@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="4" fill="#0a0a0f"/>
+  <!-- stylized sand dune silhouette in amber -->
+  <path d="M2 24 Q8 12 16 20 Q22 26 30 18 L30 30 L2 30 Z" fill="#d4a017"/>
+  <!-- two moons above -->
+  <circle cx="22" cy="8" r="3" fill="#c8a84b" opacity="0.8"/>
+  <circle cx="26" cy="6" r="2" fill="#c8a84b" opacity="0.5"/>
+</svg>

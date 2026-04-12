@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+# Fast smoke check: lint + type-check + build
+SMOKE_CMD="npm run lint && npx tsc --noEmit && npm run build"
+
+eval "$SMOKE_CMD"

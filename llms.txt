@@ -1,0 +1,42 @@
+# Dune Browser Game
+
+> A browser-based strategy game set in Frank Herbert's Dune universe — harvest spice, forge alliances, and rule Arrakis.
+
+Built with React 18, TypeScript 5, and Vite. Runs entirely in the browser — no installation required.
+
+## Documentation
+
+- [README](README.md): Project overview, features, build instructions
+- [CONTRIBUTING](CONTRIBUTING.md): Development setup, branch naming, commit conventions
+- [CLAUDE.md](CLAUDE.md): AI session instructions, architecture, coding conventions
+- [SECURITY](SECURITY.md): Security policy and vulnerability reporting
+- [Secrets Guide](docs/secrets-guide.md): CI/CD secrets setup — which tokens are auto-provided vs manually configured
+
+## Automation
+
+- [CI workflow](.github/workflows/ci.yml): Lint + type-check + build on every PR
+- [Release workflow](.github/workflows/release.yml): Semver bump, build, GitHub Release
+- [Pages deployment](.github/workflows/deploy-pages.yml): Bilingual marketing site deploy
+- [Container publish](.github/workflows/publish-container.yml): Docker image → GHCR
+
+## Website
+
+- [English site](website/index.html): Landing page (deployed to GitHub Pages)
+- [Persian site](website/fa/index.html): Persian/RTL landing page
+- [Stylesheet](website/styles.css): Shared Dune-themed CSS
+
+## Infrastructure
+
+- [Dockerfile](Dockerfile): Multi-stage build — Node 20 build → nginx serve
+- [nginx config](nginx.conf): SPA routing + static asset caching
+- [Hook installer](scripts/install-hooks.sh): Sets up pre-commit and commit-msg hooks
+- [Repo setup](scripts/setup-repo.sh): Branch protection and merge strategy (run once)
+- [version.txt](version.txt): Current semantic version (MAJOR.MINOR.PATCH)
+- [License](LICENSE): Apache License 2.0
+
+## Links
+
+- [GitHub Repository](https://github.com/cocodedk/Dune-Browser-Game): Source code, issues, and releases
+- [Play the Game](https://cocodedk.github.io/Dune-Browser-Game/): Live deployment on GitHub Pages
+- [Cocode](https://cocode.dk): Developer studio behind the project
+- [Author: Babak Bandpey](https://linkedin.com/in/babakbandpey): LinkedIn profile of the project author

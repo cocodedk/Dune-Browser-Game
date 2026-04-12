@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<!--
+  OG Image Source — 1200 × 630 px
+  ─────────────────────────────────────────────────────────────
+  This file is the visual source for og.png.
+  To generate og.png, open this file in a Chromium-based browser
+  at exactly 1200 × 630 viewport, then either:
+    • Use Puppeteer:  page.screenshot({ path: 'og.png' })
+    • Use Playwright: page.screenshot({ path: 'og.png' })
+    • Use Chrome DevTools: Device toolbar → 1200×630 → "Capture screenshot"
+  Place the resulting og.png in website/ alongside this file.
+  ─────────────────────────────────────────────────────────────
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1200" />
+  <title>OG Image Source — Dune Browser Game</title>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+    }
+
+    body {
+      background-color: #0a0a0f;
+      font-family: Georgia, 'Times New Roman', serif;
+      position: relative;
+    }
+
+    /* ── Deep Space Background ── */
+    .bg-space {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 120% 80% at 50% -10%, #1a1205 0%, transparent 55%),
+        radial-gradient(ellipse 80% 60% at 80% 20%, #1c0d03 0%, transparent 45%),
+        radial-gradient(ellipse 60% 40% at 20% 60%, #0d0a1a 0%, transparent 50%),
+        linear-gradient(180deg, #0a0a0f 0%, #0f0e08 45%, #0a0a0f 100%);
+    }
+
+    /* ── Star Field ── */
+    .stars {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 5%  8%,  rgba(200,168,75,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 12% 18%, rgba(200,168,75,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 5%,  rgba(200,168,75,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 28% 25%, rgba(200,168,75,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 38% 10%, rgba(200,168,75,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 48% 20%, rgba(200,168,75,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 58% 7%,  rgba(200,168,75,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 65% 30%, rgba(200,168,75,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 12%, rgba(200,168,75,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 22%, rgba(200,168,75,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 93% 9%,  rgba(200,168,75,0.6) 0%, transparent 100%),
+        radial-gradient(2px 2px at 8%  35%, rgba(200,168,75,0.3) 0%, transparent 100%),
+        radial-gradient(2px 2px at 32% 38%, rgba(200,168,75,0.3) 0%, transparent 100%),
+        radial-gradient(2px 2px at 70% 35%, rgba(200,168,75,0.3) 0%, transparent 100%),
+        radial-gradient(2px 2px at 90% 40%, rgba(200,168,75,0.3) 0%, transparent 100%);
+    }
+
+    /* ── Twin Moons ── */
+    .moon {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #f0e0a0, #c8a84b 50%, #7a5510);
+    }
+
+    .moon-large {
+      width: 90px;
+      height: 90px;
+      top: 50px;
+      right: 180px;
+      box-shadow: 0 0 40px rgba(200,168,75,0.6), 0 0 100px rgba(200,168,75,0.2);
+    }
+
+    .moon-small {
+      width: 52px;
+      height: 52px;
+      top: 30px;
+      right: 115px;
+      opacity: 0.65;
+      box-shadow: 0 0 25px rgba(200,168,75,0.4), 0 0 70px rgba(200,168,75,0.15);
+    }
+
+    /* ── Sand Dune Silhouette ── */
+    .dunes {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 260px;
+    }
+
+    .dunes svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Horizon Glow ── */
+    .horizon {
+      position: absolute;
+      bottom: 230px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(212,160,23,0.0) 5%,
+        rgba(212,160,23,0.5) 20%,
+        rgba(212,160,23,0.9) 50%,
+        rgba(212,160,23,0.5) 80%,
+        rgba(212,160,23,0.0) 95%,
+        transparent 100%
+      );
+      box-shadow: 0 0 40px rgba(212,160,23,0.4), 0 0 120px rgba(212,160,23,0.15);
+    }
+
+    /* ── Spice Glow ── */
+    .spice-glow {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 350px;
+      background: radial-gradient(
+        ellipse 100% 60% at 50% 100%,
+        rgba(139,105,20,0.22) 0%,
+        rgba(212,160,23,0.08) 40%,
+        transparent 70%
+      );
+    }
+
+    /* ── Content Layer ── */
+    .content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 80px 200px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-family: Georgia, serif;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #8b6914;
+      margin-bottom: 16px;
+    }
+
+    .title-dune {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 120px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      line-height: 0.9;
+      text-transform: uppercase;
+      background: linear-gradient(160deg, #f4e080 0%, #d4a017 30%, #c8a84b 60%, #f4e080 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 30px rgba(212,160,23,0.5)) drop-shadow(0 0 80px rgba(212,160,23,0.2));
+      margin-bottom: 4px;
+    }
+
+    .title-sub {
+      font-family: Georgia, serif;
+      font-size: 26px;
+      font-weight: 400;
+      letter-spacing: 0.6em;
+      text-transform: uppercase;
+      color: #c8a84b;
+      opacity: 0.85;
+      margin-bottom: 32px;
+    }
+
+    .divider {
+      width: 280px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #d4a017, #c4440a, #d4a017, transparent);
+      margin: 0 auto 28px;
+    }
+
+    .tagline {
+      font-family: Georgia, serif;
+      font-size: 22px;
+      font-style: italic;
+      color: #a89880;
+      letter-spacing: 0.03em;
+      line-height: 1.5;
+    }
+
+    /* ── Footer Bar ── */
+    .footer-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(10, 10, 15, 0.85);
+      border-top: 1px solid rgba(212,160,23,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 60px;
+    }
+
+    .footer-byline {
+      font-family: Georgia, serif;
+      font-size: 13px;
+      color: #5c5040;
+      letter-spacing: 0.1em;
+    }
+
+    .footer-byline strong {
+      color: #8b6914;
+    }
+
+    .footer-url {
+      font-family: Georgia, serif;
+      font-size: 13px;
+      color: #5c5040;
+      letter-spacing: 0.1em;
+    }
+
+    .footer-badge {
+      font-family: Georgia, serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #3d2e08;
+      background: rgba(212,160,23,0.08);
+      border: 1px solid rgba(212,160,23,0.2);
+      padding: 4px 14px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Layers: back to front -->
+  <div class="bg-space"></div>
+  <div class="stars"></div>
+
+  <!-- Twin moons -->
+  <div class="moon moon-large"></div>
+  <div class="moon moon-small"></div>
+
+  <!-- Atmospheric glow -->
+  <div class="spice-glow"></div>
+
+  <!-- Horizon line -->
+  <div class="horizon"></div>
+
+  <!-- Sand dune silhouette -->
+  <div class="dunes">
+    <svg viewBox="0 0 1200 260" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Back dune layer (lighter, further) -->
+      <path d="M0 260 L0 200 Q60 160 130 155 Q200 150 260 170 Q320 190 380 185 Q440 178 500 160 Q560 142 620 138 Q680 134 740 148 Q800 162 860 170 Q920 178 980 165 Q1040 152 1100 158 Q1150 163 1200 155 L1200 260 Z"
+            fill="#1a1305" opacity="0.8"/>
+      <!-- Mid dune layer -->
+      <path d="M0 260 L0 220 Q80 175 160 172 Q240 168 300 185 Q360 202 420 195 Q490 187 550 170 Q610 153 680 145 Q750 138 810 155 Q870 172 930 180 Q990 188 1050 172 Q1100 158 1150 165 Q1175 170 1200 162 L1200 260 Z"
+            fill="#1e1608" opacity="0.9"/>
+      <!-- Front dune layer (darker, closer) -->
+      <path d="M0 260 L0 240 Q100 195 180 192 Q260 188 320 205 Q380 222 440 215 Q510 207 570 190 Q630 173 700 163 Q770 154 840 170 Q900 186 960 194 Q1020 202 1080 185 Q1130 170 1200 178 L1200 260 Z"
+            fill="#221904"/>
+      <!-- Foreground ridge -->
+      <path d="M0 260 L0 252 Q150 225 300 238 Q420 248 540 235 Q650 222 780 230 Q900 238 1050 228 Q1130 222 1200 230 L1200 260 Z"
+            fill="#170f03"/>
+    </svg>
+  </div>
+
+  <!-- Main text content -->
+  <div class="content">
+    <p class="eyebrow">Frank Herbert's Universe &nbsp;·&nbsp; Arrakis, Planet of Spice</p>
+    <div class="title-dune">DUNE</div>
+    <p class="title-sub">Browser Game</p>
+    <div class="divider"></div>
+    <p class="tagline">Rule Arrakis. &nbsp;Control the Spice. &nbsp;Survive the Intrigue.</p>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-bar">
+    <span class="footer-byline">Built by <strong>Babak Bandpey</strong></span>
+    <span class="footer-badge">Free to Play</span>
+    <span class="footer-url">cocode.dk</span>
+  </div>
+
+</body>
+</html>
