@@ -33,7 +33,7 @@ export default function CrewPanel() {
 
   const availableFields = spiceFields.filter(f => f.discovered && f.remaining > 0)
 
-  function order(groupId: string, task: 'harvest' | 'idle', targetId: string | null) {
+  function order(groupId: string, task: 'harvest' | 'prospect' | 'idle', targetId: string | null) {
     EventBus.emit('player:assign_crew', { groupId, task, targetId })
   }
 
@@ -68,7 +68,9 @@ export default function CrewPanel() {
                 ? 'Moving to new orders…'
                 : group.task === 'harvest' && field
                   ? `Harvesting ${field.id} · ${rate.toFixed(1)}/day`
-                  : 'Idle'}
+                  : group.task === 'prospect'
+                    ? 'Prospecting for new sand'
+                    : 'Idle'}
             </div>
 
             <div style={styles.actions}>
@@ -85,6 +87,16 @@ export default function CrewPanel() {
                   {f.id.replace('field_', '')}
                 </button>
               ))}
+              <button
+                  style={{
+                    ...styles.btn,
+                    ...(group.task === 'prospect' ? styles.btnActive : {}),
+                  }}
+                  onClick={() => order(group.id, 'prospect', group.locationId)}
+                  title="Look for new spice sand. Needs an ornithopter."
+                >
+                  prospect
+                </button>
               {group.task !== 'idle' && (
                 <button style={styles.btn} onClick={() => order(group.id, 'idle', null)}>
                   stand down

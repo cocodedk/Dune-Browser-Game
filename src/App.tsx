@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import StatusBar from './ui/StatusBar'
 import QuotaLedger from './ui/QuotaLedger'
 import CrewPanel from './ui/CrewPanel'
+import MarketPanel from './ui/MarketPanel'
 import VillagePanel from './ui/VillagePanel'
 import DialoguePanel from './ui/DialoguePanel'
 import EventLog from './ui/EventLog'
@@ -29,6 +30,7 @@ export default function App() {
         <StatusBar />
         <QuotaLedger />
         <CrewPanel />
+        <MarketPanel />
         <VillagePanel />
         <FactionPanel />
         <EventLog />

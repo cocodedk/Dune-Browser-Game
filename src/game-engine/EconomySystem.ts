@@ -14,6 +14,8 @@ import { extractionTier } from './troops/types'
 import type { EquipmentKind, TroopTask } from './troops/types'
 import { settleQuota, isDue, totalDue } from './quota/quota'
 import { checkAssign, applyAssign, assignRefusalMessage } from './troops/assign'
+import { findChance, resolveFind, regionExhausted, findMessage } from './troops/prospect'
+import { checkPurchase, purchaseRefusalMessage } from './market/market'
 
 /** Equipment kinds a group is carrying. */
 function carriedKinds(groupId: string): EquipmentKind[] {
@@ -140,4 +142,98 @@ export function assignCrew(
       ? `harvest ${target?.id ?? ''}`.trim()
       : task
   pushEvent('sietch_task_assigned', `Crew ordered to ${label}.`)
+}
+
+/** Finds already made in a region, tracked on flags so it survives saves. */
+function regionFinds(regionId: string): number {
+  const value = world.flags[`finds.${regionId}`]
+  return typeof value === 'number' ? value : 0
+}
+
+/**
+ * Run one day of prospecting for every crew out looking.
+ *
+ * Rolls come from Math.random here at the mutation layer; the rules themselves
+ * take injected rolls so they stay deterministic under test.
+ */
+export function runProspectDay(): void {
+  for (const group of world.troopGroups) {
+    if (group.task !== 'prospect') continue
+    if (group.changeoverDaysLeft > 0) continue
+
+    const regionId = group.taskTargetId ?? group.locationId
+    if (regionExhausted(regionFinds(regionId))) continue
+
+    const region = world.regions.find(r => r.id === regionId)
+    const richness = region?.spice ?? 30
+
+    const chance = findChance(group.skills.prospect, richness, false)
+    const outcome = resolveFind(chance, Math.random(), Math.random(), richness)
+    if (outcome.kind === 'nothing') continue
+
+    world.flags[`finds.${regionId}`] = regionFinds(regionId) + 1
+
+    if (outcome.kind === 'field' && outcome.density) {
+      const capacity = outcome.density * 8
+      world.spiceFields.push({
+        id: `field_found_${regionId}_${world.spiceFields.length}`,
+        regionId,
+        position: region ? { x: 0, y: 0 } : { x: 0, y: 0 },
+        discovered: true,
+        density: outcome.density,
+        capacity,
+        remaining: capacity,
+      })
+    } else if (outcome.kind === 'skill' && outcome.skillGain) {
+      group.skills.prospect += outcome.skillGain
+    } else if (outcome.kind === 'sietch') {
+      // Reveal an undiscovered location — the main non-dialogue discovery path.
+      const hidden = world.villages.find(v => !v.discovered)
+      if (hidden) hidden.discovered = true
+    }
+
+    pushEvent('sietch_task_assigned', findMessage(outcome))
+  }
+}
+
+/** Buy from the smuggler. Guards live in market/market.ts. */
+export function buyEquipment(kind: EquipmentKind): void {
+  const standing = typeof world.flags['smuggler.standing'] === 'number'
+    ? (world.flags['smuggler.standing'] as number)
+    : 0
+
+  const check = checkPurchase(kind, {
+    spice: world.player.spice,
+    standing,
+    tier3Unlocked: false,
+  })
+
+  if (!check.ok) {
+    pushEvent('sietch_task_assigned', purchaseRefusalMessage(check.reason))
+    return
+  }
+
+  world.player.spice -= check.item.price
+  world.flags['smuggler.standing'] = standing + 1
+  world.equipment.push({
+    id: `eq_${kind}_${world.equipment.length}`,
+    kind,
+    locationId: world.player.location,
+    groupId: null,
+    condition: 100,
+  })
+  pushEvent('spice_shipment_received', `Bought ${check.item.label} for ${check.item.price} spice.`)
+}
+
+/** Hand a piece of equipment to a crew. */
+export function issueEquipment(equipmentId: string, groupId: string): void {
+  const item = world.equipment.find(e => e.id === equipmentId)
+  if (!item) return
+  if (item.groupId) {
+    pushEvent('sietch_task_assigned', 'That equipment is already with a crew.')
+    return
+  }
+  item.groupId = groupId
+  item.locationId = null
+  pushEvent('sietch_task_assigned', 'Equipment issued to the crew.')
 }
