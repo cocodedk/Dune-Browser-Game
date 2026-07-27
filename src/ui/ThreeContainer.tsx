@@ -42,7 +42,7 @@ export default function ThreeContainer() {
 
     const handle = createRenderer(canvas, quality)
     const modes = new ModeManager({
-      strategic: () => createStrategicMode(handle.camera, quality, world),
+      strategic: () => createStrategicMode(handle.camera, quality, world, canvas),
     })
     modes.start('strategic')
 

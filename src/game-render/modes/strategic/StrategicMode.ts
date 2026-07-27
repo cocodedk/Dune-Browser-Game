@@ -21,8 +21,10 @@ import { createLighting } from '../../env/Lighting'
 import { paletteForTime } from '../../materials/Atmosphere'
 import { createTerrainMesh } from './TerrainMesh'
 import { createGroundPlane } from './GroundPlane'
+import { createCameraRig } from '../../core/CameraRig'
 import { createSietchMarkers } from './SietchMarkers'
 import { createPlayerToken } from './PlayerToken'
+import { createMarkerLabels } from './MarkerLabels'
 
 /** Matches TimeSystem's DAY_SECONDS so the sky tracks the engine's clock. */
 const DAY_SECONDS = 60
@@ -40,6 +42,7 @@ export function createStrategicMode(
   camera: PerspectiveCamera,
   quality: QualitySettings,
   world: WorldState,
+  canvas: HTMLElement,
 ): SceneMode {
   const scene = new Scene()
 
@@ -85,6 +88,14 @@ export function createStrategicMode(
   const playerToken = createPlayerToken(MARKER_SPREAD, terrain.heightAt)
   scene.add(playerToken.group)
 
+  const labels = createMarkerLabels(
+    markers.placements,
+    world.villages.map(v => ({ id: v.id, name: v.name })),
+    terrain.heightAt,
+    96,
+  )
+  scene.add(labels.group)
+
   const lighting = createLighting(scene)
 
   // Exponential fog tinted to the horizon: distant dunes dissolve into haze
@@ -104,15 +115,19 @@ export function createStrategicMode(
   // heightfield's flat square boundary as a plateau cliff on the horizon.
   // Looking down at ~62 degrees keeps the edge out of frame and puts the light
   // across the dune crests instead of end-on.
-  // Low enough to put sky and horizon in frame — that vista is where a desert
-  // gets its drama — while fog hides the heightfield boundary beyond it.
-  const pitch = (30 * Math.PI) / 180
-  const distance = WORLD_SIZE * 0.42
-  camera.position.set(0, Math.sin(pitch) * distance, Math.cos(pitch) * distance)
-  camera.lookAt(new Vector3(0, 0, 0))
   camera.near = 1
   camera.far = WORLD_SIZE * 4
   camera.updateProjectionMatrix()
+
+  // Low pitch puts sky and horizon in frame — that vista is where a desert
+  // gets its drama — while fog hides the heightfield boundary beyond it.
+  // Pan is bounded to the marker area so the player cannot wander off the map.
+  const rig = createCameraRig(camera, canvas, {
+    minDistance: WORLD_SIZE * 0.22,
+    maxDistance: WORLD_SIZE * 0.62,
+    panExtent: MARKER_SPREAD * 0.5,
+    pitchRadians: (30 * Math.PI) / 180,
+  })
 
   function applyTime(world: WorldState): void {
     const palette = paletteForTime(world.time, DAY_SECONDS)
@@ -166,6 +181,9 @@ export function createStrategicMode(
       scene.remove(sky.mesh)
       scene.remove(markers.group)
       scene.remove(playerToken.group)
+      scene.remove(labels.group)
+      labels.dispose()
+      rig.dispose()
       lighting.dispose()
       terrain.dispose()
       ground.dispose()
