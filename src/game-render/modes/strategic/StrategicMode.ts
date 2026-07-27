@@ -20,6 +20,7 @@ import { createSkyDome } from '../../materials/SkyDome'
 import { createLighting } from '../../env/Lighting'
 import { paletteForTime } from '../../materials/Atmosphere'
 import { createTerrainMesh } from './TerrainMesh'
+import { createGroundPlane } from './GroundPlane'
 
 /** Matches TimeSystem's DAY_SECONDS so the sky tracks the engine's clock. */
 const DAY_SECONDS = 60
@@ -54,6 +55,9 @@ export function createStrategicMode(
     ridgeMix: 0.62,
     // Elongate ridges along X, across the prevailing wind.
     stretch: [1, 3.4],
+    // Ramp to zero at the border so the dunes meet the ground plane instead
+    // of ending in a cliff the camera reads as a plateau.
+    edgeFalloff: 0.16,
   })
 
   const sand = createSandMaterial({
@@ -61,6 +65,11 @@ export function createStrategicMode(
   })
   const terrain = createTerrainMesh(heightfield, sand.material as Material)
   scene.add(terrain.mesh)
+
+  // Extends well past the fog distance, so the terrain's border never becomes
+  // a visible horizon line.
+  const ground = createGroundPlane(WORLD_SIZE * 8)
+  scene.add(ground.mesh)
 
   const sky = createSkyDome(WORLD_SIZE * 1.6)
   scene.add(sky.mesh)
@@ -120,6 +129,9 @@ export function createStrategicMode(
     const crest = new Color('#e3b972').lerp(rgbToColor(palette.sun), 0.22)
     const slip = shadow.clone().multiplyScalar(0.62)
     sand.setPalette(shadow, crest, slip)
+
+    // Track the sand so the far flat reads as more desert, not as a backdrop.
+    ground.setColor(shadow.clone().lerp(crest, 0.55))
   }
 
   return {
@@ -130,9 +142,11 @@ export function createStrategicMode(
     },
     dispose(): void {
       scene.remove(terrain.mesh)
+      scene.remove(ground.mesh)
       scene.remove(sky.mesh)
       lighting.dispose()
       terrain.dispose()
+      ground.dispose()
       sand.dispose()
       sky.dispose()
       scene.fog = null

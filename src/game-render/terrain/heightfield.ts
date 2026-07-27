@@ -28,6 +28,14 @@ export interface HeightfieldOptions {
    * prevailing wind. Stretching one axis is what turns noise into dunes.
    */
   stretch?: [number, number]
+  /**
+   * Fraction of each edge over which height ramps down to zero, 0..0.5.
+   *
+   * Without this the heightfield ends in a cliff, which the camera sees as a
+   * flat plateau lip across the horizon. Ramping to zero lets the terrain meet
+   * a distant ground plane seamlessly, so there is no boundary to hide.
+   */
+  edgeFalloff?: number
 }
 
 export interface Heightfield {
@@ -51,6 +59,20 @@ function ridge(value: number): number {
   return folded * folded
 }
 
+/**
+ * Weight in [0, 1] for a normalised coordinate, ramping to 0 within `falloff`
+ * of either edge. Smoothstepped so the terrain eases into the flat rather than
+ * meeting it at a visible crease.
+ */
+function edgeWeight(coord: number, falloff: number): number {
+  if (falloff <= 0) return 1
+  const f = Math.min(falloff, 0.5)
+  const distance = Math.min(coord, 1 - coord)
+  if (distance >= f) return 1
+  const t = Math.max(0, distance / f)
+  return t * t * (3 - 2 * t)
+}
+
 export function generateHeightfield(options: HeightfieldOptions): Heightfield {
   const {
     resolution,
@@ -62,6 +84,7 @@ export function generateHeightfield(options: HeightfieldOptions): Heightfield {
     warpStrength = 0.6,
     ridgeMix = 0.45,
     stretch = [1, 1],
+    edgeFalloff = 0,
   } = options
 
   if (resolution < 2) throw new Error('heightfield resolution must be >= 2')
@@ -87,7 +110,7 @@ export function generateHeightfield(options: HeightfieldOptions): Heightfield {
       // rolling is [-1,1] and crests is [0,1]; map rolling to [0,1] first so
       // the mix does not bias the field downward.
       const combined = (1 - ridgeMix) * (rolling * 0.5 + 0.5) + ridgeMix * crests
-      const height = combined * amplitude
+      const height = combined * amplitude * edgeWeight(u, edgeFalloff) * edgeWeight(v, edgeFalloff)
 
       const index = row * resolution + col
       data[index] = height

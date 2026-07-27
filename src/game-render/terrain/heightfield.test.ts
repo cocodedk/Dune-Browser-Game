@@ -129,6 +129,50 @@ describe('heightAt', () => {
 })
 
 // ---------------------------------------------------------------------------
+// edgeFalloff — kills the plateau-lip artifact at the horizon
+// ---------------------------------------------------------------------------
+
+describe('edgeFalloff', () => {
+  it('is a no-op at 0', () => {
+    const a = generateHeightfield(opts({ edgeFalloff: 0 }))
+    const b = generateHeightfield(opts())
+    expect(Array.from(a.data)).toEqual(Array.from(b.data))
+  })
+
+  it('drives every border sample to zero', () => {
+    const hf = generateHeightfield(opts({ resolution: 24, edgeFalloff: 0.2 }))
+    const n = hf.resolution
+    for (let i = 0; i < n; i++) {
+      expect(hf.data[i]).toBeCloseTo(0, 6) // top row
+      expect(hf.data[(n - 1) * n + i]).toBeCloseTo(0, 6) // bottom row
+      expect(hf.data[i * n]).toBeCloseTo(0, 6) // left column
+      expect(hf.data[i * n + (n - 1)]).toBeCloseTo(0, 6) // right column
+    }
+  })
+
+  it('leaves the interior with real relief', () => {
+    const hf = generateHeightfield(opts({ resolution: 48, edgeFalloff: 0.15 }))
+    const n = hf.resolution
+    const mid = hf.data[Math.floor(n / 2) * n + Math.floor(n / 2)]
+    expect(mid).toBeGreaterThan(0)
+    expect(hf.max).toBeGreaterThan(1)
+  })
+
+  it('never produces negative heights', () => {
+    const hf = generateHeightfield(opts({ edgeFalloff: 0.3 }))
+    for (const h of hf.data) expect(h).toBeGreaterThanOrEqual(0)
+  })
+
+  it('clamps a falloff beyond 0.5 instead of inverting the ramp', () => {
+    const hf = generateHeightfield(opts({ edgeFalloff: 0.9 }))
+    for (const h of hf.data) {
+      expect(Number.isFinite(h)).toBe(true)
+      expect(h).toBeGreaterThanOrEqual(0)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
 // ridgeMix — the dune-crest control
 // ---------------------------------------------------------------------------
 
