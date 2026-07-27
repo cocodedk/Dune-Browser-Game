@@ -19,6 +19,17 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     passWithNoTests: true,
+    // Cap worker count and recycle workers. On 2026-07-24 unbounded vitest
+    // workers grew to 2.6-4 GiB RSS each and drove the machine low enough for
+    // earlyoom to start SIGTERMing node processes. The suite is pure-TS and
+    // sub-second, so it loses nothing by running on a small, bounded pool.
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        minForks: 1,
+        maxForks: 4,
+      },
+    },
   },
   build: {
     chunkSizeWarningLimit: 550,
