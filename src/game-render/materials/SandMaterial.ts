@@ -30,6 +30,8 @@ export interface SandMaterial {
   material: MeshStandardMaterial
   /** Retint for the current hour. Cheap — call every frame if you like. */
   setPalette(shadow: string | Color, crest: string | Color, slip: string | Color): void
+  /** Scale the mica sparkle with light level. */
+  setGlint(strength: number): void
   dispose(): void
 }
 
@@ -97,6 +99,9 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
       ;(uniforms.uSandShadow.value as Color).set(shadow)
       ;(uniforms.uSandCrest.value as Color).set(crest)
       ;(uniforms.uSlipFace.value as Color).set(slip)
+    },
+    setGlint(strength: number): void {
+      uniforms.uGlintStrength.value = Math.max(0, strength)
     },
     dispose(): void {
       material.dispose()

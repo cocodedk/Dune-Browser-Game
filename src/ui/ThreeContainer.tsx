@@ -14,6 +14,7 @@ import { resolveQuality } from '../game-render/core/Quality'
 import { createRenderer } from '../game-render/core/Renderer'
 import { ModeManager } from '../game-render/core/ModeManager'
 import { createStrategicMode } from '../game-render/modes/strategic/StrategicMode'
+import { createFlightMode } from '../game-render/modes/flight/FlightMode'
 import { attachDebugHandle, detachDebugHandle } from '../game-render/core/DebugHandle'
 import { AudioManager } from '../game-render/audio/AudioManager'
 import { startTravel } from '../game-engine/TravelSystem'
@@ -44,6 +45,7 @@ export default function ThreeContainer() {
     const handle = createRenderer(canvas, quality)
     const modes = new ModeManager({
       strategic: () => createStrategicMode(handle.camera, quality, world, canvas),
+      flight: () => createFlightMode(handle.camera, quality),
     })
     modes.start('strategic')
 
@@ -67,6 +69,13 @@ export default function ThreeContainer() {
     }
     canvas.addEventListener('pointerdown', onPointerDown)
 
+    function onKeyDown(event: KeyboardEvent): void {
+      if (event.key !== 'Escape') return
+      // Skipping is purely visual: the engine still lands the trip on time.
+      if (modes.currentId === 'flight') modes.handleSignal({ kind: 'travel_complete' })
+    }
+    window.addEventListener('keydown', onKeyDown)
+
     const unwire = wireCommands()
     const audio = new AudioManager()
     audio.playAmbient('ambient_desert')
@@ -75,12 +84,22 @@ export default function ThreeContainer() {
 
     let raf = 0
     let last = performance.now()
+    let wasTraveling = false
 
     function frame(now: number): void {
       const deltaMs = Math.min(now - last, 100) // clamp after a tab-switch stall
       last = now
 
       tick(deltaMs)
+
+      // Travel start/complete drive the cinematic. Read from world state
+      // rather than a local timer so the two can never diverge.
+      const traveling = world.player.state === 'traveling'
+      if (traveling !== wasTraveling) {
+        modes.handleSignal({ kind: traveling ? 'travel_start' : 'travel_complete' })
+        wasTraveling = traveling
+      }
+
       modes.update(deltaMs, world)
 
       const scene = modes.scene
@@ -100,6 +119,7 @@ export default function ThreeContainer() {
     return () => {
       cancelAnimationFrame(raf)
       canvas.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('keydown', onKeyDown)
       unwire()
       audio.dispose()
       modes.dispose()

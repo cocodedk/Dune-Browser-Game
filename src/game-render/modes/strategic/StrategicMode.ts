@@ -154,6 +154,9 @@ export function createStrategicMode(
     const crest = new Color('#e3b972').lerp(rgbToColor(palette.sun), 0.22)
     const slip = shadow.clone().multiplyScalar(0.62)
     sand.setPalette(shadow, crest, slip)
+    // Glint is specular: with no sun on the sand it must disappear, or it
+    // reads as white speckle noise over a dark dune field.
+    sand.setGlint(Math.max(0, palette.sunElevation) * 0.07)
 
     // Track the sand so the far flat reads as more desert, not as a backdrop.
     ground.setColor(shadow.clone().lerp(crest, 0.55))
