@@ -15,6 +15,7 @@ import { createRenderer } from '../game-render/core/Renderer'
 import { ModeManager } from '../game-render/core/ModeManager'
 import { createStrategicMode } from '../game-render/modes/strategic/StrategicMode'
 import { attachDebugHandle, detachDebugHandle } from '../game-render/core/DebugHandle'
+import { AudioManager } from '../game-render/audio/AudioManager'
 import { startTravel } from '../game-engine/TravelSystem'
 import { startDialogue } from '../game-engine/DialogueSystem'
 import { pushEvent } from '../game-engine/EventSystem'
@@ -67,6 +68,8 @@ export default function ThreeContainer() {
     canvas.addEventListener('pointerdown', onPointerDown)
 
     const unwire = wireCommands()
+    const audio = new AudioManager()
+    audio.playAmbient('ambient_desert')
     const debug = attachDebugHandle(dispatchPick)
     initLoop()
 
@@ -98,6 +101,7 @@ export default function ThreeContainer() {
       cancelAnimationFrame(raf)
       canvas.removeEventListener('pointerdown', onPointerDown)
       unwire()
+      audio.dispose()
       modes.dispose()
       handle.dispose()
       detachDebugHandle()

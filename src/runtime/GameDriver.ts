@@ -1,6 +1,6 @@
 // src/runtime/GameDriver.ts
 // Renderer-agnostic driver for the simulation. Owns the engine tick and the
-// throttled `world:updated` broadcast so any renderer (Phaser today, three.js
+// throttled `world:updated` broadcast so any renderer (three.js today, others
 // later) can drive the game without importing engine internals itself.
 // The caller supplies delta each frame; nothing here touches a renderer API.
 

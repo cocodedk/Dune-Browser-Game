@@ -31,7 +31,7 @@ test('game UI structure is visible after initialisation', async ({ page }) => {
     page.locator('text=/Click a village (on the map )?to (travel or talk|inspect)/i').first()
   ).toBeVisible()
 
-  const canvas = page.locator('#phaser-container canvas')
+  const canvas = page.locator('#scene-container canvas')
   await expect(canvas).toBeAttached()
 })
 

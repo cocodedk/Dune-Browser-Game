@@ -8,7 +8,6 @@ import {
   FogExp2,
   Color,
   PerspectiveCamera,
-  Vector3,
   type Material,
 } from 'three'
 import type { SceneModeId, WorldState } from '../../../types'

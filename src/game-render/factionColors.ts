@@ -11,8 +11,8 @@ export const FACTION_CSS_COLORS: Record<FactionId, string> = {
   neutral:   '#5a5a5a',
 }
 
-/** Phaser hex colors — for Phaser Graphics/Text objects */
-export const FACTION_PHASER_COLORS: Record<FactionId, number> = {
+/** Faction hex colors — fed directly to THREE.Color */
+export const FACTION_HEX_COLORS: Record<FactionId, number> = {
   player:    0xd4a017,
   harkonnen: 0xc62828,
   fremen:    0x1565c0,

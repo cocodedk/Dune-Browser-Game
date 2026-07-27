@@ -3,10 +3,7 @@ import path from 'node:path'
 
 const assetsDir = path.resolve('dist/assets')
 // First matching pattern wins, so keep the catch-all last.
-// Phaser entries stay until Stage 04 removes the dependency; three ships
-// alongside it during the migration and both renderers are lazy chunks.
 const budgets = [
-  { pattern: /^phaser-.*\.js$/, maxBytes: 550_000 },
   { pattern: /^three-core-.*\.js$/, maxBytes: 700_000 },
   { pattern: /^three-addons-.*\.js$/, maxBytes: 200_000 },
   { pattern: /^react-vendor-.*\.js$/, maxBytes: 250_000 },

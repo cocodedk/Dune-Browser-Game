@@ -8,7 +8,7 @@ If this file and `CODEX.md` ever drift, follow `CODEX.md` and update this file t
 - Node.js 20
 - TypeScript 5
 - React 18
-- Phaser 3
+- three.js
 - Vite 6
 - npm
 - ESLint
@@ -34,9 +34,9 @@ src/
 
 - `200` lines max per source-like file is enforced by pre-commit
 - Keep simulation logic in `src/game-engine/`
-- Keep Phaser scene and rendering logic in `src/game-render/`
+- Keep three.js scene and rendering logic in `src/game-render/`
 - Keep React UI logic in `src/ui/`
-- Use `EventBus` as the Phaser <-> React boundary
+- Use `EventBus` as the renderer <-> React boundary
 - Use explicit `import { describe, it, expect } from 'vitest'` in test files — do NOT rely on globals
 - Unit tests (`.test.ts`) live next to source files in `src/`; `npm run test:unit` runs them
 
@@ -62,7 +62,7 @@ sh .githooks/pre-commit
 
 - `.githooks/pre-commit` runs file-length enforcement, lint, type-check, build, Vitest unit tests, and Playwright E2E tests
 - `npm run build` includes bundle-budget enforcement via `scripts/check-bundle-size.mjs`
-- Vite aliases Phaser to source so the game runtime can be chunked instead of shipped as one giant bundle
+- three.js is split into `three-core` / `three-addons` chunks, each with its own bundle budget
 
 ## Files to Keep in Sync
 

@@ -11,7 +11,7 @@ If `CLAUDE.md` and `CODEX.md` ever disagree, follow `CODEX.md` and bring `CLAUDE
 - Runtime: Node.js 20
 - Language: TypeScript 5
 - UI shell: React 18
-- Game runtime: Phaser 3
+- Game runtime: three.js
 - Bundler: Vite 6
 - Package manager: npm
 - Lint: ESLint flat config
@@ -27,11 +27,11 @@ Write against the repo as it exists today:
 src/
 ├── App.tsx                 # React shell layout
 ├── main.tsx                # React entry
-├── EventBus.ts             # Phaser <-> React event bridge
+├── EventBus.ts             # renderer <-> React event bridge
 ├── types.ts                # shared types and bus contracts
 ├── data/                   # static game data
 ├── game-engine/            # game state and simulation rules
-├── game-render/            # Phaser scenes and rendering
+├── game-render/            # three.js scene modes and rendering
 ├── ui/                     # React UI panels and store
 └── shims/                  # browser/build compatibility shims
 ```
@@ -39,9 +39,9 @@ src/
 ### Ownership Boundaries
 
 - `src/game-engine/`: simulation and rules, no React imports
-- `src/game-render/`: Phaser scenes, rendering, input wiring, emits bus events
-- `src/ui/`: React panels and Zustand store, no Phaser scene creation logic
-- `src/EventBus.ts`: the contract boundary between Phaser and React
+- `src/game-render/`: three.js scene modes, rendering, input wiring, emits bus events
+- `src/ui/`: React panels and Zustand store, no scene creation logic
+- `src/EventBus.ts`: the contract boundary between the renderer and React
 - `src/data/`: static authored content only
 
 ## Working Rules
@@ -57,7 +57,7 @@ src/
 - Preserve the current event-driven architecture
 - Prefer extending the existing `EventBus` flow over introducing a second coordination mechanism
 - Keep state transitions in `game-engine`, not in React components
-- Keep render concerns in Phaser scenes and visual components
+- Keep render concerns in three.js scene modes and visual components
 
 ### Style
 
@@ -70,7 +70,7 @@ src/
 
 - The React shell is intentionally light; the heavy runtime is lazy-loaded
 - `App.tsx` should stay small and shell-focused
-- Be careful when changing `GameContainer`, Phaser boot, or the event bus, because those changes affect test stability
+- Be careful when changing `ThreeContainer`, the runtime driver, or the event bus, because those changes affect test stability
 
 ## Build and Test Commands
 
@@ -109,7 +109,8 @@ npm test
 
 Current budget classes:
 
-- `phaser-*.js`: `550_000` bytes
+- `three-core-*.js`: `700_000` bytes
+- `three-addons-*.js`: `200_000` bytes
 - `react-vendor-*.js`: `250_000` bytes
 - `game-*.js`: `200_000` bytes
 - fallback `*.js`: `500_000` bytes
@@ -117,11 +118,11 @@ Current budget classes:
 Do not "fix" a budget failure by only raising the threshold unless there is a clear, justified reason.
 Prefer code-splitting, reducing eager imports, or changing chunk boundaries first.
 
-## Vite and Phaser Notes
+## Vite and three.js Notes
 
-- Vite aliases `phaser` to `phaser/src/phaser.js` so Rollup can split Phaser into smaller chunks
-- Vite also aliases `phaser3spectorjs` to a local compatibility shim in `src/shims/phaser3spectorjs.cjs`
-- The build may still print Rollup circular-chunk warnings from Phaser internals; treat them as informational unless they cause a runtime issue
+- three.js is split into `three-core` and `three-addons` chunks so each can hold its own bundle budget
+- Import three narrowly (`import { Scene } from 'three'`) so tree shaking works; never `import * as THREE`
+- The renderer is lazy-loaded via `ThreeContainer`, keeping the 3D chunk out of the initial payload
 
 ## Testing Notes
 
@@ -166,5 +167,5 @@ sh .githooks/pre-commit
 - `.githooks/pre-commit`: enforced local quality gate
 - `scripts/check-file-length.sh`: `200`-line enforcement
 - `scripts/check-bundle-size.mjs`: bundle budget enforcement
-- `vite.config.ts`: chunking and Phaser alias rules
+- `vite.config.ts`: chunking rules
 - `playwright.config.ts`: browser test setup

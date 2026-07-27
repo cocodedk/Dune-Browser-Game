@@ -15,7 +15,7 @@ import {
   DoubleSide,
 } from 'three'
 import type { WorldState, FactionId } from '../../../types'
-import { FACTION_PHASER_COLORS } from '../../factionColors'
+import { FACTION_HEX_COLORS } from '../../factionColors'
 import { layoutMarkers, nearestMarker } from './markerLayout'
 import type { MarkerPlacement } from './markerLayout'
 
@@ -95,7 +95,7 @@ export function createSietchMarkers(
     for (const entry of entries) {
       const village = state.villages.find(v => v.id === entry.id)
       if (!village) continue
-      const hex = FACTION_PHASER_COLORS[village.owner as FactionId] ?? 0xc8a84b
+      const hex = FACTION_HEX_COLORS[village.owner as FactionId] ?? 0xc8a84b
       const color = new Color(hex)
       entry.pillar.color = color
       entry.ring.color = color

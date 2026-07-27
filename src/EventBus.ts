@@ -1,4 +1,4 @@
-// src/EventBus.ts — Simple typed event bus connecting Phaser ↔ React
+// src/EventBus.ts — Simple typed event bus connecting the renderer ↔ React
 
 type Callback<T> = T extends void ? () => void : (payload: T) => void;
 

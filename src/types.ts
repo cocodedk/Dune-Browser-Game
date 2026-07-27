@@ -9,7 +9,7 @@ export type FactionId = 'player' | 'harkonnen' | 'neutral' | 'fremen' | 'atreide
 export interface Village {
   id: VillageId;
   name: string;
-  position: { x: number; y: number };  // Phaser canvas coordinates
+  position: { x: number; y: number };  // canvas-space coordinates (see markerLayout)
   population: number;
   spice: number;
   loyalty: number;        // 0–100; <30 = rebelling risk

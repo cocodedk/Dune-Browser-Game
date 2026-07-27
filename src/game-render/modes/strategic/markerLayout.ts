@@ -3,7 +3,7 @@
 // positions. Split out from the three.js layer so the projection is testable —
 // a silent off-by-one here puts every sietch in the wrong place.
 
-/** The engine's village positions are in the old 800x500 Phaser canvas space. */
+/** Engine village positions use the original 800x500 canvas coordinate space. */
 export const SOURCE_WIDTH = 800
 export const SOURCE_HEIGHT = 500
 

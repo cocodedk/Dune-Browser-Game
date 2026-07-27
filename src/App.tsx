@@ -6,20 +6,14 @@ import EventLog from './ui/EventLog'
 import FactionPanel from './ui/FactionPanel'
 import GoalOverlay from './ui/GoalOverlay'
 
-// Both renderers are lazy chunks, so selecting one never costs the other's
-// bytes. Phaser stays the default until Stage 03 reaches visual parity.
-const useThreeRenderer =
-  typeof window !== 'undefined' &&
-  new URLSearchParams(window.location.search).get('renderer') === 'three'
-
-const GameContainer = lazy(() =>
-  useThreeRenderer ? import('./ui/ThreeContainer') : import('./ui/GameContainer'),
-)
+// three.js is now the only renderer; Phaser is gone. Kept lazy so the 3D
+// chunk stays out of the initial payload.
+const GameContainer = lazy(() => import('./ui/ThreeContainer'))
 
 export default function App() {
   return (
     <div style={styles.root}>
-      {/* Left: Phaser game */}
+      {/* Left: 3D game view */}
       <div style={styles.left}>
         <div style={styles.title}>DUNE: BROWSER GAME</div>
         <Suspense fallback={<div style={styles.canvasFallback}>Loading Arrakis...</div>}>
