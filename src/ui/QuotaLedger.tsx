@@ -8,6 +8,26 @@ import { useGameStore } from './store'
 import { totalDue, daysRemaining } from '../game-engine/quota/quota'
 import { projectIncome } from '../game-engine/quota/projection'
 import { currentDay } from '../game-engine/TimeSystem'
+import { palette, type, space, panelShell, row } from './theme'
+
+/** Patience shown as pips rather than a number — state read at a glance. */
+function PatiencePips({ value }: { value: number }) {
+  return (
+    <span style={{ letterSpacing: 2 }}>
+      {[0, 1, 2].map(i => (
+        <span
+          key={i}
+          style={{
+            color: i < value ? palette.gold : palette.lineSoft,
+            fontSize: 13,
+          }}
+        >
+          ●
+        </span>
+      ))}
+    </span>
+  )
+}
 
 export default function QuotaLedger() {
   const { world } = useGameStore()
@@ -25,98 +45,80 @@ export default function QuotaLedger() {
     amountDue: due,
   })
 
-  const urgent = !projection.onTrack
-  const accent = urgent ? '#c0392b' : '#4caf50'
+  const short = !projection.onTrack
+  const accent = short ? palette.danger : palette.good
+  // The deadline tightens visually as it approaches, so urgency is felt
+  // before it is read.
+  const urgent = short && days <= 2
 
   return (
-    <div style={styles.panel}>
-      <div style={styles.header}>
-        <span style={styles.title}>Imperial Tribute</span>
-        <span style={{ ...styles.patience, color: quota.patience <= 1 ? '#c0392b' : '#d4a017' }}>
-          Patience {quota.patience}/3
+    <div style={panelShell}>
+      <div style={{ ...row, marginBottom: space.sm }}>
+        <span style={type.heading}>Imperial Tribute</span>
+        <PatiencePips value={quota.patience} />
+      </div>
+
+      <div style={styles.headline}>
+        <span style={{ ...type.figure, fontSize: 22, color: accent }}>
+          {due.toFixed(0)}
+        </span>
+        <span style={{ ...type.label, marginLeft: 5 }}>spice due</span>
+        <span style={{ flex: 1 }} />
+        <span style={{ ...type.figure, color: urgent ? palette.danger : palette.text }}>
+          {days}
+        </span>
+        <span style={{ ...type.label, marginLeft: 4 }}>
+          {days === 1 ? 'day' : 'days'}
         </span>
       </div>
 
-      <div style={styles.row}>
-        <span style={styles.label}>Due</span>
-        <span style={styles.value}>{due.toFixed(0)} spice</span>
-      </div>
       {quota.arrears > 0 && (
-        <div style={styles.row}>
-          <span style={styles.label}>…of which arrears</span>
-          <span style={{ ...styles.value, color: '#c0392b' }}>{quota.arrears.toFixed(0)}</span>
+        <div style={row}>
+          <span style={type.label}>carried arrears</span>
+          <span style={{ ...type.value, color: palette.danger }}>
+            {quota.arrears.toFixed(0)}
+          </span>
         </div>
       )}
-      <div style={styles.row}>
-        <span style={styles.label}>Days remaining</span>
-        <span style={styles.value}>{days}</span>
+      <div style={row}>
+        <span style={type.label}>in stock</span>
+        <span style={type.value}>{player.spice.toFixed(1)}</span>
       </div>
-      <div style={styles.row}>
-        <span style={styles.label}>In stock</span>
-        <span style={styles.value}>{player.spice.toFixed(1)}</span>
-      </div>
-      <div style={styles.row}>
-        <span style={styles.label}>Projected by deadline</span>
-        <span style={styles.value}>{projection.projectedTotal.toFixed(0)}</span>
+      <div style={row}>
+        <span style={type.label}>projected by deadline</span>
+        <span style={type.value}>{projection.projectedTotal.toFixed(0)}</span>
       </div>
 
       <div style={{ ...styles.verdict, borderColor: accent, color: accent }}>
-        {urgent
-          ? `Short by ${Math.abs(projection.surplus).toFixed(0)}`
-          : `Surplus ${projection.surplus.toFixed(0)}`}
+        {short
+          ? `short by ${Math.abs(projection.surplus).toFixed(0)}`
+          : `surplus ${projection.surplus.toFixed(0)}`}
       </div>
 
-      <div style={styles.rate}>
+      <div style={{ ...type.note, textAlign: 'center', marginTop: space.xs }}>
         {projection.dailyRate > 0
-          ? `${projection.dailyRate.toFixed(1)} spice/day at current orders`
-          : 'No crews are harvesting.'}
+          ? `${projection.dailyRate.toFixed(1)} spice per day at current orders`
+          : 'no crews are harvesting'}
       </div>
     </div>
   )
 }
 
 const styles = {
-  panel: {
-    padding: '10px 12px',
-    borderBottom: '1px solid #3d2b10',
-    background: '#150f08',
-  },
-  header: {
+  headline: {
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'baseline',
-    marginBottom: 8,
+    marginBottom: space.sm,
   },
-  title: {
-    color: '#d4a017',
-    fontSize: 12,
-    fontWeight: 'bold' as const,
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase' as const,
-  },
-  patience: { fontSize: 11 },
-  row: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: 12,
-    color: '#c9b899',
-    padding: '1px 0',
-  },
-  label: { opacity: 0.75 },
-  value: { fontVariantNumeric: 'tabular-nums' as const },
   verdict: {
-    marginTop: 8,
-    padding: '4px 8px',
+    marginTop: space.sm,
+    padding: '5px 8px',
     border: '1px solid',
-    borderRadius: 3,
-    fontSize: 12,
-    fontWeight: 'bold' as const,
-    textAlign: 'center' as const,
-  },
-  rate: {
-    marginTop: 5,
+    borderRadius: 2,
     fontSize: 11,
-    color: '#8b7a55',
+    fontWeight: 700 as const,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase' as const,
     textAlign: 'center' as const,
   },
 }

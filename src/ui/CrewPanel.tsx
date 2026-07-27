@@ -9,6 +9,7 @@ import { useGameStore } from './store'
 import { harvestYield } from '../game-engine/troops/harvest'
 import { effectiveDensity, extractionTier } from '../game-engine/troops/types'
 import type { TroopGroup, SpiceField, Equipment } from '../game-engine/troops/types'
+import { palette, type as typo, space, panelShell, button, divider } from './theme'
 
 function tierFor(group: TroopGroup, equipment: Equipment[]) {
   return extractionTier(
@@ -111,21 +112,15 @@ export default function CrewPanel() {
 }
 
 const styles = {
-  panel: { padding: '10px 12px', borderBottom: '1px solid #3d2b10' },
-  title: {
-    color: '#d4a017', fontSize: 12, fontWeight: 'bold' as const,
-    letterSpacing: '0.12em', textTransform: 'uppercase' as const, marginBottom: 6,
-  },
-  empty: { color: '#8b7a55', fontSize: 12, fontStyle: 'italic' as const },
-  crew: { marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid #241a0c' },
+  panel: panelShell,
+  title: { ...typo.heading, marginBottom: space.sm },
+  empty: typo.note,
+  crew: { marginBottom: space.sm, paddingBottom: space.sm, ...divider },
   crewHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' },
-  crewName: { color: '#e0cfa8', fontSize: 12, fontWeight: 'bold' as const },
-  crewMeta: { color: '#8b7a55', fontSize: 10 },
-  status: { color: '#c9b899', fontSize: 11, margin: '3px 0 5px' },
+  crewName: { color: palette.text, fontSize: 12, fontWeight: 600 as const },
+  crewMeta: { ...typo.note, fontStyle: 'normal' as const },
+  status: { color: palette.textDim, fontSize: 11, margin: `${space.xs}px 0 ${space.sm}px` },
   actions: { display: 'flex', flexWrap: 'wrap' as const, gap: 4 },
-  btn: {
-    background: '#241a0c', color: '#c9b899', border: '1px solid #3d2b10',
-    borderRadius: 3, fontSize: 10, padding: '3px 6px', cursor: 'pointer',
-  },
-  btnActive: { background: '#d4a017', color: '#1a1208', borderColor: '#d4a017' },
+  btn: button.base,
+  btnActive: button.active,
 }

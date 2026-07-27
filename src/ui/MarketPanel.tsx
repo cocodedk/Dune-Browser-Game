@@ -5,6 +5,7 @@
 import { EventBus } from '../EventBus'
 import { useGameStore } from './store'
 import { MARKET_STOCK } from '../game-engine/market/market'
+import { palette, type as typo, space, panelShell, button } from './theme'
 
 const DEN_KIND = 'smuggler_den'
 
@@ -72,29 +73,19 @@ export default function MarketPanel() {
 }
 
 const styles = {
-  panel: { padding: '10px 12px', borderBottom: '1px solid #3d2b10' },
-  title: {
-    color: '#d4a017', fontSize: 12, fontWeight: 'bold' as const,
-    letterSpacing: '0.12em', textTransform: 'uppercase' as const, marginBottom: 6,
-  },
-  subTitle: { color: '#8b7a55', fontSize: 10, textTransform: 'uppercase' as const, marginBottom: 4 },
+  panel: panelShell,
+  title: { ...typo.heading, marginBottom: space.sm },
+  subTitle: { ...typo.note, textTransform: 'uppercase' as const, fontStyle: 'normal' as const, marginBottom: 4 },
   row: {
     display: 'flex', justifyContent: 'space-between',
-    alignItems: 'center', gap: 8, marginBottom: 6,
+    alignItems: 'center', gap: space.sm, marginBottom: space.sm,
   },
   info: { display: 'flex', flexDirection: 'column' as const },
-  itemName: { color: '#e0cfa8', fontSize: 12 },
-  desc: { color: '#8b7a55', fontSize: 10 },
-  buyBtn: {
-    background: '#3d2b10', color: '#e0cfa8', border: '1px solid #d4a017',
-    borderRadius: 3, fontSize: 11, padding: '3px 9px', cursor: 'pointer',
-    fontVariantNumeric: 'tabular-nums' as const,
-  },
-  btnDisabled: { opacity: 0.35, cursor: 'not-allowed', borderColor: '#3d2b10' },
-  issueBlock: { marginTop: 8, paddingTop: 6, borderTop: '1px solid #241a0c' },
+  itemName: { color: palette.text, fontSize: 12 },
+  desc: typo.note,
+  buyBtn: { ...button.base, color: palette.text, borderColor: palette.gold, padding: '4px 10px' },
+  btnDisabled: button.disabled,
+  issueBlock: { marginTop: space.sm, paddingTop: space.sm, borderTop: `1px solid ${palette.lineSoft}` },
   issueRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  btn: {
-    background: '#241a0c', color: '#c9b899', border: '1px solid #3d2b10',
-    borderRadius: 3, fontSize: 10, padding: '3px 6px', cursor: 'pointer',
-  },
+  btn: button.base,
 }
