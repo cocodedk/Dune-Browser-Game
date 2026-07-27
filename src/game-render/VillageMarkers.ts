@@ -2,7 +2,9 @@ import Phaser from 'phaser';
 import type { WorldState, FactionId } from '../types';
 import { pushEvent } from '../game-engine/EventSystem';
 import { startDialogue } from '../game-engine/DialogueSystem';
+import { currentTravelProgress } from '../game-engine/TravelSystem';
 import { EventBus } from '../EventBus';
+import { decideVisit } from '../runtime/VisitPolicy';
 import { FACTION_PHASER_COLORS, FACTION_ABBREV } from './factionColors';
 
 export function createVillageMarkers(
@@ -21,19 +23,15 @@ export function createVillageMarkers(
       .setDepth(5);
 
     circle.on('pointerdown', () => {
-      if (world.player.state === 'traveling') return;
-      if (world.dialogue !== null) return;
+      const action = decideVisit(world, village.id);
+      if (action.kind === 'none') return;
 
-      if (world.player.location === village.id) {
-        if (village.owner === 'player') {
-          pushEvent('village_selected', `You are at ${village.name} — your territory.`);
-        } else if (village.owner === 'harkonnen') {
-          startDialogue('harkonnen_stronghold', village.id);
-        } else {
-          startDialogue('village_leader', village.id);
-        }
-      } else {
-        EventBus.emit('player:travel', { targetVillageId: village.id });
+      if (action.kind === 'travel') {
+        EventBus.emit('player:travel', { targetVillageId: action.targetId });
+      } else if (action.kind === 'dialogue') {
+        startDialogue(action.treeId, action.villageId);
+      } else if (action.kind === 'event') {
+        pushEvent('village_selected', action.message);
       }
 
       EventBus.emit('village:selected', { villageId: village.id });
@@ -91,7 +89,7 @@ export function updatePlayerPosition(
   if (player.state === 'traveling' && player.travelTarget) {
     const targetVillage = world.villages.find(v => v.id === player.travelTarget);
     if (targetVillage) {
-      const progress = Math.min(1, (world.time - (player.arrivalTime - 10)) / 10);
+      const progress = currentTravelProgress(world);
       const x = Phaser.Math.Linear(currentVillage.position.x, targetVillage.position.x, progress);
       const y = Phaser.Math.Linear(currentVillage.position.y, targetVillage.position.y, progress);
       dot.setPosition(x, y);

@@ -1,9 +1,9 @@
 import { world } from './GameState';
 import { pushEvent } from './EventSystem';
 import { visitVillage } from './VillageSystem';
-import type { VillageId } from '../types';
+import type { VillageId, WorldState } from '../types';
 
-function travelTime(fromId: VillageId, toId: VillageId): number {
+export function travelDuration(fromId: VillageId, toId: VillageId): number {
   const from = world.villages.find(v => v.id === fromId);
   const to = world.villages.find(v => v.id === toId);
   if (!from || !to) return 10;
@@ -13,12 +13,27 @@ function travelTime(fromId: VillageId, toId: VillageId): number {
   return Math.max(4, Math.round(dist / 50));
 }
 
+/**
+ * 0..1 progress of the player's current trip, or 0 when not traveling.
+ * Derives the trip duration from the same distance formula as
+ * travelDuration, so the marker lerps correctly for trips of any length
+ * (previously hardcoded to a 10-second trip regardless of actual distance).
+ */
+export function currentTravelProgress(w: WorldState): number {
+  const { player } = w;
+  if (player.state !== 'traveling' || player.travelTarget === null) return 0;
+
+  const duration = travelDuration(player.location, player.travelTarget);
+  const elapsed = duration - (player.arrivalTime - w.time);
+  return Math.min(1, Math.max(0, elapsed / duration));
+}
+
 export function startTravel(targetId: VillageId): void {
   const { player } = world;
   if (player.state === 'traveling') return;
   if (player.location === targetId) return;
 
-  const time = travelTime(player.location, targetId);
+  const time = travelDuration(player.location, targetId);
   player.state = 'traveling';
   player.travelTarget = targetId;
   player.arrivalTime = world.time + time;

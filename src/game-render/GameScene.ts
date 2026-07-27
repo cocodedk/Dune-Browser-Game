@@ -1,11 +1,7 @@
 import Phaser from 'phaser';
 import { world } from '../game-engine/GameState';
-import { update as loopUpdate, initLoop } from '../game-engine/GameLoop';
-import { startTravel } from '../game-engine/TravelSystem';
-import { chooseDialogue } from '../game-engine/DialogueSystem';
-import { pledgePlayerSietch, assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem';
-import { attackVillage, scoutVillage } from '../game-engine/CombatSystem';
-import { EventBus } from '../EventBus';
+import { initLoop, tick } from '../runtime/GameDriver';
+import { wireCommands } from '../runtime/CommandWiring';
 import { drawBackground, drawRoads } from './MapRenderer';
 import type { TerritoryLayer } from './TerritoryZones';
 import { createTerritoryZones, refreshTerritoryZones } from './TerritoryZones';
@@ -17,9 +13,7 @@ export class GameScene extends Phaser.Scene {
   private villageHitZones: Phaser.GameObjects.Arc[] = [];
   private villageBadges: Phaser.GameObjects.Text[] = [];
   private territoryLayer!: TerritoryLayer;
-  private updateTimer = 0;
-  private readonly UI_UPDATE_INTERVAL = 100; // ms — throttle React updates
-  private audioManager!: AudioManager;
+  private unwireCommands: (() => void) | null = null;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -27,6 +21,7 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     initLoop();
+    this.unwireCommands = wireCommands();
 
     this.cameras.main.setBackgroundColor('#1a1208');
     drawBackground(this);
@@ -41,55 +36,21 @@ export class GameScene extends Phaser.Scene {
     this.playerDot = this.add.circle(startVillage.position.x, startVillage.position.y, 8, 0xffffff)
       .setDepth(10);
 
-    this.audioManager = new AudioManager(this);
-    this.audioManager.playAmbient('ambient_desert');
-
-    EventBus.on('player:travel', ({ targetVillageId }) => {
-      startTravel(targetVillageId);
-    });
-    EventBus.on('player:choose', ({ choiceId }) => {
-      chooseDialogue(choiceId);
-    });
-    EventBus.on('game:speed', ({ speed }) => {
-      world.speed = speed;
-      EventBus.emit('world:updated', { state: world });
-    });
-    EventBus.on('player:pledge_sietch', ({ villageId }) => {
-      pledgePlayerSietch(villageId);
-    });
-    EventBus.on('player:assign_sietch_task', ({ villageId, task }) => {
-      assignPlayerSietchTask(villageId, task);
-    });
-    EventBus.on('player:stop_sietch_task', ({ villageId }) => {
-      stopPlayerSietchTask(villageId);
-    });
-    EventBus.on('player:attack_village', ({ targetVillageId, troopsCommitted }) => {
-      attackVillage(targetVillageId, troopsCommitted);
-    });
-    EventBus.on('player:scout_village', ({ targetVillageId }) => {
-      scoutVillage(targetVillageId);
-    });
-    EventBus.on('game:difficulty', ({ difficulty }) => {
-      world.difficulty = difficulty;
-      EventBus.emit('world:updated', { state: world });
-    });
-    EventBus.on('audio:mute', () => {
-      this.audioManager.toggleMute();
-    });
-
-    EventBus.emit('world:updated', { state: world });
+    new AudioManager(this).playAmbient('ambient_desert');
   }
 
   update(_time: number, delta: number): void {
-    loopUpdate(delta / 1000);
+    const shouldRefresh = tick(delta);
     updatePlayerPosition(this.playerDot, world);
 
-    this.updateTimer += delta;
-    if (this.updateTimer >= this.UI_UPDATE_INTERVAL) {
-      this.updateTimer = 0;
+    if (shouldRefresh) {
       refreshTerritoryZones(this.territoryLayer, world);
       refreshVillageColors(this.villageHitZones, this.villageBadges, world);
-      EventBus.emit('world:updated', { state: world });
     }
+  }
+
+  shutdown(): void {
+    this.unwireCommands?.();
+    this.unwireCommands = null;
   }
 }

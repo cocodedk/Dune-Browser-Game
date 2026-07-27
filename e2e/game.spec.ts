@@ -26,7 +26,7 @@ test('game UI structure is visible after initialisation', async ({ page }) => {
   await page.goto('/')
   await page.waitForTimeout(2000)
 
-  await expect(page.locator('text=DUNE: BROWSER GAME — PoC')).toBeVisible()
+  await expect(page.locator('text=DUNE: BROWSER GAME').first()).toBeVisible()
   await expect(
     page.locator('text=/Click a village (on the map )?to (travel or talk|inspect)/i').first()
   ).toBeVisible()

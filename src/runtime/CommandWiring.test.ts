@@ -1,0 +1,105 @@
+// src/runtime/CommandWiring.test.ts
+// Every bus command must reach its engine call, and unsubscribe must stop
+// all of them. Uses the real EventBus (not mocked) to exercise the actual
+// on/off wiring; only the engine modules are mocked.
+
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+vi.mock('../game-engine/TravelSystem', () => ({ startTravel: vi.fn() }))
+vi.mock('../game-engine/DialogueSystem', () => ({ chooseDialogue: vi.fn() }))
+vi.mock('../game-engine/SietchSystem', () => ({
+  pledgePlayerSietch: vi.fn(),
+  assignPlayerSietchTask: vi.fn(),
+  stopPlayerSietchTask: vi.fn(),
+}))
+vi.mock('../game-engine/CombatSystem', () => ({
+  attackVillage: vi.fn(),
+  scoutVillage: vi.fn(),
+}))
+
+import { startTravel } from '../game-engine/TravelSystem'
+import { chooseDialogue } from '../game-engine/DialogueSystem'
+import { pledgePlayerSietch, assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
+import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
+import { EventBus } from '../EventBus'
+import { world, setWorld, createInitialState } from '../game-engine/GameState'
+import { wireCommands } from './CommandWiring'
+
+describe('wireCommands', () => {
+  let unwire: () => void
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    setWorld(createInitialState())
+    unwire = wireCommands()
+  })
+
+  afterEach(() => {
+    unwire()
+  })
+
+  it('routes player:travel to startTravel', () => {
+    EventBus.emit('player:travel', { targetVillageId: 'arrakeen' })
+    expect(startTravel).toHaveBeenCalledWith('arrakeen')
+  })
+
+  it('routes player:choose to chooseDialogue', () => {
+    EventBus.emit('player:choose', { choiceId: 'offer_help' })
+    expect(chooseDialogue).toHaveBeenCalledWith('offer_help')
+  })
+
+  it('routes player:pledge_sietch to pledgePlayerSietch', () => {
+    EventBus.emit('player:pledge_sietch', { villageId: 'sietch_tabr' })
+    expect(pledgePlayerSietch).toHaveBeenCalledWith('sietch_tabr')
+  })
+
+  it('routes player:assign_sietch_task to assignPlayerSietchTask', () => {
+    EventBus.emit('player:assign_sietch_task', { villageId: 'sietch_tabr', task: 'harvest_spice' })
+    expect(assignPlayerSietchTask).toHaveBeenCalledWith('sietch_tabr', 'harvest_spice')
+  })
+
+  it('routes player:stop_sietch_task to stopPlayerSietchTask', () => {
+    EventBus.emit('player:stop_sietch_task', { villageId: 'sietch_tabr' })
+    expect(stopPlayerSietchTask).toHaveBeenCalledWith('sietch_tabr')
+  })
+
+  it('routes player:attack_village to attackVillage', () => {
+    EventBus.emit('player:attack_village', { targetVillageId: 'arrakeen', troopsCommitted: 5 })
+    expect(attackVillage).toHaveBeenCalledWith('arrakeen', 5)
+  })
+
+  it('routes player:scout_village to scoutVillage', () => {
+    EventBus.emit('player:scout_village', { targetVillageId: 'arrakeen' })
+    expect(scoutVillage).toHaveBeenCalledWith('arrakeen')
+  })
+
+  it('game:speed sets world.speed and re-broadcasts world:updated', () => {
+    let seen: number | null = null
+    const onUpdated = ({ state }: { state: typeof world }): void => { seen = state.speed }
+    EventBus.on('world:updated', onUpdated)
+
+    EventBus.emit('game:speed', { speed: 5 })
+
+    expect(world.speed).toBe(5)
+    expect(seen).toBe(5)
+    EventBus.off('world:updated', onUpdated)
+  })
+
+  it('game:difficulty sets world.difficulty and re-broadcasts world:updated', () => {
+    let seen: string | null = null
+    const onUpdated = ({ state }: { state: typeof world }): void => { seen = state.difficulty }
+    EventBus.on('world:updated', onUpdated)
+
+    EventBus.emit('game:difficulty', { difficulty: 'hard' })
+
+    expect(world.difficulty).toBe('hard')
+    expect(seen).toBe('hard')
+    EventBus.off('world:updated', onUpdated)
+  })
+
+  it('unsubscribe stops routing further commands', () => {
+    unwire()
+    EventBus.emit('player:travel', { targetVillageId: 'arrakeen' })
+    expect(startTravel).not.toHaveBeenCalled()
+  })
+})

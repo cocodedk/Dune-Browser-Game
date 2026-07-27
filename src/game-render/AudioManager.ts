@@ -8,6 +8,7 @@ export class AudioManager {
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
+    EventBus.on('audio:mute', () => this.toggleMute());
   }
 
   playAmbient(key: string): void {
