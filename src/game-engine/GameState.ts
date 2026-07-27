@@ -25,6 +25,7 @@ export function createInitialState(): WorldState {
       influence: 5,
       spice: 0,
       troops: 0,
+      prescience: 0,
     },
     aiTimers: {
       harkonnen: { nextDecisionAt: 10, lastDecision: null },

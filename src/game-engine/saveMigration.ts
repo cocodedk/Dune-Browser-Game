@@ -65,6 +65,7 @@ export function migrateV1ToV2(state: WorldState): WorldState {
     act: state.act ?? 'act1',
     ending: state.ending ?? null,
     ecology: state.ecology ?? [],
+    player: { ...state.player, prescience: state.player?.prescience ?? 0 },
   }
 }
 

@@ -4,6 +4,7 @@ import type { FactionProfile } from './game-engine/faction/types'
 import type { QuotaState } from './game-engine/quota/quota'
 import type { ActId, EndingId } from './game-engine/acts/transitions'
 import type { RegionEcology } from './game-engine/ecology/ecology'
+import type { PrescienceLevel } from './game-engine/prescience/prescience'
 import type { TroopGroup, SpiceField, Equipment, TroopTask, EquipmentKind } from './game-engine/troops/types'
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
@@ -41,6 +42,8 @@ export interface Player {
   influence: number;      // 0–100
   spice: number;
   troops: number;
+  /** 0 none, 1 awareness, 2 farspeech, 3 foresight. */
+  prescience: PrescienceLevel;
 }
 
 export interface AITimer {

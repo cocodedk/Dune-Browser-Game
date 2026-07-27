@@ -24,6 +24,10 @@ import {
   ecologyDay, greenRegionCount, maxVegetation,
   SETTLED_THRESHOLD, GREEN_THRESHOLD,
 } from './ecology/ecology'
+import {
+  checkGrant, grantRefusalMessage, levelDescription, canOrderRemotely,
+  raidWarningDays,
+} from './prescience/prescience'
 import type { ActWorldView, EndingId } from './acts/transitions'
 
 /** Equipment kinds a group is carrying. */
@@ -135,6 +139,10 @@ export function assignCrew(
   if (index < 0) return
 
   const group = world.troopGroups[index]
+  if (!canOrderCrewRemotely(groupId)) {
+    pushEvent('sietch_task_assigned', 'They are too far to hear you.')
+    return
+  }
   const target = targetId
     ? world.spiceFields.find(f => f.id === targetId)
     : undefined
@@ -355,6 +363,11 @@ export function runRaidCheck(): void {
 
   if (day < nextRaid) {
     world.flags['raids.nextDay'] = nextRaid
+    const warning = raidWarningDays(world.player.prescience)
+    if (warning > 0 && nextRaid - day === warning && !world.flags[`warned.${nextRaid}`]) {
+      world.flags[`warned.${nextRaid}`] = true
+      pushEvent('attack', `You see it before it forms: raiders in ${warning} days.`)
+    }
     return
   }
   world.flags['raids.nextDay'] = day + interval
@@ -453,4 +466,42 @@ export function runEcologyDay(): void {
     }
     return after
   })
+}
+
+/**
+ * Attempt the spice ritual, advancing prescience one step.
+ *
+ * Refusals are surfaced so the player learns what is still missing rather than
+ * repeating a ritual that silently does nothing.
+ */
+export function attemptRitual(): void {
+  const check = checkGrant({
+    level: world.player.prescience,
+    charisma: world.charisma,
+    ritualsUsed: typeof world.flags['ritual.count'] === 'number'
+      ? (world.flags['ritual.count'] as number) : 0,
+    fortsDestroyed: typeof world.flags['forts.destroyed'] === 'number'
+      ? (world.flags['forts.destroyed'] as number) : 0,
+    act: world.act,
+  })
+
+  if (!check.ok) {
+    pushEvent('dialogue_start', grantRefusalMessage(check.reason))
+    return
+  }
+
+  world.player.prescience = check.level
+  world.flags['prescience'] = check.level
+  pushEvent('poc_goal_achieved', levelDescription(check.level))
+}
+
+/**
+ * Whether the player may issue orders to a crew they are not standing with.
+ * Before Farspeech, presence is required — that constraint is what makes
+ * travel time a cost in the early game.
+ */
+export function canOrderCrewRemotely(groupId: string): boolean {
+  if (canOrderRemotely(world.player.prescience)) return true
+  const group = world.troopGroups.find(g => g.id === groupId)
+  return group ? group.locationId === world.player.location : false
 }
