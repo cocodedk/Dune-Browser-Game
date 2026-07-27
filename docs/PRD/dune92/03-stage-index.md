@@ -11,8 +11,8 @@ Sonnet's own report is not sufficient evidence.
 
 | # | Stage | Phase | Depends on | Spec | Status |
 |---|---|---|---|---|---|
-| 01 | Runtime driver extraction | 0 | — | full | SPECCED |
-| 02 | three.js infrastructure | 0 | 01 | full | SPECCED |
+| 01 | Runtime driver extraction | 0 | — | full | **VERIFIED** |
+| 02 | three.js infrastructure | 0 | 01 | full | **IN PROGRESS** |
 | 03 | Strategic mode + sand look | 0 | 02 | full | SPECCED |
 | 04 | Phaser removal | 0 | 03 | full | SPECCED |
 | 05 | Clock pause + Location model | 1 | 01 | full | SPECCED |
