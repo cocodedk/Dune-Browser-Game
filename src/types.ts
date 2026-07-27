@@ -1,5 +1,6 @@
 // src/types.ts — All shared types for the Dune Browser Game PoC
 import type { SietchState, SietchTask } from './game-engine/sietch/types'
+import type { FactionProfile } from './game-engine/faction/types'
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type VillageId = string;
@@ -115,53 +116,11 @@ export interface AIConfig {
   temperature: number;
 }
 
-export type FactionType = 'fremen' | 'house' | 'empire' | 'smuggler';
-
-export interface Resources {
-  spice: number;
-  solaris: number;
-  troops: number;
-  influence: number;
-}
-
-export interface StrategyProfile {
-  aggression: number;    // 0–100
-  diplomacy: number;     // 0–100
-  expansion: number;     // 0–100
-  greed: number;         // 0–100
-  loyaltyFocus: number;  // 0–100
-}
-
-export interface Relation {
-  trust: number;   // -100 to +100
-  fear: number;    // 0 to 100
-  trade: boolean;
-  war: boolean;
-}
-
-export type GoalStatus = 'active' | 'completed' | 'failed';
-
-export interface FactionGoal {
-  id: string;
-  type: string;
-  status: GoalStatus;
-}
-
-export interface FactionProfile {
-  id: FactionId;
-  name: string;
-  type: FactionType;
-  resources: Resources;
-  strategy: StrategyProfile;
-  relations: Record<string, Relation>;
-  goals: FactionGoal[];
-}
-
-export type Goal =
-  | { type: 'control_spice'; target: VillageId }
-  | { type: 'ally'; target: FactionId }
-  | { type: 'destroy'; target: FactionId }
-  | { type: 'expand'; target: number };  // target = minimum village count threshold
+// Faction simulation types live in game-engine/faction/types.ts (200-line cap).
+export type {
+  FactionType, Resources, StrategyProfile, Relation,
+  GoalStatus, FactionGoal, FactionProfile, Goal,
+} from './game-engine/faction/types';
 
 export type RegionId = string;
 
@@ -196,4 +155,10 @@ export interface BusEvents {
   'player:attack_village': { targetVillageId: VillageId; troopsCommitted: number };
   'player:scout_village': { targetVillageId: VillageId };
   'player:stop_sietch_task': { villageId: VillageId };
+  // Render -> React only. No engine command may be added here.
+  'scene:mode': { mode: SceneModeId };
+  'assets:progress': { loaded: number; total: number };
 }
+
+/** Which 3D scene assembly is on screen. Shared contract: render + React + E2E. */
+export type SceneModeId = 'strategic' | 'flight' | 'location' | 'conversation';
