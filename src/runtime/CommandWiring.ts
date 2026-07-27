@@ -46,6 +46,10 @@ export function wireCommands(): () => void {
   const onScout = ({ targetVillageId }: BusEvents['player:scout_village']): void => {
     scoutVillage(targetVillageId)
   }
+  const onPause = ({ paused }: BusEvents['game:pause']): void => {
+    world.paused = paused
+    EventBus.emit('world:updated', { state: world })
+  }
 
   EventBus.on('player:travel', onTravel)
   EventBus.on('player:choose', onChoose)
@@ -56,6 +60,7 @@ export function wireCommands(): () => void {
   EventBus.on('player:stop_sietch_task', onStopTask)
   EventBus.on('player:attack_village', onAttack)
   EventBus.on('player:scout_village', onScout)
+  EventBus.on('game:pause', onPause)
 
   return () => {
     EventBus.off('player:travel', onTravel)
@@ -67,5 +72,6 @@ export function wireCommands(): () => void {
     EventBus.off('player:stop_sietch_task', onStopTask)
     EventBus.off('player:attack_village', onAttack)
     EventBus.off('player:scout_village', onScout)
+    EventBus.off('game:pause', onPause)
   }
 }

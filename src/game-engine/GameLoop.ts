@@ -13,6 +13,7 @@ import { applyDiplomaticAction, updateRelations } from './faction/diplomacy';
 import type { WorldDiplomacyEvent } from './faction/diplomacy';
 import { generateDiplomaticActions } from './faction/diplomacyEngine';
 import { getDifficultyConfig } from './difficulty';
+import { shouldPause, effectiveDelta } from './pause';
 import type { FactionId } from '../types';
 
 function updateFactionSystems(): void {
@@ -85,12 +86,16 @@ function updateFactionSystems(): void {
 }
 
 export function update(delta: number): void {
-  if (world.goalAchieved || world.dialogue !== null) {
-    // Pause time during dialogue; stop when goal achieved
-    return;
-  }
+  // Dialogue, an explicit player pause, and a finished run each freeze the
+  // clock independently — see game-engine/pause.ts for why that matters.
+  const paused = shouldPause({
+    manual: world.paused,
+    inDialogue: world.dialogue !== null,
+    ended: world.goalAchieved,
+  });
+  if (paused) return;
 
-  const gameDelta = delta * world.speed;
+  const gameDelta = effectiveDelta(delta, world.speed, false);
   tick(gameDelta);
 
   // Day boundary: update village production

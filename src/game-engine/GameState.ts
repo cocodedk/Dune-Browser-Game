@@ -34,6 +34,7 @@ export function createInitialState(): WorldState {
     sietches: INITIAL_SIETCHES.map(s => ({ ...s })),
     difficulty: 'normal' as Difficulty,
     scoutedDefense: {},
+    paused: false,
   };
 }
 

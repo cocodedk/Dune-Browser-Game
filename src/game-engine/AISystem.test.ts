@@ -77,6 +77,7 @@ function createTestWorld(): WorldState {
     sietches: [],
     difficulty: 'normal' as const,
     scoutedDefense: {},
+    paused: false,
   };
 }
 

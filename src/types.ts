@@ -97,6 +97,8 @@ export interface WorldState {
   sietches: SietchState[];
   difficulty: Difficulty;
   scoutedDefense: Record<VillageId, number>;
+  /** Explicit player pause. Dialogue and run-end pause independently. */
+  paused: boolean;
 }
 
 export interface AIDecision {
@@ -155,6 +157,7 @@ export interface BusEvents {
   'player:attack_village': { targetVillageId: VillageId; troopsCommitted: number };
   'player:scout_village': { targetVillageId: VillageId };
   'player:stop_sietch_task': { villageId: VillageId };
+  'game:pause': { paused: boolean };
   // Render -> React only. No engine command may be added here.
   'scene:mode': { mode: SceneModeId };
   'assets:progress': { loaded: number; total: number };
