@@ -79,6 +79,14 @@ function createTestWorld(): WorldState {
     scoutedDefense: {},
     paused: false,
     flags: {},
+    quota: {
+      nextDueDay: 8, amount: 100, cycleIndex: 0,
+      patience: 3, arrears: 0, restoredThisAct: false,
+    },
+    troopGroups: [],
+    spiceFields: [],
+    equipment: [],
+    charisma: 20,
   };
 }
 

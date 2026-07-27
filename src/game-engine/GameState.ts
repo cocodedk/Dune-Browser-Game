@@ -4,6 +4,10 @@ import { INITIAL_SIETCHES } from '../data/sietches';
 import factionsData from '../data/factions.json';
 import regionsData from '../data/regions.json';
 import { loadGame } from './persistence';
+import { createQuotaState } from './quota/quota';
+import { getDifficultyConfig } from './difficulty';
+import { INITIAL_TROOP_GROUPS } from '../data/troopGroups';
+import { INITIAL_SPICE_FIELDS } from '../data/spiceFields';
 
 // Mutable world state — PoC uses module-level state for simplicity
 export let world: WorldState = createInitialState();
@@ -36,6 +40,11 @@ export function createInitialState(): WorldState {
     scoutedDefense: {},
     paused: false,
     flags: {},
+    quota: createQuotaState(getDifficultyConfig('normal').quotaMultiplier),
+    troopGroups: INITIAL_TROOP_GROUPS.map(g => ({ ...g, skills: { ...g.skills } })),
+    spiceFields: INITIAL_SPICE_FIELDS.map(f => ({ ...f })),
+    equipment: [],
+    charisma: 20,
   };
 }
 

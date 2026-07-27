@@ -7,6 +7,7 @@
 // therefore fills in defaults rather than assuming a field exists.
 
 import type { WorldState, Village, LocationKind } from '../types'
+import { createQuotaState } from './quota/quota'
 
 export const CURRENT_SAVE_VERSION = 2
 
@@ -56,6 +57,11 @@ export function migrateV1ToV2(state: WorldState): WorldState {
     villages,
     paused: state.paused ?? false,
     flags: state.flags ?? {},
+    quota: state.quota ?? createQuotaState(),
+    troopGroups: state.troopGroups ?? [],
+    spiceFields: state.spiceFields ?? [],
+    equipment: state.equipment ?? [],
+    charisma: state.charisma ?? 20,
   }
 }
 

@@ -1,6 +1,8 @@
 // src/types.ts — All shared types for the Dune Browser Game PoC
 import type { SietchState, SietchTask } from './game-engine/sietch/types'
 import type { FactionProfile } from './game-engine/faction/types'
+import type { QuotaState } from './game-engine/quota/quota'
+import type { TroopGroup, SpiceField, Equipment } from './game-engine/troops/types'
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type VillageId = string;
@@ -115,6 +117,12 @@ export interface WorldState {
    * `quota.cycle`. Gates which version of a conversation a character offers.
    */
   flags: Record<string, boolean | number>;
+  quota: QuotaState;
+  troopGroups: TroopGroup[];
+  spiceFields: SpiceField[];
+  equipment: Equipment[];
+  /** 20 at the start; gates how many sietches the player may hold. */
+  charisma: number;
 }
 
 export interface AIDecision {

@@ -14,6 +14,7 @@ import type { WorldDiplomacyEvent } from './faction/diplomacy';
 import { generateDiplomaticActions } from './faction/diplomacyEngine';
 import { getDifficultyConfig } from './difficulty';
 import { shouldPause, effectiveDelta } from './pause';
+import { runHarvestDay, runQuotaCheck } from './EconomySystem';
 import type { FactionId } from '../types';
 
 function updateFactionSystems(): void {
@@ -102,6 +103,9 @@ export function update(delta: number): void {
   if (isDayBoundary()) {
     const config = getDifficultyConfig(world.difficulty);
     updateVillages();
+    // Act 1 economy: crews produce, then the Emperor collects.
+    runHarvestDay();
+    runQuotaCheck();
     updateFactionSystems();
     updateFactionAI();
     executeGoals(config.aiActionChanceMultiplier);

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import StatusBar from './ui/StatusBar'
+import QuotaLedger from './ui/QuotaLedger'
 import VillagePanel from './ui/VillagePanel'
 import DialoguePanel from './ui/DialoguePanel'
 import EventLog from './ui/EventLog'
@@ -25,6 +26,7 @@ export default function App() {
       {/* Right: React panels */}
       <div style={styles.right}>
         <StatusBar />
+        <QuotaLedger />
         <VillagePanel />
         <FactionPanel />
         <EventLog />
