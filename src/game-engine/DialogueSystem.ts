@@ -1,0 +1,66 @@
+import { world } from './GameState';
+import { pushEvent } from './EventSystem';
+import { EventBus } from '../EventBus';
+import type { VillageId, DialogueEffect } from '../types';
+import { DIALOGUES } from '../data/dialogues';
+import { checkOwnershipTransition } from './VillageSystem';
+import { applyPlayerAction } from './faction/reputation';
+import { toReputationWorld } from './faction/adapter';
+
+export function startDialogue(treeId: string, villageId: VillageId): void {
+  const tree = DIALOGUES[treeId];
+  if (!tree) return;
+  const firstNode = tree[0];
+  world.dialogue = { treeId, currentNodeId: firstNode.id, villageId };
+  pushEvent('dialogue_start', `\ud83d\udcac Speaking with ${firstNode.speaker}...`);
+  EventBus.emit('dialogue:started', { nodeId: firstNode.id, villageId });
+}
+
+export function currentNode() {
+  if (!world.dialogue) return null;
+  const tree = DIALOGUES[world.dialogue.treeId];
+  return tree?.find(n => n.id === world.dialogue!.currentNodeId) ?? null;
+}
+
+export function endDialogue(): void {
+  if (!world.dialogue) return;
+  world.dialogue = null;
+  pushEvent('dialogue_end', '\ud83d\udcac Conversation ended.');
+  EventBus.emit('dialogue:ended');
+}
+
+export function chooseDialogue(choiceId: string): void {
+  const node = currentNode();
+  if (!node) return;
+  const choice = node.choices.find(c => c.id === choiceId);
+  if (!choice) return;
+
+  if (choice.effect) applyEffect(choice.effect, world.dialogue!.villageId);
+
+  if (choice.nextId === null) {
+    world.dialogue = null;
+    pushEvent('dialogue_end', '\ud83d\udcac Conversation ended.');
+    EventBus.emit('dialogue:ended');
+  } else {
+    world.dialogue!.currentNodeId = choice.nextId;
+  }
+}
+
+function applyEffect(effect: DialogueEffect, villageId: VillageId): void {
+  const village = world.villages.find(v => v.id === villageId);
+  if (village && effect.loyaltyDelta) {
+    village.loyalty = Math.max(0, Math.min(100, village.loyalty + effect.loyaltyDelta));
+    checkOwnershipTransition(village);
+  }
+  if (effect.influenceDelta) {
+    world.player.influence = Math.max(0, Math.min(100, world.player.influence + effect.influenceDelta));
+  }
+  if (effect.spiceDelta) {
+    world.player.spice = Math.max(0, world.player.spice + effect.spiceDelta);
+  }
+  if (effect.reputationAction) {
+    const repWorld = toReputationWorld(world);
+    const updated = applyPlayerAction(effect.reputationAction, repWorld);
+    world.factionProfiles = updated.factions;
+  }
+}

@@ -1,0 +1,112 @@
+[
+  {
+    "id": "harkonnen",
+    "name": "House Harkonnen",
+    "type": "house",
+    "resources": { "spice": 100, "solaris": 500, "troops": 200, "influence": 30 },
+    "strategy": {
+      "aggression": 90,
+      "diplomacy": 10,
+      "expansion": 70,
+      "greed": 85,
+      "loyaltyFocus": 20
+    },
+    "relations": {
+      "player":   { "trust": -80, "fear": 10,  "trade": false, "war": false },
+      "fremen":   { "trust": -60, "fear": 30,  "trade": false, "war": false },
+      "atreides": { "trust": -90, "fear": 20,  "trade": false, "war": true  },
+      "smugglers":{ "trust":   0, "fear":  0,  "trade": false, "war": false },
+      "emperor":  { "trust":   0, "fear":  0,  "trade": false, "war": false },
+      "neutral":  { "trust":   0, "fear":  0,  "trade": false, "war": false }
+    },
+    "goals": []
+  },
+  {
+    "id": "fremen",
+    "name": "Fremen",
+    "type": "fremen",
+    "resources": { "spice": 100, "solaris": 500, "troops": 50, "influence": 30 },
+    "strategy": {
+      "aggression": 40,
+      "diplomacy": 60,
+      "expansion": 30,
+      "greed": 30,
+      "loyaltyFocus": 90
+    },
+    "relations": {
+      "player":   { "trust":  0, "fear":  0, "trade": false, "war": false },
+      "harkonnen":{ "trust":  0, "fear":  0, "trade": false, "war": false },
+      "atreides": { "trust": 30, "fear":  0, "trade": false, "war": false },
+      "smugglers":{ "trust":  0, "fear":  0, "trade": false, "war": false },
+      "emperor":  { "trust":  0, "fear":  0, "trade": false, "war": false },
+      "neutral":  { "trust":  0, "fear":  0, "trade": false, "war": false }
+    },
+    "goals": []
+  },
+  {
+    "id": "atreides",
+    "name": "House Atreides",
+    "type": "house",
+    "resources": { "spice": 100, "solaris": 500, "troops": 50, "influence": 30 },
+    "strategy": {
+      "aggression": 25,
+      "diplomacy": 85,
+      "expansion": 50,
+      "greed": 40,
+      "loyaltyFocus": 80
+    },
+    "relations": {
+      "player":   { "trust":  0,  "fear":  0, "trade": false, "war": false },
+      "harkonnen":{ "trust": -90, "fear":  0, "trade": false, "war": true  },
+      "fremen":   { "trust": 40,  "fear":  0, "trade": false, "war": false },
+      "smugglers":{ "trust":  0,  "fear":  0, "trade": false, "war": false },
+      "emperor":  { "trust":  0,  "fear":  0, "trade": false, "war": false },
+      "neutral":  { "trust":  0,  "fear":  0, "trade": false, "war": false }
+    },
+    "goals": []
+  },
+  {
+    "id": "smugglers",
+    "name": "Smugglers",
+    "type": "smuggler",
+    "resources": { "spice": 100, "solaris": 500, "troops": 50, "influence": 30 },
+    "strategy": {
+      "aggression": 20,
+      "diplomacy": 80,
+      "expansion": 40,
+      "greed": 95,
+      "loyaltyFocus": 30
+    },
+    "relations": {
+      "player":   { "trust":  0, "fear":  0, "trade": false, "war": false },
+      "harkonnen":{ "trust": -10,"fear":  5, "trade": false, "war": false },
+      "fremen":   { "trust":  5, "fear":  0, "trade": false, "war": false },
+      "atreides": { "trust":  5, "fear":  0, "trade": false, "war": false },
+      "emperor":  { "trust":  0, "fear":  5, "trade": false, "war": false },
+      "neutral":  { "trust":  0, "fear":  0, "trade": false, "war": false }
+    },
+    "goals": []
+  },
+  {
+    "id": "emperor",
+    "name": "Padishah Emperor",
+    "type": "empire",
+    "resources": { "spice": 100, "solaris": 500, "troops": 300, "influence": 30 },
+    "strategy": {
+      "aggression": 60,
+      "diplomacy": 50,
+      "expansion": 20,
+      "greed": 50,
+      "loyaltyFocus": 60
+    },
+    "relations": {
+      "player":   { "trust":  0,  "fear":  0, "trade": false, "war": false },
+      "harkonnen":{ "trust": 20,  "fear":  0, "trade": true,  "war": false },
+      "fremen":   { "trust":  0,  "fear":  0, "trade": false, "war": false },
+      "atreides": { "trust": -20, "fear":  0, "trade": false, "war": false },
+      "smugglers":{ "trust":  0,  "fear":  0, "trade": false, "war": false },
+      "neutral":  { "trust":  0,  "fear":  0, "trade": false, "war": false }
+    },
+    "goals": []
+  }
+]

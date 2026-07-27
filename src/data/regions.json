@@ -1,0 +1,10 @@
+[
+  { "id": "sietch_tabr", "name": "Sietch Tabr", "owner": "fremen", "spice": 30, "unrest": 10 },
+  { "id": "arrakeen", "name": "Arrakeen", "owner": null, "spice": 50, "unrest": 20 },
+  { "id": "carthag", "name": "Carthag", "owner": "harkonnen", "spice": 40, "unrest": 35 },
+  { "id": "imperial_basin", "name": "Imperial Basin", "owner": "emperor", "spice": 80, "unrest": 5 },
+  { "id": "cielago_depression", "name": "Cielago Depression", "owner": null, "spice": 70, "unrest": 0 },
+  { "id": "red_wall_sietch", "name": "Red Wall Sietch", "owner": "fremen", "spice": 20, "unrest": 5 },
+  { "id": "tsimpo", "name": "Tsimpo", "owner": null, "spice": 35, "unrest": 15 },
+  { "id": "hagg", "name": "Hagg", "owner": "atreides", "spice": 45, "unrest": 25 }
+]
