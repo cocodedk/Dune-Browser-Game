@@ -23,13 +23,10 @@ export default defineConfig({
     // workers grew to 2.6-4 GiB RSS each and drove the machine low enough for
     // earlyoom to start SIGTERMing node processes. The suite is pure-TS and
     // sub-second, so it loses nothing by running on a small, bounded pool.
+    // Vitest 4 moved these to top level; poolOptions is removed and ignored.
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        minForks: 1,
-        maxForks: 4,
-      },
-    },
+    minWorkers: 1,
+    maxWorkers: 4,
   },
   build: {
     chunkSizeWarningLimit: 550,
