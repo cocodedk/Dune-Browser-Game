@@ -78,6 +78,7 @@ function createTestWorld(): WorldState {
     difficulty: 'normal' as const,
     scoutedDefense: {},
     paused: false,
+    flags: {},
   };
 }
 

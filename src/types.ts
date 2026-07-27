@@ -109,6 +109,11 @@ export interface WorldState {
   scoutedDefense: Record<VillageId, number>;
   /** Explicit player pause. Dialogue and run-end pause independently. */
   paused: boolean;
+  /**
+   * Flat, dotted-key story state: `act`, `met.shadir`, `beat.duke_revelation`,
+   * `quota.cycle`. Gates which version of a conversation a character offers.
+   */
+  flags: Record<string, boolean | number>;
 }
 
 export interface AIDecision {

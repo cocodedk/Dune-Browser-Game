@@ -55,6 +55,7 @@ export function migrateV1ToV2(state: WorldState): WorldState {
     ...state,
     villages,
     paused: state.paused ?? false,
+    flags: state.flags ?? {},
   }
 }
 

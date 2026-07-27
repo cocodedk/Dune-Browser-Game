@@ -35,6 +35,7 @@ export function createInitialState(): WorldState {
     difficulty: 'normal' as Difficulty,
     scoutedDefense: {},
     paused: false,
+    flags: {},
   };
 }
 
