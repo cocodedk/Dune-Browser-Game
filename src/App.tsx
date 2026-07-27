@@ -6,7 +6,15 @@ import EventLog from './ui/EventLog'
 import FactionPanel from './ui/FactionPanel'
 import GoalOverlay from './ui/GoalOverlay'
 
-const GameContainer = lazy(() => import('./ui/GameContainer'))
+// Both renderers are lazy chunks, so selecting one never costs the other's
+// bytes. Phaser stays the default until Stage 03 reaches visual parity.
+const useThreeRenderer =
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).get('renderer') === 'three'
+
+const GameContainer = lazy(() =>
+  useThreeRenderer ? import('./ui/ThreeContainer') : import('./ui/GameContainer'),
+)
 
 export default function App() {
   return (
