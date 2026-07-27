@@ -16,6 +16,7 @@ import { ModeManager } from '../game-render/core/ModeManager'
 import { createStrategicMode } from '../game-render/modes/strategic/StrategicMode'
 import { createFlightMode } from '../game-render/modes/flight/FlightMode'
 import { createConversationMode } from '../game-render/modes/conversation/ConversationMode'
+import { createLocationMode } from '../game-render/modes/location/LocationMode'
 import { attachDebugHandle, detachDebugHandle } from '../game-render/core/DebugHandle'
 import { AudioManager } from '../game-render/audio/AudioManager'
 import { startTravel } from '../game-engine/TravelSystem'
@@ -47,6 +48,7 @@ export default function ThreeContainer() {
     const modes = new ModeManager({
       strategic: () => createStrategicMode(handle.camera, quality, world, canvas),
       conversation: () => createConversationMode(handle.camera),
+      location: () => createLocationMode(),
       flight: () => createFlightMode(handle.camera, quality),
     })
     modes.start('strategic')
