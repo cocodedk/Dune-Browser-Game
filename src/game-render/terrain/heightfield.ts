@@ -22,6 +22,12 @@ export interface HeightfieldOptions {
   warpStrength?: number
   /** 0 = pure rolling fBm, 1 = pure sharp ridges. */
   ridgeMix?: number
+  /**
+   * Per-axis frequency scaling, [x, z]. Isotropic noise gives crumpled-paper
+   * terrain; real dune fields are long ridges running perpendicular to the
+   * prevailing wind. Stretching one axis is what turns noise into dunes.
+   */
+  stretch?: [number, number]
 }
 
 export interface Heightfield {
@@ -55,6 +61,7 @@ export function generateHeightfield(options: HeightfieldOptions): Heightfield {
     octaves = 5,
     warpStrength = 0.6,
     ridgeMix = 0.45,
+    stretch = [1, 1],
   } = options
 
   if (resolution < 2) throw new Error('heightfield resolution must be >= 2')
@@ -71,8 +78,8 @@ export function generateHeightfield(options: HeightfieldOptions): Heightfield {
       // Normalised 0..1 across the field, then scaled into noise space.
       const u = col / (resolution - 1)
       const v = row / (resolution - 1)
-      const nx = u * frequency
-      const nz = v * frequency
+      const nx = u * frequency * stretch[0]
+      const nz = v * frequency * stretch[1]
 
       const rolling = field.warpedFbm(nx, nz, octaves, warpStrength)
       const crests = ridge(field.fbm(nx * 1.7 + 3.1, nz * 1.7 + 7.9, Math.max(1, octaves - 1)))

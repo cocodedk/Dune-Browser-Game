@@ -12,6 +12,7 @@ import { EventBus } from '../EventBus'
 import { resolveQuality } from '../game-render/core/Quality'
 import { createRenderer } from '../game-render/core/Renderer'
 import { ModeManager } from '../game-render/core/ModeManager'
+import { createStrategicMode } from '../game-render/modes/strategic/StrategicMode'
 import { attachDebugHandle, detachDebugHandle } from '../game-render/core/DebugHandle'
 import { startTravel } from '../game-engine/TravelSystem'
 import { startDialogue } from '../game-engine/DialogueSystem'
@@ -39,9 +40,9 @@ export default function ThreeContainer() {
     })
 
     const handle = createRenderer(canvas, quality)
-    // Stage 03 registers the strategic factory; until then ModeManager falls
-    // back and we render the clear colour, which is enough to prove plumbing.
-    const modes = new ModeManager({})
+    const modes = new ModeManager({
+      strategic: () => createStrategicMode(handle.camera, quality),
+    })
     modes.start('strategic')
 
     const unwire = wireCommands()
