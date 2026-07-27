@@ -1,14 +1,13 @@
 import type { WorldState } from '../types';
+import { migrateSave, CURRENT_SAVE_VERSION } from './saveMigration';
+import type { VersionedSave } from './saveMigration';
 
 const DB_NAME = 'dune-browser-game';
 const STORE_NAME = 'world-state';
 const KEY = 'current';
 const DB_VERSION = 1;
 
-interface SaveData {
-  savedAt: number;
-  state: WorldState;
-}
+type SaveData = VersionedSave;
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -29,7 +28,10 @@ export async function saveGame(world: WorldState): Promise<void> {
   const db = await openDB();
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put({ savedAt: Date.now(), state: world }, KEY);
+    tx.objectStore(STORE_NAME).put(
+      { version: CURRENT_SAVE_VERSION, savedAt: Date.now(), state: world },
+      KEY,
+    );
     tx.oncomplete = () => { db.close(); resolve(); };
     tx.onerror = () => { db.close(); reject(tx.error); };
   });
@@ -44,7 +46,10 @@ export async function loadGame(): Promise<WorldState | null> {
     tx.oncomplete = () => db.close();
     tx.onerror = () => { db.close(); reject(tx.error); };
   });
-  return result?.state ?? null;
+  if (!result) return null;
+  // A save that cannot be migrated degrades to "no save" — starting a fresh
+  // run beats loading a half-populated world that crashes minutes later.
+  return migrateSave(result);
 }
 
 export async function deleteSave(): Promise<void> {
