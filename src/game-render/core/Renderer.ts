@@ -17,6 +17,8 @@ export interface RendererHandle {
   readonly renderer: WebGLRenderer
   readonly camera: PerspectiveCamera
   render(scene: Scene): void
+  /** Paint the clear colour with no scene — used before a mode has loaded. */
+  clear(): void
   info(): { calls: number; triangles: number }
   dispose(): void
 }
@@ -75,6 +77,9 @@ export function createRenderer(
     camera,
     render(scene: Scene): void {
       renderer.render(scene, camera)
+    },
+    clear(): void {
+      renderer.clear()
     },
     info(): { calls: number; triangles: number } {
       return {

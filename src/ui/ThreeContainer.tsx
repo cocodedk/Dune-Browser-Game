@@ -60,6 +60,7 @@ export default function ThreeContainer() {
 
       const scene = modes.scene
       if (scene) handle.render(scene)
+      else handle.clear() // no mode registered yet — still paint the base colour
 
       if (debug) {
         debug.frame += 1
