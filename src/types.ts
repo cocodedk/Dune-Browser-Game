@@ -27,6 +27,7 @@ export interface Village {
 
 /** Name the model is migrating toward; `Village` is the legacy alias. */
 export type Location = Village;
+export type LocationId = VillageId;
 
 export interface Player {
   location: VillageId;
