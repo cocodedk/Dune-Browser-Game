@@ -99,7 +99,11 @@ export function createCharacterCard(
   material.color = new Color(0xffffff)
 
   const mesh = new Mesh(geometry, material)
-  mesh.renderOrder = 50
+  mesh.renderOrder = 100
+  // The GROUP's renderOrder participates in transparent sorting too. Left at
+  // the default 0 it sorted below the scrim, so the scrim drew over the card
+  // and dimmed it by exactly the scrim's opacity.
+  group.renderOrder = 100
   group.add(mesh)
 
   return {
