@@ -36,7 +36,7 @@ export default function CrewPanel() {
 
   function order(
     groupId: string,
-    task: 'harvest' | 'prospect' | 'train' | 'idle',
+    task: 'harvest' | 'prospect' | 'train' | 'ecology' | 'idle',
     targetId: string | null,
   ) {
     EventBus.emit('player:assign_crew', { groupId, task, targetId })
@@ -77,7 +77,9 @@ export default function CrewPanel() {
                     ? 'Prospecting for new sand'
                     : group.task === 'train'
                       ? `Drilling · skill ${group.skills.military}`
-                      : 'Idle'}
+                      : group.task === 'ecology'
+                        ? 'Planting'
+                        : 'Idle'}
             </div>
 
             <div style={styles.actions}>
@@ -113,6 +115,16 @@ export default function CrewPanel() {
                 title="Drill for war. Costs income now, buys survival later."
               >
                 train
+              </button>
+              <button
+                style={{
+                  ...styles.btn,
+                  ...(group.task === 'ecology' ? styles.btnActive : {}),
+                }}
+                onClick={() => order(group.id, 'ecology', group.locationId)}
+                title="Plant. No spice ever, but the desert holds and the Fremen remember."
+              >
+                plant
               </button>
               {group.task !== 'idle' && (
                 <button style={styles.btn} onClick={() => order(group.id, 'idle', null)}>

@@ -20,6 +20,10 @@ import { evaluateAct, actQuotaMultiplier } from './acts/transitions'
 import {
   trainDay, raidInterval, raidPower, resolveCombat, weaponTier, applyLosses,
 } from './combat/resolve'
+import {
+  ecologyDay, greenRegionCount, maxVegetation,
+  SETTLED_THRESHOLD, GREEN_THRESHOLD,
+} from './ecology/ecology'
 import type { ActWorldView, EndingId } from './acts/transitions'
 
 /** Equipment kinds a group is carrying. */
@@ -264,11 +268,11 @@ function actView(): ActWorldView {
     patience: world.quota.patience,
     raidsRepelled: typeof world.flags['raids.repelled'] === 'number'
       ? (world.flags['raids.repelled'] as number) : 0,
-    maxRegionVegetation: 0,
+    maxRegionVegetation: maxVegetation(world.ecology),
     fortsDestroyed: 0,
     capitalFortDestroyed: false,
     palaceHeld: true,
-    greenRegions: 0,
+    greenRegions: greenRegionCount(world.ecology),
     averagePledgedLoyalty: avgLoyalty,
     countdownExpired: false,
   }
@@ -417,4 +421,36 @@ export function runRaidCheck(): void {
     world.flags['raids.repelled'] = repelled + 1
     pushEvent('attack', `${name} holds. The raiders withdraw, leaving ${outcome.attackerLosses}.`)
   }
+}
+
+/** One day of planting for every region with crews on ecology work. */
+export function runEcologyDay(): void {
+  world.ecology = world.ecology.map(region => {
+    const crews = world.troopGroups.filter(
+      g => g.task === 'ecology' &&
+           g.changeoverDaysLeft === 0 &&
+           (g.taskTargetId ?? g.locationId) === region.regionId,
+    )
+
+    const workers = crews.reduce((sum, g) => sum + g.size, 0)
+    const skill = crews.length
+      ? crews.reduce((sum, g) => sum + g.skills.ecology, 0) / crews.length
+      : 0
+    const hasBulbs = crews.some(g => carriedKinds(g.id).includes('bulb_cache'))
+
+    const before = region.vegetation
+    const after = ecologyDay(region, workers, skill, hasBulbs)
+
+    // Announce the thresholds, since their effects are otherwise invisible.
+    if (before < SETTLED_THRESHOLD && after.vegetation >= SETTLED_THRESHOLD) {
+      pushEvent('spice_shipment_received', `Green takes hold at ${region.regionId}.`)
+    }
+    if (before < GREEN_THRESHOLD && after.vegetation >= GREEN_THRESHOLD) {
+      pushEvent(
+        'spice_shipment_received',
+        `${region.regionId} is green. No spice will blow here again.`,
+      )
+    }
+    return after
+  })
 }

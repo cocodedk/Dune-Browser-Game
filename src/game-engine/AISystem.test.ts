@@ -89,6 +89,7 @@ function createTestWorld(): WorldState {
     charisma: 20,
     act: 'act1',
     ending: null,
+    ecology: [],
   };
 }
 

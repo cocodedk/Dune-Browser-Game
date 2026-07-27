@@ -47,6 +47,9 @@ export function createInitialState(): WorldState {
     charisma: 20,
     act: 'act1',
     ending: null,
+    ecology: (regionsData as unknown as Region[]).map(r => ({
+      regionId: r.id, vegetation: 0, windtraps: 0,
+    })),
   };
 }
 

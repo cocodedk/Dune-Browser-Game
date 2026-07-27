@@ -16,7 +16,7 @@ import { getDifficultyConfig } from './difficulty';
 import { shouldPause, effectiveDelta } from './pause';
 import {
   runHarvestDay, runProspectDay, runQuotaCheck, runActCheck,
-  runTrainingDay, runRaidCheck,
+  runTrainingDay, runRaidCheck, runEcologyDay,
 } from './EconomySystem';
 import type { FactionId } from '../types';
 
@@ -110,6 +110,7 @@ export function update(delta: number): void {
     runHarvestDay();
     runProspectDay();
   runQuotaCheck();
+  runEcologyDay();
   runTrainingDay();
   runRaidCheck();
   runActCheck();
