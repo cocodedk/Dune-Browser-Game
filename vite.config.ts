@@ -40,6 +40,12 @@ export default defineConfig({
             return undefined
           }
 
+          // Split three the same way phaser is split, so the budget script can
+          // hold core and addons to separate ceilings.
+          if (id.includes('/node_modules/three/')) {
+            return id.includes('/examples/jsm/') ? 'three-addons' : 'three-core'
+          }
+
           if (id.includes('/node_modules/phaser/')) {
             if (id.includes('/src/input/')) return 'phaser-input'
             if (id.includes('/src/textures/')) return 'phaser-textures'
