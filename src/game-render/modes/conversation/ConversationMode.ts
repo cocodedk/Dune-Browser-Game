@@ -1,0 +1,101 @@
+// src/game-render/modes/conversation/ConversationMode.ts
+// The conversation view: a character card framed against a dimmed desert.
+//
+// Conversations are the interface to every other system in this game, so this
+// mode carries more of the player's time than any other. It keeps the world
+// visible behind the speaker rather than cutting to a black screen — you are
+// standing somewhere, talking to someone, not reading a dialog box.
+
+import {
+  Scene, OrthographicCamera, PerspectiveCamera, Mesh, PlaneGeometry,
+  MeshBasicMaterial, Color, Group,
+} from 'three'
+import type { SceneModeId, WorldState } from '../../../types'
+import type { SceneMode } from '../../core/ModeManager'
+import { createCharacterCard } from './CharacterCard'
+import { INITIAL_CHARACTERS } from '../../../data/characters'
+
+const CARD_PLANE_WIDTH = 1400
+const CARD_PLANE_HEIGHT = 900
+
+/** Who is speaking at this location, if anyone. */
+function speakerAt(world: WorldState): { name: string; role: string } {
+  const character = INITIAL_CHARACTERS.find(c => c.locationId === world.player.location)
+  if (character) return { name: character.name, role: character.role }
+
+  // A location with no named resident still gets a speaker, so the player is
+  // never left facing an empty card with no explanation.
+  const place = world.villages.find(v => v.id === world.player.location)
+  return { name: place?.name ?? 'A voice', role: 'of this place' }
+}
+
+export function createConversationMode(camera: PerspectiveCamera): SceneMode {
+  const scene = new Scene()
+
+  // Orthographic framing: the card must sit at a fixed size on screen
+  // regardless of where the strategic camera happened to be.
+  const view = new OrthographicCamera(
+    -CARD_PLANE_WIDTH / 2, CARD_PLANE_WIDTH / 2,
+    CARD_PLANE_HEIGHT / 2, -CARD_PLANE_HEIGHT / 2,
+    -1000, 1000,
+  )
+  view.position.z = 10
+
+  const root = new Group()
+  scene.add(root)
+
+  // Dimming scrim, so the text layer over the top stays readable against
+  // whatever the desert is doing behind it.
+  const scrimGeometry = new PlaneGeometry(CARD_PLANE_WIDTH * 2, CARD_PLANE_HEIGHT * 2)
+  const scrimMaterial = new MeshBasicMaterial({
+    color: new Color('#0d0906'),
+    transparent: true,
+    opacity: 0.55,
+    depthTest: false,
+  })
+  const scrim = new Mesh(scrimGeometry, scrimMaterial)
+  scrim.renderOrder = 40
+  root.add(scrim)
+
+  let card: ReturnType<typeof createCharacterCard> | null = null
+  let currentName = ''
+  let elapsedMs = 0
+
+  function ensureCard(world: WorldState): void {
+    const speaker = speakerAt(world)
+    if (card && speaker.name === currentName) return
+
+    // Rebuild only when the speaker actually changes — redrawing a canvas
+    // texture every frame would be a needless GPU upload.
+    card?.dispose()
+    if (card) root.remove(card.group)
+
+    card = createCharacterCard(speaker.name, speaker.role)
+    currentName = speaker.name
+    root.add(card.group)
+  }
+
+  return {
+    id: 'conversation' as SceneModeId,
+    scene,
+    update(deltaMs: number, world: WorldState): void {
+      elapsedMs += deltaMs
+      ensureCard(world)
+      card?.update(elapsedMs)
+
+      // Keep the shared perspective camera in step so returning to another
+      // mode does not inherit a stale projection.
+      camera.updateProjectionMatrix()
+    },
+    /** The card itself is not a pick target; choices are React buttons. */
+    dispose(): void {
+      card?.dispose()
+      if (card) root.remove(card.group)
+      scrimGeometry.dispose()
+      scrimMaterial.dispose()
+      scene.remove(root)
+    },
+    // Drawn with orthographic framing rather than the shared camera.
+    camera: view,
+  }
+}

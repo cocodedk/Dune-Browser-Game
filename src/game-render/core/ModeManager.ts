@@ -6,7 +6,7 @@
 // textures unless something explicitly frees them; every mode implements
 // dispose() and this is the only place that calls it.
 
-import type { Scene } from 'three'
+import type { Scene, Camera } from 'three'
 import type { SceneModeId, WorldState } from '../../types'
 import { EventBus } from '../../EventBus'
 import { nextMode } from './SceneModes'
@@ -22,6 +22,12 @@ export interface SceneMode {
    * it; the rest inherit "clicks do nothing", which is correct for a cinematic.
    */
   pickAt?(x: number, z: number): string | null
+  /**
+   * Optional camera override. Most modes drive the shared perspective
+   * camera; the conversation view needs orthographic framing so the card
+   * sits at a fixed on-screen size regardless of the previous mode.
+   */
+  camera?: Camera
 }
 
 export type ModeFactory = () => SceneMode

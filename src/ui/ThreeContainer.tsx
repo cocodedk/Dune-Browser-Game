@@ -15,6 +15,7 @@ import { createRenderer } from '../game-render/core/Renderer'
 import { ModeManager } from '../game-render/core/ModeManager'
 import { createStrategicMode } from '../game-render/modes/strategic/StrategicMode'
 import { createFlightMode } from '../game-render/modes/flight/FlightMode'
+import { createConversationMode } from '../game-render/modes/conversation/ConversationMode'
 import { attachDebugHandle, detachDebugHandle } from '../game-render/core/DebugHandle'
 import { AudioManager } from '../game-render/audio/AudioManager'
 import { startTravel } from '../game-engine/TravelSystem'
@@ -45,6 +46,7 @@ export default function ThreeContainer() {
     const handle = createRenderer(canvas, quality)
     const modes = new ModeManager({
       strategic: () => createStrategicMode(handle.camera, quality, world, canvas),
+      conversation: () => createConversationMode(handle.camera),
       flight: () => createFlightMode(handle.camera, quality),
     })
     modes.start('strategic')
@@ -85,6 +87,7 @@ export default function ThreeContainer() {
     let raf = 0
     let last = performance.now()
     let wasTraveling = false
+    let wasInDialogue = false
 
     function frame(now: number): void {
       const deltaMs = Math.min(now - last, 100) // clamp after a tab-switch stall
@@ -100,10 +103,18 @@ export default function ThreeContainer() {
         wasTraveling = traveling
       }
 
+      // Dialogue drives the conversation view from world state for the same
+      // reason travel does: the view can never disagree with the engine.
+      const inDialogue = world.dialogue !== null
+      if (inDialogue !== wasInDialogue) {
+        modes.handleSignal({ kind: inDialogue ? 'dialogue_start' : 'dialogue_end' })
+        wasInDialogue = inDialogue
+      }
+
       modes.update(deltaMs, world)
 
       const scene = modes.scene
-      if (scene) handle.render(scene)
+      if (scene) handle.render(scene, modes.active?.camera)
       else handle.clear() // no mode registered yet — still paint the base colour
 
       if (debug) {

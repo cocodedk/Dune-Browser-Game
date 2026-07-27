@@ -10,13 +10,14 @@ import {
   SRGBColorSpace,
   Color,
   type Scene,
+  type Camera,
 } from 'three'
 import type { QualitySettings } from './Quality'
 
 export interface RendererHandle {
   readonly renderer: WebGLRenderer
   readonly camera: PerspectiveCamera
-  render(scene: Scene): void
+  render(scene: Scene, override?: Camera): void
   /** Paint the clear colour with no scene — used before a mode has loaded. */
   clear(): void
   info(): { calls: number; triangles: number }
@@ -75,8 +76,8 @@ export function createRenderer(
   return {
     renderer,
     camera,
-    render(scene: Scene): void {
-      renderer.render(scene, camera)
+    render(scene: Scene, override?: Camera): void {
+      renderer.render(scene, override ?? camera)
     },
     clear(): void {
       renderer.clear()
