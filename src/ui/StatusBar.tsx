@@ -2,6 +2,17 @@ import { useGameStore } from './store'
 import { EventBus } from '../EventBus'
 import type { Difficulty } from '../types'
 import { useState, useEffect } from 'react'
+import { palette, type as typo, button } from './theme'
+
+/** A labelled figure. Labels are words, not emoji — emoji do not scan. */
+function Readout({ label, value }: { label: string; value: string }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
+      <span style={typo.label}>{label}</span>
+      <span style={typo.value}>{value}</span>
+    </span>
+  )
+}
 
 export default function StatusBar() {
   const { world, lastSaveTime, saveGame, loadGame, newGame } = useGameStore()
@@ -48,17 +59,18 @@ export default function StatusBar() {
   return (
     <div style={styles.bar}>
       <span style={styles.item}>
-        <button style={styles.speedBtn} onClick={() => saveGame()}>Save</button>
+        <button style={button.base} onClick={() => saveGame()}>Save</button>
         {saveTimeStr && <span style={styles.saveTime}> {saveTimeStr}</span>}
-        <button style={styles.speedBtn} onClick={() => loadGame()}>Load</button>
-        <button style={styles.speedBtn} onClick={handleNew}>New</button>
+        <button style={button.base} onClick={() => loadGame()}>Load</button>
+        <button style={button.base} onClick={handleNew}>New</button>
       </span>
-      <span style={styles.item}>⏱ {minutes}:{seconds.toString().padStart(2, '0')}</span>
-      <span style={styles.item}>🌿 Spice: {player.spice.toFixed(1)}</span>
-      <span style={styles.item}>⚔ Troops: {player.troops ?? 0}</span>
-      <span style={styles.item}>⭐ Influence: {player.influence}</span>
-      <span style={{ ...styles.item, color: goalAchieved ? '#4caf50' : '#d4a017' }}>
-        🎯 {goalAchieved ? '✔ GOAL ACHIEVED!' : goalText}
+      <Readout label="day" value={`${Math.floor(time / 60)}`} />
+      <Readout label="time" value={`${minutes}:${seconds.toString().padStart(2, '0')}`} />
+      <Readout label="spice" value={player.spice.toFixed(1)} />
+      <Readout label="troops" value={`${player.troops ?? 0}`} />
+      <Readout label="influence" value={`${player.influence}`} />
+      <span style={{ ...styles.item, color: goalAchieved ? palette.good : palette.gold }}>
+        {goalAchieved ? 'RUN ENDED' : goalText}
       </span>
       {!goalAchieved && (
         <span style={styles.item}>
@@ -67,11 +79,7 @@ export default function StatusBar() {
             <button
               key={s}
               onClick={() => setSpeed(s)}
-              style={{
-                ...styles.speedBtn,
-                background: speed === s ? '#d4a017' : '#2a1e0a',
-                color: speed === s ? '#0a0a0f' : '#d4a017',
-              }}
+              style={{ ...button.base, ...(speed === s ? button.active : {}) }}
             >
               {s}×
             </button>
@@ -85,11 +93,7 @@ export default function StatusBar() {
             <button
               key={d}
               onClick={() => setDifficulty(d)}
-              style={{
-                ...styles.speedBtn,
-                background: difficulty === d ? '#d4a017' : '#2a1e0a',
-                color: difficulty === d ? '#0a0a0f' : '#d4a017',
-              }}
+              style={{ ...button.base, ...(difficulty === d ? button.active : {}) }}
             >
               {d.charAt(0).toUpperCase() + d.slice(1)}
             </button>
