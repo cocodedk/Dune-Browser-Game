@@ -2,6 +2,7 @@
 import type { SietchState, SietchTask } from './game-engine/sietch/types'
 import type { FactionProfile } from './game-engine/faction/types'
 import type { QuotaState } from './game-engine/quota/quota'
+import type { ActId, EndingId } from './game-engine/acts/transitions'
 import type { TroopGroup, SpiceField, Equipment, TroopTask, EquipmentKind } from './game-engine/troops/types'
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
@@ -123,6 +124,9 @@ export interface WorldState {
   equipment: Equipment[];
   /** 20 at the start; gates how many sietches the player may hold. */
   charisma: number;
+  /** First-class narrative state — not a story flag, so it stays typed. */
+  act: ActId;
+  ending: EndingId | null;
 }
 
 export interface AIDecision {

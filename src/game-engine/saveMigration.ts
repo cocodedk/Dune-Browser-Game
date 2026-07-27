@@ -62,6 +62,8 @@ export function migrateV1ToV2(state: WorldState): WorldState {
     spiceFields: state.spiceFields ?? [],
     equipment: state.equipment ?? [],
     charisma: state.charisma ?? 20,
+    act: state.act ?? 'act1',
+    ending: state.ending ?? null,
   }
 }
 

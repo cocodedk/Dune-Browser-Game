@@ -14,7 +14,7 @@ import type { WorldDiplomacyEvent } from './faction/diplomacy';
 import { generateDiplomaticActions } from './faction/diplomacyEngine';
 import { getDifficultyConfig } from './difficulty';
 import { shouldPause, effectiveDelta } from './pause';
-import { runHarvestDay, runProspectDay, runQuotaCheck } from './EconomySystem';
+import { runHarvestDay, runProspectDay, runQuotaCheck, runActCheck } from './EconomySystem';
 import type { FactionId } from '../types';
 
 function updateFactionSystems(): void {
@@ -107,6 +107,7 @@ export function update(delta: number): void {
     runHarvestDay();
     runProspectDay();
   runQuotaCheck();
+  runActCheck();
     updateFactionSystems();
     updateFactionAI();
     executeGoals(config.aiActionChanceMultiplier);

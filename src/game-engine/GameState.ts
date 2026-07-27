@@ -45,6 +45,8 @@ export function createInitialState(): WorldState {
     spiceFields: INITIAL_SPICE_FIELDS.map(f => ({ ...f })),
     equipment: [],
     charisma: 20,
+    act: 'act1',
+    ending: null,
   };
 }
 

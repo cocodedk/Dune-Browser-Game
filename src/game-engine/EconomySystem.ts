@@ -12,10 +12,12 @@ import { getDifficultyConfig } from './difficulty'
 import { harvestDay } from './troops/harvest'
 import { extractionTier } from './troops/types'
 import type { EquipmentKind, TroopTask } from './troops/types'
-import { settleQuota, isDue, totalDue } from './quota/quota'
+import { settleQuota, isDue, totalDue, onActTransition } from './quota/quota'
 import { checkAssign, applyAssign, assignRefusalMessage } from './troops/assign'
 import { findChance, resolveFind, regionExhausted, findMessage } from './troops/prospect'
 import { checkPurchase, purchaseRefusalMessage } from './market/market'
+import { evaluateAct, actQuotaMultiplier } from './acts/transitions'
+import type { ActWorldView, EndingId } from './acts/transitions'
 
 /** Equipment kinds a group is carrying. */
 function carriedKinds(groupId: string): EquipmentKind[] {
@@ -90,6 +92,9 @@ export function runQuotaCheck(): void {
   world.flags['quota.arrears'] = outcome.quota.arrears
 
   if (outcome.band === 'full') {
+    const paidCount = typeof world.flags['quota.paidInFull'] === 'number'
+      ? (world.flags['quota.paidInFull'] as number) : 0
+    world.flags['quota.paidInFull'] = paidCount + 1
     pushEvent('tribute_refused', `Tribute paid in full: ${outcome.paid.toFixed(0)} spice.`)
   } else if (outcome.band === 'partial') {
     pushEvent(
@@ -236,4 +241,74 @@ export function issueEquipment(equipmentId: string, groupId: string): void {
   item.groupId = groupId
   item.locationId = null
   pushEvent('sietch_task_assigned', 'Equipment issued to the crew.')
+}
+
+/** Build the act machine's view of the world from live state. */
+function actView(): ActWorldView {
+  const pledged = world.sietches.filter(s => s.pledgedToPlayer)
+  const loyalties = pledged
+    .map(s => world.villages.find(v => v.id === s.villageId)?.loyalty ?? 0)
+  const avgLoyalty = loyalties.length
+    ? loyalties.reduce((a, b) => a + b, 0) / loyalties.length
+    : 0
+
+  return {
+    act: world.act,
+    quotasPaid: typeof world.flags['quota.paidInFull'] === 'number'
+      ? (world.flags['quota.paidInFull'] as number) : 0,
+    pledgedCount: pledged.length,
+    charisma: world.charisma,
+    patience: world.quota.patience,
+    raidsRepelled: typeof world.flags['raids.repelled'] === 'number'
+      ? (world.flags['raids.repelled'] as number) : 0,
+    maxRegionVegetation: 0,
+    fortsDestroyed: 0,
+    capitalFortDestroyed: false,
+    palaceHeld: true,
+    greenRegions: 0,
+    averagePledgedLoyalty: avgLoyalty,
+    countdownExpired: false,
+  }
+}
+
+/**
+ * Day-boundary act check. An ending stops the run; an advance escalates the
+ * quota and clears the once-per-act patience allowance.
+ */
+export function runActCheck(): void {
+  if (world.goalAchieved) return
+
+  const { ending, nextAct } = evaluateAct(actView())
+
+  if (ending) {
+    world.goalAchieved = true
+    world.ending = ending
+    pushEvent('poc_goal_achieved', endingMessage(ending))
+    return
+  }
+
+  if (nextAct) {
+    world.act = nextAct
+    world.quota = onActTransition(world.quota)
+    world.quota = {
+      ...world.quota,
+      amount: Math.round(world.quota.amount * actQuotaMultiplier(nextAct)),
+    }
+    pushEvent('poc_goal_achieved', `The story turns. (${nextAct})`)
+  }
+}
+
+function endingMessage(ending: EndingId): string {
+  switch (ending) {
+    case 'loss_patience':
+      return 'The Emperor recalls you. Arrakis is taken from your house.'
+    case 'loss_palace':
+      return 'The palace is lost. Your hold on Arrakis ends here.'
+    case 'loss_abandoned':
+      return 'The last sietch turns from you. You rule nothing but sand.'
+    case 'win_military':
+      return 'The Harkonnen capital falls. Arrakis is yours.'
+    case 'win_ecology':
+      return 'The desert greens and the Fremen rise. The occupation is over.'
+  }
 }

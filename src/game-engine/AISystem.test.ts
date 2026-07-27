@@ -87,6 +87,8 @@ function createTestWorld(): WorldState {
     spiceFields: [],
     equipment: [],
     charisma: 20,
+    act: 'act1',
+    ending: null,
   };
 }
 
