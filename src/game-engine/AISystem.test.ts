@@ -43,8 +43,8 @@ function createTestWorld(): WorldState {
     time: 10,
     speed: 1,
     villages: [
-      { id: 'v1', name: 'V1', position: { x: 0, y: 0 }, population: 10, spice: 5, loyalty: 50, owner: 'player', status: 'friendly', productionRate: 1 },
-      { id: 'v2', name: 'V2', position: { x: 100, y: 100 }, population: 20, spice: 10, loyalty: 80, owner: 'harkonnen', status: 'neutral', productionRate: 2 },
+      { id: 'v1', name: 'V1', position: { x: 0, y: 0 }, population: 10, spice: 5, loyalty: 50, owner: 'player', status: 'friendly', productionRate: 1, kind: 'sietch', discovered: true, regionId: 'v1' },
+      { id: 'v2', name: 'V2', position: { x: 100, y: 100 }, population: 20, spice: 10, loyalty: 80, owner: 'harkonnen', status: 'neutral', productionRate: 2, kind: 'fort', discovered: true, regionId: 'v2' },
     ],
     player: {
       location: 'v1',

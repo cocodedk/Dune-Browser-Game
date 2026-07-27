@@ -3,6 +3,9 @@ import type { Village } from '../types'
 export const INITIAL_VILLAGES: Village[] = [
   {
     id: 'hagg',
+    kind: 'sietch',
+    discovered: true,
+    regionId: 'hagg',
     name: 'Hagg',
     position: { x: 130, y: 80 },
     population: 320,
@@ -14,6 +17,9 @@ export const INITIAL_VILLAGES: Village[] = [
   },
   {
     id: 'arrakeen',
+    kind: 'palace',
+    discovered: true,
+    regionId: 'arrakeen',
     name: 'Arrakeen',
     position: { x: 430, y: 120 },
     population: 800,
@@ -25,6 +31,9 @@ export const INITIAL_VILLAGES: Village[] = [
   },
   {
     id: 'imperial_basin',
+    kind: 'station',
+    discovered: false,
+    regionId: 'imperial_basin',
     name: 'Imperial Basin',
     position: { x: 700, y: 100 },
     population: 1200,
@@ -36,6 +45,9 @@ export const INITIAL_VILLAGES: Village[] = [
   },
   {
     id: 'red_wall_sietch',
+    kind: 'sietch',
+    discovered: true,
+    regionId: 'red_wall_sietch',
     name: 'Red Wall Sietch',
     position: { x: 70, y: 240 },
     population: 280,
@@ -47,6 +59,9 @@ export const INITIAL_VILLAGES: Village[] = [
   },
   {
     id: 'tsimpo',
+    kind: 'smuggler_den',
+    discovered: false,
+    regionId: 'tsimpo',
     name: 'Tsimpo',
     position: { x: 380, y: 285 },
     population: 350,
@@ -58,6 +73,9 @@ export const INITIAL_VILLAGES: Village[] = [
   },
   {
     id: 'sietch_tabr',
+    kind: 'sietch',
+    discovered: true,
+    regionId: 'sietch_tabr',
     name: 'Sietch Tabr',
     position: { x: 140, y: 390 },
     population: 450,
@@ -69,6 +87,9 @@ export const INITIAL_VILLAGES: Village[] = [
   },
   {
     id: 'carthag',
+    kind: 'fort',
+    discovered: true,
+    regionId: 'carthag',
     name: 'Carthag',
     position: { x: 640, y: 350 },
     population: 600,
@@ -80,6 +101,9 @@ export const INITIAL_VILLAGES: Village[] = [
   },
   {
     id: 'cielago_depression',
+    kind: 'field_camp',
+    discovered: false,
+    regionId: 'cielago_depression',
     name: 'Cielago Depression',
     position: { x: 520, y: 460 },
     population: 180,

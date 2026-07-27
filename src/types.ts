@@ -6,6 +6,9 @@ export type Difficulty = 'easy' | 'normal' | 'hard';
 export type VillageId = string;
 export type FactionId = 'player' | 'harkonnen' | 'neutral' | 'fremen' | 'atreides' | 'smugglers' | 'emperor';
 
+export type LocationKind =
+  | 'palace' | 'sietch' | 'smuggler_den' | 'fort' | 'field_camp' | 'station';
+
 export interface Village {
   id: VillageId;
   name: string;
@@ -16,7 +19,14 @@ export interface Village {
   owner: FactionId;
   status: 'neutral' | 'friendly' | 'rebelling';
   productionRate: number; // spice per game-second
+  kind: LocationKind;
+  /** Undiscovered places cannot be travelled to — enforced in the engine. */
+  discovered: boolean;
+  regionId: RegionId;
 }
+
+/** Name the model is migrating toward; `Village` is the legacy alias. */
+export type Location = Village;
 
 export interface Player {
   location: VillageId;

@@ -2,6 +2,9 @@ import { world } from './GameState';
 import { pushEvent } from './EventSystem';
 import { visitVillage } from './VillageSystem';
 import type { VillageId, WorldState } from '../types';
+import { checkTravel, rejectionMessage } from './travel/rules';
+import type { TravelMode } from './travel/rules';
+import { REGION_ADJACENCY } from '../data/regionAdjacency';
 
 export function travelDuration(fromId: VillageId, toId: VillageId): number {
   const from = world.villages.find(v => v.id === fromId);
@@ -28,12 +31,34 @@ export function currentTravelProgress(w: WorldState): number {
   return Math.min(1, Math.max(0, elapsed / duration));
 }
 
+/** Travel mode currently available to the player. */
+export function currentTravelMode(): TravelMode {
+  // Ornithopters arrive with the smuggler market (Stage 11); until then the
+  // player walks. Modelled here so range gating is already in force.
+  return 'foot';
+}
+
 export function startTravel(targetId: VillageId): void {
   const { player } = world;
-  if (player.state === 'traveling') return;
-  if (player.location === targetId) return;
 
-  const time = travelDuration(player.location, targetId);
+  const check = checkTravel({
+    from: world.villages.find(v => v.id === player.location),
+    to: world.villages.find(v => v.id === targetId),
+    mode: currentTravelMode(),
+    isTraveling: player.state === 'traveling',
+    adjacency: REGION_ADJACENCY,
+  });
+
+  if (!check.ok) {
+    // Silent on the two cases ordinary fumbling produces; the rest explain
+    // themselves, because "nothing happened" is the worst possible feedback.
+    if (check.reason !== 'same-location' && check.reason !== 'already-traveling') {
+      pushEvent('village_selected', rejectionMessage(check.reason));
+    }
+    return;
+  }
+
+  const time = check.durationSeconds;
   player.state = 'traveling';
   player.travelTarget = targetId;
   player.arrivalTime = world.time + time;
