@@ -11,8 +11,9 @@ import { currentDay } from './TimeSystem'
 import { getDifficultyConfig } from './difficulty'
 import { harvestDay } from './troops/harvest'
 import { extractionTier } from './troops/types'
-import type { EquipmentKind } from './troops/types'
+import type { EquipmentKind, TroopTask } from './troops/types'
 import { settleQuota, isDue, totalDue } from './quota/quota'
+import { checkAssign, applyAssign, assignRefusalMessage } from './troops/assign'
 
 /** Equipment kinds a group is carrying. */
 function carriedKinds(groupId: string): EquipmentKind[] {
@@ -104,4 +105,39 @@ export function runQuotaCheck(): void {
     world.goalAchieved = true
     pushEvent('poc_goal_achieved', 'The Emperor recalls you. Arrakis is taken from your house.')
   }
+}
+
+/**
+ * Apply a player crew order. Guards live in troops/assign.ts; this is the
+ * mutation layer, and it reports refusals so the player is never left
+ * wondering whether the click registered.
+ */
+export function assignCrew(
+  groupId: string,
+  task: TroopTask,
+  targetId: string | null,
+): void {
+  const index = world.troopGroups.findIndex(g => g.id === groupId)
+  if (index < 0) return
+
+  const group = world.troopGroups[index]
+  const target = targetId
+    ? world.spiceFields.find(f => f.id === targetId)
+    : undefined
+  const hasThopter = carriedKinds(groupId).includes('thopter')
+
+  const check = checkAssign({ group, task, target, hasThopter })
+  if (!check.ok) {
+    pushEvent('sietch_task_assigned', assignRefusalMessage(check.reason))
+    return
+  }
+
+  world.troopGroups[index] = applyAssign(group, task, targetId)
+
+  const label = task === 'idle'
+    ? 'stand down'
+    : task === 'harvest'
+      ? `harvest ${target?.id ?? ''}`.trim()
+      : task
+  pushEvent('sietch_task_assigned', `Crew ordered to ${label}.`)
 }

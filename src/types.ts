@@ -2,7 +2,7 @@
 import type { SietchState, SietchTask } from './game-engine/sietch/types'
 import type { FactionProfile } from './game-engine/faction/types'
 import type { QuotaState } from './game-engine/quota/quota'
-import type { TroopGroup, SpiceField, Equipment } from './game-engine/troops/types'
+import type { TroopGroup, SpiceField, Equipment, TroopTask } from './game-engine/troops/types'
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type VillageId = string;
@@ -182,6 +182,7 @@ export interface BusEvents {
   'player:scout_village': { targetVillageId: VillageId };
   'player:stop_sietch_task': { villageId: VillageId };
   'game:pause': { paused: boolean };
+  'player:assign_crew': { groupId: string; task: TroopTask; targetId: string | null };
   // Render -> React only. No engine command may be added here.
   'scene:mode': { mode: SceneModeId };
   'assets:progress': { loaded: number; total: number };

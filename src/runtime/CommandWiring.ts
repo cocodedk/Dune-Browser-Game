@@ -9,6 +9,7 @@ import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue } from '../game-engine/DialogueSystem'
 import { pledgePlayerSietch, assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
 import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
+import { assignCrew } from '../game-engine/EconomySystem'
 import { EventBus } from '../EventBus'
 import type { BusEvents } from '../types'
 
@@ -46,6 +47,9 @@ export function wireCommands(): () => void {
   const onScout = ({ targetVillageId }: BusEvents['player:scout_village']): void => {
     scoutVillage(targetVillageId)
   }
+  const onAssignCrew = ({ groupId, task, targetId }: BusEvents['player:assign_crew']): void => {
+    assignCrew(groupId, task, targetId)
+  }
   const onPause = ({ paused }: BusEvents['game:pause']): void => {
     world.paused = paused
     EventBus.emit('world:updated', { state: world })
@@ -60,6 +64,7 @@ export function wireCommands(): () => void {
   EventBus.on('player:stop_sietch_task', onStopTask)
   EventBus.on('player:attack_village', onAttack)
   EventBus.on('player:scout_village', onScout)
+  EventBus.on('player:assign_crew', onAssignCrew)
   EventBus.on('game:pause', onPause)
 
   return () => {
@@ -72,6 +77,7 @@ export function wireCommands(): () => void {
     EventBus.off('player:stop_sietch_task', onStopTask)
     EventBus.off('player:attack_village', onAttack)
     EventBus.off('player:scout_village', onScout)
+    EventBus.off('player:assign_crew', onAssignCrew)
     EventBus.off('game:pause', onPause)
   }
 }
