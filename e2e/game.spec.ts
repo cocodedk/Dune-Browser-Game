@@ -42,8 +42,9 @@ test('status bar renders spice, influence and speed buttons', async ({ page }) =
   await page.goto('/')
   await page.waitForTimeout(2000)
 
-  await expect(page.locator('text=Spice:')).toBeVisible()
-  await expect(page.locator('text=Influence:')).toBeVisible()
+  // Readouts are a word label beside a tabular figure, not "Spice: 0".
+  await expect(page.locator('text=spice').first()).toBeVisible()
+  await expect(page.locator('text=influence').first()).toBeVisible()
 
   await expect(page.getByRole('button', { name: '1×' })).toBeVisible()
   await expect(page.getByRole('button', { name: '2×' })).toBeVisible()
