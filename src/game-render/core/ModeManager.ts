@@ -17,31 +17,41 @@ export interface SceneMode {
   readonly scene: Scene
   update(deltaMs: number, world: WorldState): void
   dispose(): void
+  /**
+   * Optional world-XZ hit test. Modes that have clickable content implement
+   * it; the rest inherit "clicks do nothing", which is correct for a cinematic.
+   */
+  pickAt?(x: number, z: number): string | null
 }
 
 export type ModeFactory = () => SceneMode
 
 export class ModeManager {
   private factories: Partial<Record<SceneModeId, ModeFactory>>
-  private active: SceneMode | null = null
+  private activeMode: SceneMode | null = null
   private previousId: SceneModeId = 'strategic'
   private warned = new Set<SceneModeId>()
+
+  /** The live mode, for callers needing mode-specific behaviour like picking. */
+  get active(): SceneMode | null {
+    return this.activeMode
+  }
 
   constructor(factories: Partial<Record<SceneModeId, ModeFactory>>) {
     this.factories = factories
   }
 
   get currentId(): SceneModeId {
-    return this.active?.id ?? 'strategic'
+    return this.activeMode?.id ?? 'strategic'
   }
 
   get scene(): Scene | null {
-    return this.active?.scene ?? null
+    return this.activeMode?.scene ?? null
   }
 
   /** Enter the starting mode. Safe to call once; later calls are no-ops. */
   start(id: SceneModeId = 'strategic'): void {
-    if (this.active) return
+    if (this.activeMode) return
     this.enter(id)
   }
 
@@ -53,12 +63,12 @@ export class ModeManager {
   }
 
   update(deltaMs: number, world: WorldState): void {
-    this.active?.update(deltaMs, world)
+    this.activeMode?.update(deltaMs, world)
   }
 
   dispose(): void {
-    this.active?.dispose()
-    this.active = null
+    this.activeMode?.dispose()
+    this.activeMode = null
   }
 
   private enter(id: SceneModeId): void {
@@ -78,12 +88,12 @@ export class ModeManager {
       return
     }
 
-    const outgoing = this.active
+    const outgoing = this.activeMode
     if (outgoing) this.previousId = outgoing.id
 
-    this.active = factory()
+    this.activeMode = factory()
     outgoing?.dispose()
 
-    EventBus.emit('scene:mode', { mode: this.active.id })
+    EventBus.emit('scene:mode', { mode: this.activeMode.id })
   }
 }

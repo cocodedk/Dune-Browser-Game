@@ -4,6 +4,7 @@
 // never re-renders per frame.
 
 import { useEffect, useRef } from 'react'
+import { Raycaster, Vector2, Vector3, Plane } from 'three'
 import { world } from '../game-engine/GameState'
 import { initLoop, tick } from '../runtime/GameDriver'
 import { wireCommands } from '../runtime/CommandWiring'
@@ -41,9 +42,29 @@ export default function ThreeContainer() {
 
     const handle = createRenderer(canvas, quality)
     const modes = new ModeManager({
-      strategic: () => createStrategicMode(handle.camera, quality),
+      strategic: () => createStrategicMode(handle.camera, quality, world),
     })
     modes.start('strategic')
+
+    // Raycast a pointer position onto the y=0 plane, then let the active mode
+    // resolve that world position to a location id. Same path __DUNE__.pick
+    // takes, minus the ray.
+    const raycaster = new Raycaster()
+    const pointer = new Vector2()
+    const groundPlane = new Plane(new Vector3(0, 1, 0), 0)
+    const hit = new Vector3()
+
+    function onPointerDown(event: PointerEvent): void {
+      const rect = canvas!.getBoundingClientRect()
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+      raycaster.setFromCamera(pointer, handle.camera)
+      if (!raycaster.ray.intersectPlane(groundPlane, hit)) return
+
+      const id = modes.active?.pickAt?.(hit.x, hit.z)
+      if (id) dispatchPick(id)
+    }
+    canvas.addEventListener('pointerdown', onPointerDown)
 
     const unwire = wireCommands()
     const debug = attachDebugHandle(dispatchPick)
@@ -75,6 +96,7 @@ export default function ThreeContainer() {
 
     return () => {
       cancelAnimationFrame(raf)
+      canvas.removeEventListener('pointerdown', onPointerDown)
       unwire()
       modes.dispose()
       handle.dispose()

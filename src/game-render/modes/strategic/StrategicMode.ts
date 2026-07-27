@@ -21,6 +21,8 @@ import { createLighting } from '../../env/Lighting'
 import { paletteForTime } from '../../materials/Atmosphere'
 import { createTerrainMesh } from './TerrainMesh'
 import { createGroundPlane } from './GroundPlane'
+import { createSietchMarkers } from './SietchMarkers'
+import { createPlayerToken } from './PlayerToken'
 
 /** Matches TimeSystem's DAY_SECONDS so the sky tracks the engine's clock. */
 const DAY_SECONDS = 60
@@ -37,6 +39,7 @@ function rgbToColor(rgb: readonly [number, number, number]): Color {
 export function createStrategicMode(
   camera: PerspectiveCamera,
   quality: QualitySettings,
+  world: WorldState,
 ): SceneMode {
   const scene = new Scene()
 
@@ -73,6 +76,14 @@ export function createStrategicMode(
 
   const sky = createSkyDome(WORLD_SIZE * 1.6)
   scene.add(sky.mesh)
+
+  // Villages occupy the readable middle of the map, not the fogged distance.
+  const MARKER_SPREAD = WORLD_SIZE * 0.42
+  const markers = createSietchMarkers(world, MARKER_SPREAD, terrain.heightAt)
+  scene.add(markers.group)
+
+  const playerToken = createPlayerToken(MARKER_SPREAD, terrain.heightAt)
+  scene.add(playerToken.group)
 
   const lighting = createLighting(scene)
 
@@ -134,19 +145,32 @@ export function createStrategicMode(
     ground.setColor(shadow.clone().lerp(crest, 0.55))
   }
 
+  let elapsedMs = 0
+
   return {
     id: 'strategic' as SceneModeId,
     scene,
-    update(_deltaMs: number, world: WorldState): void {
-      applyTime(world)
+    /** World-XZ hit test for a click, delegated to the marker layer. */
+    pickAt(x: number, z: number): string | null {
+      return markers.pickAt(x, z, MARKER_SPREAD * 0.09)
+    },
+    update(deltaMs: number, state: WorldState): void {
+      elapsedMs += deltaMs
+      applyTime(state)
+      markers.refresh(state)
+      playerToken.update(state, elapsedMs)
     },
     dispose(): void {
       scene.remove(terrain.mesh)
       scene.remove(ground.mesh)
       scene.remove(sky.mesh)
+      scene.remove(markers.group)
+      scene.remove(playerToken.group)
       lighting.dispose()
       terrain.dispose()
       ground.dispose()
+      markers.dispose()
+      playerToken.dispose()
       sand.dispose()
       sky.dispose()
       scene.fog = null
