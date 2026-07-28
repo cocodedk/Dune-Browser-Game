@@ -36,6 +36,8 @@ export function createPlanetMode(
   quality: QualitySettings,
   world: WorldState,
   canvas: HTMLElement,
+  /** Called once the player has zoomed all the way down to the surface. */
+  onDescend?: () => void,
 ): SceneMode {
   const scene = new Scene()
 
@@ -154,6 +156,11 @@ export function createPlanetMode(
     // out nor violent up close.
     zoom = Math.max(0, Math.min(1, zoom - e.deltaY * 0.00075))
     applyCamera()
+
+    // Bottoming out the zoom is the player asking to land. Handing off to the
+    // surface view beats letting them press against a sphere whose
+    // tessellation cannot carry a close look.
+    if (zoom >= 0.999 && onDescend) onDescend()
   }
   function onDown(e: PointerEvent): void {
     if (e.button !== 0) return

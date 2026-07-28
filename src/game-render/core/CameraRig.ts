@@ -21,6 +21,8 @@ export interface CameraRig {
   zoomBy(delta: number): void
   panBy(dx: number, dz: number): void
   orbitBy(radians: number): void
+  /** True when zoomed fully out — the handoff point back to orbit. */
+  atMaxDistance(): boolean
   dispose(): void
 }
 
@@ -120,6 +122,7 @@ export function createCameraRig(
     zoomBy,
     panBy,
     orbitBy,
+    atMaxDistance: () => distance >= limits.maxDistance - 1e-6,
     dispose(): void {
       canvas.removeEventListener('pointerdown', onPointerDown)
       window.removeEventListener('pointermove', onPointerMove)

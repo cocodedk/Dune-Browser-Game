@@ -12,6 +12,8 @@ export type EngineSignal =
   | { kind: 'travel_complete' }
   | { kind: 'dialogue_start' }
   | { kind: 'dialogue_end' }
+  | { kind: 'descend' }
+  | { kind: 'ascend' }
 
 /**
  * Next scene mode for a signal.
@@ -38,6 +40,14 @@ export function nextMode(
     case 'travel_complete':
       // Only meaningful while flying; arriving from anywhere else is a no-op.
       return current === 'flight' ? 'location' : current
+
+    case 'descend':
+      // Only from orbit. Descending mid-conversation or mid-flight would
+      // yank the player out of something they are in the middle of.
+      return current === 'strategic' ? 'surface' : current
+
+    case 'ascend':
+      return current === 'surface' ? 'strategic' : current
 
     case 'dialogue_start':
       return 'conversation'

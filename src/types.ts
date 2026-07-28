@@ -210,4 +210,7 @@ export interface BusEvents {
 }
 
 /** Which 3D scene assembly is on screen. Shared contract: render + React + E2E. */
-export type SceneModeId = 'strategic' | 'flight' | 'location' | 'conversation';
+export type SceneModeId =
+  | 'strategic'      // orbit: the whole planet
+  | 'surface'        // descended: the dune field underfoot
+  | 'flight' | 'location' | 'conversation';

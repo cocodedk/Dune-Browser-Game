@@ -42,6 +42,8 @@ export function createStrategicMode(
   quality: QualitySettings,
   world: WorldState,
   canvas: HTMLElement,
+  /** Called when the player zooms back out past the surface view. */
+  onAscend?: () => void,
 ): SceneMode {
   const scene = new Scene()
 
@@ -135,6 +137,13 @@ export function createStrategicMode(
     pitchRadians: (42 * Math.PI) / 180,
   })
 
+  // Zooming out past the rig's far limit returns the player to orbit.
+  function onSurfaceWheel(e: WheelEvent): void {
+    if (e.deltaY <= 0 || !onAscend) return
+    if (rig.atMaxDistance()) onAscend()
+  }
+  canvas.addEventListener('wheel', onSurfaceWheel, { passive: true })
+
   function applyTime(world: WorldState): void {
     const palette = paletteForTime(world.time, DAY_SECONDS)
 
@@ -174,7 +183,7 @@ export function createStrategicMode(
   let elapsedMs = 0
 
   return {
-    id: 'strategic' as SceneModeId,
+    id: 'surface' as SceneModeId,
     scene,
     /** World-XZ hit test for a click, delegated to the marker layer. */
     pickAt(x: number, z: number): string | null {
@@ -194,6 +203,7 @@ export function createStrategicMode(
       scene.remove(playerToken.group)
       scene.remove(labels.group)
       labels.dispose()
+      canvas.removeEventListener('wheel', onSurfaceWheel)
       rig.dispose()
       lighting.dispose()
       terrain.dispose()

@@ -5,12 +5,14 @@ import type { SceneModeId } from '../../types'
 import { nextMode } from './SceneModes'
 import type { EngineSignal } from './SceneModes'
 
-const ALL_MODES: SceneModeId[] = ['strategic', 'flight', 'location', 'conversation']
+const ALL_MODES: SceneModeId[] = ['strategic', 'surface', 'flight', 'location', 'conversation']
 const ALL_SIGNALS: EngineSignal[] = [
   { kind: 'travel_start' },
   { kind: 'travel_complete' },
   { kind: 'dialogue_start' },
   { kind: 'dialogue_end' },
+  { kind: 'descend' },
+  { kind: 'ascend' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -86,6 +88,41 @@ describe('nextMode: dialogue_end', () => {
   it('is a no-op when not in a conversation', () => {
     expect(nextMode('strategic', { kind: 'dialogue_end' }, 'location')).toBe('strategic')
     expect(nextMode('flight', { kind: 'dialogue_end' }, 'location')).toBe('flight')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Descend / ascend
+// ---------------------------------------------------------------------------
+
+describe('nextMode: descend and ascend', () => {
+  it('descends from orbit to the surface', () => {
+    expect(nextMode('strategic', { kind: 'descend' })).toBe('surface')
+  })
+
+  it('ascends from the surface back to orbit', () => {
+    expect(nextMode('surface', { kind: 'ascend' })).toBe('strategic')
+  })
+
+  it('never descends out of a conversation or a flight', () => {
+    // Both are things the player is in the middle of; yanking them to the
+    // surface mid-sentence or mid-trip would be a bug they cannot undo.
+    expect(nextMode('conversation', { kind: 'descend' })).toBe('conversation')
+    expect(nextMode('flight', { kind: 'descend' })).toBe('flight')
+  })
+
+  it('ignores ascend from anywhere but the surface', () => {
+    expect(nextMode('strategic', { kind: 'ascend' })).toBe('strategic')
+    expect(nextMode('location', { kind: 'ascend' })).toBe('location')
+  })
+
+  it('round-trips orbit -> surface -> orbit', () => {
+    const down = nextMode('strategic', { kind: 'descend' })
+    expect(nextMode(down, { kind: 'ascend' })).toBe('strategic')
+  })
+
+  it('is idempotent when already at the destination', () => {
+    expect(nextMode('surface', { kind: 'descend' })).toBe('surface')
   })
 })
 
