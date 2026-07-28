@@ -10,6 +10,7 @@ import {
   isDue,
   daysRemaining,
   CYCLE_DAYS,
+  FIRST_DEADLINE_DAY,
   STARTING_PATIENCE,
   BASE_AMOUNTS,
 } from './quota'
@@ -26,7 +27,7 @@ function quota(overrides: Partial<QuotaState> = {}): QuotaState {
 describe('quota schedule', () => {
   it('starts with the first demand due after one cycle', () => {
     const q = createQuotaState()
-    expect(q.nextDueDay).toBe(CYCLE_DAYS)
+    expect(q.nextDueDay).toBe(FIRST_DEADLINE_DAY)
     expect(q.amount).toBe(BASE_AMOUNTS[0])
     expect(q.patience).toBe(STARTING_PATIENCE)
     expect(q.arrears).toBe(0)
@@ -155,10 +156,10 @@ describe('quota over several cycles', () => {
   it('advances the due day and cycle each settlement', () => {
     const first = settleQuota(quota(), 100)
     expect(first.quota.cycleIndex).toBe(1)
-    expect(first.quota.nextDueDay).toBe(CYCLE_DAYS * 2)
+    expect(first.quota.nextDueDay).toBe(FIRST_DEADLINE_DAY + CYCLE_DAYS)
     const second = settleQuota(first.quota, 250)
     expect(second.quota.cycleIndex).toBe(2)
-    expect(second.quota.nextDueDay).toBe(CYCLE_DAYS * 3)
+    expect(second.quota.nextDueDay).toBe(FIRST_DEADLINE_DAY + CYCLE_DAYS * 2)
   })
 
   it('compounds arrears into the next demand across three cycles', () => {

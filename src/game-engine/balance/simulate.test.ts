@@ -8,38 +8,20 @@ import { simulate, theoreticalDailyMax } from './simulate'
 import type { Strategy, SimCrew } from './simulate'
 import { impossibleDemand } from '../acts/endgame'
 
-const ACT1_DAYS = 24 // three quota cycles
+const ACT1_DAYS = 28 // three cycles: days 12, 20, 28
 
 // ---------------------------------------------------------------------------
 // The central promise: skill should separate outcomes
 // ---------------------------------------------------------------------------
 
 describe('strategies produce different outcomes', () => {
-  // KNOWN BALANCE DEFECT, recorded deliberately rather than hidden.
-  //
-  // Under current tuning the harvester is never purchasable in Act 1: before
-  // Q1 the player needs their cash for tribute, and afterwards they never
-  // rebuild a 100-spice surplus before the next deadline. So the "optimal"
-  // and "hoarder" lines produce identical income, which means the capex
-  // decision the whole slice is built around does not actually exist yet.
-  //
-  // Act 1 income is ~470 spice against quotas totalling 800. Either the
-  // quota curve must fall or income must rise; that is a design call, not a
-  // silent code change, so it is surfaced here instead of tuned away.
-  //
-  // This test will FAIL once the tuning is fixed. That is intended — it is a
-  // tripwire that forces this comment to be revisited.
-  it('documents that the harvester is currently unaffordable in Act 1', () => {
+  it('rewards investing over hoarding', () => {
+    // Restored once the 12-day grace period opened a real purchase window.
+    // Previously these lines earned identically, meaning the capex decision
+    // the whole slice is built around did not exist in play.
     const optimal = simulate('optimal', ACT1_DAYS)
     const hoarder = simulate('hoarder', ACT1_DAYS)
-    expect(optimal.totalEarned).toBeCloseTo(hoarder.totalEarned, 5)
-  })
-
-  it('records the Act 1 income shortfall against the quota curve', () => {
-    const optimal = simulate('optimal', ACT1_DAYS)
-    const quotaTotal = 100 + 250 + 450
-    const available = optimal.totalEarned + 60 // plus starting spice
-    expect(available).toBeLessThan(quotaTotal)
+    expect(optimal.totalEarned).toBeGreaterThan(hoarder.totalEarned)
   })
 
   it('punishes the naive single-crew player', () => {

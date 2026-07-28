@@ -8,6 +8,17 @@
 // asserts that end to end; these tests pin the mechanics it relies on.
 
 export const CYCLE_DAYS = 8
+/**
+ * The first tribute falls later than the rest — the Emperor grants a
+ * settling-in period.
+ *
+ * This exists to solve a measured defect, not for flavour. At an 8-day first
+ * deadline the player never held 100 spice with headroom, so the harvester
+ * was unbuyable and the capex decision the slice is built around never
+ * occurred. A 12-day grace opens exactly one window in which investing is a
+ * real gamble against the first demand.
+ */
+export const FIRST_DEADLINE_DAY = 12
 export const STARTING_PATIENCE = 3
 export const MAX_PATIENCE = 3
 export const PARTIAL_PAYMENT_FRACTION = 0.6
@@ -52,7 +63,7 @@ export interface PaymentOutcome {
 
 export function createQuotaState(difficultyMultiplier = 1): QuotaState {
   return {
-    nextDueDay: CYCLE_DAYS,
+    nextDueDay: FIRST_DEADLINE_DAY,
     amount: Math.round(BASE_AMOUNTS[0] * difficultyMultiplier),
     cycleIndex: 0,
     patience: STARTING_PATIENCE,
