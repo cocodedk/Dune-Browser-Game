@@ -11,6 +11,8 @@ import {
   Group, Mesh, PlaneGeometry, MeshBasicMaterial,
   CanvasTexture, LinearFilter, Color, SRGBColorSpace,
 } from 'three'
+import { portraitFor } from '../../../data/portraits'
+import type { PortraitDef } from '../../../data/portraits'
 
 export interface CharacterCard {
   group: Group
@@ -27,54 +29,58 @@ const CARD_HEIGHT = 420
  * character's name and role. Real portraits arrive in the Stage 20 asset pass;
  * until then this must still look composed rather than broken.
  */
-function drawPortrait(name: string, role: string, accent: string): CanvasTexture {
+function drawPortrait(name: string, role: string, def: PortraitDef): CanvasTexture {
   const canvas = document.createElement('canvas')
   canvas.width = CARD_WIDTH
   canvas.height = CARD_HEIGHT
   const ctx = canvas.getContext('2d')!
 
   const backdrop = ctx.createLinearGradient(0, 0, 0, CARD_HEIGHT)
-  backdrop.addColorStop(0, '#a8763f')
-  backdrop.addColorStop(0.55, '#7a512a')
-  backdrop.addColorStop(1, '#3d2a15')
+  backdrop.addColorStop(0, def.backTop)
+  backdrop.addColorStop(1, def.backBottom)
   ctx.fillStyle = backdrop
   ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
 
-  // Warm glow behind the figure. The diorama gets its readability from a
-  // tint overlay plus a hearth glow, not from its base gradient — which is
-  // in fact darker than this card's was. Without an equivalent the card
-  // faithfully rendered colours that were simply authored too dark.
+  // Key light. Hardness controls how tightly the glow falls off, which is what
+  // separates a soldier from a scientist without changing the drawing at all.
+  const spread = CARD_WIDTH * (1.05 - def.keyHardness * 0.62)
   const glow = ctx.createRadialGradient(
-    CARD_WIDTH / 2, 210, 20, CARD_WIDTH / 2, 210, CARD_WIDTH * 0.75,
+    CARD_WIDTH * 0.38, 190, 12, CARD_WIDTH * 0.38, 190, spread,
   )
-  glow.addColorStop(0, 'rgba(255, 196, 120, 0.42)')
-  glow.addColorStop(1, 'rgba(255, 196, 120, 0)')
+  glow.addColorStop(0, `rgba(255, 214, 156, ${0.2 + def.keyHardness * 0.32})`)
+  glow.addColorStop(1, 'rgba(255, 214, 156, 0)')
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
 
-  // Head-and-shoulders silhouette — reads as a person at a glance.
-  // Kept small and only semi-opaque. At r=62 plus a 105x108 torso at 92%
-  // opacity the figure covered most of a 300x420 canvas, so the card read
-  // as black — the backdrop was rendering correctly all along, there was
-  // simply almost none of it visible.
-  ctx.fillStyle = 'rgba(38, 22, 10, 0.72)'
-  ctx.beginPath()
-  ctx.arc(CARD_WIDTH / 2, 175, 46, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.beginPath()
-  ctx.ellipse(CARD_WIDTH / 2, 352, 74, 76, 0, Math.PI, 0)
-  ctx.fill()
+  // Framing: a closer subject sits lower and larger in the frame.
+  const scale = 0.82 + def.framing * 0.4
+  const headY = 190 - def.framing * 26
+  const headR = 44 * scale * def.build
 
-  // Rim light from the upper left, matching the scene's sun direction.
-  ctx.strokeStyle = accent
-  ctx.lineWidth = 4
-  ctx.globalAlpha = 0.95
+  ctx.fillStyle = def.figure
+  ctx.globalAlpha = 0.78
   ctx.beginPath()
-  ctx.arc(CARD_WIDTH / 2, 175, 46, Math.PI * 0.75, Math.PI * 1.65)
+  ctx.arc(CARD_WIDTH / 2, headY, headR, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.ellipse(
+    CARD_WIDTH / 2, CARD_HEIGHT - 58,
+    72 * scale * def.build, 78 * scale, 0, Math.PI, 0,
+  )
+  ctx.fill()
+  ctx.globalAlpha = 1
+
+  // Rim light from the upper left, matching the scene's sun direction. Its
+  // colour is the character's single identifying accent.
+  ctx.strokeStyle = def.rim
+  ctx.lineWidth = 3 + def.keyHardness * 3
+  ctx.globalAlpha = 0.9
+  ctx.beginPath()
+  ctx.arc(CARD_WIDTH / 2, headY, headR, Math.PI * 0.78, Math.PI * 1.62)
   ctx.stroke()
   ctx.globalAlpha = 1
 
-  ctx.fillStyle = accent
+  ctx.fillStyle = def.rim
   ctx.font = '600 26px system-ui, sans-serif'
   ctx.textAlign = 'center'
   ctx.fillText(name, CARD_WIDTH / 2, 396)
@@ -97,11 +103,11 @@ function drawPortrait(name: string, role: string, accent: string): CanvasTexture
 export function createCharacterCard(
   name: string,
   role: string,
-  accent = '#d4a017',
+  characterId = '',
 ): CharacterCard {
   const group = new Group()
 
-  const texture = drawPortrait(name, role, accent)
+  const texture = drawPortrait(name, role, portraitFor(characterId))
   const geometry = new PlaneGeometry(CARD_WIDTH, CARD_HEIGHT)
   const material = new MeshBasicMaterial({
     map: texture,

@@ -19,14 +19,14 @@ const CARD_PLANE_WIDTH = 1400
 const CARD_PLANE_HEIGHT = 900
 
 /** Who is speaking at this location, if anyone. */
-function speakerAt(world: WorldState): { name: string; role: string } {
+function speakerAt(world: WorldState): { name: string; role: string; id: string } {
   const character = INITIAL_CHARACTERS.find(c => c.locationId === world.player.location)
-  if (character) return { name: character.name, role: character.role }
+  if (character) return { name: character.name, role: character.role, id: character.id }
 
   // A location with no named resident still gets a speaker, so the player is
   // never left facing an empty card with no explanation.
   const place = world.villages.find(v => v.id === world.player.location)
-  return { name: place?.name ?? 'A voice', role: 'of this place' }
+  return { name: place?.name ?? 'A voice', role: 'of this place', id: '' }
 }
 
 export function createConversationMode(camera: PerspectiveCamera): SceneMode {
@@ -70,7 +70,7 @@ export function createConversationMode(camera: PerspectiveCamera): SceneMode {
     card?.dispose()
     if (card) root.remove(card.group)
 
-    card = createCharacterCard(speaker.name, speaker.role)
+    card = createCharacterCard(speaker.name, speaker.role, speaker.id)
     currentName = speaker.name
     root.add(card.group)
   }
