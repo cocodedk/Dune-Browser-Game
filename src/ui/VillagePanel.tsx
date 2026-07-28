@@ -3,6 +3,7 @@ import { EventBus } from '../EventBus'
 import type { Village } from '../types'
 import SietchCommandSection from './SietchCommandSection'
 import AttackSection from './AttackSection'
+import TravelAction from './TravelAction'
 
 const OWNER_LABEL: Record<string, string> = {
   player:    'Your territory',
@@ -99,13 +100,12 @@ export default function VillagePanel() {
         {isHere ? (
           <span style={{ color: '#4caf50', fontSize: 13 }}>📍 You are here — click to talk</span>
         ) : (
-          <button
-            onClick={travel}
-            disabled={isTraveling}
-            style={styles.btn}
-          >
-            {isTraveling ? '🐪 Traveling...' : `🐪 Travel to ${selectedVillage.name}`}
-          </button>
+          <TravelAction
+            name={selectedVillage.name}
+            id={selectedVillage.id}
+            isTraveling={isTraveling}
+            onTravel={travel}
+          />
         )}
       </div>
     </div>

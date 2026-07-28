@@ -47,6 +47,18 @@ export interface DebugHandle {
    * cycle can be inspected without waiting a minute per rotation.
    */
   setTime?: (seconds: number) => void
+  /**
+   * Populated by ThreeContainer. A small snapshot of engine state, so a
+   * driver script can tell "the click did nothing" from "the engine refused"
+   * without reading the DOM.
+   */
+  player?: () => {
+    state: string
+    location: string
+    travelTarget: string | null
+    spice: number
+    inDialogue: boolean
+  }
 }
 
 declare global {
@@ -87,6 +99,7 @@ export function detachDebugHandle(): void {
 export interface DebugSources {
   audio: () => Record<string, unknown>
   setTime: (seconds: number) => void
+  player: NonNullable<DebugHandle['player']>
   scene: () => Object3D | null
   camera: () => Camera
   size: () => { width: number; height: number }
@@ -100,6 +113,7 @@ export function wireDebugHandle(
   if (!handle) return
   handle.audio = sources.audio
   handle.setTime = sources.setTime
+  handle.player = sources.player
   handle.inspect = () => {
     const scene = sources.scene()
     if (!scene) return []

@@ -14,13 +14,8 @@ import { decideVisit } from '../runtime/VisitPolicy'
 import { EventBus } from '../EventBus'
 import { resolveQuality } from '../game-render/core/Quality'
 import { createRenderer } from '../game-render/core/Renderer'
+import { createModeManager } from '../game-render/core/modeFactories'
 import { COMMAND_COLUMN_WIDTH } from './theme'
-import { ModeManager } from '../game-render/core/ModeManager'
-import { createPlanetMode } from '../game-render/planet/PlanetMode'
-import { createStrategicMode } from '../game-render/modes/strategic/StrategicMode'
-import { createFlightMode } from '../game-render/modes/flight/FlightMode'
-import { createConversationMode } from '../game-render/modes/conversation/ConversationMode'
-import { createLocationMode } from '../game-render/modes/location/LocationMode'
 import {
   attachDebugHandle, detachDebugHandle, wireDebugHandle,
 } from '../game-render/core/DebugHandle'
@@ -51,21 +46,7 @@ export default function ThreeContainer() {
     })
 
     const handle = createRenderer(canvas, quality, COMMAND_COLUMN_WIDTH)
-    const modes = new ModeManager({
-      // Orbit. Zooming all the way in descends to the surface.
-      strategic: () =>
-        createPlanetMode(handle.camera, quality, world, canvas, () =>
-          modes.handleSignal({ kind: 'descend' }),
-        ),
-      // The dune field underfoot. Zooming back out returns to orbit.
-      surface: () =>
-        createStrategicMode(handle.camera, quality, world, canvas, () =>
-          modes.handleSignal({ kind: 'ascend' }),
-        ),
-      conversation: () => createConversationMode(handle.camera),
-      location: () => createLocationMode(),
-      flight: () => createFlightMode(handle.camera, quality),
-    })
+    const modes = createModeManager(handle.camera, quality, world, canvas)
     modes.start('strategic')
 
     // Raycast a pointer position onto the y=0 plane, then let the active mode
@@ -102,6 +83,13 @@ export default function ThreeContainer() {
     wireDebugHandle(debug, {
       audio: audio.debugState,
       setTime: seconds => { world.time = seconds },
+      player: () => ({
+        state: world.player.state,
+        location: world.player.location,
+        travelTarget: world.player.travelTarget,
+        spice: world.player.spice,
+        inDialogue: world.dialogue !== null,
+      }),
       scene: () => modes.scene,
       camera: () => modes.active?.camera ?? handle.camera,
       size: () => ({ width: canvas.clientWidth, height: canvas.clientHeight }),

@@ -17,6 +17,8 @@ import { INITIAL_CHARACTERS } from '../../../data/characters'
 
 const CARD_PLANE_WIDTH = 1400
 const CARD_PLANE_HEIGHT = 900
+/** Card centre above the middle of the frame, in view units. */
+const CARD_LIFT = 120
 
 /** Who is speaking at this location, if anyone. */
 function speakerAt(world: WorldState): { name: string; role: string; id: string } {
@@ -75,7 +77,8 @@ export function createConversationMode(camera: PerspectiveCamera): SceneMode {
     card?.dispose()
     if (card) root.remove(card.group)
 
-    card = createCharacterCard(speaker.name, speaker.role, speaker.id)
+    // Lifted clear of the dialogue box, which owns the lower third of the frame.
+    card = createCharacterCard(speaker.name, speaker.role, speaker.id, CARD_LIFT)
     currentName = speaker.name
     root.add(card.group)
   }

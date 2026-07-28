@@ -4,6 +4,7 @@ import { EventBus } from '../EventBus'
 import { endDialogue } from '../game-engine/DialogueSystem'
 import { getPortraitKey, PORTRAIT_FACTION } from '../data/portraitConfig'
 import { FACTION_CSS_COLORS } from '../game-render/factionColors'
+import { COMMAND_COLUMN_WIDTH } from './theme'
 
 export default function DialoguePanel() {
   const { currentDialogueNode, world } = useGameStore()
@@ -60,8 +61,18 @@ export default function DialoguePanel() {
 const styles = {
   overlay: {
     position: 'fixed' as const,
-    inset: 0,
-    background: 'rgba(0,0,0,0.75)',
+    // Stops short of the command column: a flat 75% black over the whole
+    // viewport dimmed the instruments too, so during a conversation the
+    // player could not read their own spice, deadline or crew.
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: COMMAND_COLUMN_WIDTH,
+    // Darkest at the bottom where the text sits, clearing toward the top so
+    // the character is lit rather than veiled.
+    background:
+      'linear-gradient(to bottom, rgba(6,4,2,0.30) 0%,' +
+      ' rgba(6,4,2,0.55) 55%, rgba(6,4,2,0.86) 100%)',
     display: 'flex',
     alignItems: 'flex-end',
     justifyContent: 'center',

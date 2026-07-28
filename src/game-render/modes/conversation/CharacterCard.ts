@@ -13,6 +13,7 @@ import {
 } from 'three'
 import { portraitFor } from '../../../data/portraits'
 import type { PortraitDef } from '../../../data/portraits'
+import { drawFigure } from './drawFigure'
 
 export interface CharacterCard {
   group: Group
@@ -21,19 +22,28 @@ export interface CharacterCard {
   dispose(): void
 }
 
+// Authored space. The canvas is rendered at SUPERSAMPLE times this and the
+// drawing scaled to match, so the portrait stays crisp when the plane is
+// bigger on screen than the texture would otherwise allow.
 const CARD_WIDTH = 300
 const CARD_HEIGHT = 420
+const SUPERSAMPLE = 2
+/** Plane size relative to the authored card. The figure was too small to read. */
+const CARD_ZOOM = 1.34
 
 /**
- * Draw a placeholder portrait: a silhouette over a warm gradient, with the
- * character's name and role. Real portraits arrive in the Stage 20 asset pass;
- * until then this must still look composed rather than broken.
+ * Compose the portrait: backdrop, key light, figure, rim light, name plate.
+ *
+ * The figure itself is drawn by drawFigure; everything here is the lighting
+ * and framing around it, which is what makes fourteen characters drawn by one
+ * function still look like fourteen different people.
  */
 function drawPortrait(name: string, role: string, def: PortraitDef): CanvasTexture {
   const canvas = document.createElement('canvas')
-  canvas.width = CARD_WIDTH
-  canvas.height = CARD_HEIGHT
+  canvas.width = CARD_WIDTH * SUPERSAMPLE
+  canvas.height = CARD_HEIGHT * SUPERSAMPLE
   const ctx = canvas.getContext('2d')!
+  ctx.scale(SUPERSAMPLE, SUPERSAMPLE)
 
   const backdrop = ctx.createLinearGradient(0, 0, 0, CARD_HEIGHT)
   backdrop.addColorStop(0, def.backTop)
@@ -61,44 +71,45 @@ function drawPortrait(name: string, role: string, def: PortraitDef): CanvasTextu
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
 
-  // Framing: a closer subject sits lower and larger in the frame.
-  const scale = 0.82 + def.framing * 0.4
-  const headY = 190 - def.framing * 26
-  const headR = 44 * scale * def.build
-
-  ctx.fillStyle = def.figure
-  ctx.globalAlpha = 0.78
-  ctx.beginPath()
-  ctx.arc(CARD_WIDTH / 2, headY, headR, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.beginPath()
-  ctx.ellipse(
-    CARD_WIDTH / 2, CARD_HEIGHT - 58,
-    72 * scale * def.build, 78 * scale, 0, Math.PI, 0,
-  )
-  ctx.fill()
-  ctx.globalAlpha = 1
+  const { headX, headY, headR } = drawFigure(ctx, def, {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+  })
 
   // Rim light from the upper left, matching the scene's sun direction. Its
-  // colour is the character's single identifying accent.
+  // colour is the character's single identifying accent, and it traces the
+  // hood rather than the skull — the hood is the silhouette you actually see.
   ctx.strokeStyle = def.rim
-  ctx.lineWidth = 3 + def.keyHardness * 3
-  ctx.globalAlpha = 0.9
+  ctx.lineWidth = 2.5 + def.keyHardness * 3.5
+  ctx.globalAlpha = 0.92
   ctx.beginPath()
-  ctx.arc(CARD_WIDTH / 2, headY, headR, Math.PI * 0.78, Math.PI * 1.62)
+  ctx.ellipse(
+    headX, headY - headR * 0.06, headR * 1.16, headR * 1.28, 0,
+    Math.PI * 0.72, Math.PI * 1.58,
+  )
   ctx.stroke()
   ctx.globalAlpha = 1
+
+  // The robe reaches the bottom edge, so the name needs its own ground or it
+  // competes with the folds behind it. Sits above the card's lower edge, not on it: the dialogue box overlaps
+  // the bottom of the card, and a name printed there is a name nobody reads.
+  const plate = ctx.createLinearGradient(0, 300, 0, 392)
+  plate.addColorStop(0, 'rgba(10, 7, 3, 0)')
+  plate.addColorStop(0.45, 'rgba(10, 7, 3, 0.78)')
+  plate.addColorStop(1, 'rgba(10, 7, 3, 0)')
+  ctx.fillStyle = plate
+  ctx.fillRect(0, 300, CARD_WIDTH, 92)
 
   ctx.fillStyle = def.rim
   ctx.font = '600 26px system-ui, sans-serif'
   ctx.textAlign = 'center'
-  ctx.fillText(name, CARD_WIDTH / 2, 396)
+  ctx.fillText(name, CARD_WIDTH / 2, 352)
 
   ctx.fillStyle = 'rgba(240, 224, 190, 0.9)'
   ctx.font = 'italic 14px system-ui, sans-serif'
   // Long roles are trimmed rather than overflowing the card.
   const trimmed = role.length > 42 ? `${role.slice(0, 40)}…` : role
-  ctx.fillText(trimmed, CARD_WIDTH / 2, 415)
+  ctx.fillText(trimmed, CARD_WIDTH / 2, 373)
 
   const texture = new CanvasTexture(canvas)
   texture.minFilter = LinearFilter
@@ -113,11 +124,17 @@ export function createCharacterCard(
   name: string,
   role: string,
   characterId = '',
+  /**
+   * Height of the card's centre in view units. The dialogue box occupies the
+   * lower third of the frame, and at 0 it covered the figure's chest and the
+   * name plate entirely.
+   */
+  baseY = 0,
 ): CharacterCard {
   const group = new Group()
 
   const texture = drawPortrait(name, role, portraitFor(characterId))
-  const geometry = new PlaneGeometry(CARD_WIDTH, CARD_HEIGHT)
+  const geometry = new PlaneGeometry(CARD_WIDTH * CARD_ZOOM, CARD_HEIGHT * CARD_ZOOM)
   const material = new MeshBasicMaterial({
     map: texture,
     transparent: true,
@@ -142,7 +159,7 @@ export function createCharacterCard(
     update(elapsedMs: number): void {
       // Breathing drift: barely perceptible, but a perfectly still card reads
       // as a paused game rather than a person listening.
-      group.position.y = Math.sin(elapsedMs * 0.0011) * 5
+      group.position.y = baseY + Math.sin(elapsedMs * 0.0011) * 5
       group.rotation.z = Math.sin(elapsedMs * 0.0007) * 0.004
     },
     dispose(): void {

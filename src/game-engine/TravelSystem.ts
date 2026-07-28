@@ -38,16 +38,29 @@ export function currentTravelMode(): TravelMode {
   return 'foot';
 }
 
-export function startTravel(targetId: VillageId): void {
+/**
+ * Can the player travel there right now, and if not, why?
+ *
+ * Exposed so the interface can answer that question *before* the click. At
+ * game start exactly one of the eight destinations is legal — the rest are
+ * either undiscovered or out of range on foot — and offering an identical
+ * enabled button for all eight means seven of them do nothing visible.
+ */
+export function travelCheckTo(targetId: VillageId) {
   const { player } = world;
-
-  const check = checkTravel({
+  return checkTravel({
     from: world.villages.find(v => v.id === player.location),
     to: world.villages.find(v => v.id === targetId),
     mode: currentTravelMode(),
     isTraveling: player.state === 'traveling',
     adjacency: REGION_ADJACENCY,
   });
+}
+
+export function startTravel(targetId: VillageId): void {
+  const { player } = world;
+
+  const check = travelCheckTo(targetId);
 
   if (!check.ok) {
     // Silent on the two cases ordinary fumbling produces; the rest explain
