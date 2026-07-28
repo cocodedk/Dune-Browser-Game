@@ -13,7 +13,7 @@ import { EventBus } from '../EventBus'
 import { resolveQuality } from '../game-render/core/Quality'
 import { createRenderer } from '../game-render/core/Renderer'
 import { ModeManager } from '../game-render/core/ModeManager'
-import { createStrategicMode } from '../game-render/modes/strategic/StrategicMode'
+import { createPlanetMode } from '../game-render/planet/PlanetMode'
 import { createFlightMode } from '../game-render/modes/flight/FlightMode'
 import { createConversationMode } from '../game-render/modes/conversation/ConversationMode'
 import { createLocationMode } from '../game-render/modes/location/LocationMode'
@@ -46,7 +46,9 @@ export default function ThreeContainer() {
 
     const handle = createRenderer(canvas, quality)
     const modes = new ModeManager({
-      strategic: () => createStrategicMode(handle.camera, quality, world, canvas),
+      // The strategic view is now the planet; the flat dune field remains
+      // available as the terrain source for flight and location modes.
+      strategic: () => createPlanetMode(handle.camera, quality, world, canvas),
       conversation: () => createConversationMode(handle.camera),
       location: () => createLocationMode(),
       flight: () => createFlightMode(handle.camera, quality),
