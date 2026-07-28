@@ -11,6 +11,7 @@ import FactionPanel from './ui/FactionPanel'
 import GoalOverlay from './ui/GoalOverlay'
 import { COMMAND_COLUMN_WIDTH, palette } from './ui/theme'
 import OrnamentFrame from './ui/Ornament'
+import ViewHint from './ui/ViewHint'
 
 // three.js is now the only renderer; Phaser is gone. Kept lazy so the 3D
 // chunk stays out of the initial payload.
@@ -48,9 +49,7 @@ export default function App() {
         <OrnamentFrame plain><EventLog /></OrnamentFrame>
       </div>
 
-      <div style={styles.hint}>
-        Click a sietch to travel · drag with shift to pan · scroll to zoom
-      </div>
+      <ViewHint />
 
       <DialoguePanel />
       <GoalOverlay />
@@ -112,17 +111,6 @@ const styles = {
     WebkitBackdropFilter: 'blur(7px)',
     borderLeft: `1px solid ${palette.line}`,
     boxShadow: '-14px 0 34px rgba(0,0,0,0.45)',
-  },
-  hint: {
-    position: 'absolute' as const,
-    bottom: 12,
-    left: 20,
-    // Faint grey over sand was unreadable; this is instructions, so it has to
-    // survive the brightest thing the renderer can put behind it.
-    color: palette.textDim,
-    fontSize: 11,
-    textShadow: HALO,
-    pointerEvents: 'none' as const,
   },
   fallback: {
     flex: 1,

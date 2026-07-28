@@ -47,7 +47,16 @@ export function nextMode(
       return current === 'strategic' ? 'surface' : current
 
     case 'ascend':
-      return current === 'surface' ? 'strategic' : current
+      // From the surface, out to orbit. From a location, back to the desert
+      // around it.
+      //
+      // The second case was missing, and location had no pick handler either,
+      // so arriving anywhere was a dead end: no click did anything, and the
+      // only ways out of the mode were starting a trip — which needs a map
+      // click to choose a destination — or opening a conversation. The player
+      // was simply stuck where the ornithopter put them.
+      if (current === 'surface') return 'strategic'
+      return current === 'location' ? 'surface' : current
 
     case 'dialogue_start':
       return 'conversation'

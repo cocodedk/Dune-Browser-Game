@@ -40,7 +40,8 @@ export function createModeManager(
         modes.handleSignal({ kind: 'ascend' }),
       ),
     conversation: () => createConversationMode(camera),
-    location: () => createLocationMode(),
+    location: () =>
+      createLocationMode(canvas, () => modes.handleSignal({ kind: 'ascend' })),
     flight: () => createFlightMode(camera, quality),
   })
   return modes

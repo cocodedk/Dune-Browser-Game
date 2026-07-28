@@ -72,6 +72,8 @@ export default function ThreeContainer() {
       if (event.key !== 'Escape') return
       // Skipping is purely visual: the engine still lands the trip on time.
       if (modes.currentId === 'flight') modes.handleSignal({ kind: 'travel_complete' })
+      // And Escape backs out of a location, which used to have no exit at all.
+      else if (modes.currentId === 'location') modes.handleSignal({ kind: 'ascend' })
     }
     window.addEventListener('keydown', onKeyDown)
 

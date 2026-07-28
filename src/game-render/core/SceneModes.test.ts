@@ -111,9 +111,36 @@ describe('nextMode: descend and ascend', () => {
     expect(nextMode('flight', { kind: 'descend' })).toBe('flight')
   })
 
-  it('ignores ascend from anywhere but the surface', () => {
+  it('backs out of a location to the desert around it', () => {
+    // Arriving somewhere used to be a dead end: location has no pick handler,
+    // so no click did anything, and the only exits were starting a trip —
+    // which needs a map click to pick a destination — or a conversation. The
+    // player was stuck wherever the ornithopter put them.
+    expect(nextMode('location', { kind: 'ascend' })).toBe('surface')
+  })
+
+  it('ignores ascend where there is nothing to back out to', () => {
     expect(nextMode('strategic', { kind: 'ascend' })).toBe('strategic')
-    expect(nextMode('location', { kind: 'ascend' })).toBe('location')
+    expect(nextMode('conversation', { kind: 'ascend' })).toBe('conversation')
+    expect(nextMode('flight', { kind: 'ascend' })).toBe('flight')
+  })
+
+  it('always leaves a way back to the map from every mode', () => {
+    // The property the bug violated. From anywhere the player can end up,
+    // some signal must reach the strategic map within a few steps.
+    const exits: Record<string, { kind: 'ascend' | 'dialogue_end' | 'travel_complete' }> = {
+      location: { kind: 'ascend' },
+      surface: { kind: 'ascend' },
+      conversation: { kind: 'dialogue_end' },
+      flight: { kind: 'travel_complete' },
+    }
+    for (const [mode, signal] of Object.entries(exits)) {
+      let current = nextMode(mode as SceneModeId, signal)
+      for (let step = 0; step < 4 && current !== 'strategic'; step++) {
+        current = nextMode(current, { kind: 'ascend' })
+      }
+      expect(current).toBe('strategic')
+    }
   })
 
   it('round-trips orbit -> surface -> orbit', () => {

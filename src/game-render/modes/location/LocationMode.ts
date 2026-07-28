@@ -91,7 +91,11 @@ function paintDiorama(kind: LocationKind, name: string, tint: Color): CanvasText
   return texture
 }
 
-export function createLocationMode(): SceneMode {
+export function createLocationMode(
+  canvas?: HTMLElement,
+  /** Called when the player asks to step back out to the desert. */
+  onLeave?: () => void,
+): SceneMode {
   const scene = new Scene()
 
   const view = new OrthographicCamera(
@@ -103,6 +107,13 @@ export function createLocationMode(): SceneMode {
 
   const root = new Group()
   scene.add(root)
+
+  // Scrolling out is the same gesture that leaves every other view, so it
+  // should work here too rather than being the one place it does nothing.
+  function onWheel(e: WheelEvent): void {
+    if (e.deltaY > 0) onLeave?.()
+  }
+  canvas?.addEventListener('wheel', onWheel, { passive: true })
 
   const geometry = new PlaneGeometry(FRAME_WIDTH * 1.08, FRAME_HEIGHT * 1.08)
   let texture: CanvasTexture | null = null
@@ -153,6 +164,7 @@ export function createLocationMode(): SceneMode {
       root.position.y = Math.cos(elapsedMs * 0.00012) * 14
     },
     dispose(): void {
+      canvas?.removeEventListener('wheel', onWheel)
       geometry.dispose()
       material.dispose()
       texture?.dispose()
