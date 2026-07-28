@@ -104,7 +104,11 @@ export function createStrategicMode(
   // heightfield's square boundary before it reaches the horizon line. At
   // 0.00052 the far edge showed as a hard plateau lip against the sky.
   // ~91% opacity by 1300 units hides it while leaving the foreground clear.
-  const fog = new FogExp2(0xe0a070, 0.0012)
+  // Tuned down from 0.0012, which was set to hide the heightfield edge at
+  // 800x500. A full-screen board sees further, and that density flattened
+  // the whole mid-distance into featureless cream. The ground plane now
+  // handles edge concealment, so fog is free to be about depth again.
+  const fog = new FogExp2(0xe0a070, 0.00075)
   scene.fog = fog
 
   // High, fixed-pitch orbital view. Deliberately not free-look — this is a map
@@ -125,7 +129,10 @@ export function createStrategicMode(
     minDistance: WORLD_SIZE * 0.22,
     maxDistance: WORLD_SIZE * 0.62,
     panExtent: MARKER_SPREAD * 0.5,
-    pitchRadians: (30 * Math.PI) / 180,
+    // Pitched down from 30 degrees for the full-screen board: the frame went
+    // from 1.6:1 to about 1.24:1, and a taller frame at the same pitch fills
+    // its top quarter with distant haze instead of dunes.
+    pitchRadians: (42 * Math.PI) / 180,
   })
 
   function applyTime(world: WorldState): void {
@@ -150,7 +157,9 @@ export function createStrategicMode(
     // Anchor on the sand colours and only tint toward the hour, rather than
     // the reverse. Deriving crest straight from the sun washed it to bone
     // white at noon and lost the entire palette.
-    const shadow = new Color('#7d3a18').lerp(rgbToColor(palette.ambient), 0.3)
+    // Troughs stay saturated at noon. Lerping too far toward the pale noon
+    // ambient washed the shadow side out and lost every crest line.
+    const shadow = new Color('#6e3113').lerp(rgbToColor(palette.ambient), 0.18)
     const crest = new Color('#e3b972').lerp(rgbToColor(palette.sun), 0.22)
     const slip = shadow.clone().multiplyScalar(0.62)
     sand.setPalette(shadow, crest, slip)

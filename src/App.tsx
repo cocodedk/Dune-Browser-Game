@@ -9,25 +9,34 @@ import DialoguePanel from './ui/DialoguePanel'
 import EventLog from './ui/EventLog'
 import FactionPanel from './ui/FactionPanel'
 import GoalOverlay from './ui/GoalOverlay'
+import { palette } from './ui/theme'
 
 // three.js is now the only renderer; Phaser is gone. Kept lazy so the 3D
 // chunk stays out of the initial payload.
 const GameContainer = lazy(() => import('./ui/ThreeContainer'))
 
+/**
+ * The map IS the screen.
+ *
+ * The 3D view fills the entire viewport and the interface floats over it as
+ * translucent panes, rather than the map living in a box beside a sidebar.
+ * Arrakis is the subject; the panels are instruments read against it.
+ */
 export default function App() {
   return (
     <div style={styles.root}>
-      {/* Left: 3D game view */}
-      <div style={styles.left}>
-        <div style={styles.title}>DUNE: BROWSER GAME</div>
-        <Suspense fallback={<div style={styles.canvasFallback}>Loading Arrakis...</div>}>
+      {/* Full-bleed 3D view, underneath everything */}
+      <div style={styles.stage}>
+        <Suspense fallback={<div style={styles.fallback}>Loading Arrakis…</div>}>
           <GameContainer />
         </Suspense>
-        <div style={styles.hint}>Click a village on the map to travel or talk · Speed controls in right panel</div>
       </div>
 
-      {/* Right: React panels */}
-      <div style={styles.right}>
+      {/* Title, floating top-left over the sand */}
+      <div style={styles.title}>DUNE</div>
+
+      {/* Command column, floating right. Scrolls independently of the map. */}
+      <div style={styles.column}>
         <StatusBar />
         <QuotaLedger />
         <CrewPanel />
@@ -38,66 +47,82 @@ export default function App() {
         <EventLog />
       </div>
 
-      {/* Dialogue modal overlay */}
-      <DialoguePanel />
+      <div style={styles.hint}>
+        Click a sietch to travel · drag with shift to pan · scroll to zoom
+      </div>
 
-      {/* Goal achieved overlay */}
+      <DialoguePanel />
       <GoalOverlay />
     </div>
   )
 }
 
+const OVERLAY_WIDTH = 340
+
 const styles = {
   root: {
-    // #root is itself a flex container, so this must claim the space or it
-    // collapses to the width of its children.
     flex: 1,
     width: '100%',
-    display: 'flex',
     height: '100vh',
-    background: '#0a0a0f',
+    position: 'relative' as const,
+    background: palette.ink,
     overflow: 'hidden',
   },
-  left: {
-    flex: 1,
-    minWidth: 0,
+  // Absolutely positioned so the canvas covers the viewport edge to edge and
+  // the overlays do not steal any of it via flex layout.
+  stage: {
+    position: 'absolute' as const,
+    inset: 0,
     display: 'flex',
-    flexDirection: 'column' as const,
-    padding: 0,
-    gap: 8,
   },
   title: {
-    color: '#d4a017',
-    fontSize: 13,
-    fontWeight: 'bold' as const,
-    letterSpacing: '0.15em',
+    position: 'absolute' as const,
+    top: 14,
+    left: 20,
+    color: palette.gold,
+    fontSize: 15,
+    fontWeight: 700 as const,
+    letterSpacing: '0.42em',
     textTransform: 'uppercase' as const,
+    // Legible over pale noon sand as well as a night sky.
+    textShadow: '0 1px 6px rgba(0,0,0,0.85)',
+    pointerEvents: 'none' as const,
+  },
+  column: {
+    position: 'absolute' as const,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: OVERLAY_WIDTH,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    overflowY: 'auto' as const,
+    // Translucent so the desert stays visible behind the instruments, with a
+    // blur so text never has to fight dune detail for legibility.
+    background: 'rgba(13, 9, 6, 0.82)',
+    backdropFilter: 'blur(7px)',
+    WebkitBackdropFilter: 'blur(7px)',
+    borderLeft: `1px solid ${palette.line}`,
+    boxShadow: '-14px 0 34px rgba(0,0,0,0.45)',
   },
   hint: {
-    color: '#6b5a2a',
+    position: 'absolute' as const,
+    bottom: 12,
+    left: 20,
+    color: palette.textFaint,
     fontSize: 11,
-    textAlign: 'center' as const,
+    textShadow: '0 1px 5px rgba(0,0,0,0.9)',
+    pointerEvents: 'none' as const,
   },
-  canvasFallback: {
+  fallback: {
     flex: 1,
-    border: '1px solid #3d2b10',
-    borderRadius: 4,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#8b6914',
-    background: '#120d07',
+    color: palette.gold,
+    background: palette.panel,
     fontSize: 13,
-    letterSpacing: '0.08em',
+    letterSpacing: '0.14em',
     textTransform: 'uppercase' as const,
-  },
-  right: {
-    flex: '0 0 340px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    borderLeft: '1px solid #3d2b10',
-    overflow: 'hidden',
-    minWidth: 280,
-    maxWidth: 380,
   },
 }
