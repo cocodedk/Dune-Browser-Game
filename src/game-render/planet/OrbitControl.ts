@@ -80,9 +80,15 @@ export function createOrbitControl(
 
   function onWheel(e: WheelEvent): void {
     e.preventDefault()
-    // Fraction of remaining distance per notch, so it never feels glacial far
-    // out nor violent up close.
-    zoom = Math.max(0, Math.min(1, zoom - e.deltaY * 0.00075))
+
+    // Fraction of remaining distance per notch.
+    //
+    // Was 0.00075, which put barely two notches between orbit and the ground
+    // — the descent fired almost as soon as the player started scrolling,
+    // which is most of why it felt like being dropped somewhere arbitrary.
+    // Six or seven notches makes it read as an approach, and gives the player
+    // room to stop and re-aim on the way down.
+    zoom = Math.max(0, Math.min(1, zoom - e.deltaY * 0.00021))
 
     // Bottoming out the zoom is the player asking to land. Handing off to the
     // surface view beats letting them press against a sphere whose
