@@ -45,7 +45,9 @@ export function createFraming(
 
     // Applied every call, not only on change: the label plane is rebuilt
     // whenever the hotspots change and would otherwise come back unscaled.
-    planes().backdrop?.scale.setScalar(fit.coverScale)
+    // The backdrop is now painted at the visible shape and sized to it, so it
+    // must not be scaled on top of that.
+    planes().backdrop?.scale.setScalar(1)
     return fit
   }
 

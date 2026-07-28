@@ -88,15 +88,28 @@ export function createLocationMode(
     // Repaint per hour-band rather than per frame; a canvas upload every frame
     // would be pure waste for art that barely changes.
     const band = Math.floor((world.time % DAY_SECONDS) / (DAY_SECONDS / 6))
-    const key = `${place.id}:${band}`
+    // Keyed on the window shape too: the painting is now composed for the
+    // screen it is shown on rather than cropped to fit it.
+    const key = `${place.id}:${band}:${framing.key}`
     if (key === currentKey) return
 
     texture?.dispose()
+    const { viewWidth, viewHeight } = framing.fit
+    // Capped so a very wide window does not allocate an enormous canvas.
+    const pixelHeight = 1000
+    const pixelWidth = Math.min(
+      3000, Math.round(pixelHeight * (viewWidth / viewHeight)),
+    )
     texture = paintDiorama(
       place.kind,
       place.name,
       new Color(palette.horizon[0], palette.horizon[1], palette.horizon[2]),
+      pixelWidth,
+      pixelHeight,
     )
+    // Sized to the visible frustum, so nothing is cropped and nothing stretched.
+    mesh.geometry.dispose()
+    mesh.geometry = new PlaneGeometry(viewWidth, viewHeight)
     material.map = texture
     material.needsUpdate = true
     currentKey = key
