@@ -9,6 +9,7 @@ import { world } from './GameState'
 import { pushEvent } from './EventSystem'
 import { currentDay } from './TimeSystem'
 import { getDifficultyConfig } from './difficulty'
+import { CHARISMA_PER_QUOTA } from './sietch/loyalty'
 import type { TroopTask } from './troops/types'
 import { settleQuota, isDue, totalDue } from './quota/quota'
 import { checkAssign, applyAssign, assignRefusalMessage } from './troops/assign'
@@ -53,6 +54,7 @@ export function runQuotaCheck(): void {
     const paidCount = typeof world.flags['quota.paidInFull'] === 'number'
       ? (world.flags['quota.paidInFull'] as number) : 0
     world.flags['quota.paidInFull'] = paidCount + 1
+    world.charisma += CHARISMA_PER_QUOTA
     pushEvent('tribute_refused', `Tribute paid in full: ${outcome.paid.toFixed(0)} spice.`)
   } else if (outcome.band === 'partial') {
     pushEvent(

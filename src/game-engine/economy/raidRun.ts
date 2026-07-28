@@ -10,6 +10,7 @@ import {
 } from '../combat/resolve'
 import { raidWarningDays } from '../prescience/prescience'
 import { carriedKinds } from './carried'
+import { CHARISMA_PER_RAID } from '../sietch/loyalty'
 
 /**
  * The Harkonnen raid clock.
@@ -98,6 +99,7 @@ export function runRaidCheck(): void {
     const repelled = typeof world.flags['raids.repelled'] === 'number'
       ? (world.flags['raids.repelled'] as number) : 0
     world.flags['raids.repelled'] = repelled + 1
+    world.charisma += CHARISMA_PER_RAID
     pushEvent('attack', `${name} holds. The raiders withdraw, leaving ${outcome.attackerLosses}.`)
   }
 }

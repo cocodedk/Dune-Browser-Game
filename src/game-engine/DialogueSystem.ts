@@ -1,4 +1,5 @@
 import { world } from './GameState';
+import { applyFlagEffects } from './dialogue/conditions';
 import { pushEvent } from './EventSystem';
 import { EventBus } from '../EventBus';
 import type { VillageId, DialogueEffect } from '../types';
@@ -57,6 +58,16 @@ function applyEffect(effect: DialogueEffect, villageId: VillageId): void {
   }
   if (effect.spiceDelta) {
     world.player.spice = Math.max(0, world.player.spice + effect.spiceDelta);
+  }
+  // Story flags and renown. These were declared on the effect type, authored
+  // throughout the dialogue data, and silently dropped here — so every
+  // `taught.*`, `recruited.*` and `beat.*` flag in the game was permanently
+  // unset, and with them every conversation state that depended on one.
+  if (effect.setFlags || effect.addFlags) {
+    world.flags = applyFlagEffects(world.flags, effect.setFlags, effect.addFlags);
+  }
+  if (effect.charismaDelta) {
+    world.charisma = Math.max(0, world.charisma + effect.charismaDelta);
   }
   if (effect.reputationAction) {
     const repWorld = toReputationWorld(world);

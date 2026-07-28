@@ -3,6 +3,7 @@
 // and emits game events. Analogous to TravelSystem.ts.
 
 import { world } from './GameState'
+import { CHARISMA_PER_PLEDGE } from './sietch/loyalty'
 import { pushEvent } from './EventSystem'
 import { pledgeSietch, assignTask, canAssignTask } from './sietch/assignTask'
 import type { SietchTask } from './sietch/types'
@@ -27,6 +28,8 @@ export function pledgePlayerSietch(villageId: VillageId): void {
   if (!village || village.owner !== 'fremen') return
 
   if (sietch.pledgedToPlayer) return
+
+  world.charisma += CHARISMA_PER_PLEDGE
 
   world.sietches = pledgeSietch(world.sietches, villageId)
   pushEvent(

@@ -31,6 +31,19 @@ function clampLoyalty(value: number): number {
   return Math.max(0, Math.min(100, value))
 }
 
+/**
+ * Renown gained per deed.
+ *
+ * `world.charisma` was written by nothing at all: it started at 20 and stayed
+ * there. The act2 -> act3 transition gates on charisma >= 50, so acts 3 and 4
+ * — the forts, the endgame and every act-based ending — were unreachable in
+ * normal play. Renown now comes from the three things that visibly grow a
+ * house: sietches sworn, tribute met, raids beaten.
+ */
+export const CHARISMA_PER_PLEDGE = 5
+export const CHARISMA_PER_QUOTA = 5
+export const CHARISMA_PER_RAID = 5
+
 /** How many sietches the player may hold at a given charisma. */
 export function maxPledged(charisma: number): number {
   return Math.floor(Math.max(0, charisma) / 10)
