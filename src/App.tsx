@@ -58,6 +58,13 @@ export default function App() {
   )
 }
 
+/** Tight opaque halo plus a wide soft one — legible over sand or sky. */
+const HALO = [
+  '0 0 2px rgba(8,5,2,0.95)',
+  '0 1px 3px rgba(8,5,2,0.9)',
+  '0 2px 12px rgba(8,5,2,0.75)',
+].join(', ')
+
 const styles = {
   root: {
     flex: 1,
@@ -83,8 +90,10 @@ const styles = {
     fontWeight: 700 as const,
     letterSpacing: '0.42em',
     textTransform: 'uppercase' as const,
-    // Legible over pale noon sand as well as a night sky.
-    textShadow: '0 1px 6px rgba(0,0,0,0.85)',
+    // Gold on a night sky is easy; gold on noon sand is not, and a single soft
+    // shadow left the title invisible over bright dunes. A tight opaque halo
+    // plus a wider soft one keeps it readable against anything.
+    textShadow: HALO,
     pointerEvents: 'none' as const,
   },
   column: {
@@ -108,9 +117,11 @@ const styles = {
     position: 'absolute' as const,
     bottom: 12,
     left: 20,
-    color: palette.textFaint,
+    // Faint grey over sand was unreadable; this is instructions, so it has to
+    // survive the brightest thing the renderer can put behind it.
+    color: palette.textDim,
     fontSize: 11,
-    textShadow: '0 1px 5px rgba(0,0,0,0.9)',
+    textShadow: HALO,
     pointerEvents: 'none' as const,
   },
   fallback: {

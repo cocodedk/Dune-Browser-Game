@@ -50,9 +50,19 @@ const KEYFRAMES: Keyframe[] = [
     sun: [1.0, 0.62, 0.36], ambient: [0.32, 0.26, 0.34], exposure: 0.95,
   },
   {
-    t: 0.5, // noon — bleached, low saturation, brutal
-    horizon: [0.93, 0.79, 0.58], zenith: [0.42, 0.56, 0.82],
-    sun: [1.0, 0.96, 0.87], ambient: [0.55, 0.52, 0.48], exposure: 1.15,
+    // Noon — hard and hot, but still ochre.
+    //
+    // The first pass chased "bleached" literally: near-white sun over a
+    // near-neutral ambient of 0.55/0.52/0.48, at an exposure of 1.15. Measured
+    // on the rendered surface that put the sand at luma 181 with saturation
+    // 0.32 — a flat cream wall with no dune form left in it, which is the
+    // opposite of what this game should look like. The ambient was doing the
+    // damage: a near-grey fill desaturates every surface it touches.
+    //
+    // Now warm and lower. Arrakis at noon is punishing; it is not colourless.
+    t: 0.5,
+    horizon: [0.90, 0.72, 0.50], zenith: [0.42, 0.56, 0.82],
+    sun: [1.0, 0.93, 0.78], ambient: [0.38, 0.30, 0.24], exposure: 0.88,
   },
   {
     t: 0.75, // dusk

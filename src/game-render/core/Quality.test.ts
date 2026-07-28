@@ -88,8 +88,16 @@ describe('resolveQuality', () => {
   })
 
   it('scales terrain resolution with tier', () => {
-    expect(resolveQuality({ cores: 1, devicePixelRatio: 1 }).terrainResolution).toBe(128)
-    expect(resolveQuality({ cores: 4, devicePixelRatio: 1 }).terrainResolution).toBe(192)
-    expect(resolveQuality({ cores: 16, devicePixelRatio: 1 }).terrainResolution).toBe(256)
+    // Asserted as an ordering rather than three magic numbers: the absolute
+    // values track WORLD_SIZE and get retuned whenever the terrain is resized,
+    // but "a better machine never gets coarser terrain" must always hold.
+    const low = resolveQuality({ cores: 1, devicePixelRatio: 1 }).terrainResolution
+    const medium = resolveQuality({ cores: 4, devicePixelRatio: 1 }).terrainResolution
+    const high = resolveQuality({ cores: 16, devicePixelRatio: 1 }).terrainResolution
+
+    expect(low).toBeLessThan(medium)
+    expect(medium).toBeLessThan(high)
+    // Below about 128 samples a side the dunes stop reading as dunes at all.
+    expect(low).toBeGreaterThanOrEqual(128)
   })
 })

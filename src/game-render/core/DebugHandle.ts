@@ -42,6 +42,11 @@ export interface DebugHandle {
    * transform takes one call.
    */
   inspect?: () => InspectedObject[]
+  /**
+   * Populated by ThreeContainer. Scrubs the engine clock, so the whole day
+   * cycle can be inspected without waiting a minute per rotation.
+   */
+  setTime?: (seconds: number) => void
 }
 
 declare global {
@@ -76,6 +81,31 @@ export function attachDebugHandle(pick: (id: string) => void): DebugHandle | nul
 
 export function detachDebugHandle(): void {
   if (typeof window !== 'undefined') delete window.__DUNE__
+}
+
+/** Everything the handle needs to observe, supplied by the render container. */
+export interface DebugSources {
+  audio: () => Record<string, unknown>
+  setTime: (seconds: number) => void
+  scene: () => Object3D | null
+  camera: () => Camera
+  size: () => { width: number; height: number }
+}
+
+/** Attach the observation surface. No-op when debug is not enabled. */
+export function wireDebugHandle(
+  handle: DebugHandle | null,
+  sources: DebugSources,
+): void {
+  if (!handle) return
+  handle.audio = sources.audio
+  handle.setTime = sources.setTime
+  handle.inspect = () => {
+    const scene = sources.scene()
+    if (!scene) return []
+    const { width, height } = sources.size()
+    return inspectScene(scene, sources.camera(), width, height)
+  }
 }
 
 /**

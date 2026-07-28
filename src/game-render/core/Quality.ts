@@ -30,9 +30,13 @@ export interface QualitySettings {
 }
 
 const SETTINGS: Record<QualityTier, Omit<QualitySettings, 'tier' | 'pixelRatio'>> = {
-  low: { terrainResolution: 128, bloom: false, grain: false, colorGrade: true },
-  medium: { terrainResolution: 192, bloom: true, grain: true, colorGrade: true },
-  high: { terrainResolution: 256, bloom: true, grain: true, colorGrade: true },
+  // Resolution is samples per side across the whole terrain, so it has to rise
+  // with WORLD_SIZE or the dunes coarsen as the field grows. These are set for
+  // a 4400-unit field: roughly 11 world units per sample at high, which holds
+  // a ~230-unit dune wavelength at about 20 samples across.
+  low: { terrainResolution: 192, bloom: false, grain: false, colorGrade: true },
+  medium: { terrainResolution: 288, bloom: true, grain: true, colorGrade: true },
+  high: { terrainResolution: 384, bloom: true, grain: true, colorGrade: true },
 }
 
 const PIXEL_RATIO_CAP: Record<QualityTier, number> = {

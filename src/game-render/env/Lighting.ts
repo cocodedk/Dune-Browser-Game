@@ -39,7 +39,13 @@ export function createLighting(scene: Scene): LightingRig {
     fill,
     applyPalette(palette, distance = 700): void {
       sun.color = toColor(palette.sun)
-      fill.color = toColor(palette.zenith)
+      // The sky fill lands on exactly the up-facing crests the sun already
+      // lights, so a literal blue zenith greys out the brightest sand on the
+      // screen: measured, it held daytime saturation at 0.38 while dusk
+      // reached 0.50. Pulled toward the sun's colour it stays a *sky* bounce
+      // without bleeding the ochre out of the desert. The dome itself keeps
+      // the true zenith colour — this is the bounce, not the sky.
+      fill.color = toColor(palette.zenith).lerp(toColor(palette.sun), 0.62)
       fill.groundColor = toColor(palette.horizon)
 
       // Elevation runs -1 (midnight) to 1 (noon). Keep a sliver of light below
@@ -59,8 +65,8 @@ export function createLighting(scene: Scene): LightingRig {
       // Kept deliberately low. At the first pass (sun 2.4 + fill 0.9) ACES
       // rolled the sand off to near-white and every dune form vanished. Sand
       // is highly reflective, so it blows out long before you expect it to.
-      sun.intensity = Math.max(0.08, 0.22 + Math.max(0, elevation) * 1.05)
-      fill.intensity = Math.max(0.14, 0.2 + Math.max(0, elevation) * 0.22)
+      sun.intensity = Math.max(0.08, 0.20 + Math.max(0, elevation) * 0.62)
+      fill.intensity = Math.max(0.14, 0.16 + Math.max(0, elevation) * 0.12)
     },
     dispose(): void {
       scene.remove(sun)

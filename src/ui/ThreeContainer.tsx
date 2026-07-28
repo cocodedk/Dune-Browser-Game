@@ -6,6 +6,8 @@
 import { useEffect, useRef } from 'react'
 import { Raycaster, Vector2, Vector3, Plane } from 'three'
 import { world } from '../game-engine/GameState'
+import { DAY_SECONDS } from '../game-engine/TimeSystem'
+import { paletteForTime } from '../game-render/materials/Atmosphere'
 import { initLoop, tick } from '../runtime/GameDriver'
 import { wireCommands } from '../runtime/CommandWiring'
 import { decideVisit } from '../runtime/VisitPolicy'
@@ -20,7 +22,7 @@ import { createFlightMode } from '../game-render/modes/flight/FlightMode'
 import { createConversationMode } from '../game-render/modes/conversation/ConversationMode'
 import { createLocationMode } from '../game-render/modes/location/LocationMode'
 import {
-  attachDebugHandle, detachDebugHandle, inspectScene,
+  attachDebugHandle, detachDebugHandle, wireDebugHandle,
 } from '../game-render/core/DebugHandle'
 import { AudioManager } from '../game-render/audio/AudioManager'
 import { startTravel } from '../game-engine/TravelSystem'
@@ -97,19 +99,13 @@ export default function ThreeContainer() {
     const audio = new AudioManager()
     audio.playAmbient('ambient_desert')
     const debug = attachDebugHandle(dispatchPick)
-    if (debug) {
-      debug.audio = audio.debugState
-      debug.inspect = () => {
-        const scene = modes.scene
-        if (!scene) return []
-        return inspectScene(
-          scene,
-          modes.active?.camera ?? handle.camera,
-          canvas.clientWidth,
-          canvas.clientHeight,
-        )
-      }
-    }
+    wireDebugHandle(debug, {
+      audio: audio.debugState,
+      setTime: seconds => { world.time = seconds },
+      scene: () => modes.scene,
+      camera: () => modes.active?.camera ?? handle.camera,
+      size: () => ({ width: canvas.clientWidth, height: canvas.clientHeight }),
+    })
     initLoop()
 
     let raf = 0
@@ -140,6 +136,11 @@ export default function ThreeContainer() {
       }
 
       modes.update(deltaMs, world)
+
+      // Exposure follows the hour. The palette has always computed this; until
+      // now nothing read it, so tone mapping sat at a fixed 1.0 and noon
+      // bleached the desert flat while midnight crushed it.
+      handle.setExposure(paletteForTime(world.time, DAY_SECONDS).exposure)
 
       const scene = modes.scene
       if (scene) handle.render(scene, modes.active?.camera)

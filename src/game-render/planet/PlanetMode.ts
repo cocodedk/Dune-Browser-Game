@@ -69,7 +69,7 @@ export function createPlanetMode(
     lighting.applyPalette(palette, RADIUS * 3)
 
     const shadow = new Color('#6e3113').lerp(rgb(palette.ambient), 0.18)
-    const crest = new Color('#e3b972').lerp(rgb(palette.sun), 0.22)
+    const crest = new Color('#dcab5c').lerp(rgb(palette.sun), 0.10)
     sand.setPalette(shadow, crest, shadow.clone().multiplyScalar(0.62))
     sand.setGlint(Math.max(0, palette.sunElevation) * 0.06)
 

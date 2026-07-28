@@ -18,6 +18,8 @@ export interface RendererHandle {
   readonly renderer: WebGLRenderer
   readonly camera: PerspectiveCamera
   render(scene: Scene, override?: Camera): void
+  /** Tone-mapping exposure for the current hour. */
+  setExposure(value: number): void
   /** Paint the clear colour with no scene — used before a mode has loaded. */
   clear(): void
   info(): { calls: number; triangles: number }
@@ -90,6 +92,11 @@ export function createRenderer(
     camera,
     render(scene: Scene, override?: Camera): void {
       renderer.render(scene, override ?? camera)
+    },
+    setExposure(value: number): void {
+      // Clamped: the palette is data, and a bad keyframe should wash the
+      // image out a little rather than turn the screen white or black.
+      renderer.toneMappingExposure = Math.max(0.2, Math.min(2, value))
     },
     clear(): void {
       renderer.clear()
