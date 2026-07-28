@@ -96,7 +96,7 @@ export function createPlanetMode(
 
   const orbit = createOrbitControl(camera, canvas, {
     radius: RADIUS,
-    onDescend: onDescend ? () => onDescend(orbit.centre) : undefined,
+    onDescend,
   })
 
   // Sized to the mean surface, so a click lands on the ground rather than on

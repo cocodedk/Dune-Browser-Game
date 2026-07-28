@@ -6,6 +6,7 @@
 // of a strategic view — the player should never be able to lose the world.
 
 import { Vector3, type PerspectiveCamera } from 'three'
+import { createAiming } from './aiming'
 import { zoomToDistance } from './sphere'
 
 export interface OrbitControl {
@@ -27,7 +28,7 @@ export interface OrbitControl {
 export interface OrbitOptions {
   radius: number
   /** Fired once the player has zoomed all the way down. */
-  onDescend?: () => void
+  onDescend?: (target: { lat: number; lon: number }) => void
 }
 
 export function createOrbitControl(
@@ -74,12 +75,35 @@ export function createOrbitControl(
   }
   applyAt(zoom)
 
+  const aiming = createAiming(camera, canvas, radius)
+  const pointUnderCursor = aiming.pointUnderCursor
+  const anglesFor = aiming.anglesFor
+  const centreOfView = aiming.centreOfView
+
+  /** Where this zoom gesture is headed, captured once and held. */
+  let aim: { lat: number; lon: number } | null = null
+
   let dragging = false
   let lastX = 0
   let lastY = 0
 
   function onWheel(e: WheelEvent): void {
     e.preventDefault()
+
+    // Take the aim from the first notch of the gesture, while the camera is
+    // still far enough out for the cursor to select a distinct place.
+    //
+    // Reading it at the moment of descent does not work: by then the camera
+    // has eased down to about 1.3 planet radii, the whole screen covers a few
+    // degrees of ground, and "under the cursor" has collapsed into "under the
+    // camera" — which is the centre-locked answer this is meant to replace.
+    if (e.deltaY < 0 && !aim && zoom < 0.55) {
+      const u = pointUnderCursor(e)
+      if (u) aim = anglesFor(u)
+    } else if (e.deltaY > 0) {
+      // Pulling back abandons the approach.
+      aim = null
+    }
 
     // Fraction of remaining distance per notch.
     //
@@ -93,10 +117,15 @@ export function createOrbitControl(
     // Bottoming out the zoom is the player asking to land. Handing off to the
     // surface view beats letting them press against a sphere whose
     // tessellation cannot carry a close look.
-    if (zoom >= 0.999 && onDescend) onDescend()
+    if (zoom >= 0.999 && onDescend) {
+      onDescend(aim ?? centreOfView())
+      aim = null
+    }
   }
 
   function onDown(e: PointerEvent): void {
+    // Turning the globe by hand is a fresh intent.
+    aim = null
     if (e.button !== 0) return
     dragging = true
     lastX = e.clientX
@@ -126,14 +155,7 @@ export function createOrbitControl(
   return {
     get zoom(): number { return eased },
     get centre(): { lat: number; lon: number } {
-      // Camera position inverted through the same convention latLonToVec3
-      // uses, so descending lands where the player was looking.
-      const p = camera.position
-      const length = Math.hypot(p.x, p.y, p.z) || 1
-      return {
-        lat: (Math.asin(Math.max(-1, Math.min(1, p.y / length))) * 180) / Math.PI,
-        lon: (Math.atan2(p.z, p.x) * 180) / Math.PI,
-      }
+      return centreOfView()
     },
     step(deltaMs: number): boolean {
       // Ease rather than snap, so a wheel notch reads as movement toward the
