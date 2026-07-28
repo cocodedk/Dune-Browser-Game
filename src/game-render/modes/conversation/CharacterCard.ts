@@ -41,6 +41,15 @@ function drawPortrait(name: string, role: string, def: PortraitDef): CanvasTextu
   ctx.fillStyle = backdrop
   ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
 
+  // Flat warm lift across the whole card. The diorama gets its readability
+  // from exactly this step — a 28% apricot tint over its gradient — and the
+  // card had only a radial glow. This was the one compositing difference
+  // between the two, and the card is the one that read as black.
+  ctx.globalAlpha = 0.28
+  ctx.fillStyle = '#e8a86a'
+  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+  ctx.globalAlpha = 1
+
   // Key light. Hardness controls how tightly the glow falls off, which is what
   // separates a soldier from a scientist without changing the drawing at all.
   const spread = CARD_WIDTH * (1.05 - def.keyHardness * 0.62)

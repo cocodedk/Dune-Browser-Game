@@ -47,6 +47,14 @@ playthroughs in microseconds under four strategies.
    and the cause is still unknown. Roughly seven attempts went into this; a
    fresh pair of eyes will likely beat another hour of mine.
 
+   Eight attempts total. Eliminated with evidence: the scrim (disabling it
+   entirely changed nothing), tone mapping, sRGB colour space, group render
+   order, material transparency, silhouette size, and a flat warm tint
+   matching the one the diorama uses. The diorama renders correctly through
+   the same pipeline, which is the strongest clue available: diff the two
+   draw paths rather than theorising about the colour pipeline, because the
+   pipeline has now been ruled out four separate ways.
+
 2. **Portrait direction is a defensible default, not a chosen one.** All values
    live in `src/data/portraits.ts` and can be redirected without touching the
    renderer.
