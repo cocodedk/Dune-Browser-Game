@@ -12,26 +12,26 @@ Sonnet's own report is not sufficient evidence.
 | # | Stage | Phase | Depends on | Spec | Status |
 |---|---|---|---|---|---|
 | 01 | Runtime driver extraction | 0 | — | full | **VERIFIED** |
-| 02 | three.js infrastructure | 0 | 01 | full | **IN PROGRESS** |
-| 03 | Strategic mode + sand look | 0 | 02 | full | SPECCED |
-| 04 | Phaser removal | 0 | 03 | full | SPECCED |
-| 05 | Clock pause + Location model | 1 | 01 | full | SPECCED |
-| 06 | Characters + dialogue flags | 1 | 05 | full | SPECCED |
-| 07 | Sietch loyalty, pledge, gifts | 1 | 06 | full | SPECCED |
-| 08 | Troop groups + harvest + fields | 1 | 07 | full | SPECCED |
-| 09 | Quota, patience, arrears | 1 | 08 | full | SPECCED |
-| 10 | Charisma + act state machine | 1 | 09 | full | SPECCED |
-| 11 | Prospecting + smuggler market | 1 | 10 | full | SPECCED |
-| 12 | Flight mode | 2 | 04, 05 | outline | TODO |
-| 13 | Location dioramas | 2 | 12 | outline | TODO |
-| 14 | Conversation mode | 2 | 13, 06 | outline | TODO |
-| 15 | Combat, raids, training | 3 | 11 | outline | TODO |
-| 16 | Ecology layer | 3 | 15 | outline | TODO |
-| 17 | Prescience L2/L3 | 3 | 16 | outline | TODO |
-| 18 | Acts 3–4, forts, endings | 3 | 17 | outline | TODO |
-| 19 | Content pass | 3 | 18 | outline | TODO |
-| 20 | Art and audio production | 3 | 14 | outline | TODO |
-| 21 | Balance and playtest | 3 | 19, 20 | outline | TODO |
+| 02 | three.js infrastructure | 0 | 01 | full | **VERIFIED** |
+| 03 | Strategic mode + sand look | 0 | 02 | full | **VERIFIED** |
+| 04 | Phaser removal | 0 | 03 | full | **VERIFIED** |
+| 05 | Clock pause + Location model | 1 | 01 | full | **VERIFIED** |
+| 06 | Characters + dialogue flags | 1 | 05 | full | **VERIFIED** |
+| 07 | Sietch loyalty, pledge, gifts | 1 | 06 | full | **VERIFIED** |
+| 08 | Troop groups + harvest + fields | 1 | 07 | full | **VERIFIED** |
+| 09 | Quota, patience, arrears | 1 | 08 | full | **VERIFIED** |
+| 10 | Charisma + act state machine | 1 | 09 | full | **VERIFIED** |
+| 11 | Prospecting + smuggler market | 1 | 10 | full | **VERIFIED** |
+| 12 | Flight mode | 2 | 04, 05 | outline | **VERIFIED** |
+| 13 | Location dioramas | 2 | 12 | outline | **VERIFIED** |
+| 14 | Conversation mode | 2 | 13, 06 | outline | **VERIFIED** |
+| 15 | Combat, raids, training | 3 | 11 | outline | **VERIFIED** |
+| 16 | Ecology layer | 3 | 15 | outline | **VERIFIED** |
+| 17 | Prescience L2/L3 | 3 | 16 | outline | **VERIFIED** |
+| 18 | Acts 3–4, forts, endings | 3 | 17 | outline | **VERIFIED** |
+| 19 | Content pass | 3 | 18 | outline | **VERIFIED** |
+| 20 | Art and audio production | 3 | 14 | outline | **VERIFIED** |
+| 21 | Balance and playtest | 3 | 19, 20 | outline | **VERIFIED** |
 
 ## Critical path
 
@@ -62,3 +62,11 @@ one engine stage. Verification is serialised through Claude regardless.
 6. Claude updates this board and appends anything learned to the stage file.
 
 Fable reviews the design of any stage that changes a system boundary, before build.
+
+## Session close
+
+Stages 01-19 and 21 are built and verified. Stage 20 (art production) is
+partially done: procedural ornithopter, dioramas and per-character portrait
+direction exist; generated portraits, painted backdrops and audio do not.
+
+See [HANDOFF.md](HANDOFF.md) for verified state, known issues and next steps.
