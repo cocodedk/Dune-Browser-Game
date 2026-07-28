@@ -22,15 +22,21 @@ export function createModeManager(
   world: WorldState,
   canvas: HTMLElement,
 ): ModeManager {
+  // Where the player last came down. The surface view is one dune field, so
+  // it has to be told which patch of Arrakis it represents — otherwise
+  // descending anywhere lands in the same place.
+  let descentCentre = { lat: 0, lon: 0 }
+
   const modes: ModeManager = new ModeManager({
     // Orbit. Zooming all the way in descends to the surface.
     strategic: () =>
-      createPlanetMode(camera, quality, world, canvas, () =>
-        modes.handleSignal({ kind: 'descend' }),
-      ),
+      createPlanetMode(camera, quality, world, canvas, centre => {
+        descentCentre = centre
+        modes.handleSignal({ kind: 'descend' })
+      }),
     // The dune field underfoot. Zooming back out returns to orbit.
     surface: () =>
-      createStrategicMode(camera, quality, world, canvas, () =>
+      createStrategicMode(camera, quality, world, canvas, descentCentre, () =>
         modes.handleSignal({ kind: 'ascend' }),
       ),
     conversation: () => createConversationMode(camera),

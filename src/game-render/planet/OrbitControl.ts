@@ -11,6 +11,14 @@ import { zoomToDistance } from './sphere'
 export interface OrbitControl {
   /** Eased altitude, 0 at orbit and 1 at the surface. */
   readonly zoom: number
+  /**
+   * The point on the globe directly under the camera, in degrees.
+   *
+   * This is what the surface view descends *to*. Without it the ground was a
+   * single fixed dune field at the origin, so coming down over the far side
+   * of the planet landed you in exactly the same place.
+   */
+  readonly centre: { lat: number; lon: number }
   /** Advance the easing. Returns true when the camera actually moved. */
   step(deltaMs: number): boolean
   dispose(): void
@@ -111,6 +119,16 @@ export function createOrbitControl(
 
   return {
     get zoom(): number { return eased },
+    get centre(): { lat: number; lon: number } {
+      // Camera position inverted through the same convention latLonToVec3
+      // uses, so descending lands where the player was looking.
+      const p = camera.position
+      const length = Math.hypot(p.x, p.y, p.z) || 1
+      return {
+        lat: (Math.asin(Math.max(-1, Math.min(1, p.y / length))) * 180) / Math.PI,
+        lon: (Math.atan2(p.z, p.x) * 180) / Math.PI,
+      }
+    },
     step(deltaMs: number): boolean {
       // Ease rather than snap, so a wheel notch reads as movement toward the
       // planet instead of a jump cut.

@@ -42,7 +42,7 @@ export function createPlanetMode(
   world: WorldState,
   canvas: HTMLElement,
   /** Called once the player has zoomed all the way down to the surface. */
-  onDescend?: () => void,
+  onDescend?: (centre: { lat: number; lon: number }) => void,
 ): SceneMode {
   const scene = new Scene()
 
@@ -80,7 +80,10 @@ export function createPlanetMode(
   const worlds = createNamedStars(RADIUS * 26)
   scene.add(worlds.group)
 
-  const orbit = createOrbitControl(camera, canvas, { radius: RADIUS, onDescend })
+  const orbit = createOrbitControl(camera, canvas, {
+    radius: RADIUS,
+    onDescend: onDescend ? () => onDescend(orbit.centre) : undefined,
+  })
 
   const ecology = createPlanetEcology(planet, world)
 

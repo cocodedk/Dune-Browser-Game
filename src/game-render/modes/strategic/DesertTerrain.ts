@@ -10,6 +10,7 @@ import { generateHeightfield } from '../../terrain/heightfield'
 import { createTerrainMesh } from './TerrainMesh'
 import { createGroundPlane } from './GroundPlane'
 import type { QualitySettings } from '../../core/Quality'
+import { seedForLocation } from './localMap'
 
 /** Terrain extent in world units. Everything else scales off this. */
 export const WORLD_SIZE = 4400
@@ -26,11 +27,15 @@ export function createDesertTerrain(
   scene: Scene,
   quality: QualitySettings,
   sandMaterial: Material,
+  /** Where on the globe this patch of desert is. */
+  centre: { lat: number; lon: number } = { lat: 0, lon: 0 },
 ): DesertTerrain {
   const heightfield = generateHeightfield({
     resolution: quality.terrainResolution,
     worldSize: WORLD_SIZE,
-    seed: TERRAIN_SEED,
+    // Seeded from the place, so two parts of Arrakis do not generate the
+    // same dunes and landing anywhere does not look like landing everywhere.
+    seed: seedForLocation(centre, TERRAIN_SEED),
     // Seen from a low angle, 78 read as ripples on a beach rather than dunes.
     // Sand can stand at about 34 degrees before it slips, and this is the
     // amplitude that puts the steep faces near that limit at this wavelength.

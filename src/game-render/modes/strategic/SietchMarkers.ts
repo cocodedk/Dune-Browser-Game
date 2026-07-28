@@ -55,11 +55,17 @@ export function createSietchMarkers(
   world: WorldState,
   spread: number,
   heightAt: (x: number, z: number) => number,
+  /**
+   * Pre-computed positions. The surface view supplies these because it lays
+   * markers out relative to where the player came down, not relative to a
+   * fixed world origin.
+   */
+  given?: MarkerPlacement[],
 ): SietchMarkers {
   const group = new Group()
   group.name = 'sietch-markers'
 
-  const placements = layoutMarkers(world.villages, spread)
+  const placements = given ?? layoutMarkers(world.villages, spread)
   const entries: MarkerEntry[] = []
 
   // Shared geometry across every marker — only the materials differ.

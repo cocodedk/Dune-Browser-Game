@@ -13,7 +13,7 @@ import { createDesertTerrain, WORLD_SIZE } from './DesertTerrain'
 import { createDesertSky } from './DesertSky'
 import { createCameraRig } from '../../core/CameraRig'
 import { createSietchMarkers } from './SietchMarkers'
-import { projectToWorld } from './markerLayout'
+import { localPlacements } from './localMap'
 import { createPlayerToken } from './PlayerToken'
 import { createMarkerLabels } from './MarkerLabels'
 
@@ -22,6 +22,8 @@ export function createStrategicMode(
   quality: QualitySettings,
   world: WorldState,
   canvas: HTMLElement,
+  /** The point on the globe the player came down at. */
+  centre: { lat: number; lon: number },
   /** Called when the player zooms back out past the surface view. */
   onAscend?: () => void,
 ): SceneMode {
@@ -30,27 +32,29 @@ export function createStrategicMode(
   const sand = createSandMaterial({
     glintStrength: quality.tier === 'low' ? 0 : 0.07,
   })
-  const terrain = createDesertTerrain(scene, quality, sand.material as Material)
+  const terrain = createDesertTerrain(scene, quality, sand.material as Material, centre)
   const sky = createDesertSky(scene, sand, WORLD_SIZE)
 
   // Villages occupy the readable middle of the map, not the fogged distance.
   const MARKER_SPREAD = WORLD_SIZE * 0.42
 
-  // The surface view is one dune field, not the planet. Once sietches existed
-  // on the far side of the globe their projected positions ran far outside
-  // this terrain — markers standing on nothing, thousands of units past
-  // anywhere the camera can pan. Only what is plausibly local is drawn here;
-  // the globe is the map for everywhere else.
-  const LOCAL_EXTENT = MARKER_SPREAD * 0.62
+  // The surface view is one dune field, and it now knows which one. Markers
+  // are laid out by bearing and distance from where the player came down, so
+  // descending over the far side of the planet shows the sietches that are
+  // actually there rather than the same central cluster every time.
+  const LOCAL_DEGREES = 20
+  const placements = localPlacements(
+    world.villages, centre, MARKER_SPREAD * 0.8, LOCAL_DEGREES,
+  )
+  const nearby = new Set(placements.map(p => p.id))
   const localWorld = {
     ...world,
-    villages: world.villages.filter(v => {
-      const { x, z } = projectToWorld(v.position, MARKER_SPREAD)
-      return Math.abs(x) <= LOCAL_EXTENT && Math.abs(z) <= LOCAL_EXTENT
-    }),
+    villages: world.villages.filter(v => nearby.has(v.id)),
   }
 
-  const markers = createSietchMarkers(localWorld, MARKER_SPREAD, terrain.heightAt)
+  const markers = createSietchMarkers(
+    localWorld, MARKER_SPREAD, terrain.heightAt, placements,
+  )
   scene.add(markers.group)
 
   const playerToken = createPlayerToken(MARKER_SPREAD, terrain.heightAt)
