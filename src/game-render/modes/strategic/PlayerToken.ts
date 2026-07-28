@@ -6,8 +6,11 @@
 
 import { Group, Mesh, ConeGeometry, SphereGeometry, MeshBasicMaterial } from 'three'
 import type { WorldState } from '../../../types'
-import { currentTravelProgress } from '../../../game-engine/TravelSystem'
-import { projectToWorld } from './markerLayout'
+import { SOURCE_WIDTH, SOURCE_HEIGHT } from './markerLayout'
+import { angularDistance } from './localMap'
+import type { LatLon } from './localMap'
+import { canvasToLatLon } from '../../planet/sphere'
+import { playerAnchor, anchorPoint, longitudeDelta } from '../../../game-engine/position/playerAnchor'
 
 const HOVER_HEIGHT = 46
 const BOB_AMPLITUDE = 3.5
@@ -18,9 +21,23 @@ export interface PlayerToken {
   dispose(): void
 }
 
+/**
+ * @param centre The descent point this dune field represents.
+ *
+ * The token used to place itself with projectToWorld — the *old global* flat
+ * projection, mapping the whole canvas around the world origin. Every marker
+ * beside it has been placed by localPlacements, in bearing and distance from
+ * the descent centre, since the surface view learned where it was. The two
+ * frames agree nowhere: even landing dead-centre put the token at a small
+ * fraction of the right distance, and landing anywhere else left it hovering
+ * over sand unrelated to any settlement. The one "you are here" instrument in
+ * the game was pointing at the wrong place.
+ */
 export function createPlayerToken(
   spread: number,
   heightAt: (x: number, z: number) => number,
+  centre: LatLon,
+  localDegrees: number,
 ): PlayerToken {
   const group = new Group()
   group.name = 'player-token'
@@ -41,26 +58,26 @@ export function createPlayerToken(
   bead.renderOrder = 20
   group.add(bead)
 
+  const perDegree = spread / localDegrees
+
   function update(world: WorldState, elapsedMs: number): void {
-    const { player } = world
+    const anchor = playerAnchor(world, p => canvasToLatLon(p, SOURCE_WIDTH, SOURCE_HEIGHT))
+    if (!anchor) return
 
-    const from = world.villages.find(v => v.id === player.location)
-    if (!from) return
+    const here = anchorPoint(anchor)
 
-    let target = projectToWorld(from.position, spread)
-
-    if (player.state === 'traveling' && player.travelTarget) {
-      const to = world.villages.find(v => v.id === player.travelTarget)
-      if (to) {
-        const progress = currentTravelProgress(world)
-        const a = projectToWorld(from.position, spread)
-        const b = projectToWorld(to.position, spread)
-        target = {
-          x: a.x + (b.x - a.x) * progress,
-          z: a.z + (b.z - a.z) * progress,
-        }
-      }
+    // Over the horizon means over the horizon: a token for somewhere outside
+    // this dune field would be a mark pointing off the edge of the world.
+    if (angularDistance(centre, here) > localDegrees) {
+      group.visible = false
+      return
     }
+    group.visible = true
+
+    // The same frame localPlacements uses, so the token and the markers agree.
+    const east = longitudeDelta(centre.lon, here.lon)
+      * Math.cos((centre.lat * Math.PI) / 180)
+    const target = { x: east * perDegree, z: -(here.lat - centre.lat) * perDegree }
 
     const bob = Math.sin(elapsedMs * 0.0022) * BOB_AMPLITUDE
     group.position.set(

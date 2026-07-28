@@ -11,6 +11,7 @@ import type { WorldState } from '../../types'
 import type { QualitySettings } from './Quality'
 import { ModeManager } from './ModeManager'
 import { EventBus } from '../../EventBus'
+import { surfaceCentre, descentTarget } from '../modes/strategic/localMap'
 import { createPlanetMode } from '../planet/PlanetMode'
 import { createStrategicMode } from '../modes/strategic/StrategicMode'
 import { createFlightMode } from '../modes/flight/FlightMode'
@@ -32,13 +33,23 @@ export function createModeManager(
     // Orbit. Zooming all the way in descends to the surface.
     strategic: () =>
       createPlanetMode(camera, quality, world, canvas, centre => {
-        descentCentre = centre
+        // Snapped, because the camera reports the middle of the screen and
+        // the player was aiming at a sietch.
+        descentCentre = descentTarget(centre, world.villages)
         modes.handleSignal({ kind: 'descend' })
       }),
     // The dune field underfoot. Zooming back out returns to orbit.
     surface: () =>
-      createStrategicMode(camera, quality, world, canvas, descentCentre, () =>
-        modes.handleSignal({ kind: 'ascend' }),
+      createStrategicMode(
+        camera, quality, world, canvas,
+        // Stepping out of a sietch centres on that sietch, not on wherever
+        // the player last zoomed down — which after any travel is stale.
+        surfaceCentre(
+          modes.previousId,
+          descentCentre,
+          world.villages.find(v => v.id === world.player.location)?.position,
+        ),
+        () => modes.handleSignal({ kind: 'ascend' }),
       ),
     conversation: () => createConversationMode(camera, canvas),
     location: () =>

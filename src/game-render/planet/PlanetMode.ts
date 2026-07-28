@@ -29,6 +29,7 @@ import { SOURCE_WIDTH, SOURCE_HEIGHT } from '../modes/strategic/markerLayout'
 import { createWormSign } from './WormSign'
 import { createDesertSites } from './DesertSites'
 import { createCrewUnits } from './CrewUnits'
+import { createPlayerBeacon } from './PlayerBeacon'
 import { createSunPlacer } from './PlanetSun'
 
 const DAY_SECONDS = 60
@@ -107,6 +108,9 @@ export function createPlanetMode(
 
   const crews = createCrewUnits(RADIUS, d => planet.radiusAt(d))
   scene.add(crews.group)
+
+  const beacon = createPlayerBeacon(RADIUS, d => planet.radiusAt(d))
+  scene.add(beacon.group)
   let elapsedMs = 0
 
   const placeSun = createSunPlacer(lighting, camera, RADIUS)
@@ -155,6 +159,7 @@ export function createPlanetMode(
       sites.update(state.desertSites, orbit.zoom)
       elapsedMs += deltaMs
       crews.update(state, elapsedMs)
+      beacon.update(state, camera, elapsedMs)
     },
     dispose(): void {
       orbit.dispose()
@@ -167,12 +172,14 @@ export function createPlanetMode(
       scene.remove(wormSign.group)
       scene.remove(sites.group)
       scene.remove(crews.group)
+      scene.remove(beacon.group)
       lighting.dispose()
       moons.dispose()
       worlds.dispose()
       wormSign.dispose()
       sites.dispose()
       crews.dispose()
+      beacon.dispose()
       planet.dispose()
       stars.dispose()
       air.dispose()

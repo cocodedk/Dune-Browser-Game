@@ -52,6 +52,17 @@ export function wireDebugSources(
           })
         }
       },
+      giveEquipment: kind => {
+        for (const group of world.troopGroups) {
+          world.equipment.push({
+            id: `debug_${kind}_${group.id}`,
+            kind: kind as (typeof world.equipment)[number]['kind'],
+            locationId: null,
+            groupId: group.id,
+            condition: 100,
+          })
+        }
+      },
       endRun: ending => {
         world.goalAchieved = true
         world.ending = ending as typeof world.ending

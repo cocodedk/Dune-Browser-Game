@@ -92,3 +92,54 @@ export function seedForLocation(centre: LatLon, base: number): number {
   const lon = Math.round(centre.lon / 4)
   return (base ^ Math.imul(lat + 512, 73856093) ^ Math.imul(lon + 512, 19349663)) >>> 0
 }
+
+/**
+ * Which patch of desert the surface view should show.
+ *
+ * Coming down from orbit, it is wherever the player zoomed in. Stepping out of
+ * a location, it must be where they are *standing* — the descent centre is
+ * whatever they last zoomed down at, which after any travel is stale and can
+ * be half a planet away. Walking out of a sietch and finding a stretch of
+ * desert that does not even contain it is the single worst answer to "where
+ * am I".
+ */
+export function surfaceCentre(
+  previousMode: string,
+  orbitCentre: LatLon,
+  playerPosition: { x: number; y: number } | undefined,
+): LatLon {
+  if (previousMode !== 'location' || !playerPosition) return orbitCentre
+  return canvasToLatLon(playerPosition, SOURCE_WIDTH, SOURCE_HEIGHT)
+}
+
+/**
+ * Where a descent from orbit should actually put the player.
+ *
+ * The orbit camera reports the point directly beneath itself, which is the
+ * centre of the visible disc — not the sietch the player was looking at when
+ * they scrolled in. Since a sietch is almost never dead-centre, zooming down
+ * "on" one landed you in empty desert some degrees away from it, which reads
+ * as the game ignoring you.
+ *
+ * So a descent snaps to the nearest settlement the player knows about, if one
+ * is close enough to have plausibly been the thing they aimed at. Beyond that
+ * the desert is the desert and they land where they pointed.
+ */
+export function descentTarget(
+  centre: LatLon,
+  settlements: readonly { id: string; discovered: boolean; position: { x: number; y: number } }[],
+  snapDegrees = 14,
+): LatLon {
+  let best: LatLon | null = null
+  let bestDistance = snapDegrees
+
+  for (const s of settlements) {
+    if (!s.discovered) continue
+    const ll = canvasToLatLon(s.position, SOURCE_WIDTH, SOURCE_HEIGHT)
+    const d = angularDistance(centre, ll)
+    if (d >= bestDistance) continue
+    best = ll
+    bestDistance = d
+  }
+  return best ?? centre
+}

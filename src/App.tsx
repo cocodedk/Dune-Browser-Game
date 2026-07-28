@@ -12,6 +12,7 @@ import GoalOverlay from './ui/GoalOverlay'
 import { COMMAND_COLUMN_WIDTH, palette } from './ui/theme'
 import OrnamentFrame from './ui/Ornament'
 import ViewHint from './ui/ViewHint'
+import PositionStrip from './ui/PositionStrip'
 
 // three.js is now the only renderer; Phaser is gone. Kept lazy so the 3D
 // chunk stays out of the initial payload.
@@ -36,6 +37,7 @@ export default function App() {
 
       {/* Title, floating top-left over the sand */}
       <div style={styles.title}>DUNE</div>
+      <PositionStrip />
 
       {/* Command column, floating right. Scrolls independently of the map. */}
       <div style={styles.column}>

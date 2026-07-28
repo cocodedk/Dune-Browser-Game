@@ -3,7 +3,13 @@
 import { describe, it, expect } from 'vitest'
 import {
   longitudeDelta, angularDistance, localPlacements, seedForLocation,
+  surfaceCentre, descentTarget,
 } from './localMap'
+import { canvasToLatLon } from '../../planet/sphere'
+import { SOURCE_WIDTH, SOURCE_HEIGHT } from './markerLayout'
+
+const canvasToLatLonAt = (p: { x: number; y: number }) =>
+  canvasToLatLon(p, SOURCE_WIDTH, SOURCE_HEIGHT)
 
 const SPREAD = 1848
 const EXTENT = 22
@@ -108,5 +114,59 @@ describe('seedForLocation', () => {
   it('does not regenerate the world for small camera drift', () => {
     expect(seedForLocation({ lat: 10, lon: 20 }, 7))
       .toBe(seedForLocation({ lat: 10.4, lon: 20.3 }, 7))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// surfaceCentre and descentTarget — the "where am I" repairs
+// ---------------------------------------------------------------------------
+
+describe('surfaceCentre', () => {
+  const orbit = { lat: 40, lon: 120 }
+  const tabr = { x: 140, y: 390 }
+
+  it('uses the orbit centre when coming down from space', () => {
+    expect(surfaceCentre('strategic', orbit, tabr)).toEqual(orbit)
+  })
+
+  it('centres on the player when stepping out of a location', () => {
+    // The bug: the descent centre is whatever the player last zoomed down at,
+    // which after any travel can be half a planet from where they stand.
+    const centre = surfaceCentre('location', orbit, tabr)
+    expect(centre).not.toEqual(orbit)
+    expect(angularDistance(centre, canvasToLatLonAt(tabr))).toBeLessThan(0.01)
+  })
+
+  it('falls back to the orbit centre when the player is nowhere', () => {
+    expect(surfaceCentre('location', orbit, undefined)).toEqual(orbit)
+  })
+})
+
+describe('descentTarget', () => {
+  const villages = [
+    { id: 'tabr', discovered: true, position: { x: 140, y: 390 } },
+    { id: 'hidden', discovered: false, position: { x: 150, y: 385 } },
+  ]
+  const tabrLl = canvasToLatLonAt({ x: 140, y: 390 })
+
+  it('snaps to a settlement the player was plainly aiming at', () => {
+    const near = { lat: tabrLl.lat + 3, lon: tabrLl.lon + 3 }
+    expect(angularDistance(descentTarget(near, villages), tabrLl)).toBeLessThan(0.01)
+  })
+
+  it('leaves a deliberate desert landing alone', () => {
+    const far = { lat: tabrLl.lat + 40, lon: tabrLl.lon + 40 }
+    expect(descentTarget(far, villages)).toEqual(far)
+  })
+
+  it('never snaps to a place the player has not discovered', () => {
+    const nearHidden = canvasToLatLonAt({ x: 150, y: 385 })
+    const landed = descentTarget(nearHidden, [villages[1]])
+    expect(landed).toEqual(nearHidden)
+  })
+
+  it('returns the point unchanged when there is nothing to snap to', () => {
+    const p = { lat: 5, lon: 5 }
+    expect(descentTarget(p, [])).toEqual(p)
   })
 })

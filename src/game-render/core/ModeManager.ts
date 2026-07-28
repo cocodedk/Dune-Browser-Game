@@ -35,7 +35,7 @@ export type ModeFactory = () => SceneMode
 export class ModeManager {
   private factories: Partial<Record<SceneModeId, ModeFactory>>
   private activeMode: SceneMode | null = null
-  private previousId: SceneModeId = 'strategic'
+  private previous: SceneModeId = 'strategic'
   private warned = new Set<SceneModeId>()
 
   /** The live mode, for callers needing mode-specific behaviour like picking. */
@@ -51,6 +51,11 @@ export class ModeManager {
     return this.activeMode?.id ?? 'strategic'
   }
 
+  /** The mode entered before this one, for factories that need the approach. */
+  get previousId(): SceneModeId {
+    return this.previous
+  }
+
   get scene(): Scene | null {
     return this.activeMode?.scene ?? null
   }
@@ -63,7 +68,7 @@ export class ModeManager {
 
   /** Route an engine signal through the pure reducer and switch if needed. */
   handleSignal(signal: EngineSignal): void {
-    const target = nextMode(this.currentId, signal, this.previousId)
+    const target = nextMode(this.currentId, signal, this.previous)
     if (target === this.currentId) return
     this.enter(target)
   }
@@ -95,7 +100,7 @@ export class ModeManager {
     }
 
     const outgoing = this.activeMode
-    if (outgoing) this.previousId = outgoing.id
+    if (outgoing) this.previous = outgoing.id
 
     this.activeMode = factory()
     outgoing?.dispose()

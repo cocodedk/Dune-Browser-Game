@@ -57,7 +57,9 @@ export function createStrategicMode(
   )
   scene.add(markers.group)
 
-  const playerToken = createPlayerToken(MARKER_SPREAD, terrain.heightAt)
+  const playerToken = createPlayerToken(
+    MARKER_SPREAD * 0.8, terrain.heightAt, centre, LOCAL_DEGREES,
+  )
   scene.add(playerToken.group)
 
   const labels = createMarkerLabels(

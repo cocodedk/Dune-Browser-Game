@@ -81,6 +81,8 @@ export interface DebugHandle {
    * draws on the sand should not.
    */
   giveHarvester?: () => void
+  /** Populated by ThreeContainer. Issues any equipment kind to every crew. */
+  giveEquipment?: (kind: string) => void
   /** Populated by ThreeContainer. Ends the run with a chosen ending. */
   endRun?: (ending: string) => void
   /**
@@ -141,6 +143,7 @@ export interface DebugSources {
   revealSites: () => void
   teleport: (villageId: string) => void
   giveHarvester: () => void
+  giveEquipment: (kind: string) => void
   endRun: (ending: string) => void
   player: NonNullable<DebugHandle['player']>
   scene: () => Object3D | null
@@ -162,6 +165,7 @@ export function wireDebugHandle(
   handle.revealSites = sources.revealSites
   handle.teleport = sources.teleport
   handle.giveHarvester = sources.giveHarvester
+  handle.giveEquipment = sources.giveEquipment
   handle.endRun = sources.endRun
   handle.player = sources.player
   handle.inspect = () => {
