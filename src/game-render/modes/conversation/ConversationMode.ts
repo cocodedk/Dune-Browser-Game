@@ -48,9 +48,14 @@ export function createConversationMode(camera: PerspectiveCamera): SceneMode {
   // whatever the desert is doing behind it.
   const scrimGeometry = new PlaneGeometry(CARD_PLANE_WIDTH * 2, CARD_PLANE_HEIGHT * 2)
   const scrimMaterial = new MeshBasicMaterial({
-    color: new Color('#0d0906'),
+    // Measured: the card renders at its authored colour (196,141,81). The
+    // view read as black because the scrim rendered the surrounding 80% of
+    // the frame at (13,8,4), and against that contrast a bright card looks
+    // dark. Lifting the scrim fixes the composition; the card never needed
+    // touching.
+    color: new Color('#2a1d12'),
     transparent: true,
-    opacity: 0.55,
+    opacity: 0.42,
     depthTest: false,
   })
   const scrim = new Mesh(scrimGeometry, scrimMaterial)

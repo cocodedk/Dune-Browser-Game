@@ -39,33 +39,21 @@ playthroughs in microseconds under four strategies.
 
 ## Known issues, honestly stated
 
-1. **The character card renders darker than its authored backdrop.** Not
-   solved. Ruled out with evidence: the scrim (disabling it entirely changed
-   nothing), tone mapping, sRGB colour space, group render order, and material
-   transparency. The per-character accent system demonstrably works — Ysane's
-   rim reads spice-blue. The overall level does not match the authored values
-   and the cause is still unknown. Roughly seven attempts went into this; a
-   fresh pair of eyes will likely beat another hour of mine.
+1. **RESOLVED — the card was never rendering wrong.** Measured with
+   `preserveDrawingBuffer` enabled: the card renders at `[196, 141, 81]`,
+   matching its authored source canvas `[199, 143, 81]` to within gradient
+   sampling error. The scrim rendered the surrounding 80% of the frame at
+   `[13, 8, 4]`, and against that contrast a genuinely bright card reads as
+   dark. Fixed by lifting the scrim; the card itself needed nothing.
 
-   Eight attempts total. Eliminated with evidence: the scrim (disabling it
-   entirely changed nothing), tone mapping, sRGB colour space, group render
-   order, material transparency, silhouette size, and a flat warm tint
-   matching the one the diorama uses. The diorama renders correctly through
-   the same pipeline, which is the strongest clue available: diff the two
-   draw paths rather than theorising about the colour pipeline, because the
-   pipeline has now been ruled out four separate ways.
+   Nine attempts went into this, and the cost was entirely self-inflicted: I
+   theorised from screenshots instead of measuring. Two separate confident
+   conclusions were published and both had to be corrected. The one measurement
+   that settled it took two minutes.
 
-   **MEASURED, and it corrects an earlier wrong conclusion.** Redrawing the
-   same gradient into a scratch canvas and sampling it gives
-   `[199, 143, 81, 255]` — a properly bright tan, exactly as authored. So
-   the colours were never too dark, and commit 7bb8fa6's claim that this
-   "was never a rendering bug" is WRONG. Something downstream darkens it.
-
-   Note for whoever measures next: reading the rendered pixel via
-   `drawImage` off the WebGL canvas returns `[0,0,0,0]`, because the context
-   defaults to `preserveDrawingBuffer: false`. Either construct the renderer
-   with that flag on for a debug session, or compare against a Playwright
-   screenshot, which does capture the composited result.
+   Trap for future readback: reading the WebGL canvas via `drawImage` returns
+   `[0,0,0,0]` unless the renderer is constructed with
+   `preserveDrawingBuffer: true`.
 
 2. **Portrait direction is a defensible default, not a chosen one.** All values
    live in `src/data/portraits.ts` and can be redirected without touching the
