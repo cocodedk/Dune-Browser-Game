@@ -33,20 +33,20 @@ describe('quota schedule', () => {
   })
 
   it('uses the authored amounts for the first three cycles', () => {
-    expect(baseAmountForCycle(0)).toBe(100)
-    expect(baseAmountForCycle(1)).toBe(250)
-    expect(baseAmountForCycle(2)).toBe(450)
+    expect(baseAmountForCycle(0)).toBe(90)
+    expect(baseAmountForCycle(1)).toBe(150)
+    expect(baseAmountForCycle(2)).toBe(260)
   })
 
   it('grows geometrically after the authored cycles', () => {
-    expect(baseAmountForCycle(3)).toBe(675)
-    expect(baseAmountForCycle(4)).toBe(1013)
+    expect(baseAmountForCycle(3)).toBe(390)
+    expect(baseAmountForCycle(4)).toBe(585)
     expect(baseAmountForCycle(5)).toBeGreaterThan(baseAmountForCycle(4))
   })
 
   it('scales the opening demand by difficulty', () => {
-    expect(createQuotaState(0.75).amount).toBe(75)
-    expect(createQuotaState(1.3).amount).toBe(130)
+    expect(createQuotaState(0.75).amount).toBe(68)
+    expect(createQuotaState(1.3).amount).toBe(117)
   })
 
   it('reports due state and countdown', () => {
@@ -167,14 +167,14 @@ describe('quota over several cycles', () => {
     expect(result.quota.arrears).toBe(50)
 
     q = result.quota
-    expect(totalDue(q)).toBe(250 + 50)
+    expect(totalDue(q)).toBe(150 + 50)
 
     result = settleQuota(q, 0) // pays nothing -> full shortfall carried
-    expect(result.quota.arrears).toBe(300)
+    expect(result.quota.arrears).toBe(200)
     expect(result.quota.patience).toBe(2)
 
     q = result.quota
-    expect(totalDue(q)).toBe(450 + 300)
+    expect(totalDue(q)).toBe(260 + 200)
   })
 
   it('kills a player who ignores three consecutive demands', () => {

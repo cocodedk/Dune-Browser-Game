@@ -13,8 +13,20 @@ export const MAX_PATIENCE = 3
 export const PARTIAL_PAYMENT_FRACTION = 0.6
 export const ARREARS_SURCHARGE = 0.25
 
-/** First three cycles are hand-authored; later ones scale geometrically. */
-export const BASE_AMOUNTS = [100, 250, 450] as const
+/**
+ * First three cycles are hand-authored; later ones scale geometrically.
+ *
+ * Retuned from 100/250/450 after the balance harness showed that curve was
+ * unpayable: Act 1 yields ~470 spice including the starting 60, against 800
+ * demanded. Worse, it left no window in which the 100-spice harvester was
+ * affordable, so the capex decision the whole slice is built around never
+ * actually occurred.
+ *
+ * 90/150/260 totals 500 against ~530 available to a good line — tight enough
+ * that a wasted cycle hurts, loose enough that the harvester window opens
+ * around day 12-14 as the design intended.
+ */
+export const BASE_AMOUNTS = [90, 150, 260] as const
 export const LATER_CYCLE_GROWTH = 1.5
 
 export interface QuotaState {
