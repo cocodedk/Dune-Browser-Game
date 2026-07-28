@@ -10,10 +10,10 @@
 import type { DialogueNode } from '../../types'
 
 export const ACT3_NODES: DialogueNode[] = [
-  // --- Draeg Varn ----------------------------------------------------------
+  // --- Glossu Rabban ----------------------------------------------------------
   {
     id: 'varn_confident_root',
-    speaker: 'Draeg Varn',
+    speaker: 'Glossu Rabban',
     text:
       'You are the one raising sietches. I have burned four of them this year ' +
       'and I expect I will burn yours. Nothing personal in it — you are simply ' +
@@ -26,7 +26,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'varn_four',
-    speaker: 'Draeg Varn',
+    speaker: 'Glossu Rabban',
     text:
       'It is enough. Sietches are not forts — they are people who have decided ' +
       'to stay somewhere. You only have to make staying expensive.',
@@ -35,7 +35,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'varn_why',
-    speaker: 'Draeg Varn',
+    speaker: 'Glossu Rabban',
     text:
       'Because half of what I do is arithmetic in someone else\'s head. If you ' +
       'move crews to garrison after this conversation, that is a field I did ' +
@@ -44,7 +44,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'varn_losing_root',
-    speaker: 'Draeg Varn',
+    speaker: 'Glossu Rabban',
     text:
       'You took a wall. I want you to know I am not surprised — I told them ' +
       'the outposts were too far apart and was told the cost of moving them ' +
@@ -57,7 +57,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'varn_listen',
-    speaker: 'Draeg Varn',
+    speaker: 'Glossu Rabban',
     text:
       'They will move the garrisons and call it their idea. That is how it ' +
       'works, and it is why you will get the second one cheaper than the first.',
@@ -67,7 +67,7 @@ export const ACT3_NODES: DialogueNode[] = [
   // --- The Baron -----------------------------------------------------------
   {
     id: 'baron_truce_root',
-    speaker: 'Baron Vorrik Harkonnen',
+    speaker: 'Baron Vladimir Harkonnen',
     text:
       'A proposal, and I will be brief because the shape of it insults us both. ' +
       'I stop raiding. You keep your sietches. In exchange I take a share of ' +
@@ -82,7 +82,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'baron_word',
-    speaker: 'Baron Vorrik Harkonnen',
+    speaker: 'Baron Vladimir Harkonnen',
     text:
       'Time. Which is the only thing being sold anywhere on this planet. His ' +
       'patience with you extends; your quota pressure eases. I am offering you ' +
@@ -94,7 +94,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'baron_forgive',
-    speaker: 'Baron Vorrik Harkonnen',
+    speaker: 'Baron Vladimir Harkonnen',
     text:
       'They would not. That is the cost, and I have priced it in — you would be ' +
       'buying breathing room with the only thing you have that I cannot take by ' +
@@ -108,7 +108,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'baron_refused',
-    speaker: 'Baron Vorrik Harkonnen',
+    speaker: 'Baron Vladimir Harkonnen',
     text:
       'As you like. I made the offer because it was cheaper than the alternative, ' +
       'not because I feared it. Now we find out which of us was doing the better ' +
@@ -117,7 +117,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'baron_accepted',
-    speaker: 'Baron Vorrik Harkonnen',
+    speaker: 'Baron Vladimir Harkonnen',
     text:
       'Sensible. Do not expect them to say so. They will keep working for you ' +
       'and they will stop looking at you, and you will find the second thing ' +
@@ -126,7 +126,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'baron_cornered_root',
-    speaker: 'Baron Vorrik Harkonnen',
+    speaker: 'Baron Vladimir Harkonnen',
     text:
       'Two of my walls are yours. I notice you did not take the offer and I ' +
       'notice the Fremen are still with you, which I confess I had not costed ' +
@@ -140,7 +140,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'baron_property',
-    speaker: 'Baron Vorrik Harkonnen',
+    speaker: 'Baron Vladimir Harkonnen',
     text:
       'I costed them as a supply, which is what everyone who has ever held this ' +
       'planet has done, including the man who sent you. The difference between ' +
@@ -151,7 +151,7 @@ export const ACT3_NODES: DialogueNode[] = [
   // --- Act 4: the last demand ----------------------------------------------
   {
     id: 'corvin_final_demand_root',
-    speaker: 'Legate Corvin',
+    speaker: 'Count Fenring',
     text:
       'The figure is not an error. I checked it twice because I assumed it was, ' +
       'and I was instructed to convey it exactly as written. You cannot produce ' +
@@ -167,7 +167,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'final_submit',
-    speaker: 'Legate Corvin',
+    speaker: 'Count Fenring',
     text:
       'It buys you time and nothing else. He will send the audit eventually; ' +
       'you are only choosing when. I will record that you complied.',
@@ -175,7 +175,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'final_defy',
-    speaker: 'Legate Corvin',
+    speaker: 'Count Fenring',
     text:
       'Then the Sardaukar will be here within a fortnight, and I will not be ' +
       'the one they send to explain. I have watched three administrations say ' +
@@ -184,7 +184,7 @@ export const ACT3_NODES: DialogueNode[] = [
   },
   {
     id: 'final_corvin',
-    speaker: 'Legate Corvin',
+    speaker: 'Count Fenring',
     text:
       'Nothing good, and nothing you need to weigh. I am the instrument, not ' +
       'the hand. Answer the demand.',

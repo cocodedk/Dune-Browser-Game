@@ -8,10 +8,10 @@
 import type { DialogueNode } from '../../types'
 
 export const PALACE_NODES: DialogueNode[] = [
-  // --- Duke Armand ---------------------------------------------------------
+  // --- Duke Leto Atreides ---------------------------------------------------------
   {
     id: 'duke_briefing_root',
-    speaker: 'Duke Armand',
+    speaker: 'Duke Leto Atreides',
     text:
       'Spice is the only reason anyone tolerates this planet, and the Emperor ' +
       'has decided we are the ones who will dig it. The Fremen have been doing ' +
@@ -24,7 +24,7 @@ export const PALACE_NODES: DialogueNode[] = [
   },
   {
     id: 'duke_briefing_reason',
-    speaker: 'Duke Armand',
+    speaker: 'Duke Leto Atreides',
     text:
       'None at all. That is rather the point of asking rather than ordering. ' +
       'Take water, take patience, and take your time — you have a little of it.',
@@ -32,7 +32,7 @@ export const PALACE_NODES: DialogueNode[] = [
   },
   {
     id: 'duke_briefing_time',
-    speaker: 'Duke Armand',
+    speaker: 'Duke Leto Atreides',
     text:
       'Twelve days before the first tribute. After that, eight between each. ' +
       'They chose those numbers before they had seen the ground.',
@@ -40,7 +40,7 @@ export const PALACE_NODES: DialogueNode[] = [
   },
   {
     id: 'duke_first_quota_root',
-    speaker: 'Duke Armand',
+    speaker: 'Duke Leto Atreides',
     text:
       'Vell tells me the ledger balanced. He said it the way a physician says ' +
       'a fever has broken — accurately, and without promising anything.',
@@ -51,13 +51,13 @@ export const PALACE_NODES: DialogueNode[] = [
   },
   {
     id: 'duke_quota_harder',
-    speaker: 'Duke Armand',
+    speaker: 'Duke Leto Atreides',
     text: 'It is designed to be. That is not an accident of arithmetic.',
     choices: [{ id: 'duke_qh1', text: 'Say what you mean.', nextId: null }],
   },
   {
     id: 'duke_after_revelation_root',
-    speaker: 'Duke Armand',
+    speaker: 'Duke Leto Atreides',
     text:
       'We were not given Arrakis. We were placed on it, the way a man places a ' +
       'coin on a table before turning over his cards. Whatever we build here, ' +
@@ -70,10 +70,10 @@ export const PALACE_NODES: DialogueNode[] = [
     ],
   },
 
-  // --- Ottone Vell, the ledger ---------------------------------------------
+  // --- Thufir Hawat, the ledger ---------------------------------------------
   {
     id: 'vell_ledger_root',
-    speaker: 'Ottone Vell',
+    speaker: 'Thufir Hawat',
     text:
       'The ledger is current. What it does not say is where the next column ' +
       'comes from — that part is yours. I only write down what arrives.',
@@ -84,7 +84,7 @@ export const PALACE_NODES: DialogueNode[] = [
   },
   {
     id: 'vell_not_enough',
-    speaker: 'Ottone Vell',
+    speaker: 'Thufir Hawat',
     text:
       'No. Crews cost nothing to move and everything to waste. A crew standing ' +
       'idle is the most expensive thing on this planet.',
@@ -92,7 +92,7 @@ export const PALACE_NODES: DialogueNode[] = [
   },
   {
     id: 'vell_arrears_root',
-    speaker: 'Ottone Vell',
+    speaker: 'Thufir Hawat',
     text:
       'We are carrying a balance. The Imperium adds a quarter to anything it ' +
       'has to wait for, and it never forgets to. Shortfalls compound.',
@@ -103,17 +103,17 @@ export const PALACE_NODES: DialogueNode[] = [
   },
   {
     id: 'vell_clear',
-    speaker: 'Ottone Vell',
+    speaker: 'Thufir Hawat',
     text:
       'One good cycle would. Two poor ones and the interest is doing more work ' +
       'than your crews are.',
     choices: [{ id: 'vell_c1', text: 'Understood.', nextId: null }],
   },
 
-  // --- Legate Corvin, the Emperor's patience -------------------------------
+  // --- Count Fenring, the Emperor's patience -------------------------------
   {
     id: 'corvin_formal_root',
-    speaker: 'Legate Corvin',
+    speaker: 'Count Fenring',
     text:
       'His Imperial Majesty conveys his confidence in your administration. ' +
       'I am instructed to observe, record, and convey. I have conveyed.',
@@ -124,14 +124,14 @@ export const PALACE_NODES: DialogueNode[] = [
   },
   {
     id: 'corvin_observe',
-    speaker: 'Legate Corvin',
+    speaker: 'Count Fenring',
     text:
       'Tonnage. Only ever tonnage. I am told the rest is atmosphere.',
     choices: [{ id: 'corvin_o1', text: 'Then you will be well fed here.', nextId: null }],
   },
   {
     id: 'corvin_displeased_root',
-    speaker: 'Legate Corvin',
+    speaker: 'Count Fenring',
     text:
       'The last shipment was light. I have written it down exactly as light as ' +
       'it was — I am not permitted to round in your favour, and I would not.',
@@ -143,14 +143,14 @@ export const PALACE_NODES: DialogueNode[] = [
   },
   {
     id: 'corvin_made_up',
-    speaker: 'Legate Corvin',
+    speaker: 'Count Fenring',
     text:
       'They all say so. The ones who mean it usually look less certain than you do.',
     choices: [{ id: 'corvin_mu1', text: 'We will see.', nextId: null }],
   },
   {
     id: 'corvin_final_warning_root',
-    speaker: 'Legate Corvin',
+    speaker: 'Count Fenring',
     text:
       'I am instructed to inform you that His Majesty\'s patience is a finite ' +
       'instrument and you are near the end of it. I am also instructed to ' +
@@ -162,7 +162,7 @@ export const PALACE_NODES: DialogueNode[] = [
   },
   {
     id: 'corvin_end',
-    speaker: 'Legate Corvin',
+    speaker: 'Count Fenring',
     text:
       'Sardaukar arrive to audit the accounts. They are thorough, and they are ' +
       'not accountants.',

@@ -10,7 +10,7 @@ import { REACHES_STATES } from './dialogueStates.reaches'
 import { LATER_ACT_STATES } from './dialogueStates.later'
 
 export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
-  // --- Duke Armand -------------------------------------------------------
+  // --- Duke Leto Atreides -------------------------------------------------------
   {
     id: 'duke.after_revelation',
     characterId: 'duke_armand',
@@ -30,7 +30,7 @@ export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
     rootNodeId: 'duke_briefing_root',
   },
 
-  // --- Ottone Vell, the ledger ------------------------------------------
+  // --- Thufir Hawat, the ledger ------------------------------------------
   {
     id: 'vell.in_arrears',
     characterId: 'vell',
@@ -44,7 +44,7 @@ export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
     rootNodeId: 'vell_ledger_root',
   },
 
-  // --- Legate Corvin, the Emperor's patience ----------------------------
+  // --- Count Fenring, the Emperor's patience ----------------------------
   {
     id: 'corvin.final_demand',
     characterId: 'corvin',
@@ -70,7 +70,7 @@ export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
     rootNodeId: 'corvin_formal_root',
   },
 
-  // --- Naib Shadir, the first pledge ------------------------------------
+  // --- Stilgar, the first pledge ------------------------------------
   {
     id: 'shadir.pledged',
     characterId: 'shadir',
@@ -90,7 +90,7 @@ export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
     rootNodeId: 'shadir_wary_root',
   },
 
-  // --- Ysane, the scout --------------------------------------------------
+  // --- Chani, the scout --------------------------------------------------
   {
     id: 'ysane.recruited',
     characterId: 'ysane',
@@ -104,7 +104,7 @@ export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
     rootNodeId: 'ysane_first_meeting_root',
   },
 
-  // --- Mother Sova, the rituals -----------------------------------------
+  // --- Reverend Mother Ramallo, the rituals -----------------------------------------
   {
     id: 'sova.ritual_available',
     characterId: 'sova',
@@ -124,7 +124,7 @@ export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
     rootNodeId: 'sova_greeting_root',
   },
 
-  // --- Pell, prospecting tutor ------------------------------------------
+  // --- Shishakli, prospecting tutor ------------------------------------------
   {
     id: 'pell.taught',
     characterId: 'pell',

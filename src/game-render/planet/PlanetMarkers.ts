@@ -30,6 +30,8 @@ export interface PlanetMarkers {
 interface Seat {
   object: Object3D
   out: Vector3
+  /** Which settlement this belongs to, so undiscovered ones stay hidden. */
+  id?: string
   /** Only labels carry an anchor: they are re-seated as the spire resizes. */
   anchor?: Vector3
 }
@@ -63,9 +65,18 @@ export function createPlanetMarkers(
   }
 
   const markers = createSietchMarkers(world, radius * 2, () => 0)
+
+  // Undiscovered places are not named. Learning where somewhere *is* should be
+  // something the player does — by prospecting, or by being told — rather than
+  // something the map hands over at the start. Names are supplied only for
+  // what has been found; the rest get no label, and their markers are hidden
+  // entirely in update().
+  const known = new Set(world.villages.filter(v => v.discovered).map(v => v.id))
   const labels = createMarkerLabels(
     markers.placements,
-    world.villages.map(v => ({ id: v.id, name: v.name })),
+    world.villages
+      .filter(v => known.has(v.id))
+      .map(v => ({ id: v.id, name: v.name })),
     () => 0,
     0,
     // Pinned to the spire tip and lifted one plate-height clear of it, so the
@@ -82,19 +93,26 @@ export function createPlanetMarkers(
     const anchor = anchors.get(markers.placements[Math.floor(index / 2)]?.id ?? '')
     if (!anchor) return
     const out = anchor.clone().normalize()
+    const id = markers.placements[Math.floor(index / 2)]?.id
     child.position.copy(anchor)
     child.quaternion.setFromUnitVectors(UP, out)
-    seats.push({ object: child, out })
+    seats.push({ object: child, out, id })
   })
 
   // Labels are sprites and always face the camera, so they need position only
   // — rotating a sprite does nothing. They are re-seated every frame because
   // the spire beneath them grows and shrinks with zoom, and a name plate that
   // detaches from its marker is worse than no name plate.
+  //
+  // Only discovered places have labels, so this walks that filtered list
+  // rather than every placement.
+  const labelled = markers.placements.filter(p => known.has(p.id))
   labels.group.children.forEach((child, index) => {
-    const anchor = anchors.get(markers.placements[index]?.id ?? '')
+    const anchor = anchors.get(labelled[index]?.id ?? '')
     if (!anchor) return
-    seats.push({ object: child, out: anchor.clone().normalize(), anchor })
+    seats.push({
+      object: child, out: anchor.clone().normalize(), anchor, id: labelled[index]?.id,
+    })
   })
 
   const toCamera = new Vector3()
@@ -139,8 +157,14 @@ export function createPlanetMarkers(
       // looking at Arrakis and its moons, not choosing a sietch.
       const labelOpacity = smoothstep(0.12, 0.38, zoom)
 
+      // What has been found can change mid-run: prospecting reveals places.
+      for (const id of state.villages.filter(v => v.discovered).map(v => v.id)) {
+        known.add(id)
+      }
+
       for (const seat of seats) {
         seat.object.visible = seat.out.dot(toCamera) > horizon
+          && (seat.id === undefined || known.has(seat.id))
         if (!seat.anchor) continue
         seat.object.position.copy(seat.anchor).addScaledVector(seat.out, lift)
         const material = (seat.object as Sprite).material

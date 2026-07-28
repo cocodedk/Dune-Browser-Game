@@ -36,7 +36,7 @@ export const LATER_ACT_STATES: DialogueStateDef[] = [
     rootNodeId: 'vast_proposal_root',
   },
 
-  // --- Lady Maren --------------------------------------------------------
+  // --- Lady Jessica --------------------------------------------------------
   {
     id: 'maren.alone',
     characterId: 'maren',
@@ -50,7 +50,7 @@ export const LATER_ACT_STATES: DialogueStateDef[] = [
     rootNodeId: 'maren_counsel_root',
   },
 
-  // --- Draeg Varn, the field commander ----------------------------------
+  // --- Glossu Rabban, the field commander ----------------------------------
   {
     id: 'varn.losing',
     characterId: 'varn',
@@ -78,7 +78,7 @@ export const LATER_ACT_STATES: DialogueStateDef[] = [
     rootNodeId: 'baron_truce_root',
   },
 
-  // --- Rhaz Meko, the market --------------------------------------------
+  // --- Esmar Tuek, the market --------------------------------------------
   {
     id: 'meko.regular',
     characterId: 'meko',

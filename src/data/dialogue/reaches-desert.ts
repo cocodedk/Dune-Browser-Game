@@ -10,10 +10,10 @@
 import type { DialogueNode } from '../../types'
 
 export const REACHES_DESERT_NODES: DialogueNode[] = [
-  // --- Sayyadina Sabiha — reads the sand -----------------------------------
+  // --- Harah — reads the sand -----------------------------------
   {
     id: 'sabiha_root',
-    speaker: 'Sayyadina Sabiha',
+    speaker: 'Harah',
     text:
       'You walked in from the north without listening once. The sand here is ' +
       'drum sand for two hundred metres in the direction you came. You are ' +
@@ -29,7 +29,7 @@ export const REACHES_DESERT_NODES: DialogueNode[] = [
   },
   {
     id: 'sabiha_teach',
-    speaker: 'Sayyadina Sabiha',
+    speaker: 'Harah',
     text:
       'A maker comes to noise and it comes to spice, and a blow is both at ' +
       'once. That is why the richest sand is the sand nobody is standing on. ' +
@@ -39,7 +39,7 @@ export const REACHES_DESERT_NODES: DialogueNode[] = [
   },
   {
     id: 'sabiha_deep',
-    speaker: 'Sayyadina Sabiha',
+    speaker: 'Harah',
     text:
       'Wrecks, mostly. The Harkonnens lost machines out there and never went ' +
       'back for one of them — cheaper to buy another than to cross that sand. ' +
@@ -54,7 +54,7 @@ export const REACHES_DESERT_NODES: DialogueNode[] = [
   },
   {
     id: 'sabiha_crews',
-    speaker: 'Sayyadina Sabiha',
+    speaker: 'Harah',
     text:
       'Then your crews will walk two days out and two days back and find the ' +
       'same sand every time. Range is the whole thing. On foot the deep desert ' +
@@ -62,10 +62,10 @@ export const REACHES_DESERT_NODES: DialogueNode[] = [
     choices: [{ id: 'sab_c1', text: 'Then I need thopters.', nextId: null }],
   },
 
-  // --- Orrin of the Fedaykin — has ridden ----------------------------------
+  // --- Otheym — has ridden ----------------------------------
   {
     id: 'orrin_root',
-    speaker: 'Orrin of the Fedaykin',
+    speaker: 'Otheym',
     text:
       'They told you I have ridden makers. They tell everyone. It is not a ' +
       'skill, it is a decision you make once and then keep making until the ' +
@@ -78,7 +78,7 @@ export const REACHES_DESERT_NODES: DialogueNode[] = [
   },
   {
     id: 'orrin_ask',
-    speaker: 'Orrin of the Fedaykin',
+    speaker: 'Otheym',
     text:
       'Then I will answer. A maker cannot be stopped, only left. Everything ' +
       'else you have been told is somebody selling you courage. Keep your ' +
@@ -90,7 +90,7 @@ export const REACHES_DESERT_NODES: DialogueNode[] = [
   },
   {
     id: 'orrin_price',
-    speaker: 'Orrin of the Fedaykin',
+    speaker: 'Otheym',
     text:
       'Off-worlder. The last man who said that to me is under the sand at ' +
       'Habbanya, and he is still wrong.',

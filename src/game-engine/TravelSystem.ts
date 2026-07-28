@@ -33,8 +33,17 @@ export function currentTravelProgress(w: WorldState): number {
 
 /** Travel mode currently available to the player. */
 export function currentTravelMode(): TravelMode {
-  // Ornithopters arrive with the smuggler market (Stage 11); until then the
-  // player walks. Modelled here so range gating is already in force.
+  // Read from what the player actually owns.
+  //
+  // This returned the constant 'foot' with a note saying ornithopters would
+  // arrive later. They had: the market sells them, worms check for them, and
+  // prospecting range uses them. Only travel still always walked, so buying
+  // one changed nothing about where you could go — and the far side of the
+  // planet, which is deliberately reachable only by long-range thopter, was
+  // visible and permanently unreachable.
+  const kinds = new Set(world.equipment.map(e => e.kind));
+  if (kinds.has('lr_thopter')) return 'lr_thopter';
+  if (kinds.has('thopter')) return 'thopter';
   return 'foot';
 }
 
