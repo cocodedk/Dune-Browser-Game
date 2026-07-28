@@ -30,7 +30,7 @@ Sonnet's own report is not sufficient evidence.
 | 17 | Prescience L2/L3 | 3 | 16 | outline | **VERIFIED** |
 | 18 | Acts 3–4, forts, endings | 3 | 17 | outline | **VERIFIED** |
 | 19 | Content pass | 3 | 18 | outline | **VERIFIED** |
-| 20 | Art and audio production | 3 | 14 | outline | **VERIFIED** |
+| 20 | Art and audio production | 3 | 14 | outline | **PARTIAL** |
 | 21 | Balance and playtest | 3 | 19, 20 | outline | **VERIFIED** |
 
 ## Critical path
