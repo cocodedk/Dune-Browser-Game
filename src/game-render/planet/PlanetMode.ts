@@ -23,6 +23,9 @@ import { createOrbitControl } from './OrbitControl'
 import { createMoons } from './Moons'
 import { createNamedStars } from './NamedStars'
 import { createPlanetEcology } from './PlanetEcology'
+import { massifsForSettlements } from './massifs'
+import { canvasToLatLon } from './sphere'
+import { SOURCE_WIDTH, SOURCE_HEIGHT } from '../modes/strategic/markerLayout'
 import { createWormSign } from './WormSign'
 import { createDesertSites } from './DesertSites'
 import { createCrewUnits } from './CrewUnits'
@@ -51,12 +54,21 @@ export function createPlanetMode(
     // The globe carries per-vertex biome tints; the flat surface mesh does not.
     vertexColors: true,
   })
+  // Sietches are caves cut into rock, never open sand — so the rock goes
+  // where they are. A couple of places get a lower line than a mountain.
+  const massifs = massifsForSettlements(
+    world.villages,
+    p => canvasToLatLon(p, SOURCE_WIDTH, SOURCE_HEIGHT),
+    { great_flat: 0.45, funeral_plain: 0.7 },
+  )
+
   const planet = createPlanetMesh(
     {
       radius: RADIUS,
       seed: 20250727,
       relief: RELIEF,
       segments: quality.tier === 'low' ? 96 : 192,
+      massifs,
     },
     sand.material as Material,
   )
