@@ -93,6 +93,11 @@ export default function ThreeContainer() {
       revealSites: () => {
         world.desertSites = world.desertSites.map(s => ({ ...s, discovered: true }))
       },
+      teleport: villageId => {
+        world.player.location = villageId
+        world.player.state = 'idle'
+        world.player.travelTarget = null
+      },
       player: () => ({
         state: world.player.state,
         location: world.player.location,

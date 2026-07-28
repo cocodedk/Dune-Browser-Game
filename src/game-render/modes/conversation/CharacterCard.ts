@@ -108,7 +108,8 @@ function drawPortrait(name: string, role: string, def: PortraitDef): CanvasTextu
   ctx.fillStyle = 'rgba(240, 224, 190, 0.9)'
   ctx.font = 'italic 14px system-ui, sans-serif'
   // Long roles are trimmed rather than overflowing the card.
-  const trimmed = role.length > 42 ? `${role.slice(0, 40)}…` : role
+  // The card is a third larger than it was; 42 was clipping roles mid-word.
+  const trimmed = role.length > 58 ? `${role.slice(0, 56)}…` : role
   ctx.fillText(trimmed, CARD_WIDTH / 2, 373)
 
   const texture = new CanvasTexture(canvas)

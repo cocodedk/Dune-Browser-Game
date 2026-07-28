@@ -102,7 +102,45 @@ const PORTRAITS: Record<string, PortraitDef> = {
     backTop: '#5a2a32', backBottom: '#1f0d12',
     rim: '#c04a5a', figure: '#180a0d', framing: 0.3, keyHardness: 0.6, build: 1.35,
   },
+
+  // --- The far reaches -----------------------------------------------------
+  // Fremen of the deep south: harder light, closer framing, spice-blue rim.
+  sabiha: {
+    backTop: '#a86a42', backBottom: '#38200f',
+    rim: '#5aa9c8', figure: '#281607', framing: 0.72, keyHardness: 0.82,
+    build: 0.9, dress: 'fremen',
+  },
+  orrin: {
+    backTop: '#94603a', backBottom: '#2e1a0d',
+    rim: '#6fbcd4', figure: '#221305', framing: 0.92, keyHardness: 0.95,
+    build: 1.15, dress: 'fremen',
+  },
+
+  // Harkonnen and Guild: cold, even, and lit like an interrogation.
+  krail: {
+    backTop: '#6a3a34', backBottom: '#24100e',
+    rim: '#d4604a', figure: '#1c0b09', framing: 0.85, keyHardness: 0.9,
+    build: 1.25, dress: 'plain',
+  },
+  dessin: {
+    backTop: '#5a5f6a', backBottom: '#1e2126',
+    rim: '#b0bcc8', figure: '#171a1f', framing: 0.28, keyHardness: 0.18,
+    build: 0.88, dress: 'noble',
+  },
+  hallock: {
+    backTop: '#71574a', backBottom: '#281d18',
+    rim: '#c88a5a', figure: '#1d1410', framing: 0.78, keyHardness: 0.62,
+    build: 1.1, dress: 'plain',
+  },
+
+  // The waterseller: warm, close, and the only one who looks pleased to see you.
+  zurrah: {
+    backTop: '#b8834a', backBottom: '#3e2814',
+    rim: '#e8c06a', figure: '#2a1a0a', framing: 0.8, keyHardness: 0.55,
+    build: 1.2, dress: 'plain',
+  },
 }
+
 
 export function portraitFor(characterId: string): PortraitDef {
   return PORTRAITS[characterId] ?? DEFAULT

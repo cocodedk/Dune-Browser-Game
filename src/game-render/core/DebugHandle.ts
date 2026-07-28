@@ -68,6 +68,13 @@ export interface DebugHandle {
   /** Populated by ThreeContainer. Reveals every deep-desert site at once. */
   revealSites?: () => void
   /**
+   * Populated by ThreeContainer. Puts the player at a location outright.
+   *
+   * Travel range is deliberately tight early on, so reaching the far side of
+   * the map to check that somebody is standing there takes most of a game.
+   */
+  teleport?: (villageId: string) => void
+  /**
    * Populated by ThreeContainer. A small snapshot of engine state, so a
    * driver script can tell "the click did nothing" from "the engine refused"
    * without reading the DOM.
@@ -123,6 +130,7 @@ export interface DebugSources {
   worms: NonNullable<DebugHandle['worms']>
   signWorm: (fieldId: string) => void
   revealSites: () => void
+  teleport: (villageId: string) => void
   player: NonNullable<DebugHandle['player']>
   scene: () => Object3D | null
   camera: () => Camera
@@ -141,6 +149,7 @@ export function wireDebugHandle(
   handle.worms = sources.worms
   handle.signWorm = sources.signWorm
   handle.revealSites = sources.revealSites
+  handle.teleport = sources.teleport
   handle.player = sources.player
   handle.inspect = () => {
     const scene = sources.scene()

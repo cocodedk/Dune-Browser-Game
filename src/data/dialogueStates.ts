@@ -6,6 +6,8 @@
 // fallback. A data test enforces both rules over the whole roster.
 
 import type { DialogueStateDef } from '../game-engine/dialogue/types'
+import { REACHES_STATES } from './dialogueStates.reaches'
+import { LATER_ACT_STATES } from './dialogueStates.later'
 
 export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
   // --- Duke Armand -------------------------------------------------------
@@ -136,87 +138,6 @@ export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
     rootNodeId: 'pell_offer_root',
   },
 
-  // --- Captain Voss, training -------------------------------------------
-  {
-    id: 'voss.drilling',
-    characterId: 'voss',
-    condition: { op: 'gte', key: 'raids.repelled', value: 1 },
-    rootNodeId: 'voss_drilling_root',
-  },
-  {
-    id: 'voss.arrival',
-    characterId: 'voss',
-    condition: null,
-    rootNodeId: 'voss_arrival_root',
-  },
-
-  // --- Dr. Vast, ecology -------------------------------------------------
-  {
-    id: 'vast.planting',
-    characterId: 'vast',
-    condition: { op: 'eq', key: 'taught.ecology', value: true },
-    rootNodeId: 'vast_planting_root',
-  },
-  {
-    id: 'vast.proposal',
-    characterId: 'vast',
-    condition: null,
-    rootNodeId: 'vast_proposal_root',
-  },
-
-  // --- Lady Maren --------------------------------------------------------
-  {
-    id: 'maren.alone',
-    characterId: 'maren',
-    condition: { op: 'eq', key: 'beat.duke_departed', value: true },
-    rootNodeId: 'maren_alone_root',
-  },
-  {
-    id: 'maren.counsel',
-    characterId: 'maren',
-    condition: null,
-    rootNodeId: 'maren_counsel_root',
-  },
-
-  // --- Draeg Varn, the field commander ----------------------------------
-  {
-    id: 'varn.losing',
-    characterId: 'varn',
-    condition: { op: 'gte', key: 'forts.destroyed', value: 1 },
-    rootNodeId: 'varn_losing_root',
-  },
-  {
-    id: 'varn.confident',
-    characterId: 'varn',
-    condition: null,
-    rootNodeId: 'varn_confident_root',
-  },
-
-  // --- The Baron ---------------------------------------------------------
-  {
-    id: 'baron.cornered',
-    characterId: 'baron',
-    condition: { op: 'gte', key: 'forts.destroyed', value: 2 },
-    rootNodeId: 'baron_cornered_root',
-  },
-  {
-    id: 'baron.truce',
-    characterId: 'baron',
-    condition: null,
-    rootNodeId: 'baron_truce_root',
-  },
-
-  // --- Rhaz Meko, the market --------------------------------------------
-  {
-    id: 'meko.regular',
-    characterId: 'meko',
-    condition: { op: 'gte', key: 'smuggler.standing', value: 1 },
-    rootNodeId: 'meko_regular_root',
-  },
-  {
-    id: 'meko.first',
-    characterId: 'meko',
-    condition: null,
-    rootNodeId: 'meko_first_root',
-  },
+  ...LATER_ACT_STATES,
+  ...REACHES_STATES,
 ]

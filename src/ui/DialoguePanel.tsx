@@ -5,6 +5,8 @@ import { endDialogue } from '../game-engine/DialogueSystem'
 import { getPortraitKey, PORTRAIT_FACTION } from '../data/portraitConfig'
 import { FACTION_CSS_COLORS } from '../game-render/factionColors'
 import { COMMAND_COLUMN_WIDTH } from './theme'
+import { displaySpeaker } from '../game-engine/dialogue/resident'
+import { INITIAL_CHARACTERS } from '../data/characters'
 
 export default function DialoguePanel() {
   const { currentDialogueNode, world } = useGameStore()
@@ -23,6 +25,14 @@ export default function DialoguePanel() {
   const portraitColor = factionId ? FACTION_CSS_COLORS[factionId] : '#d4a017'
   const portraitLabel = portraitKey ? portraitKey.replace(/_/g, ' ').toUpperCase() : ''
 
+  // The generic trees say "Village Elder"; the character card behind them
+  // names whoever actually lives here. Reconciled so the player is not shown
+  // two names for one speaker.
+  const resident = INITIAL_CHARACTERS.find(c => c.locationId === world.player.location)
+  const speakerName = currentDialogueNode
+    ? displaySpeaker(currentDialogueNode.speaker, resident?.name)
+    : ''
+
   function choose(choiceId: string) {
     EventBus.emit('player:choose', { choiceId })
   }
@@ -36,7 +46,7 @@ export default function DialoguePanel() {
             {portraitLabel}
           </div>
           <div style={styles.portraitInfo}>
-            <div style={styles.speaker}>{currentDialogueNode.speaker}</div>
+            <div style={styles.speaker}>{speakerName}</div>
           </div>
         </div>
         <p style={styles.text}>{currentDialogueNode.text}</p>

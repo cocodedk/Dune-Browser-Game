@@ -101,4 +101,52 @@ export const INITIAL_CHARACTERS: Character[] = [
     locationId: 'tsimpo',
     recruited: false,
   },
+  // --- The far reaches ----------------------------------------------------
+  //
+  // Imperial Basin and Cielago Depression had nobody in them at all: a player
+  // who travelled there found a place with no one to talk to. These also give
+  // the systems added since — worms, ecology, the deep desert — a voice each,
+  // so a mechanic can be taught by someone rather than by a tooltip.
+  {
+    id: 'sabiha',
+    name: 'Sayyadina Sabiha',
+    role: 'Reads the sand, and will tell you what it says for a price',
+    locationId: 'cielago_depression',
+    recruited: false,
+  },
+  {
+    id: 'orrin',
+    name: 'Orrin of the Fedaykin',
+    role: 'Has ridden makers, and would rather not discuss it',
+    locationId: 'cielago_depression',
+    recruited: false,
+  },
+  {
+    id: 'krail',
+    name: 'Overseer Krail',
+    role: 'Runs the Basin crews, and counts the dead as wastage',
+    locationId: 'imperial_basin',
+    recruited: false,
+  },
+  {
+    id: 'dessin',
+    name: 'Factor Dessin',
+    role: 'Keeps the Guild\u2019s accounts, and no opinions whatever',
+    locationId: 'imperial_basin',
+    recruited: false,
+  },
+  {
+    id: 'zurrah',
+    name: 'Zurrah',
+    role: 'Sells water, and hears everything sold with it',
+    locationId: 'tsimpo',
+    recruited: false,
+  },
+  {
+    id: 'hallock',
+    name: 'Sergeant Hallock',
+    role: 'Harkonnen garrison, and tired enough to be bought',
+    locationId: 'carthag',
+    recruited: false,
+  },
 ]
