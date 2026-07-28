@@ -80,6 +80,13 @@ export interface DialogueEffect {
   influenceDelta?: number;
   spiceDelta?: number;
   reputationAction?: PlayerAction;
+  /** Story flags written when this choice is taken. */
+  setFlags?: Record<string, boolean | number>;
+  /** Numeric flag increments, applied after setFlags. */
+  addFlags?: Record<string, number>;
+  charismaDelta?: number;
+  revealLocation?: VillageId;
+  recruitCharacter?: string;
 }
 
 export type GameEventType =
