@@ -39,7 +39,11 @@ export function createPlanetMode(
 ): SceneMode {
   const scene = new Scene()
 
-  const sand = createSandMaterial({ glintStrength: quality.tier === 'low' ? 0 : 0.06 })
+  const sand = createSandMaterial({
+    glintStrength: quality.tier === 'low' ? 0 : 0.06,
+    // The globe carries per-vertex biome tints; the flat surface mesh does not.
+    vertexColors: true,
+  })
   const planet = createPlanetMesh(
     {
       radius: RADIUS,
@@ -66,7 +70,22 @@ export function createPlanetMode(
 
   function applyTime(state: WorldState): void {
     const palette = paletteForTime(state.time, DAY_SECONDS)
-    lighting.applyPalette(palette, RADIUS * 3)
+
+    // The sun's bearing follows the camera's, offset over the player's left
+    // shoulder.
+    //
+    // With the azimuth fixed — which is right for a single patch of desert —
+    // one hemisphere of the globe was lit permanently and the other never was
+    // at all, so half of Arrakis was built, displaced, tinted and impossible
+    // to look at. Sweeping the azimuth on the day clock instead just means the
+    // camera and the terminator chase each other around.
+    //
+    // This is a map the player reads, not a rotating body being simulated: the
+    // face you turn toward should be the face that is lit. The hour still
+    // shows, in colour and in how high the light sits, and the limb still
+    // falls away into shadow.
+    const bearing = Math.atan2(camera.position.x, camera.position.z)
+    lighting.applyPalette(palette, RADIUS * 3, bearing + 0.55)
 
     const shadow = new Color('#6e3113').lerp(rgb(palette.ambient), 0.18)
     const crest = new Color('#dcab5c').lerp(rgb(palette.sun), 0.10)

@@ -24,6 +24,15 @@ export interface SandMaterialOptions {
   /** 0 disables the mica sparkle (low quality tier). */
   glintStrength?: number
   rippleScale?: number
+  /**
+   * Multiply the sand palette by the geometry's per-vertex colour.
+   *
+   * Used by the globe to tint ice, rock and salt pan differently without a
+   * second material. Off by default and it must stay that way: the flat
+   * terrain mesh carries no colour attribute, and enabling this for geometry
+   * that lacks one leaves vColor undefined.
+   */
+  vertexColors?: boolean
 }
 
 export interface SandMaterial {
@@ -42,6 +51,7 @@ const DEFAULTS: Required<SandMaterialOptions> = {
   windDirection: [1, 0.35],
   glintStrength: 0.06,
   rippleScale: 0.9,
+  vertexColors: false,
 }
 
 export function createSandMaterial(options: SandMaterialOptions = {}): SandMaterial {
@@ -60,6 +70,10 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
 
   const material = new MeshStandardMaterial({
     color: 0xffffff,
+    // The sand chunk multiplies into diffuseColor *after* <color_fragment>,
+    // which is where three applies vColor — so a vertex tint survives intact
+    // and modulates the whole palette rather than replacing it.
+    vertexColors: opts.vertexColors,
     // Sand is rough and non-metallic; specular comes from the glint term only.
     roughness: 0.95,
     metalness: 0.0,
@@ -91,7 +105,8 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
   }
 
   // Forces a recompile if the material is reused across quality changes.
-  material.customProgramCacheKey = () => `sand-${opts.glintStrength}`
+  material.customProgramCacheKey = () =>
+    `sand-${opts.glintStrength}-${opts.vertexColors}`
 
   return {
     material,

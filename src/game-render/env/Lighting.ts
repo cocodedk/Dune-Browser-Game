@@ -12,8 +12,18 @@ import type { AtmospherePalette } from '../materials/Atmosphere'
 export interface LightingRig {
   sun: DirectionalLight
   fill: HemisphereLight
-  /** Point the sun and retint everything for the current hour. */
-  applyPalette(palette: AtmospherePalette, distance?: number): void
+  /**
+   * Point the sun and retint everything for the current hour.
+   *
+   * @param azimuthRadians Compass bearing of the sun. Fixed by default, which
+   *   suits a single patch of desert; the globe sweeps it a full turn per day
+   *   so that every longitude is lit at some point.
+   */
+  applyPalette(
+    palette: AtmospherePalette,
+    distance?: number,
+    azimuthRadians?: number,
+  ): void
   dispose(): void
 }
 
@@ -37,7 +47,7 @@ export function createLighting(scene: Scene): LightingRig {
   return {
     sun,
     fill,
-    applyPalette(palette, distance = 700): void {
+    applyPalette(palette, distance = 700, azimuthRadians = Math.PI * 0.25): void {
       sun.color = toColor(palette.sun)
       // The sky fill lands on exactly the up-facing crests the sun already
       // lights, so a literal blue zenith greys out the brightest sand on the
@@ -52,7 +62,12 @@ export function createLighting(scene: Scene): LightingRig {
       // the horizon so night is legible rather than pitch black.
       const elevation = palette.sunElevation
       const altitude = Math.max(elevation, -0.25)
-      const azimuth = Math.PI * 0.25
+      // Fixed by default, which is right for a small patch of desert where the
+      // sun simply rises and sets. On the globe it is not: with a fixed
+      // azimuth one hemisphere is lit permanently and the other is never lit
+      // at all, so half the planet could not be looked at. The planet view
+      // sweeps this through a full turn over its day.
+      const azimuth = azimuthRadians
 
       sun.position.set(
         Math.cos(azimuth) * distance * Math.max(0.35, 1 - Math.abs(altitude)),
