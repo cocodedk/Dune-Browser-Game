@@ -81,6 +81,8 @@ export interface DebugHandle {
    * draws on the sand should not.
    */
   giveHarvester?: () => void
+  /** Populated by ThreeContainer. Ends the run with a chosen ending. */
+  endRun?: (ending: string) => void
   /**
    * Populated by ThreeContainer. A small snapshot of engine state, so a
    * driver script can tell "the click did nothing" from "the engine refused"
@@ -139,6 +141,7 @@ export interface DebugSources {
   revealSites: () => void
   teleport: (villageId: string) => void
   giveHarvester: () => void
+  endRun: (ending: string) => void
   player: NonNullable<DebugHandle['player']>
   scene: () => Object3D | null
   camera: () => Camera
@@ -159,6 +162,7 @@ export function wireDebugHandle(
   handle.revealSites = sources.revealSites
   handle.teleport = sources.teleport
   handle.giveHarvester = sources.giveHarvester
+  handle.endRun = sources.endRun
   handle.player = sources.player
   handle.inspect = () => {
     const scene = sources.scene()

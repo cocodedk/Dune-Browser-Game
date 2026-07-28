@@ -68,6 +68,9 @@ export function runQuotaCheck(): void {
 
   if (outcome.gameOver) {
     world.goalAchieved = true
+    // Recorded, not just announced: without this the overlay had no way to
+    // know the run had ended badly, and captioned it a victory.
+    world.ending = 'loss_patience'
     pushEvent('poc_goal_achieved', 'The Emperor recalls you. Arrakis is taken from your house.')
   }
 }

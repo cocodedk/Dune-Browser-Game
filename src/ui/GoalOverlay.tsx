@@ -1,16 +1,28 @@
 import { useGameStore } from './store'
+import { isVictory } from '../game-engine/acts/transitions'
 
+/**
+ * The end of a run.
+ *
+ * Three of this game's five endings are losses, and every one of them used to
+ * be captioned "Victory!" — the overlay read only "has the run ended" and
+ * assumed the answer meant winning. Losing Arrakis to the Emperor was
+ * announced with a trophy.
+ */
 export default function GoalOverlay() {
   const { world } = useGameStore()
   if (!world.goalAchieved) return null
 
   const goalEvent = [...world.events].reverse().find(e => e.type === 'poc_goal_achieved')
-  const subtitle = goalEvent?.message ?? 'Goal achieved!'
+  const subtitle = goalEvent?.message ?? 'The run is over.'
+  const won = isVictory(world.ending)
 
   return (
     <div style={styles.overlay}>
       <div style={styles.box}>
-        <div style={styles.title}>🏆 Victory!</div>
+        <div style={{ ...styles.title, color: won ? WIN_GOLD : LOSS_RED }}>
+          {won ? 'Arrakis is yours' : 'Your house falls'}
+        </div>
         <p style={styles.subtitle}>{subtitle}</p>
         <button
           style={styles.btn}
@@ -24,6 +36,9 @@ export default function GoalOverlay() {
     </div>
   )
 }
+
+const WIN_GOLD = '#e8c060'
+const LOSS_RED = '#c05a4a'
 
 const styles = {
   overlay: {
@@ -46,7 +61,6 @@ const styles = {
     boxShadow: '0 0 60px rgba(212,160,23,0.3)',
   },
   title: {
-    color: '#d4a017',
     fontSize: 32,
     fontWeight: 'bold' as const,
     marginBottom: 16,

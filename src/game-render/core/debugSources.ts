@@ -52,6 +52,10 @@ export function wireDebugSources(
           })
         }
       },
+      endRun: ending => {
+        world.goalAchieved = true
+        world.ending = ending as typeof world.ending
+      },
       player: () => ({
         state: world.player.state,
         location: world.player.location,

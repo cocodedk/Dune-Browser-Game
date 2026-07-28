@@ -13,6 +13,19 @@ export type EndingId =
 
 export const ACT_ORDER: readonly ActId[] = ['act1', 'act2', 'act3', 'act4']
 
+/**
+ * Did the player win?
+ *
+ * Trivial, and it needs to exist: the end-of-run overlay was reading only the
+ * "run has ended" flag and captioning every one of the five endings
+ * "Victory!" — including losing Arrakis to the Emperor. An ending has a
+ * winner or it does not, and that has to be a fact the interface can ask for
+ * rather than one it assumes.
+ */
+export function isVictory(ending: EndingId | null): boolean {
+  return ending === 'win_military' || ending === 'win_ecology'
+}
+
 export interface ActWorldView {
   act: ActId
   /** Quota cycles fully paid. */

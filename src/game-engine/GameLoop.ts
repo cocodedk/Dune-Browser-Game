@@ -142,9 +142,11 @@ export function update(delta: number): void {
   if (!world.goalAchieved) {
     if (world.goalType === 'control_all_villages' && playerControlsAll()) {
       world.goalAchieved = true;
+      world.ending = 'win_military';
       pushEvent('poc_goal_achieved', '✔ You control all villages. Arrakis bows to you.');
     } else if (world.goalType === 'survive_20_min' && hasPlayerSurvived()) {
       world.goalAchieved = true;
+      world.ending = 'win_military';
       pushEvent('poc_goal_achieved', '✔ You survived 20 minutes. Arrakis endures.');
     }
   }

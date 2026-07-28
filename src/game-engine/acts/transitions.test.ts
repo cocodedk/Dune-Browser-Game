@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest'
 import {
+  isVictory,
   evaluateEnding,
   evaluateActTransition,
   evaluateAct,
@@ -150,5 +151,28 @@ describe('actQuotaMultiplier', () => {
     for (const act of ACT_ORDER) {
       expect(actQuotaMultiplier(act as ActId)).toBeGreaterThanOrEqual(1)
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// isVictory
+// ---------------------------------------------------------------------------
+
+describe('isVictory', () => {
+  it('is true only for the two wins', () => {
+    expect(isVictory('win_military')).toBe(true)
+    expect(isVictory('win_ecology')).toBe(true)
+  })
+
+  it('is false for every loss', () => {
+    // All three of these were once captioned "Victory!" — losing Arrakis to
+    // the Emperor was announced with a trophy.
+    expect(isVictory('loss_patience')).toBe(false)
+    expect(isVictory('loss_palace')).toBe(false)
+    expect(isVictory('loss_abandoned')).toBe(false)
+  })
+
+  it('is false when the run has not ended', () => {
+    expect(isVictory(null)).toBe(false)
   })
 })
