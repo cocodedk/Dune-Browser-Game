@@ -18,7 +18,10 @@ const PADDING = 14
 // roughly a viewport fraction, so this multiplier maps a texture's pixel width
 // to about the same on-screen width. 0.0022 rendered labels half the canvas
 // wide and overlapping.
-const LABEL_SCALE = 0.0008
+// Calibrated at a 1400px-wide viewport. Labels are viewport-relative, so
+// they scale with the window while the world-space markers do not — at the
+// old 0.0008 they dominated the map once it filled the screen.
+const LABEL_SCALE = 0.00042
 
 export interface MarkerLabels {
   group: Group

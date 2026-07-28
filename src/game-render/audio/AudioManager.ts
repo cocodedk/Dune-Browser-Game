@@ -174,6 +174,16 @@ export class AudioManager {
     this.unlockBound = null
   }
 
+  /** Diagnostic snapshot — used by the E2E/debug path, not by the game. */
+  debugState = (): Record<string, unknown> => ({
+    contextState: this.context?.state ?? 'none',
+    hasGain: !!this.gain,
+    hasBed: !!this.bed,
+    currentKey: this.currentKey,
+    muted: this._isMuted,
+    volume: this._volume,
+  })
+
   private emitState(): void {
     EventBus.emit('audio:changed', {
       isPlaying: this.currentKey !== null,

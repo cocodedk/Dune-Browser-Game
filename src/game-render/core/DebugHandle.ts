@@ -14,6 +14,8 @@ export interface DebugHandle {
   worldTime: number
   renderInfo: { calls: number; triangles: number }
   pick(id: string): void
+  /** Populated by ThreeContainer; audio state for diagnosis. */
+  audio?: () => Record<string, unknown>
 }
 
 declare global {

@@ -46,7 +46,7 @@ export function createAmbientBed(context: AudioContext): AmbientBed {
   windFilter.Q.value = 0.7
 
   const windGain = context.createGain()
-  windGain.gain.value = 0.16
+  windGain.gain.value = 0.55
 
   // A second, higher band that swells independently — two uncorrelated
   // envelopes are what stop the bed sounding like a single static hiss.
@@ -63,14 +63,14 @@ export function createAmbientBed(context: AudioContext): AmbientBed {
   const lfo = context.createOscillator()
   lfo.frequency.value = 0.037
   const lfoDepth = context.createGain()
-  lfoDepth.gain.value = 0.055
+  lfoDepth.gain.value = 0.22
 
   // Low drone for the sense of open space.
   const drone = context.createOscillator()
   drone.type = 'sine'
   drone.frequency.value = 58
   const droneGain = context.createGain()
-  droneGain.gain.value = 0.025
+  droneGain.gain.value = 0.11
 
   noise.connect(windFilter).connect(windGain)
   noise.connect(gustFilter).connect(gustGain)
@@ -98,10 +98,10 @@ export function createAmbientBed(context: AudioContext): AmbientBed {
       const heat = Math.max(0, -Math.cos(f * Math.PI * 2))
       const now = context.currentTime
 
-      windGain.gain.setTargetAtTime(0.10 + heat * 0.13, now, 3)
+      windGain.gain.setTargetAtTime(0.38 + heat * 0.34, now, 3)
       windFilter.frequency.setTargetAtTime(360 + heat * 260, now, 3)
       // Night keeps the drone but loses the gusts, which reads as stillness.
-      droneGain.gain.setTargetAtTime(0.032 - heat * 0.012, now, 3)
+      droneGain.gain.setTargetAtTime(0.14 - heat * 0.05, now, 3)
     },
 
     stop(): void {

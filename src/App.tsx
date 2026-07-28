@@ -49,15 +49,21 @@ export default function App() {
 
 const styles = {
   root: {
+    // #root is itself a flex container, so this must claim the space or it
+    // collapses to the width of its children.
+    flex: 1,
+    width: '100%',
     display: 'flex',
     height: '100vh',
     background: '#0a0a0f',
     overflow: 'hidden',
   },
   left: {
+    flex: 1,
+    minWidth: 0,
     display: 'flex',
     flexDirection: 'column' as const,
-    padding: 16,
+    padding: 0,
     gap: 8,
   },
   title: {
@@ -73,9 +79,7 @@ const styles = {
     textAlign: 'center' as const,
   },
   canvasFallback: {
-    width: 800,
-    height: 500,
-    flexShrink: 0,
+    flex: 1,
     border: '1px solid #3d2b10',
     borderRadius: 4,
     display: 'flex',
@@ -88,7 +92,7 @@ const styles = {
     textTransform: 'uppercase' as const,
   },
   right: {
-    flex: 1,
+    flex: '0 0 340px',
     display: 'flex',
     flexDirection: 'column' as const,
     borderLeft: '1px solid #3d2b10',

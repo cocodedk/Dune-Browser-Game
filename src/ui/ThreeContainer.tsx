@@ -84,6 +84,7 @@ export default function ThreeContainer() {
     const audio = new AudioManager()
     audio.playAmbient('ambient_desert')
     const debug = attachDebugHandle(dispatchPick)
+    if (debug) debug.audio = audio.debugState
     initLoop()
 
     let raf = 0
@@ -153,11 +154,12 @@ export default function ThreeContainer() {
 
 const styles = {
   container: {
-    width: 800,
-    height: 500,
-    flexShrink: 0,
-    border: '1px solid #3d2b10',
-    borderRadius: 4,
+    // Fills the column rather than sitting at a fixed 800x500. The renderer
+    // already resizes off this element via ResizeObserver, so the 3D view
+    // follows the window with no further wiring.
+    flex: 1,
+    minWidth: 0,
+    minHeight: 0,
     overflow: 'hidden' as const,
     background: '#120d07',
   },
