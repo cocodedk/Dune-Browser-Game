@@ -53,6 +53,40 @@ const DEFS: Record<BiomeId, BiomeDef> = {
   pan: { relief: 0.16, tint: [1.16, 1.09, 0.88] },
 }
 
+/**
+ * What a fully greened region looks like from orbit.
+ *
+ * Not a lawn. Arrakis greened is scrub, palmary and grass holding sand down —
+ * grey-green and dusty, and the tint has to stay dark enough that the terrain
+ * relief still reads through it.
+ */
+// Red has to be pushed down hard, not just green pushed up: this multiplies a
+// strongly orange sand palette, and a merely green-biased tint comes out olive.
+// Measured, [0.42, 0.72, 0.34] moved green/red from 0.45 to only 0.55.
+const VEGETATION_TINT: readonly [number, number, number] = [0.20, 0.86, 0.30]
+
+/**
+ * Blend a biome tint toward vegetation.
+ *
+ * @param vegetation 0..100, as the ecology system tracks it.
+ *
+ * Deliberately not linear. Below the settled threshold the planting is a few
+ * bulbs in the sand and should be almost invisible from orbit; past it, the
+ * region turns visibly. The player should be able to see which regions they
+ * have committed to without opening a panel.
+ */
+export function greened(
+  tint: readonly [number, number, number],
+  vegetation: number,
+): [number, number, number] {
+  const t = smoothstep(12, 72, Math.max(0, Math.min(100, vegetation)))
+  return [
+    tint[0] + (VEGETATION_TINT[0] - tint[0]) * t,
+    tint[1] + (VEGETATION_TINT[1] - tint[1]) * t,
+    tint[2] + (VEGETATION_TINT[2] - tint[2]) * t,
+  ]
+}
+
 function smoothstep(edge0: number, edge1: number, x: number): number {
   if (edge0 === edge1) return x < edge0 ? 0 : 1
   const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)))

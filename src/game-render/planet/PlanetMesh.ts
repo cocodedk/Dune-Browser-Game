@@ -5,14 +5,31 @@
 
 import { BufferAttribute, Mesh, SphereGeometry, type Material, Vector3 } from 'three'
 import { createNoiseField } from '../terrain/noise'
-import { biomeAt } from './biomes'
+import { biomeAt, greened } from './biomes'
 
 export interface PlanetMesh {
   mesh: Mesh
   readonly radius: number
   /** Surface radius at a direction, including displacement. */
   radiusAt(direction: Vector3): number
+  /**
+   * Repaint the globe for the current state of the ecology.
+   *
+   * The whole point of greening Arrakis is that it is visible: a player who
+   * has spent crews on planting instead of harvesting should be able to see
+   * what they bought by looking at the planet.
+   */
+  setVegetation(regions: readonly VegetatedRegion[]): void
   dispose(): void
+}
+
+export interface VegetatedRegion {
+  /** Unit vector to the region's centre on the sphere. */
+  direction: Vector3
+  /** 0..100, as the ecology system tracks it. */
+  vegetation: number
+  /** Angular radius of the region's influence, in radians. */
+  extent: number
 }
 
 export interface PlanetOptions {
@@ -92,6 +109,8 @@ export function createPlanetMesh(
   // vertex colour, so this recolours ice, rock and salt pan without a second
   // material or a second draw call.
   const colors = new Float32Array(position.count * 3)
+  // Kept so vegetation can be repainted later without recomputing the biomes.
+  const baseTints: [number, number, number][] = new Array(position.count)
 
   for (let i = 0; i < position.count; i++) {
     v.fromBufferAttribute(position, i)
@@ -102,6 +121,7 @@ export function createPlanetMesh(
     const r = radius * (1 + h * relief * biome.relief)
     position.setXYZ(i, unit.x * r, unit.y * r, unit.z * r)
 
+    baseTints[i] = [biome.tint[0], biome.tint[1], biome.tint[2]]
     colors[i * 3] = biome.tint[0]
     colors[i * 3 + 1] = biome.tint[1]
     colors[i * 3 + 2] = biome.tint[2]
@@ -117,9 +137,38 @@ export function createPlanetMesh(
   const mesh = new Mesh(geometry, material)
   mesh.name = 'planet'
 
+  const colorAttribute = geometry.attributes.color as BufferAttribute
+  const unit = new Vector3()
+
   return {
     mesh,
     radius,
+    setVegetation(regions): void {
+      // Rewrites the colour buffer in place. Cheap enough to be worth doing,
+      // and called only when the ecology has actually moved — every frame
+      // would be a pointless GPU upload of an unchanged buffer.
+      for (let i = 0; i < position.count; i++) {
+        unit.fromBufferAttribute(position, i).normalize()
+
+        // Strongest single region wins rather than summing: overlapping
+        // influences that add would push the tint past vegetation entirely.
+        let strongest = 0
+        for (const region of regions) {
+          if (region.vegetation <= 0) continue
+          const angle = Math.acos(
+            Math.max(-1, Math.min(1, unit.dot(region.direction))),
+          )
+          if (angle >= region.extent) continue
+          const falloff = 1 - angle / region.extent
+          strongest = Math.max(strongest, region.vegetation * falloff * falloff)
+        }
+
+        const base = baseTints[i]
+        const tint = strongest > 0 ? greened(base, strongest) : base
+        colorAttribute.setXYZ(i, tint[0], tint[1], tint[2])
+      }
+      colorAttribute.needsUpdate = true
+    },
     radiusAt(direction: Vector3): number {
       // Must apply the same biome relief scaling as the mesh build above, or
       // markers sink into rock and float over the pans.

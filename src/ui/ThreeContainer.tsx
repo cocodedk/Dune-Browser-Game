@@ -83,6 +83,9 @@ export default function ThreeContainer() {
     wireDebugHandle(debug, {
       audio: audio.debugState,
       setTime: seconds => { world.time = seconds },
+      setVegetation: value => {
+        for (const region of world.ecology) region.vegetation = value
+      },
       player: () => ({
         state: world.player.state,
         location: world.player.location,

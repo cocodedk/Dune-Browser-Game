@@ -1,7 +1,7 @@
 // src/game-render/planet/biomes.test.ts
 
 import { describe, it, expect } from 'vitest'
-import { biomeAt } from './biomes'
+import { biomeAt, greened } from './biomes'
 import type { BiomeId } from './biomes'
 
 /** Sand is the middle of the continental range. */
@@ -129,5 +129,56 @@ describe('biomeAt: totality', () => {
   it('clamps a continental sample that arrives out of range', () => {
     expect(biomeAt(0, -3).id).toBe('pan')
     expect(biomeAt(0, 9).id).toBe('rock')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// greened — vegetation over a biome
+// ---------------------------------------------------------------------------
+
+describe('greened', () => {
+  const sand = biomeAt(0, SAND).tint
+
+  it('leaves bare ground untouched', () => {
+    expect(greened(sand, 0)).toEqual([...sand])
+  })
+
+  it('turns green as vegetation rises', () => {
+    const ratio = (t: readonly number[]) => t[1] / t[0]
+    expect(ratio(greened(sand, 100))).toBeGreaterThan(ratio(sand) * 2)
+  })
+
+  it('is monotonic in vegetation', () => {
+    // A region that goes greener must never look drier for it.
+    let previous = -Infinity
+    for (let v = 0; v <= 100; v += 2) {
+      const t = greened(sand, v)
+      const greenness = t[1] / t[0]
+      expect(greenness).toBeGreaterThanOrEqual(previous - 1e-9)
+      previous = greenness
+    }
+  })
+
+  it('barely shows below the settled threshold', () => {
+    // A few bulbs in the sand should not repaint a region from orbit.
+    const early = greened(sand, 10)
+    for (let ch = 0; ch < 3; ch++) {
+      expect(Math.abs(early[ch] - sand[ch])).toBeLessThan(0.06)
+    }
+  })
+
+  it('clamps vegetation outside 0..100', () => {
+    expect(greened(sand, -50)).toEqual([...sand])
+    expect(greened(sand, 500)).toEqual(greened(sand, 100))
+  })
+
+  it('never returns a negative channel, on any biome', () => {
+    for (const c of [0.05, 0.5, 0.95]) {
+      for (const lat of [0, 40, 80]) {
+        for (const ch of greened(biomeAt(lat, c).tint, 100)) {
+          expect(ch).toBeGreaterThan(0)
+        }
+      }
+    }
   })
 })

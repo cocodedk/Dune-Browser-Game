@@ -48,6 +48,12 @@ export interface DebugHandle {
    */
   setTime?: (seconds: number) => void
   /**
+   * Populated by ThreeContainer. Forces every region's vegetation, so the
+   * long ecology game can be inspected without playing sixty game-days for
+   * each check.
+   */
+  setVegetation?: (value: number) => void
+  /**
    * Populated by ThreeContainer. A small snapshot of engine state, so a
    * driver script can tell "the click did nothing" from "the engine refused"
    * without reading the DOM.
@@ -99,6 +105,7 @@ export function detachDebugHandle(): void {
 export interface DebugSources {
   audio: () => Record<string, unknown>
   setTime: (seconds: number) => void
+  setVegetation: (value: number) => void
   player: NonNullable<DebugHandle['player']>
   scene: () => Object3D | null
   camera: () => Camera
@@ -113,6 +120,7 @@ export function wireDebugHandle(
   if (!handle) return
   handle.audio = sources.audio
   handle.setTime = sources.setTime
+  handle.setVegetation = sources.setVegetation
   handle.player = sources.player
   handle.inspect = () => {
     const scene = sources.scene()
