@@ -61,8 +61,15 @@ export default function ThreeContainer() {
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
       raycaster.setFromCamera(pointer, handle.camera)
-      if (!raycaster.ray.intersectPlane(groundPlane, hit)) return
 
+      // Ray-based picking wins where a mode offers it: the globe's content is
+      // on a sphere, and flattening the ray onto y=0 first made most of the
+      // planet unclickable.
+      const byRay = modes.active?.pickRay?.(raycaster.ray)
+      if (byRay) { dispatchPick(byRay); return }
+      if (modes.active?.pickRay) return
+
+      if (!raycaster.ray.intersectPlane(groundPlane, hit)) return
       const id = modes.active?.pickAt?.(hit.x, hit.z)
       if (id) dispatchPick(id)
     }

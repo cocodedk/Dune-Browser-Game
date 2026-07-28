@@ -6,7 +6,7 @@
 // textures unless something explicitly frees them; every mode implements
 // dispose() and this is the only place that calls it.
 
-import type { Scene, Camera } from 'three'
+import type { Scene, Camera, Ray } from 'three'
 import type { SceneModeId, WorldState } from '../../types'
 import { EventBus } from '../../EventBus'
 import { nextMode } from './SceneModes'
@@ -22,6 +22,17 @@ export interface SceneMode {
    * it; the rest inherit "clicks do nothing", which is correct for a cinematic.
    */
   pickAt?(x: number, z: number): string | null
+  /**
+   * Hit test against a real ray, for modes whose content is not on the y=0
+   * plane.
+   *
+   * The globe is the reason this exists. Intersecting a flat plane and then
+   * comparing the result to anchors that live on a sphere is geometrically
+   * meaningless: a sietch at 20 degrees of latitude sits 342 units off that
+   * plane against a 220-unit match threshold, so it could never be clicked at
+   * all. Modes that implement this get it used in preference to pickAt.
+   */
+  pickRay?(ray: Ray): string | null
   /**
    * Optional camera override. Most modes drive the shared perspective
    * camera; the conversation view needs orthographic framing so the card

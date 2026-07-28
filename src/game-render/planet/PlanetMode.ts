@@ -8,7 +8,7 @@
 // Assembly only. The globe is in PlanetMesh, the haze in AtmosphereShell, the
 // markers in PlanetMarkers, the camera in OrbitControl.
 
-import { Scene, PerspectiveCamera, Vector3, Color, type Material } from 'three'
+import { Scene, PerspectiveCamera, Vector3, Sphere, Color, type Material } from 'three'
 import type { SceneModeId, WorldState } from '../../types'
 import type { SceneMode } from '../core/ModeManager'
 import type { QualitySettings } from '../core/Quality'
@@ -30,6 +30,7 @@ import { createWormSign } from './WormSign'
 import { createDesertSites } from './DesertSites'
 import { createCrewUnits } from './CrewUnits'
 import { createPlayerBeacon } from './PlayerBeacon'
+import { nearestAnchor } from './pickAnchor'
 import { createSunPlacer } from './PlanetSun'
 
 const DAY_SECONDS = 60
@@ -98,6 +99,11 @@ export function createPlanetMode(
     onDescend: onDescend ? () => onDescend(orbit.centre) : undefined,
   })
 
+  // Sized to the mean surface, so a click lands on the ground rather than on
+  // the mathematical sphere the relief is displaced from.
+  const pickSphere = new Sphere(new Vector3(0, 0, 0), RADIUS * 1.02)
+  const pickHit = new Vector3()
+
   const ecology = createPlanetEcology(planet, world)
 
   const wormSign = createWormSign(world, RADIUS, d => planet.radiusAt(d))
@@ -137,17 +143,20 @@ export function createPlanetMode(
   return {
     id: 'strategic' as SceneModeId,
     scene,
-    /** Raycast hit on the globe resolves to the nearest sietch. */
-    pickAt(x: number, z: number): string | null {
-      const hit = new Vector3(x, 0, z)
-      if (hit.lengthSq() === 0) return null
-      let best: string | null = null
-      let bestDist = Infinity
-      for (const [id, anchor] of markers.anchors) {
-        const d = anchor.distanceTo(hit)
-        if (d < bestDist) { bestDist = d; best = id }
-      }
-      return bestDist < RADIUS * 0.22 ? best : null
+    /**
+     * A click on the globe resolves to the sietch nearest where the ray meets
+     * the planet.
+     *
+     * Against the sphere, not the y=0 plane. The plane version could not work:
+     * it compared a flat intersection against anchors sitting on a sphere, so
+     * anything above about 12 degrees of latitude was unclickable and
+     * travelling by clicking the map — the game's only travel verb — silently
+     * did nothing for most of the world.
+     */
+    pickRay(ray): string | null {
+      const surface = ray.intersectSphere(pickSphere, pickHit)
+      if (!surface) return null
+      return nearestAnchor(surface, markers.anchors, RADIUS * 0.22)
     },
     update(deltaMs: number, state: WorldState): void {
       applyTime(state)
