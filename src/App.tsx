@@ -3,6 +3,7 @@ import StatusBar from './ui/StatusBar'
 import QuotaLedger from './ui/QuotaLedger'
 import CrewPanel from './ui/CrewPanel'
 import MarketPanel from './ui/MarketPanel'
+import FortPanel from './ui/FortPanel'
 import VillagePanel from './ui/VillagePanel'
 import DialoguePanel from './ui/DialoguePanel'
 import EventLog from './ui/EventLog'
@@ -31,6 +32,7 @@ export default function App() {
         <QuotaLedger />
         <CrewPanel />
         <MarketPanel />
+        <FortPanel />
         <VillagePanel />
         <FactionPanel />
         <EventLog />

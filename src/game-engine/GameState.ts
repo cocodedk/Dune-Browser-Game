@@ -8,6 +8,7 @@ import { createQuotaState } from './quota/quota';
 import { getDifficultyConfig } from './difficulty';
 import { INITIAL_TROOP_GROUPS } from '../data/troopGroups';
 import { INITIAL_SPICE_FIELDS } from '../data/spiceFields';
+import { INITIAL_FORTS } from '../data/forts';
 
 // Mutable world state — PoC uses module-level state for simplicity
 export let world: WorldState = createInitialState();
@@ -48,6 +49,7 @@ export function createInitialState(): WorldState {
     charisma: 20,
     act: 'act1',
     ending: null,
+    forts: INITIAL_FORTS.map(f => ({ ...f })),
     ecology: (regionsData as unknown as Region[]).map(r => ({
       regionId: r.id, vegetation: 0, windtraps: 0,
     })),

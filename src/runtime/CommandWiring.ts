@@ -9,7 +9,9 @@ import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue } from '../game-engine/DialogueSystem'
 import { pledgePlayerSietch, assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
 import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
-import { assignCrew, buyEquipment, issueEquipment } from '../game-engine/EconomySystem'
+import {
+  assignCrew, buyEquipment, issueEquipment, assaultFort,
+} from '../game-engine/EconomySystem'
 import { EventBus } from '../EventBus'
 import type { BusEvents } from '../types'
 
@@ -56,6 +58,9 @@ export function wireCommands(): () => void {
   const onIssue = ({ equipmentId, groupId }: BusEvents['player:issue_equipment']): void => {
     issueEquipment(equipmentId, groupId)
   }
+  const onAssault = ({ fortId }: BusEvents['player:assault_fort']): void => {
+    assaultFort(fortId)
+  }
   const onPause = ({ paused }: BusEvents['game:pause']): void => {
     world.paused = paused
     EventBus.emit('world:updated', { state: world })
@@ -73,6 +78,7 @@ export function wireCommands(): () => void {
   EventBus.on('player:assign_crew', onAssignCrew)
   EventBus.on('player:buy_equipment', onBuy)
   EventBus.on('player:issue_equipment', onIssue)
+  EventBus.on('player:assault_fort', onAssault)
   EventBus.on('game:pause', onPause)
 
   return () => {
@@ -88,6 +94,7 @@ export function wireCommands(): () => void {
     EventBus.off('player:assign_crew', onAssignCrew)
     EventBus.off('player:buy_equipment', onBuy)
     EventBus.off('player:issue_equipment', onIssue)
+    EventBus.off('player:assault_fort', onAssault)
     EventBus.off('game:pause', onPause)
   }
 }

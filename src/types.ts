@@ -4,6 +4,7 @@ import type { FactionProfile } from './game-engine/faction/types'
 import type { QuotaState } from './game-engine/quota/quota'
 import type { ActId, EndingId } from './game-engine/acts/transitions'
 import type { RegionEcology } from './game-engine/ecology/ecology'
+import type { FortState } from './game-engine/acts/endgame'
 import type { PrescienceLevel } from './game-engine/prescience/prescience'
 import type { TroopGroup, SpiceField, Equipment, TroopTask, EquipmentKind } from './game-engine/troops/types'
 
@@ -132,6 +133,7 @@ export interface WorldState {
   act: ActId;
   ending: EndingId | null;
   ecology: RegionEcology[];
+  forts: FortState[];
 }
 
 export interface AIDecision {
@@ -192,6 +194,7 @@ export interface BusEvents {
   'player:stop_sietch_task': { villageId: VillageId };
   'game:pause': { paused: boolean };
   'player:assign_crew': { groupId: string; task: TroopTask; targetId: string | null };
+  'player:assault_fort': { fortId: string };
   'player:buy_equipment': { kind: EquipmentKind };
   'player:issue_equipment': { equipmentId: string; groupId: string };
   // Render -> React only. No engine command may be added here.

@@ -28,6 +28,9 @@ import {
   checkGrant, grantRefusalMessage, levelDescription, canOrderRemotely,
   raidWarningDays,
 } from './prescience/prescience'
+import {
+  checkAssault, assaultRefusalMessage, destroyedCount, capitalDestroyed,
+} from './acts/endgame'
 import type { ActWorldView, EndingId } from './acts/transitions'
 
 /** Equipment kinds a group is carrying. */
@@ -277,8 +280,8 @@ function actView(): ActWorldView {
     raidsRepelled: typeof world.flags['raids.repelled'] === 'number'
       ? (world.flags['raids.repelled'] as number) : 0,
     maxRegionVegetation: maxVegetation(world.ecology),
-    fortsDestroyed: 0,
-    capitalFortDestroyed: false,
+    fortsDestroyed: destroyedCount(world.forts),
+    capitalFortDestroyed: capitalDestroyed(world.forts),
     palaceHeld: true,
     greenRegions: greenRegionCount(world.ecology),
     averagePledgedLoyalty: avgLoyalty,
@@ -504,4 +507,57 @@ export function canOrderCrewRemotely(groupId: string): boolean {
   if (canOrderRemotely(world.player.prescience)) return true
   const group = world.troopGroups.find(g => g.id === groupId)
   return group ? group.locationId === world.player.location : false
+}
+
+/**
+ * Storm a Harkonnen stronghold with every drilled crew standing at the fort.
+ *
+ * Assault is resolved against the fort's garrison; the attacker carries no
+ * defender bonus, so taking a wall costs materially more than holding one.
+ */
+export function assaultFort(fortId: string): void {
+  const index = world.forts.findIndex(f => f.locationId === fortId)
+  if (index < 0) return
+  const fort = world.forts[index]
+
+  const attackers = world.troopGroups.filter(
+    g => g.locationId === fortId && g.changeoverDaysLeft === 0,
+  )
+  const size = attackers.reduce((sum, g) => sum + g.size, 0)
+  const skill = attackers.length
+    ? attackers.reduce((sum, g) => sum + g.skills.military, 0) / attackers.length
+    : 0
+
+  const check = checkAssault(fort, { size, militarySkill: skill }, destroyedCount(world.forts))
+  if (!check.ok) {
+    pushEvent('attack', assaultRefusalMessage(check.reason))
+    return
+  }
+
+  const weapon = weaponTier(attackers.flatMap(g => carriedKinds(g.id)))
+  const outcome = resolveCombat(
+    { size, militarySkill: skill, weapon, defending: false },
+    { size: fort.strength / 4, militarySkill: 70, weapon: 'krys', defending: true },
+    Math.random(),
+  )
+
+  // Casualties land on the attacking crews either way.
+  if (attackers.length > 0 && outcome.attackerLosses > 0) {
+    const each = Math.floor(outcome.attackerLosses / attackers.length)
+    for (const group of attackers) {
+      const i = world.troopGroups.findIndex(g => g.id === group.id)
+      if (i >= 0) world.troopGroups[i] = applyLosses(group, each)
+    }
+  }
+
+  const place = world.villages.find(v => v.id === fortId)
+  const name = place?.name ?? fortId
+
+  if (outcome.attackerWins) {
+    world.forts[index] = { ...fort, destroyed: true }
+    world.flags['forts.destroyed'] = destroyedCount(world.forts)
+    pushEvent('attack', `${name} falls. ${outcome.attackerLosses} Fedaykin bought it.`)
+  } else {
+    pushEvent('attack', `The assault on ${name} breaks. ${outcome.attackerLosses} lost.`)
+  }
 }

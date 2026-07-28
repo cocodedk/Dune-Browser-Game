@@ -91,6 +91,7 @@ function createTestWorld(): WorldState {
     act: 'act1',
     ending: null,
     ecology: [],
+    forts: [],
   };
 }
 
