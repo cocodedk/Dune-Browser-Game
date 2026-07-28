@@ -79,6 +79,21 @@ export const INITIAL_CHARACTERS: Character[] = [
     locationId: 'arrakeen',
     recruited: true,
   },
+  // --- Act 3-4 antagonists -------------------------------------------------
+  {
+    id: 'varn',
+    name: 'Draeg Varn',
+    role: 'Harkonnen field commander, and proud of the work',
+    locationId: 'carthag',
+    recruited: false,
+  },
+  {
+    id: 'baron',
+    name: 'Baron Vorrik Harkonnen',
+    role: 'Holds Arrakis the way a hand holds a bird',
+    locationId: 'carthag',
+    recruited: false,
+  },
   {
     id: 'meko',
     name: 'Rhaz Meko',

@@ -44,6 +44,12 @@ export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
 
   // --- Legate Corvin, the Emperor's patience ----------------------------
   {
+    id: 'corvin.final_demand',
+    characterId: 'corvin',
+    condition: { op: 'eq', key: 'act', value: 4 },
+    rootNodeId: 'corvin_final_demand_root',
+  },
+  {
     id: 'corvin.final_warning',
     characterId: 'corvin',
     condition: { op: 'lte', key: 'quota.patience', value: 1 },
@@ -170,6 +176,34 @@ export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
     characterId: 'maren',
     condition: null,
     rootNodeId: 'maren_counsel_root',
+  },
+
+  // --- Draeg Varn, the field commander ----------------------------------
+  {
+    id: 'varn.losing',
+    characterId: 'varn',
+    condition: { op: 'gte', key: 'forts.destroyed', value: 1 },
+    rootNodeId: 'varn_losing_root',
+  },
+  {
+    id: 'varn.confident',
+    characterId: 'varn',
+    condition: null,
+    rootNodeId: 'varn_confident_root',
+  },
+
+  // --- The Baron ---------------------------------------------------------
+  {
+    id: 'baron.cornered',
+    characterId: 'baron',
+    condition: { op: 'gte', key: 'forts.destroyed', value: 2 },
+    rootNodeId: 'baron_cornered_root',
+  },
+  {
+    id: 'baron.truce',
+    characterId: 'baron',
+    condition: null,
+    rootNodeId: 'baron_truce_root',
   },
 
   // --- Rhaz Meko, the market --------------------------------------------
