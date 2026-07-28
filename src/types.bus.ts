@@ -12,6 +12,8 @@ import type { EquipmentKind, TroopTask } from './game-engine/troops/types'
 import type { SietchTask } from './game-engine/sietch/types'
 
 export interface BusEvents {
+  /** Speak to whoever is at the player's location. Sent from a location hotspot. */
+  'player:talk': Record<string, never>;
   'village:selected': { villageId: VillageId };
   'world:updated': { state: WorldState };
   'dialogue:started': { nodeId: string; villageId: VillageId };

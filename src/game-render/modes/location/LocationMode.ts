@@ -8,93 +8,27 @@
 
 import {
   Scene, OrthographicCamera, Mesh, PlaneGeometry,
-  MeshBasicMaterial, CanvasTexture, LinearFilter, SRGBColorSpace, Group, Color,
+  MeshBasicMaterial, CanvasTexture, Group, Color,
 } from 'three'
 import type { SceneModeId, WorldState, LocationKind } from '../../../types'
 import type { SceneMode } from '../../core/ModeManager'
-import { dioramaFor } from './locationDefs'
+import { pickHotspot } from './hotspotPick'
+import { createHotspotLayer } from './HotspotLayer'
+import type { HotspotLayer } from './HotspotLayer'
+import { hotspotsFor } from './locationDefs'
+import type { Hotspot } from './locationDefs'
+import { paintDiorama, FRAME_WIDTH, FRAME_HEIGHT } from './paintDiorama'
+import { INITIAL_CHARACTERS } from '../../../data/characters'
 import { paletteForTime } from '../../materials/Atmosphere'
 
-const FRAME_WIDTH = 1600
-const FRAME_HEIGHT = 1000
 const DAY_SECONDS = 60
-
-/**
- * Paint the diorama to a canvas.
- *
- * Canvas rather than geometry because the whole point is a painted backdrop;
- * building it from meshes would cost more and look worse.
- */
-function paintDiorama(kind: LocationKind, name: string, tint: Color): CanvasTexture {
-  const def = dioramaFor(kind)
-  const canvas = document.createElement('canvas')
-  canvas.width = FRAME_WIDTH
-  canvas.height = FRAME_HEIGHT
-  const ctx = canvas.getContext('2d')!
-
-  // Sky, warmed toward the hour so the diorama shares the map's clock.
-  const sky = ctx.createLinearGradient(0, 0, 0, FRAME_HEIGHT)
-  sky.addColorStop(0, def.skyTop)
-  sky.addColorStop(1, def.skyBottom)
-  ctx.fillStyle = sky
-  ctx.fillRect(0, 0, FRAME_WIDTH, FRAME_HEIGHT)
-
-  ctx.globalAlpha = 0.28
-  ctx.fillStyle = `rgb(${Math.round(tint.r * 255)}, ${Math.round(tint.g * 255)}, ${Math.round(tint.b * 255)})`
-  ctx.fillRect(0, 0, FRAME_WIDTH, FRAME_HEIGHT)
-  ctx.globalAlpha = 1
-
-  // Hearth glow behind the massing — what makes an interior feel inhabited.
-  if (def.hearth > 0) {
-    const glow = ctx.createRadialGradient(
-      FRAME_WIDTH / 2, FRAME_HEIGHT * 0.62, 20,
-      FRAME_WIDTH / 2, FRAME_HEIGHT * 0.62, FRAME_WIDTH * 0.45,
-    )
-    glow.addColorStop(0, `rgba(255, 176, 92, ${0.5 * def.hearth})`)
-    glow.addColorStop(1, 'rgba(255, 176, 92, 0)')
-    ctx.fillStyle = glow
-    ctx.fillRect(0, 0, FRAME_WIDTH, FRAME_HEIGHT)
-  }
-
-  // Foreground massing: an irregular silhouette framing the view. Drawn as one
-  // path so the horizon reads as rock rather than as a rectangle.
-  const baseY = FRAME_HEIGHT * (1 - def.enclosure * 0.55)
-  ctx.fillStyle = def.massing
-  ctx.beginPath()
-  ctx.moveTo(0, FRAME_HEIGHT)
-  ctx.lineTo(0, baseY)
-  for (let x = 0; x <= FRAME_WIDTH; x += FRAME_WIDTH / 12) {
-    const jag = Math.sin(x * 0.004) * 46 + Math.sin(x * 0.011) * 22
-    ctx.lineTo(x, baseY + jag)
-  }
-  ctx.lineTo(FRAME_WIDTH, FRAME_HEIGHT)
-  ctx.closePath()
-  ctx.fill()
-
-  // Side pillars deepen the enclosure without another texture.
-  const pillar = FRAME_WIDTH * 0.09 * def.enclosure
-  if (pillar > 4) {
-    ctx.fillStyle = def.massing
-    ctx.fillRect(0, 0, pillar, FRAME_HEIGHT)
-    ctx.fillRect(FRAME_WIDTH - pillar, 0, pillar, FRAME_HEIGHT)
-  }
-
-  ctx.fillStyle = 'rgba(240, 224, 190, 0.92)'
-  ctx.font = '600 34px system-ui, sans-serif'
-  ctx.textAlign = 'center'
-  ctx.fillText(name, FRAME_WIDTH / 2, 74)
-
-  const texture = new CanvasTexture(canvas)
-  texture.minFilter = LinearFilter
-  texture.magFilter = LinearFilter
-  texture.colorSpace = SRGBColorSpace
-  return texture
-}
 
 export function createLocationMode(
   canvas?: HTMLElement,
   /** Called when the player asks to step back out to the desert. */
   onLeave?: () => void,
+  /** Called with a hotspot id when the player clicks something in the scene. */
+  onSpot?: (id: string) => void,
 ): SceneMode {
   const scene = new Scene()
 
@@ -115,6 +49,52 @@ export function createLocationMode(
   }
   canvas?.addEventListener('wheel', onWheel, { passive: true })
 
+  // Clickable spots. hotspotsFor has existed, fully specced and tested, since
+  // the diorama was written — it was simply never wired to anything, so
+  // arriving somewhere was a picture with nothing to do in it.
+  let spots: Hotspot[] = []
+  let hotspots: HotspotLayer | null = null
+
+  /**
+   * Pointer handling lives here rather than in a pickAt() implementation.
+   *
+   * ThreeContainer raycasts the shared *perspective* camera onto the y=0
+   * plane; this mode renders through its own orthographic camera looking down
+   * -z, so that ray runs parallel to the plane and its hit coordinates mean
+   * nothing here. A pickAt() would compile, look right, and never fire.
+   */
+  function normalised(e: PointerEvent): { nx: number; ny: number } | null {
+    if (!canvas) return null
+    const rect = canvas.getBoundingClientRect()
+    if (rect.width === 0 || rect.height === 0) return null
+    return {
+      nx: (e.clientX - rect.left) / rect.width,
+      ny: (e.clientY - rect.top) / rect.height,
+    }
+  }
+
+  function onPointerMove(e: PointerEvent): void {
+    const p = normalised(e)
+    if (!p || !hotspots) return
+    const hit = pickHotspot(spots, p.nx, p.ny)
+    hotspots.setHover(hit?.id ?? null)
+    if (canvas instanceof HTMLElement) {
+      canvas.style.cursor = hit ? 'pointer' : ''
+    }
+  }
+
+  function onPointerDown(e: PointerEvent): void {
+    const p = normalised(e)
+    if (!p) return
+    const hit = pickHotspot(spots, p.nx, p.ny)
+    if (!hit) return
+    if (hit.id === 'leave') onLeave?.()
+    else onSpot?.(hit.id)
+  }
+
+  canvas?.addEventListener('pointermove', onPointerMove)
+  canvas?.addEventListener('pointerdown', onPointerDown)
+
   const geometry = new PlaneGeometry(FRAME_WIDTH * 1.08, FRAME_HEIGHT * 1.08)
   let texture: CanvasTexture | null = null
   const material = new MeshBasicMaterial({
@@ -128,6 +108,7 @@ export function createLocationMode(
   root.add(mesh)
 
   let currentKey = ''
+  let hotspotKey = ''
   let elapsedMs = 0
 
   function ensurePainting(world: WorldState): void {
@@ -150,6 +131,33 @@ export function createLocationMode(
     material.map = texture
     material.needsUpdate = true
     currentKey = key
+
+    ensureHotspots(world, place.kind)
+  }
+
+  /**
+   * Rebuild the clickable spots for wherever the player is standing.
+   *
+   * The layer is a sibling of the backdrop, not a child: the backdrop is
+   * scaled 8% larger and drifts for parallax, and labels riding that plane
+   * would slowly stop agreeing with their own hit targets.
+   */
+  function ensureHotspots(world: WorldState, kind: LocationKind): void {
+    const hasSpeaker = INITIAL_CHARACTERS.some(
+      c => c.locationId === world.player.location,
+    )
+    const next = hotspotsFor(kind, hasSpeaker)
+    const signature = next.map(s => s.id).join(',')
+    if (signature === hotspotKey) return
+
+    hotspotKey = signature
+    spots = next
+    if (hotspots) {
+      scene.remove(hotspots.mesh)
+      hotspots.dispose()
+    }
+    hotspots = createHotspotLayer(spots, FRAME_WIDTH, FRAME_HEIGHT)
+    scene.add(hotspots.mesh)
   }
 
   return {
@@ -159,12 +167,19 @@ export function createLocationMode(
     update(deltaMs: number, world: WorldState): void {
       elapsedMs += deltaMs
       ensurePainting(world)
+      hotspots?.update(elapsedMs)
       // Slow drift gives the flat backdrop a suggestion of depth.
       root.position.x = Math.sin(elapsedMs * 0.00016) * 26
       root.position.y = Math.cos(elapsedMs * 0.00012) * 14
     },
     dispose(): void {
       canvas?.removeEventListener('wheel', onWheel)
+      canvas?.removeEventListener('pointermove', onPointerMove)
+      canvas?.removeEventListener('pointerdown', onPointerDown)
+      if (hotspots) {
+        scene.remove(hotspots.mesh)
+        hotspots.dispose()
+      }
       geometry.dispose()
       material.dispose()
       texture?.dispose()

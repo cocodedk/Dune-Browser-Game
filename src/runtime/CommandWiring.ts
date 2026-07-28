@@ -6,7 +6,9 @@
 
 import { world } from '../game-engine/GameState'
 import { startTravel } from '../game-engine/TravelSystem'
-import { chooseDialogue } from '../game-engine/DialogueSystem'
+import { chooseDialogue, startDialogue } from '../game-engine/DialogueSystem'
+import { pushEvent } from '../game-engine/EventSystem'
+import { decideVisit } from './VisitPolicy'
 import { pledgePlayerSietch, assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
 import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
 import {
@@ -20,6 +22,19 @@ import type { BusEvents } from '../types'
  * Returns an unsubscribe function that removes all of them.
  */
 export function wireCommands(): () => void {
+  /**
+   * Speak to whoever is here.
+   *
+   * Reuses the same decision the map click uses, so standing in a sietch and
+   * clicking "Speak" opens exactly the conversation that clicking the sietch
+   * from the map would.
+   */
+  const onTalk = (): void => {
+    const action = decideVisit(world, world.player.location)
+    if (action.kind === 'dialogue') startDialogue(action.treeId, action.villageId)
+    else if (action.kind === 'event') pushEvent('village_selected', action.message)
+  }
+
   const onTravel = ({ targetVillageId }: BusEvents['player:travel']): void => {
     startTravel(targetVillageId)
   }
@@ -66,6 +81,7 @@ export function wireCommands(): () => void {
     EventBus.emit('world:updated', { state: world })
   }
 
+  EventBus.on('player:talk', onTalk)
   EventBus.on('player:travel', onTravel)
   EventBus.on('player:choose', onChoose)
   EventBus.on('game:speed', onSpeed)

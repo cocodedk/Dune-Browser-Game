@@ -10,6 +10,7 @@ import type { PerspectiveCamera } from 'three'
 import type { WorldState } from '../../types'
 import type { QualitySettings } from './Quality'
 import { ModeManager } from './ModeManager'
+import { EventBus } from '../../EventBus'
 import { createPlanetMode } from '../planet/PlanetMode'
 import { createStrategicMode } from '../modes/strategic/StrategicMode'
 import { createFlightMode } from '../modes/flight/FlightMode'
@@ -41,7 +42,13 @@ export function createModeManager(
       ),
     conversation: () => createConversationMode(camera),
     location: () =>
-      createLocationMode(canvas, () => modes.handleSignal({ kind: 'ascend' })),
+      createLocationMode(
+        canvas,
+        () => modes.handleSignal({ kind: 'ascend' }),
+        // Speaking is an engine action, so it goes over the bus rather than
+        // being performed here — the render layer never mutates the world.
+        id => { if (id === 'talk') EventBus.emit('player:talk', {}) },
+      ),
     flight: () => createFlightMode(camera, quality),
   })
   return modes
