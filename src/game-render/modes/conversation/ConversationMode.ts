@@ -14,6 +14,7 @@ import type { SceneModeId, WorldState } from '../../../types'
 import type { SceneMode } from '../../core/ModeManager'
 import { createCharacterCard } from './CharacterCard'
 import { INITIAL_CHARACTERS } from '../../../data/characters'
+import { fitOrtho } from '../../core/orthoFit'
 
 const CARD_PLANE_WIDTH = 1400
 const CARD_PLANE_HEIGHT = 900
@@ -31,7 +32,10 @@ function speakerAt(world: WorldState): { name: string; role: string; id: string 
   return { name: place?.name ?? 'A voice', role: 'of this place', id: '' }
 }
 
-export function createConversationMode(camera: PerspectiveCamera): SceneMode {
+export function createConversationMode(
+  camera: PerspectiveCamera,
+  canvas?: HTMLElement,
+): SceneMode {
   const scene = new Scene()
 
   // Orthographic framing: the card must sit at a fixed size on screen
@@ -64,6 +68,26 @@ export function createConversationMode(camera: PerspectiveCamera): SceneMode {
   scrim.renderOrder = 40
   root.add(scrim)
 
+  // The conversation frustum was fixed at 1400x900 and never resized either,
+  // so the card and its scrim drifted out of frame on any window that was not
+  // that shape.
+  let fitKey = ''
+  function refit(): void {
+    const width = canvas?.clientWidth || CARD_PLANE_WIDTH
+    const height = canvas?.clientHeight || CARD_PLANE_HEIGHT
+    const key = `${width}x${height}`
+    if (key === fitKey) return
+    fitKey = key
+
+    const fit = fitOrtho(CARD_PLANE_WIDTH, CARD_PLANE_HEIGHT, width, height)
+    view.left = -fit.viewWidth / 2
+    view.right = fit.viewWidth / 2
+    view.top = fit.viewHeight / 2
+    view.bottom = -fit.viewHeight / 2
+    view.updateProjectionMatrix()
+    scrim.scale.setScalar(Math.max(1, fit.coverScale))
+  }
+
   let card: ReturnType<typeof createCharacterCard> | null = null
   let currentName = ''
   let elapsedMs = 0
@@ -88,6 +112,7 @@ export function createConversationMode(camera: PerspectiveCamera): SceneMode {
     scene,
     update(deltaMs: number, world: WorldState): void {
       elapsedMs += deltaMs
+      refit()
       ensureCard(world)
       card?.update(elapsedMs)
 

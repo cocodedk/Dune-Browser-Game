@@ -12,12 +12,13 @@ import {
 } from 'three'
 import type { SceneModeId, WorldState, LocationKind } from '../../../types'
 import type { SceneMode } from '../../core/ModeManager'
-import { pickHotspot } from './hotspotPick'
 import { createHotspotLayer } from './HotspotLayer'
 import type { HotspotLayer } from './HotspotLayer'
 import { hotspotsFor } from './locationDefs'
 import type { Hotspot } from './locationDefs'
 import { paintDiorama, FRAME_WIDTH, FRAME_HEIGHT } from './paintDiorama'
+import { createFraming } from './framing'
+import { createPointerRouter } from './pointerRouter'
 import { INITIAL_CHARACTERS } from '../../../data/characters'
 import { paletteForTime } from '../../materials/Atmosphere'
 
@@ -55,45 +56,11 @@ export function createLocationMode(
   let spots: Hotspot[] = []
   let hotspots: HotspotLayer | null = null
 
-  /**
-   * Pointer handling lives here rather than in a pickAt() implementation.
-   *
-   * ThreeContainer raycasts the shared *perspective* camera onto the y=0
-   * plane; this mode renders through its own orthographic camera looking down
-   * -z, so that ray runs parallel to the plane and its hit coordinates mean
-   * nothing here. A pickAt() would compile, look right, and never fire.
-   */
-  function normalised(e: PointerEvent): { nx: number; ny: number } | null {
-    if (!canvas) return null
-    const rect = canvas.getBoundingClientRect()
-    if (rect.width === 0 || rect.height === 0) return null
-    return {
-      nx: (e.clientX - rect.left) / rect.width,
-      ny: (e.clientY - rect.top) / rect.height,
-    }
-  }
-
-  function onPointerMove(e: PointerEvent): void {
-    const p = normalised(e)
-    if (!p || !hotspots) return
-    const hit = pickHotspot(spots, p.nx, p.ny)
-    hotspots.setHover(hit?.id ?? null)
-    if (canvas instanceof HTMLElement) {
-      canvas.style.cursor = hit ? 'pointer' : ''
-    }
-  }
-
-  function onPointerDown(e: PointerEvent): void {
-    const p = normalised(e)
-    if (!p) return
-    const hit = pickHotspot(spots, p.nx, p.ny)
-    if (!hit) return
-    if (hit.id === 'leave') onLeave?.()
-    else onSpot?.(hit.id)
-  }
-
-  canvas?.addEventListener('pointermove', onPointerMove)
-  canvas?.addEventListener('pointerdown', onPointerDown)
+  const pointer = createPointerRouter(canvas, {
+    spots: () => spots,
+    hover: id => hotspots?.setHover(id),
+    activate: id => { if (id === 'leave') onLeave?.(); else onSpot?.(id) },
+  })
 
   const geometry = new PlaneGeometry(FRAME_WIDTH * 1.08, FRAME_HEIGHT * 1.08)
   let texture: CanvasTexture | null = null
@@ -109,6 +76,8 @@ export function createLocationMode(
 
   let currentKey = ''
   let hotspotKey = ''
+
+  const framing = createFraming(view, canvas, () => ({ backdrop: mesh }))
   let elapsedMs = 0
 
   function ensurePainting(world: WorldState): void {
@@ -147,7 +116,9 @@ export function createLocationMode(
       c => c.locationId === world.player.location,
     )
     const next = hotspotsFor(kind, hasSpeaker)
-    const signature = next.map(s => s.id).join(',')
+    // Keyed on the window shape too: the label plane spans the visible
+    // frustum, so it has to be rebuilt when that changes.
+    const signature = `${next.map(s => s.id).join(',')}@${framing.key}`
     if (signature === hotspotKey) return
 
     hotspotKey = signature
@@ -156,7 +127,9 @@ export function createLocationMode(
       scene.remove(hotspots.mesh)
       hotspots.dispose()
     }
-    hotspots = createHotspotLayer(spots, FRAME_WIDTH, FRAME_HEIGHT)
+    hotspots = createHotspotLayer(
+      spots, framing.fit.viewWidth, framing.fit.viewHeight,
+    )
     scene.add(hotspots.mesh)
   }
 
@@ -166,6 +139,7 @@ export function createLocationMode(
     camera: view,
     update(deltaMs: number, world: WorldState): void {
       elapsedMs += deltaMs
+      framing.refit()
       ensurePainting(world)
       hotspots?.update(elapsedMs)
       // Slow drift gives the flat backdrop a suggestion of depth.
@@ -174,8 +148,7 @@ export function createLocationMode(
     },
     dispose(): void {
       canvas?.removeEventListener('wheel', onWheel)
-      canvas?.removeEventListener('pointermove', onPointerMove)
-      canvas?.removeEventListener('pointerdown', onPointerDown)
+      pointer.dispose()
       if (hotspots) {
         scene.remove(hotspots.mesh)
         hotspots.dispose()

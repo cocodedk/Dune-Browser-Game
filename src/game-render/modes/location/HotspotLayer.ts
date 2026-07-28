@@ -66,12 +66,21 @@ function paint(
   return texture
 }
 
+/**
+ * @param viewWidth  Visible world extent, which tracks the window shape.
+ * @param viewHeight Ditto.
+ *
+ * Sized to the *visible* frustum rather than to the authored art frame. The
+ * backdrop is scaled to cover, which crops a third of its height on an
+ * ultrawide — and labels riding that crop simply vanish off the top and
+ * bottom of the screen. These are interface, so they belong to the viewport.
+ */
 export function createHotspotLayer(
   spots: readonly Hotspot[],
-  frameWidth: number,
-  frameHeight: number,
+  viewWidth: number,
+  viewHeight: number,
 ): HotspotLayer {
-  const geometry = new PlaneGeometry(frameWidth, frameHeight)
+  const geometry = new PlaneGeometry(viewWidth, viewHeight)
   const material = new MeshBasicMaterial({
     transparent: true,
     depthTest: false,
@@ -80,7 +89,10 @@ export function createHotspotLayer(
     toneMapped: false,
   })
 
-  let texture = paint(spots, 1024, 768, null)
+  // Painted at the visible aspect so the text is never stretched.
+  const pixelHeight = 768
+  const pixelWidth = Math.round(pixelHeight * (viewWidth / viewHeight))
+  let texture = paint(spots, pixelWidth, pixelHeight, null)
   material.map = texture
 
   const mesh = new Mesh(geometry, material)
@@ -95,7 +107,7 @@ export function createHotspotLayer(
       if (id === hovered) return
       hovered = id
       texture.dispose()
-      texture = paint(spots, 1024, 768, hovered)
+      texture = paint(spots, pixelWidth, pixelHeight, hovered)
       material.map = texture
       material.needsUpdate = true
     },

@@ -40,7 +40,7 @@ export function createModeManager(
       createStrategicMode(camera, quality, world, canvas, descentCentre, () =>
         modes.handleSignal({ kind: 'ascend' }),
       ),
-    conversation: () => createConversationMode(camera),
+    conversation: () => createConversationMode(camera, canvas),
     location: () =>
       createLocationMode(
         canvas,
