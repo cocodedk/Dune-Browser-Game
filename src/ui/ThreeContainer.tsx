@@ -86,6 +86,10 @@ export default function ThreeContainer() {
       setVegetation: value => {
         for (const region of world.ecology) region.vegetation = value
       },
+      worms: () => world.wormSightings.map(s => ({ ...s })),
+      signWorm: fieldId => {
+        world.wormSightings.push({ fieldId, atTime: world.time })
+      },
       player: () => ({
         state: world.player.state,
         location: world.player.location,

@@ -50,6 +50,7 @@ export function createInitialState(): WorldState {
     act: 'act1',
     ending: null,
     forts: INITIAL_FORTS.map(f => ({ ...f })),
+    wormSightings: [],
     ecology: (regionsData as unknown as Region[]).map(r => ({
       regionId: r.id, vegetation: 0, windtraps: 0,
     })),

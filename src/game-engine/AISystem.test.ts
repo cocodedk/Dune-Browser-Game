@@ -92,6 +92,7 @@ function createTestWorld(): WorldState {
     ending: null,
     ecology: [],
     forts: [],
+    wormSightings: [],
   };
 }
 

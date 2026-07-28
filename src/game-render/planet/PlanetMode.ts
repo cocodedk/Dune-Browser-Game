@@ -23,6 +23,7 @@ import { createOrbitControl } from './OrbitControl'
 import { createMoons } from './Moons'
 import { createNamedStars } from './NamedStars'
 import { createPlanetEcology } from './PlanetEcology'
+import { createWormSign } from './WormSign'
 
 const DAY_SECONDS = 60
 const RADIUS = 1000
@@ -79,6 +80,9 @@ export function createPlanetMode(
   const orbit = createOrbitControl(camera, canvas, { radius: RADIUS, onDescend })
 
   const ecology = createPlanetEcology(planet, world)
+
+  const wormSign = createWormSign(world, RADIUS, d => planet.radiusAt(d))
+  scene.add(wormSign.group)
 
   const SUN_AXIS = new Vector3(0, 1, 0)
   const sunDirection = new Vector3()
@@ -154,6 +158,7 @@ export function createPlanetMode(
       markers.update(state, camera, orbit.zoom)
       moons.update(state.time)
       ecology.update(state)
+      wormSign.update(state, DAY_SECONDS)
     },
     dispose(): void {
       orbit.dispose()
@@ -163,9 +168,11 @@ export function createPlanetMode(
       scene.remove(markers.group)
       scene.remove(moons.group)
       scene.remove(worlds.group)
+      scene.remove(wormSign.group)
       lighting.dispose()
       moons.dispose()
       worlds.dispose()
+      wormSign.dispose()
       planet.dispose()
       stars.dispose()
       air.dispose()

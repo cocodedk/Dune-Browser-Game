@@ -7,8 +7,10 @@
 // and let assertions run against those.
 
 import type { Camera, Object3D } from 'three'
-import { Quaternion, Vector3 } from 'three'
 import type { SceneModeId } from '../../types'
+import { inspectScene } from './inspectScene'
+
+export { inspectScene }
 
 /** One object in the live scene, with where it actually lands on screen. */
 export interface InspectedObject {
@@ -53,6 +55,16 @@ export interface DebugHandle {
    * each check.
    */
   setVegetation?: (value: number) => void
+  /** Populated by ThreeContainer. Live worm sightings, for driver scripts. */
+  worms?: () => { fieldId: string; atTime: number }[]
+  /**
+   * Populated by ThreeContainer. Stages a worm attack on a field.
+   *
+   * Worms only take crews working a *harvester*, which has to be bought from
+   * the smugglers first — so reaching a real attack takes a long game, and
+   * checking that the sign draws should not.
+   */
+  signWorm?: (fieldId: string) => void
   /**
    * Populated by ThreeContainer. A small snapshot of engine state, so a
    * driver script can tell "the click did nothing" from "the engine refused"
@@ -106,6 +118,8 @@ export interface DebugSources {
   audio: () => Record<string, unknown>
   setTime: (seconds: number) => void
   setVegetation: (value: number) => void
+  worms: NonNullable<DebugHandle['worms']>
+  signWorm: (fieldId: string) => void
   player: NonNullable<DebugHandle['player']>
   scene: () => Object3D | null
   camera: () => Camera
@@ -121,6 +135,8 @@ export function wireDebugHandle(
   handle.audio = sources.audio
   handle.setTime = sources.setTime
   handle.setVegetation = sources.setVegetation
+  handle.worms = sources.worms
+  handle.signWorm = sources.signWorm
   handle.player = sources.player
   handle.inspect = () => {
     const scene = sources.scene()
@@ -128,69 +144,4 @@ export function wireDebugHandle(
     const { width, height } = sources.size()
     return inspectScene(scene, sources.camera(), width, height)
   }
-}
-
-/**
- * Project every object in a scene to screen space.
- *
- * Meshes only — groups and lights have no visible extent, and listing them
- * just buries the thing being looked for.
- */
-export function inspectScene(
-  root: Object3D,
-  camera: Camera,
-  width: number,
-  height: number,
-): InspectedObject[] {
-  const out: InspectedObject[] = []
-  const world = new Vector3()
-  const edge = new Vector3()
-  const right = new Vector3()
-  const up = new Vector3()
-  const spin = new Quaternion()
-
-  root.updateMatrixWorld(true)
-  root.traverse(object => {
-    const geometry = (object as { geometry?: { boundingSphere?: { radius: number } | null;
-      computeBoundingSphere?: () => void } }).geometry
-    if (!geometry) return
-
-    object.getWorldPosition(world)
-    const view = world.clone().project(camera)
-    const behind = view.z > 1
-    const screen: [number, number] | null = behind
-      ? null
-      : [(view.x * 0.5 + 0.5) * width, (-view.y * 0.5 + 0.5) * height]
-
-    // Bounding-sphere radius, scaled by world scale, projected as an offset
-    // from the centre — that is the on-screen size in pixels.
-    //
-    // The offset runs along the camera's right vector, not along all three
-    // axes: offsetting diagonally and measuring only x overstates the radius
-    // by root-3, which is exactly the kind of quietly-wrong number that sends
-    // an investigation down the wrong road.
-    let screenRadius: number | null = null
-    if (!geometry.boundingSphere) geometry.computeBoundingSphere?.()
-    const radius = geometry.boundingSphere?.radius
-    if (radius != null && screen) {
-      const scale = object.getWorldScale(new Vector3())
-      const maxScale = Math.max(scale.x, scale.y, scale.z)
-      right.setFromMatrixColumn(camera.matrixWorld, 0).normalize()
-      edge.copy(world).addScaledVector(right, radius * maxScale).project(camera)
-      screenRadius = Math.abs((edge.x - view.x) * 0.5 * width)
-    }
-
-    up.set(0, 1, 0).applyQuaternion(object.getWorldQuaternion(spin)).normalize()
-
-    out.push({
-      name: object.name || '(unnamed)',
-      type: object.type,
-      visible: object.visible,
-      world: [world.x, world.y, world.z],
-      up: [up.x, up.y, up.z],
-      screen,
-      screenRadius,
-    })
-  })
-  return out
 }

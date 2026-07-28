@@ -35,6 +35,12 @@ export interface Village {
 export type Location = Village;
 export type LocationId = VillageId;
 
+// Conversation types live in their own module but are re-exported here, so
+// every existing import of them keeps working.
+export type {
+  DialogueNode, DialogueChoice, PlayerAction, DialogueEffect,
+} from './types.dialogue';
+
 export interface Player {
   location: VillageId;
   state: 'idle' | 'traveling';
@@ -50,43 +56,6 @@ export interface Player {
 export interface AITimer {
   nextDecisionAt: number;
   lastDecision: AIDecision | null;
-}
-
-export interface DialogueNode {
-  id: string;
-  speaker: string;
-  text: string;
-  choices: DialogueChoice[];
-}
-
-export interface DialogueChoice {
-  id: string;
-  text: string;
-  nextId: string | null;  // null = end dialogue
-  effect?: DialogueEffect;
-}
-
-export type PlayerAction =
-  | { type: 'help_village'; factionAffinity: FactionId }
-  | { type: 'hoard_spice'; amount: number }
-  | { type: 'ignore_attack'; victimFaction: FactionId }
-  | { type: 'attack_faction'; target: FactionId }
-  | { type: 'honor_agreement'; partner: FactionId }
-  | { type: 'break_agreement'; partner: FactionId }
-  | { type: 'trade_with_faction'; target: FactionId; amount: number };
-
-export interface DialogueEffect {
-  loyaltyDelta?: number;
-  influenceDelta?: number;
-  spiceDelta?: number;
-  reputationAction?: PlayerAction;
-  /** Story flags written when this choice is taken. */
-  setFlags?: Record<string, boolean | number>;
-  /** Numeric flag increments, applied after setFlags. */
-  addFlags?: Record<string, number>;
-  charismaDelta?: number;
-  revealLocation?: VillageId;
-  recruitCharacter?: string;
 }
 
 export type GameEventType =
@@ -141,6 +110,20 @@ export interface WorldState {
   ending: EndingId | null;
   ecology: RegionEcology[];
   forts: FortState[];
+  /**
+   * Where and when a worm has recently taken or scattered a crew.
+   *
+   * Kept in world state rather than as a render-side effect so that a worm
+   * attack is a fact about Arrakis: the map can show it, a save can carry it,
+   * and the Fremen can be asked about it.
+   */
+  wormSightings: WormSighting[];
+}
+
+export interface WormSighting {
+  fieldId: string;
+  /** Engine time in seconds. */
+  atTime: number;
 }
 
 export interface AIDecision {
