@@ -9,12 +9,13 @@ import { ACT2_NODES } from './act2'
 import { ACT3_NODES } from './act3'
 import { REACHES_DESERT_NODES } from './reaches-desert'
 import { REACHES_BASIN_NODES } from './reaches-basin'
+import { DUNCAN_NODES } from './duncan'
 import { INITIAL_DIALOGUE_STATES } from '../dialogueStates'
 import type { DialogueNode } from '../../types'
 
 const ALL: DialogueNode[] = [
   ...PALACE_NODES, ...DESERT_NODES, ...ACT2_NODES, ...ACT3_NODES,
-  ...REACHES_DESERT_NODES, ...REACHES_BASIN_NODES,
+  ...REACHES_DESERT_NODES, ...REACHES_BASIN_NODES, ...DUNCAN_NODES,
 ]
 const BY_ID = new Map(ALL.map(n => [n.id, n]))
 

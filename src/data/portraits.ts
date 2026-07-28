@@ -133,6 +133,13 @@ const PORTRAITS: Record<string, PortraitDef> = {
     build: 1.1, dress: 'plain',
   },
 
+  // Duncan: Atreides colours worn by someone who has been living in a sietch.
+  duncan: {
+    backTop: '#7a6a52', backBottom: '#2a2418',
+    rim: '#7fc48a', figure: '#1d1810', framing: 0.88, keyHardness: 0.75,
+    build: 1.1, dress: 'plain',
+  },
+
   // The waterseller: warm, close, and the only one who looks pleased to see you.
   zurrah: {
     backTop: '#b8834a', backBottom: '#3e2814',

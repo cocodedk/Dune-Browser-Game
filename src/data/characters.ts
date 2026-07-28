@@ -149,4 +149,14 @@ export const INITIAL_CHARACTERS: Character[] = [
     locationId: 'carthag',
     recruited: false,
   },
+  // Duncan, who in the books is the Atreides sent to live among the Fremen —
+  // so he stands at Sietch Tabr rather than in the palace, and is the bridge
+  // between the two halves of the cast.
+  {
+    id: 'duncan',
+    name: 'Duncan Idaho',
+    role: 'Swordmaster, and the first of you the Fremen trusted',
+    locationId: 'wind_pass',
+    recruited: true,
+  },
 ]

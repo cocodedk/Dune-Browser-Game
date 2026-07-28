@@ -44,4 +44,10 @@ export const REACHES_STATES: DialogueStateDef[] = [
     condition: null,
     rootNodeId: 'hallock_root',
   },
+  {
+    id: 'duncan.between',
+    characterId: 'duncan',
+    condition: null,
+    rootNodeId: 'duncan_root',
+  },
 ]
