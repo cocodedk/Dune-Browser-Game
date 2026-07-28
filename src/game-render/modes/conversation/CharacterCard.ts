@@ -34,19 +34,35 @@ function drawPortrait(name: string, role: string, accent: string): CanvasTexture
   const ctx = canvas.getContext('2d')!
 
   const backdrop = ctx.createLinearGradient(0, 0, 0, CARD_HEIGHT)
-  backdrop.addColorStop(0, '#6b4a28')
-  backdrop.addColorStop(0.55, '#4a3218')
-  backdrop.addColorStop(1, '#241a0c')
+  backdrop.addColorStop(0, '#a8763f')
+  backdrop.addColorStop(0.55, '#7a512a')
+  backdrop.addColorStop(1, '#3d2a15')
   ctx.fillStyle = backdrop
   ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
 
+  // Warm glow behind the figure. The diorama gets its readability from a
+  // tint overlay plus a hearth glow, not from its base gradient — which is
+  // in fact darker than this card's was. Without an equivalent the card
+  // faithfully rendered colours that were simply authored too dark.
+  const glow = ctx.createRadialGradient(
+    CARD_WIDTH / 2, 210, 20, CARD_WIDTH / 2, 210, CARD_WIDTH * 0.75,
+  )
+  glow.addColorStop(0, 'rgba(255, 196, 120, 0.42)')
+  glow.addColorStop(1, 'rgba(255, 196, 120, 0)')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+
   // Head-and-shoulders silhouette — reads as a person at a glance.
-  ctx.fillStyle = 'rgba(20, 12, 5, 0.85)'
+  // Kept small and only semi-opaque. At r=62 plus a 105x108 torso at 92%
+  // opacity the figure covered most of a 300x420 canvas, so the card read
+  // as black — the backdrop was rendering correctly all along, there was
+  // simply almost none of it visible.
+  ctx.fillStyle = 'rgba(38, 22, 10, 0.72)'
   ctx.beginPath()
-  ctx.arc(CARD_WIDTH / 2, 165, 62, 0, Math.PI * 2)
+  ctx.arc(CARD_WIDTH / 2, 175, 46, 0, Math.PI * 2)
   ctx.fill()
   ctx.beginPath()
-  ctx.ellipse(CARD_WIDTH / 2, 340, 105, 108, 0, Math.PI, 0)
+  ctx.ellipse(CARD_WIDTH / 2, 352, 74, 76, 0, Math.PI, 0)
   ctx.fill()
 
   // Rim light from the upper left, matching the scene's sun direction.
@@ -54,7 +70,7 @@ function drawPortrait(name: string, role: string, accent: string): CanvasTexture
   ctx.lineWidth = 4
   ctx.globalAlpha = 0.95
   ctx.beginPath()
-  ctx.arc(CARD_WIDTH / 2, 165, 62, Math.PI * 0.75, Math.PI * 1.65)
+  ctx.arc(CARD_WIDTH / 2, 175, 46, Math.PI * 0.75, Math.PI * 1.65)
   ctx.stroke()
   ctx.globalAlpha = 1
 
