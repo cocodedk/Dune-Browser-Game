@@ -75,6 +75,13 @@ export interface DebugHandle {
    */
   teleport?: (villageId: string) => void
   /**
+   * Populated by ThreeContainer. Issues a harvester to every crew.
+   *
+   * Buying one takes an act's worth of spice, and checking that the machine
+   * draws on the sand should not.
+   */
+  giveHarvester?: () => void
+  /**
    * Populated by ThreeContainer. A small snapshot of engine state, so a
    * driver script can tell "the click did nothing" from "the engine refused"
    * without reading the DOM.
@@ -131,6 +138,7 @@ export interface DebugSources {
   signWorm: (fieldId: string) => void
   revealSites: () => void
   teleport: (villageId: string) => void
+  giveHarvester: () => void
   player: NonNullable<DebugHandle['player']>
   scene: () => Object3D | null
   camera: () => Camera
@@ -150,6 +158,7 @@ export function wireDebugHandle(
   handle.signWorm = sources.signWorm
   handle.revealSites = sources.revealSites
   handle.teleport = sources.teleport
+  handle.giveHarvester = sources.giveHarvester
   handle.player = sources.player
   handle.inspect = () => {
     const scene = sources.scene()

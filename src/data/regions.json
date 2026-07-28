@@ -1,10 +1,135 @@
 [
-  { "id": "sietch_tabr", "name": "Sietch Tabr", "owner": "fremen", "spice": 30, "unrest": 10 },
-  { "id": "arrakeen", "name": "Arrakeen", "owner": null, "spice": 50, "unrest": 20 },
-  { "id": "carthag", "name": "Carthag", "owner": "harkonnen", "spice": 40, "unrest": 35 },
-  { "id": "imperial_basin", "name": "Imperial Basin", "owner": "emperor", "spice": 80, "unrest": 5 },
-  { "id": "cielago_depression", "name": "Cielago Depression", "owner": null, "spice": 70, "unrest": 0 },
-  { "id": "red_wall_sietch", "name": "Red Wall Sietch", "owner": "fremen", "spice": 20, "unrest": 5 },
-  { "id": "tsimpo", "name": "Tsimpo", "owner": null, "spice": 35, "unrest": 15 },
-  { "id": "hagg", "name": "Hagg", "owner": "atreides", "spice": 45, "unrest": 25 }
+  {
+    "id": "sietch_tabr",
+    "name": "Sietch Tabr",
+    "owner": "fremen",
+    "spice": 30,
+    "unrest": 10
+  },
+  {
+    "id": "arrakeen",
+    "name": "Arrakeen",
+    "owner": null,
+    "spice": 50,
+    "unrest": 20
+  },
+  {
+    "id": "carthag",
+    "name": "Carthag",
+    "owner": "harkonnen",
+    "spice": 40,
+    "unrest": 35
+  },
+  {
+    "id": "imperial_basin",
+    "name": "Imperial Basin",
+    "owner": "emperor",
+    "spice": 80,
+    "unrest": 5
+  },
+  {
+    "id": "cielago_depression",
+    "name": "Cielago Depression",
+    "owner": null,
+    "spice": 70,
+    "unrest": 0
+  },
+  {
+    "id": "red_wall_sietch",
+    "name": "Red Wall Sietch",
+    "owner": "fremen",
+    "spice": 20,
+    "unrest": 5
+  },
+  {
+    "id": "tsimpo",
+    "name": "Tsimpo",
+    "owner": null,
+    "spice": 35,
+    "unrest": 15
+  },
+  {
+    "id": "hagg",
+    "name": "Hagg",
+    "owner": "atreides",
+    "spice": 45,
+    "unrest": 25
+  },
+  {
+    "id": "habbanya_ridge",
+    "name": "Habbanya Ridge",
+    "owner": "fremen",
+    "spice": 35,
+    "unrest": 5
+  },
+  {
+    "id": "funeral_plain",
+    "name": "Funeral Plain",
+    "owner": null,
+    "spice": 15,
+    "unrest": 0
+  },
+  {
+    "id": "plaster_basin",
+    "name": "Plaster Basin",
+    "owner": null,
+    "spice": 60,
+    "unrest": 15
+  },
+  {
+    "id": "wind_pass",
+    "name": "Wind Pass",
+    "owner": "fremen",
+    "spice": 25,
+    "unrest": 5
+  },
+  {
+    "id": "old_gap",
+    "name": "Old Gap",
+    "owner": "harkonnen",
+    "spice": 45,
+    "unrest": 40
+  },
+  {
+    "id": "bight_of_cliff",
+    "name": "Bight of the Cliff",
+    "owner": "fremen",
+    "spice": 30,
+    "unrest": 5
+  },
+  {
+    "id": "great_flat",
+    "name": "The Great Flat",
+    "owner": null,
+    "spice": 5,
+    "unrest": 0
+  },
+  {
+    "id": "sihaya_ridge",
+    "name": "Sihaya Ridge",
+    "owner": "fremen",
+    "spice": 55,
+    "unrest": 5
+  },
+  {
+    "id": "red_chasm",
+    "name": "Red Chasm",
+    "owner": "fremen",
+    "spice": 75,
+    "unrest": 10
+  },
+  {
+    "id": "cave_of_birds",
+    "name": "Cave of Birds",
+    "owner": "fremen",
+    "spice": 40,
+    "unrest": 0
+  },
+  {
+    "id": "gara_kulon",
+    "name": "Gara Kulon",
+    "owner": null,
+    "spice": 90,
+    "unrest": 25
+  }
 ]

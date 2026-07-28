@@ -25,6 +25,8 @@ import { createNamedStars } from './NamedStars'
 import { createPlanetEcology } from './PlanetEcology'
 import { createWormSign } from './WormSign'
 import { createDesertSites } from './DesertSites'
+import { createCrewUnits } from './CrewUnits'
+import { createSunPlacer } from './PlanetSun'
 
 const DAY_SECONDS = 60
 const RADIUS = 1000
@@ -88,39 +90,11 @@ export function createPlanetMode(
   const sites = createDesertSites(world.desertSites, RADIUS, d => planet.radiusAt(d))
   scene.add(sites.group)
 
-  const SUN_AXIS = new Vector3(0, 1, 0)
-  const sunDirection = new Vector3()
+  const crews = createCrewUnits(RADIUS, d => planet.radiusAt(d))
+  scene.add(crews.group)
+  let elapsedMs = 0
 
-  /**
-   * Put the sun behind the player's shoulder.
-   *
-   * A directional rig aimed by compass bearing and hour is right for standing
-   * on a desert and wrong for looking at a ball. Measured, the inhabited band
-   * — the only part of Arrakis anyone needs to read — was rendering between
-   * [26,6,3] and [9,1,0]. Black. Two causes: the sun sat 55 degrees off the
-   * view axis because its elevation is set by the hour and the camera's is
-   * not, and the intensities were tuned down for a surface where every
-   * surface normal points at the sky.
-   *
-   * So the globe places its own sun: swung a little off the camera for
-   * modelling, lifted a little for a top light, and brighter. The hour still
-   * drives colour and still dims the whole planet toward night.
-   */
-  function placeSun(elevation: number): void {
-    sunDirection.copy(camera.position).normalize()
-      .applyAxisAngle(SUN_AXIS, 0.62)
-    sunDirection.y += 0.42
-    sunDirection.normalize().multiplyScalar(RADIUS * 3)
-
-    lighting.sun.position.copy(sunDirection)
-    lighting.sun.target.position.set(0, 0, 0)
-    lighting.sun.target.updateMatrixWorld()
-
-    // Night still falls, but never all the way to an unreadable map.
-    const daylight = Math.max(0.22, 0.34 + Math.max(0, elevation) * 0.9)
-    lighting.sun.intensity = daylight * 1.9
-    lighting.fill.intensity = Math.max(0.3, daylight * 0.75)
-  }
+  const placeSun = createSunPlacer(lighting, camera, RADIUS)
 
   function applyTime(state: WorldState): void {
     const palette = paletteForTime(state.time, DAY_SECONDS)
@@ -164,6 +138,8 @@ export function createPlanetMode(
       ecology.update(state)
       wormSign.update(state, DAY_SECONDS)
       sites.update(state.desertSites, orbit.zoom)
+      elapsedMs += deltaMs
+      crews.update(state, elapsedMs)
     },
     dispose(): void {
       orbit.dispose()
@@ -175,11 +151,13 @@ export function createPlanetMode(
       scene.remove(worlds.group)
       scene.remove(wormSign.group)
       scene.remove(sites.group)
+      scene.remove(crews.group)
       lighting.dispose()
       moons.dispose()
       worlds.dispose()
       wormSign.dispose()
       sites.dispose()
+      crews.dispose()
       planet.dispose()
       stars.dispose()
       air.dispose()

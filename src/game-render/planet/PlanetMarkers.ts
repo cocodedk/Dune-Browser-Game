@@ -113,7 +113,12 @@ export function createPlanetMarkers(
       // *positions* as well, which lifted every marker to 2.8 planet radii and
       // left one hanging in the sky like a moon.
       const scale = 1.55 - zoom * 0.55
-      for (const child of markers.group.children) child.scale.setScalar(scale)
+      // Multiplied by each child's own emphasis, so the larger ring on a
+      // sworn sietch survives the per-frame zoom rescale.
+      for (const child of markers.group.children) {
+        const emphasis = (child.userData.emphasis as number | undefined) ?? 1
+        child.scale.setScalar(scale * emphasis)
+      }
 
       // Hide everything standing on the far side of the globe. Markers draw
       // with depth testing off so a dune can never swallow one, but on a

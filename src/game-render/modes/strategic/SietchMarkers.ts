@@ -45,7 +45,11 @@ interface MarkerEntry {
   id: string
   pillar: MeshBasicMaterial
   ring: MeshBasicMaterial
+  ringMesh: Mesh
 }
+
+/** The player's gold. A sietch wearing this one has sworn. */
+const ALLY_COLOR = 0xf0c040
 
 export function createSietchMarkers(
   world: WorldState,
@@ -107,21 +111,43 @@ export function createSietchMarkers(
     ring.position.set(placement.x, groundY + 0.6, placement.z)
     group.add(ring)
 
-    entries.push({ id: placement.id, pillar: pillarMaterial, ring: ringMaterial })
+    entries.push({
+      id: placement.id, pillar: pillarMaterial, ring: ringMaterial, ringMesh: ring,
+    })
   }
 
+  /**
+   * Repaint markers for the current state of the world.
+   *
+   * The spire says who *holds* a sietch. The ring says whether it has sworn to
+   * you, which is a different question and the one the player is actually
+   * asking: an allied Fremen sietch is still Fremen, and used to be
+   * indistinguishable on the map from one that had never met you.
+   */
   function refresh(state: WorldState): void {
     for (const entry of entries) {
       const village = state.villages.find(v => v.id === entry.id)
       if (!village) continue
-      const hex = FACTION_HEX_COLORS[village.owner as FactionId] ?? 0xc8a84b
-      const color = new Color(hex)
-      entry.pillar.color = color
-      entry.ring.color = color
 
-      // The player's current location burns brighter than the rest.
+      const hex = FACTION_HEX_COLORS[village.owner as FactionId] ?? 0xc8a84b
+      entry.pillar.color = new Color(hex)
+
+      const sworn = state.sietches.some(
+        sietch => sietch.villageId === entry.id && sietch.pledgedToPlayer,
+      )
       const here = state.player.location === entry.id
-      entry.ring.opacity = here ? 0.95 : 0.5
+
+      // A sworn sietch wears the player's gold as a full bright ring; an
+      // unsworn one keeps its own colour, dim. The difference has to survive
+      // being three pixels across at orbit, so it is hue *and* brightness
+      // rather than either alone.
+      entry.ring.color = new Color(sworn ? ALLY_COLOR : hex)
+      entry.ring.opacity = sworn ? 0.95 : here ? 0.6 : 0.32
+      // Recorded rather than applied: the globe rescales every marker child
+      // each frame for zoom, and would overwrite a scale set here. Consumers
+      // multiply by this instead.
+      entry.ringMesh.userData.emphasis = sworn ? 1.4 : 1
+      entry.ringMesh.scale.setScalar(entry.ringMesh.userData.emphasis)
     }
   }
 

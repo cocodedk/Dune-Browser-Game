@@ -1,4 +1,6 @@
 import type { Village } from '../types'
+import { WIDER_VILLAGES } from './villages.wider'
+import { FAR_SIDE_VILLAGES } from './villages.farside'
 
 export const INITIAL_VILLAGES: Village[] = [
   {
@@ -113,4 +115,6 @@ export const INITIAL_VILLAGES: Village[] = [
     status: 'neutral',
     productionRate: 2.5,
   },
+  ...WIDER_VILLAGES,
+  ...FAR_SIDE_VILLAGES,
 ]

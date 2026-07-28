@@ -16,9 +16,8 @@ import { resolveQuality } from '../game-render/core/Quality'
 import { createRenderer } from '../game-render/core/Renderer'
 import { createModeManager } from '../game-render/core/modeFactories'
 import { COMMAND_COLUMN_WIDTH } from './theme'
-import {
-  attachDebugHandle, detachDebugHandle, wireDebugHandle,
-} from '../game-render/core/DebugHandle'
+import { attachDebugHandle, detachDebugHandle } from '../game-render/core/DebugHandle'
+import { wireDebugSources } from '../game-render/core/debugSources'
 import { AudioManager } from '../game-render/audio/AudioManager'
 import { startTravel } from '../game-engine/TravelSystem'
 import { startDialogue } from '../game-engine/DialogueSystem'
@@ -80,35 +79,7 @@ export default function ThreeContainer() {
     const audio = new AudioManager()
     audio.playAmbient('ambient_desert')
     const debug = attachDebugHandle(dispatchPick)
-    wireDebugHandle(debug, {
-      audio: audio.debugState,
-      setTime: seconds => { world.time = seconds },
-      setVegetation: value => {
-        for (const region of world.ecology) region.vegetation = value
-      },
-      worms: () => world.wormSightings.map(s => ({ ...s })),
-      signWorm: fieldId => {
-        world.wormSightings.push({ fieldId, atTime: world.time })
-      },
-      revealSites: () => {
-        world.desertSites = world.desertSites.map(s => ({ ...s, discovered: true }))
-      },
-      teleport: villageId => {
-        world.player.location = villageId
-        world.player.state = 'idle'
-        world.player.travelTarget = null
-      },
-      player: () => ({
-        state: world.player.state,
-        location: world.player.location,
-        travelTarget: world.player.travelTarget,
-        spice: world.player.spice,
-        inDialogue: world.dialogue !== null,
-      }),
-      scene: () => modes.scene,
-      camera: () => modes.active?.camera ?? handle.camera,
-      size: () => ({ width: canvas.clientWidth, height: canvas.clientHeight }),
-    })
+    wireDebugSources(debug, handle, modes, canvas, audio)
     initLoop()
 
     let raf = 0
