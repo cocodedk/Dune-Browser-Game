@@ -55,6 +55,18 @@ playthroughs in microseconds under four strategies.
    draw paths rather than theorising about the colour pipeline, because the
    pipeline has now been ruled out four separate ways.
 
+   **MEASURED, and it corrects an earlier wrong conclusion.** Redrawing the
+   same gradient into a scratch canvas and sampling it gives
+   `[199, 143, 81, 255]` — a properly bright tan, exactly as authored. So
+   the colours were never too dark, and commit 7bb8fa6's claim that this
+   "was never a rendering bug" is WRONG. Something downstream darkens it.
+
+   Note for whoever measures next: reading the rendered pixel via
+   `drawImage` off the WebGL canvas returns `[0,0,0,0]`, because the context
+   defaults to `preserveDrawingBuffer: false`. Either construct the renderer
+   with that flag on for a debug session, or compare against a Playwright
+   screenshot, which does capture the composited result.
+
 2. **Portrait direction is a defensible default, not a chosen one.** All values
    live in `src/data/portraits.ts` and can be redirected without touching the
    renderer.
