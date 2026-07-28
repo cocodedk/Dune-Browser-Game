@@ -72,11 +72,21 @@ function drawLabel(text: string): { texture: CanvasTexture; width: number; heigh
   return { texture, width, height }
 }
 
+/**
+ * @param screenLift How far above its anchor point the plate sits, in
+ *   multiples of its own height, measured on screen rather than in the world.
+ *
+ *   On the flat map "up" in the world is also up on screen, so the default of
+ *   0 is right there. On the globe it is not: a marker near the limb has its
+ *   outward direction pointing sideways, and a world-space offset slid the
+ *   name plate out beside its sietch instead of above it.
+ */
 export function createMarkerLabels(
   placements: MarkerPlacement[],
   sources: LabelSource[],
   heightAt: (x: number, z: number) => number,
   verticalOffset: number,
+  screenLift = 0,
 ): MarkerLabels {
   const group = new Group()
   group.name = 'marker-labels'
@@ -102,6 +112,10 @@ export function createMarkerLabels(
 
     const sprite = new Sprite(material)
     sprite.scale.set(width * LABEL_SCALE, height * LABEL_SCALE, 1)
+    // center is the sprite's own anchor point in its local 0..1 space, so
+    // shifting it below 0 lifts the plate above the position it is pinned to,
+    // in screen space, at any camera angle.
+    sprite.center.set(0.5, 0.5 - screenLift)
     sprite.position.set(
       placement.x,
       heightAt(placement.x, placement.z) + verticalOffset,

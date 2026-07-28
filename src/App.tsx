@@ -9,7 +9,8 @@ import DialoguePanel from './ui/DialoguePanel'
 import EventLog from './ui/EventLog'
 import FactionPanel from './ui/FactionPanel'
 import GoalOverlay from './ui/GoalOverlay'
-import { palette } from './ui/theme'
+import { COMMAND_COLUMN_WIDTH, palette } from './ui/theme'
+import OrnamentFrame from './ui/Ornament'
 
 // three.js is now the only renderer; Phaser is gone. Kept lazy so the 3D
 // chunk stays out of the initial payload.
@@ -37,14 +38,14 @@ export default function App() {
 
       {/* Command column, floating right. Scrolls independently of the map. */}
       <div style={styles.column}>
-        <StatusBar />
-        <QuotaLedger />
-        <CrewPanel />
-        <MarketPanel />
-        <FortPanel />
-        <VillagePanel />
-        <FactionPanel />
-        <EventLog />
+        <OrnamentFrame plain><StatusBar /></OrnamentFrame>
+        <OrnamentFrame><QuotaLedger /></OrnamentFrame>
+        <OrnamentFrame><CrewPanel /></OrnamentFrame>
+        <OrnamentFrame><MarketPanel /></OrnamentFrame>
+        <OrnamentFrame><FortPanel /></OrnamentFrame>
+        <OrnamentFrame plain><VillagePanel /></OrnamentFrame>
+        <OrnamentFrame plain><FactionPanel /></OrnamentFrame>
+        <OrnamentFrame plain><EventLog /></OrnamentFrame>
       </div>
 
       <div style={styles.hint}>
@@ -56,8 +57,6 @@ export default function App() {
     </div>
   )
 }
-
-const OVERLAY_WIDTH = 340
 
 const styles = {
   root: {
@@ -93,7 +92,7 @@ const styles = {
     top: 0,
     right: 0,
     bottom: 0,
-    width: OVERLAY_WIDTH,
+    width: COMMAND_COLUMN_WIDTH,
     display: 'flex',
     flexDirection: 'column' as const,
     overflowY: 'auto' as const,

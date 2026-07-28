@@ -1,7 +1,7 @@
 // src/game-render/materials/Atmosphere.test.ts
 
 import { describe, it, expect } from 'vitest'
-import { dayFraction, paletteAt, paletteForTime } from './Atmosphere'
+import { DAY_START_FRACTION, dayFraction, paletteAt, paletteForTime } from './Atmosphere'
 import type { Rgb } from './Atmosphere'
 
 function channelsInRange(c: Rgb): boolean {
@@ -150,9 +150,22 @@ describe('paletteAt: art direction', () => {
 // ---------------------------------------------------------------------------
 
 describe('paletteForTime', () => {
-  it('agrees with paletteAt on the equivalent fraction', () => {
+  it('agrees with paletteAt on the equivalent fraction, offset by the start hour', () => {
     // DAY_SECONDS is 60 in the engine.
-    expect(paletteForTime(30, 60)).toEqual(paletteAt(0.5))
-    expect(paletteForTime(60 * 5 + 15, 60)).toEqual(paletteAt(0.25))
+    expect(paletteForTime(30, 60)).toEqual(paletteAt(0.5 + DAY_START_FRACTION))
+    expect(paletteForTime(60 * 5 + 15, 60)).toEqual(paletteAt(0.25 + DAY_START_FRACTION))
+  })
+
+  it('opens the game in daylight rather than at midnight', () => {
+    // The opening frame is what sells the game. A black planet does not.
+    // sunElevation runs -1 at midnight to +1 at noon.
+    expect(paletteForTime(0, 60).sunElevation).toBeGreaterThan(0.3)
+  })
+
+  it('still completes a full cycle over one day', () => {
+    const start = paletteForTime(0, 60)
+    expect(paletteForTime(60, 60)).toEqual(start)
+    // Half a day later the sun must be on the other side of the sky.
+    expect(paletteForTime(30, 60).sunElevation).toBeLessThan(-0.3)
   })
 })

@@ -66,6 +66,16 @@ export const type = {
 export const space = { xs: 3, sm: 6, md: 10, lg: 16 } as const
 
 /**
+ * Width of the floating command column, in pixels.
+ *
+ * Shared with the renderer, which shifts the camera's optical centre by half
+ * of it. The canvas runs full-bleed underneath the panels, so without that
+ * shift Arrakis sits centred on the *canvas* and therefore visibly off-centre
+ * in the part of the screen you can actually see.
+ */
+export const COMMAND_COLUMN_WIDTH = 340
+
+/**
  * Standard panel shell. The hairline top edge reads as a carved seam rather
  * than a border, which keeps a stack of panels looking like one instrument
  * panel instead of a pile of boxes.

@@ -12,13 +12,16 @@ import { decideVisit } from '../runtime/VisitPolicy'
 import { EventBus } from '../EventBus'
 import { resolveQuality } from '../game-render/core/Quality'
 import { createRenderer } from '../game-render/core/Renderer'
+import { COMMAND_COLUMN_WIDTH } from './theme'
 import { ModeManager } from '../game-render/core/ModeManager'
 import { createPlanetMode } from '../game-render/planet/PlanetMode'
 import { createStrategicMode } from '../game-render/modes/strategic/StrategicMode'
 import { createFlightMode } from '../game-render/modes/flight/FlightMode'
 import { createConversationMode } from '../game-render/modes/conversation/ConversationMode'
 import { createLocationMode } from '../game-render/modes/location/LocationMode'
-import { attachDebugHandle, detachDebugHandle } from '../game-render/core/DebugHandle'
+import {
+  attachDebugHandle, detachDebugHandle, inspectScene,
+} from '../game-render/core/DebugHandle'
 import { AudioManager } from '../game-render/audio/AudioManager'
 import { startTravel } from '../game-engine/TravelSystem'
 import { startDialogue } from '../game-engine/DialogueSystem'
@@ -45,7 +48,7 @@ export default function ThreeContainer() {
       devicePixelRatio: window.devicePixelRatio || 1,
     })
 
-    const handle = createRenderer(canvas, quality)
+    const handle = createRenderer(canvas, quality, COMMAND_COLUMN_WIDTH)
     const modes = new ModeManager({
       // Orbit. Zooming all the way in descends to the surface.
       strategic: () =>
@@ -94,7 +97,19 @@ export default function ThreeContainer() {
     const audio = new AudioManager()
     audio.playAmbient('ambient_desert')
     const debug = attachDebugHandle(dispatchPick)
-    if (debug) debug.audio = audio.debugState
+    if (debug) {
+      debug.audio = audio.debugState
+      debug.inspect = () => {
+        const scene = modes.scene
+        if (!scene) return []
+        return inspectScene(
+          scene,
+          modes.active?.camera ?? handle.camera,
+          canvas.clientWidth,
+          canvas.clientHeight,
+        )
+      }
+    }
     initLoop()
 
     let raf = 0

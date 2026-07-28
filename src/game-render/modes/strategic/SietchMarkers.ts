@@ -21,10 +21,15 @@ import type { MarkerPlacement } from './markerLayout'
 
 // Sized for legibility at the strategic camera distance, not for realism.
 // The first pass (26 high, 4.5 radius) was a speck the fog swallowed entirely.
-const PILLAR_HEIGHT = 74
-const PILLAR_RADIUS = 9
-const RING_INNER = 20
-const RING_OUTER = 29
+//
+// The second overcorrected: at 9 units across and 74 tall the pillar was a
+// stub, and enlarged for the orbit view it read as a chunk of coloured
+// plastic lying on the planet. A marker wants to be a *spire* — tall enough
+// to find, thin enough that it never competes with the terrain it stands on.
+export const PILLAR_HEIGHT = 72
+const PILLAR_RADIUS = 3.4
+const RING_INNER = 17
+const RING_OUTER = 21
 
 export interface SietchMarkers {
   group: Group
@@ -54,12 +59,19 @@ export function createSietchMarkers(
   const entries: MarkerEntry[] = []
 
   // Shared geometry across every marker — only the materials differ.
+  // Tapered to a point: a spire that narrows reads as deliberate signage,
+  // where a parallel-sided rod reads as a mistake in the geometry.
   const pillarGeometry = new CylinderGeometry(
-    PILLAR_RADIUS * 0.6,
+    PILLAR_RADIUS * 0.12,
     PILLAR_RADIUS,
     PILLAR_HEIGHT,
-    8,
+    6,
   )
+  // Origin at the base, not the centre. A cylinder centred on its own origin
+  // buries half of itself wherever you place it, and with depth testing off
+  // that buried half draws straight through the ground. Basing it here also
+  // means scaling the marker grows it upward from where it stands.
+  pillarGeometry.translate(0, PILLAR_HEIGHT / 2, 0)
   const ringGeometry = new RingGeometry(RING_INNER, RING_OUTER, 24)
   ringGeometry.rotateX(-Math.PI / 2)
 
@@ -70,7 +82,8 @@ export function createSietchMarkers(
     // world, not scenery. Fogged, the far half of the map became unreadable.
     const pillarMaterial = new MeshBasicMaterial({ color: 0xffffff, fog: false })
     const pillar = new Mesh(pillarGeometry, pillarMaterial)
-    pillar.position.set(placement.x, groundY + PILLAR_HEIGHT / 2, placement.z)
+    pillar.name = `pillar:${placement.id}`
+    pillar.position.set(placement.x, groundY, placement.z)
     // Always visible, even through a dune — a marker you cannot find is worse
     // than one that cheats on occlusion.
     pillar.renderOrder = 10
@@ -84,7 +97,13 @@ export function createSietchMarkers(
       side: DoubleSide,
       fog: false,
     })
+    // Same reasoning as the pillar. Left depth-testing, a ring lying tangent
+    // to displaced terrain has half its circumference below the local dune
+    // and renders as a broken C rather than a ring.
+    ringMaterial.depthTest = false
     const ring = new Mesh(ringGeometry, ringMaterial)
+    ring.name = `ring:${placement.id}`
+    ring.renderOrder = 9
     ring.position.set(placement.x, groundY + 0.6, placement.z)
     group.add(ring)
 

@@ -30,6 +30,8 @@ const CLEAR_COLOR = new Color('#1a1208')
 export function createRenderer(
   canvas: HTMLCanvasElement,
   quality: QualitySettings,
+  /** Width of UI overlaying the right edge of the canvas, in CSS pixels. */
+  rightInset = 0,
 ): RendererHandle {
   const renderer = new WebGLRenderer({
     canvas,
@@ -55,6 +57,16 @@ export function createRenderer(
     const height = parent?.clientHeight || canvas.clientHeight || 1
     renderer.setSize(width, height, false)
     camera.aspect = width / height
+
+    // Slide the optical centre left by half the overlaid column so what the
+    // camera points at lands in the middle of the *uncovered* screen. Done on
+    // the projection rather than by moving the camera, because moving it would
+    // also swing the orbit centre and change what "look at the planet" means.
+    //
+    // Guarded: on a narrow window the column can be most of the screen, and
+    // shifting by half of that would push the subject off the left edge.
+    const inset = Math.min(rightInset, width * 0.4)
+    camera.setViewOffset(width, height, inset / 2, 0, width, height)
     camera.updateProjectionMatrix()
   }
 

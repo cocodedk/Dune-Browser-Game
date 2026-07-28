@@ -109,7 +109,19 @@ export function paletteAt(fraction: number): AtmospherePalette {
   }
 }
 
+/**
+ * Where in the day engine time zero sits.
+ *
+ * The engine counts from 0 because deadlines, AI timers and the survival goal
+ * all measure from the start; that is not negotiable. But midnight is the one
+ * hour of the cycle where Arrakis is a black disc, and the opening frame of
+ * the game landed exactly there. 0.36 is mid-morning — sun low and gold,
+ * relief still throwing long shadows. It is the best-looking hour, so it is
+ * the one the player arrives in.
+ */
+export const DAY_START_FRACTION = 0.36
+
 /** Convenience: palette straight from engine time. */
 export function paletteForTime(timeSeconds: number, daySeconds: number): AtmospherePalette {
-  return paletteAt(dayFraction(timeSeconds, daySeconds))
+  return paletteAt(dayFraction(timeSeconds, daySeconds) + DAY_START_FRACTION)
 }
