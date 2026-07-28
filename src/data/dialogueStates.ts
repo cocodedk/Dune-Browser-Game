@@ -130,6 +130,48 @@ export const INITIAL_DIALOGUE_STATES: DialogueStateDef[] = [
     rootNodeId: 'pell_offer_root',
   },
 
+  // --- Captain Voss, training -------------------------------------------
+  {
+    id: 'voss.drilling',
+    characterId: 'voss',
+    condition: { op: 'gte', key: 'raids.repelled', value: 1 },
+    rootNodeId: 'voss_drilling_root',
+  },
+  {
+    id: 'voss.arrival',
+    characterId: 'voss',
+    condition: null,
+    rootNodeId: 'voss_arrival_root',
+  },
+
+  // --- Dr. Vast, ecology -------------------------------------------------
+  {
+    id: 'vast.planting',
+    characterId: 'vast',
+    condition: { op: 'eq', key: 'taught.ecology', value: true },
+    rootNodeId: 'vast_planting_root',
+  },
+  {
+    id: 'vast.proposal',
+    characterId: 'vast',
+    condition: null,
+    rootNodeId: 'vast_proposal_root',
+  },
+
+  // --- Lady Maren --------------------------------------------------------
+  {
+    id: 'maren.alone',
+    characterId: 'maren',
+    condition: { op: 'eq', key: 'beat.duke_departed', value: true },
+    rootNodeId: 'maren_alone_root',
+  },
+  {
+    id: 'maren.counsel',
+    characterId: 'maren',
+    condition: null,
+    rootNodeId: 'maren_counsel_root',
+  },
+
   // --- Rhaz Meko, the market --------------------------------------------
   {
     id: 'meko.regular',

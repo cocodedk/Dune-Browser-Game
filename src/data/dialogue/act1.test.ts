@@ -5,13 +5,14 @@
 import { describe, it, expect } from 'vitest'
 import { PALACE_NODES } from './act1-palace'
 import { DESERT_NODES } from './act1-desert'
+import { ACT2_NODES } from './act2'
 import { INITIAL_DIALOGUE_STATES } from '../dialogueStates'
 import type { DialogueNode } from '../../types'
 
-const ALL: DialogueNode[] = [...PALACE_NODES, ...DESERT_NODES]
+const ALL: DialogueNode[] = [...PALACE_NODES, ...DESERT_NODES, ...ACT2_NODES]
 const BY_ID = new Map(ALL.map(n => [n.id, n]))
 
-describe('act 1 dialogue integrity', () => {
+describe('dialogue integrity', () => {
   it('uses unique node ids', () => {
     expect(BY_ID.size).toBe(ALL.length)
   })

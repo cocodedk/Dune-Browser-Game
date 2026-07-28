@@ -57,6 +57,28 @@ export const INITIAL_CHARACTERS: Character[] = [
     locationId: 'hagg',
     recruited: false,
   },
+  // --- Act 2 arrivals ------------------------------------------------------
+  {
+    id: 'voss',
+    name: 'Captain Serra Voss',
+    role: 'Sent to make soldiers of your spice crews',
+    locationId: 'arrakeen',
+    recruited: false,
+  },
+  {
+    id: 'vast',
+    name: 'Dr. Imrell Vast',
+    role: 'Planetologist, and inconveniently patient',
+    locationId: 'hagg',
+    recruited: false,
+  },
+  {
+    id: 'maren',
+    name: 'Lady Maren',
+    role: 'Your mother, and a better politician than your father',
+    locationId: 'arrakeen',
+    recruited: true,
+  },
   {
     id: 'meko',
     name: 'Rhaz Meko',
