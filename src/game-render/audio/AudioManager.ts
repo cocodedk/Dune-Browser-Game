@@ -7,6 +7,8 @@
 // player's first interaction.
 
 import { EventBus } from '../../EventBus'
+import { createAmbientBed } from './ambient'
+import type { AmbientBed } from './ambient'
 
 const ASSET_BASE = 'assets/audio'
 
@@ -20,6 +22,7 @@ export class AudioManager {
   private _isMuted = false
   private _volume = 0.5
   private unlockBound: (() => void) | null = null
+  private bed: AmbientBed | null = null
 
   constructor() {
     EventBus.on('audio:mute', this.toggleMute)
@@ -65,6 +68,8 @@ export class AudioManager {
   dispose = (): void => {
     EventBus.off('audio:mute', this.toggleMute)
     this.removeUnlockHandler()
+    this.bed?.stop()
+    this.bed = null
     this.stopAmbient()
     void this.context?.close().catch(() => undefined)
     this.context = null
@@ -105,11 +110,19 @@ export class AudioManager {
     if (!buffer) {
       try {
         const response = await fetch(`${ASSET_BASE}/${key}.ogg`)
-        if (!response.ok) return // Asset not authored yet — stay silent.
+        if (!response.ok) {
+          // No recorded bed authored — synthesise one instead of going
+          // silent. Filtered noise never repeats, so it has no loop point
+          // for the player to notice.
+          this.startSynthesised(context)
+          return
+        }
         buffer = await context.decodeAudioData(await response.arrayBuffer())
         this.buffers.set(key, buffer)
       } catch {
-        return // Missing or undecodable audio must never break the game.
+        // Missing or undecodable audio must never break the game.
+        this.startSynthesised(context)
+        return
       }
     }
 
@@ -125,6 +138,20 @@ export class AudioManager {
     this.source = source
     this.currentKey = key
     this.emitState()
+  }
+
+  /** Synthesised fallback bed, used when no recorded ambience exists. */
+  private startSynthesised(context: AudioContext): void {
+    if (this.bed || !this.gain) return
+    this.bed = createAmbientBed(context)
+    this.bed.start(this.gain)
+    this.currentKey = 'synthesised'
+    this.emitState()
+  }
+
+  /** Track the hour so the wind rises and falls with the sun. */
+  setDayFraction = (fraction: number): void => {
+    this.bed?.setDayFraction(fraction)
   }
 
   private installUnlockHandler(): void {

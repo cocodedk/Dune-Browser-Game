@@ -119,6 +119,9 @@ export default function ThreeContainer() {
       if (scene) handle.render(scene, modes.active?.camera)
       else handle.clear() // no mode registered yet — still paint the base colour
 
+      // Wind rises and falls with the sun, on the same clock as the sky.
+      audio.setDayFraction((world.time % 60) / 60)
+
       if (debug) {
         debug.frame += 1
         debug.mode = modes.currentId
