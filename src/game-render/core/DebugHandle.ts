@@ -65,6 +65,8 @@ export interface DebugHandle {
    * checking that the sign draws should not.
    */
   signWorm?: (fieldId: string) => void
+  /** Populated by ThreeContainer. Reveals every deep-desert site at once. */
+  revealSites?: () => void
   /**
    * Populated by ThreeContainer. A small snapshot of engine state, so a
    * driver script can tell "the click did nothing" from "the engine refused"
@@ -120,6 +122,7 @@ export interface DebugSources {
   setVegetation: (value: number) => void
   worms: NonNullable<DebugHandle['worms']>
   signWorm: (fieldId: string) => void
+  revealSites: () => void
   player: NonNullable<DebugHandle['player']>
   scene: () => Object3D | null
   camera: () => Camera
@@ -137,6 +140,7 @@ export function wireDebugHandle(
   handle.setVegetation = sources.setVegetation
   handle.worms = sources.worms
   handle.signWorm = sources.signWorm
+  handle.revealSites = sources.revealSites
   handle.player = sources.player
   handle.inspect = () => {
     const scene = sources.scene()

@@ -90,6 +90,9 @@ export default function ThreeContainer() {
       signWorm: fieldId => {
         world.wormSightings.push({ fieldId, atTime: world.time })
       },
+      revealSites: () => {
+        world.desertSites = world.desertSites.map(s => ({ ...s, discovered: true }))
+      },
       player: () => ({
         state: world.player.state,
         location: world.player.location,

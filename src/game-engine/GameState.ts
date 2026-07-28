@@ -9,6 +9,10 @@ import { getDifficultyConfig } from './difficulty';
 import { INITIAL_TROOP_GROUPS } from '../data/troopGroups';
 import { INITIAL_SPICE_FIELDS } from '../data/spiceFields';
 import { INITIAL_FORTS } from '../data/forts';
+import { generateSites } from './desert/sites';
+
+/** Fixes the deep desert for a game, so a reload finds the same secrets. */
+const DESERT_SEED = 20250727;
 
 // Mutable world state — PoC uses module-level state for simplicity
 export let world: WorldState = createInitialState();
@@ -51,6 +55,7 @@ export function createInitialState(): WorldState {
     ending: null,
     forts: INITIAL_FORTS.map(f => ({ ...f })),
     wormSightings: [],
+    desertSites: generateSites(DESERT_SEED),
     ecology: (regionsData as unknown as Region[]).map(r => ({
       regionId: r.id, vegetation: 0, windtraps: 0,
     })),

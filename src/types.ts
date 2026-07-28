@@ -1,12 +1,13 @@
 // src/types.ts — All shared types for the Dune Browser Game PoC
-import type { SietchState, SietchTask } from './game-engine/sietch/types'
+import type { DesertSite } from './game-engine/desert/sites';
+import type { SietchState } from './game-engine/sietch/types'
 import type { FactionProfile } from './game-engine/faction/types'
 import type { QuotaState } from './game-engine/quota/quota'
 import type { ActId, EndingId } from './game-engine/acts/transitions'
 import type { RegionEcology } from './game-engine/ecology/ecology'
 import type { FortState } from './game-engine/acts/endgame'
 import type { PrescienceLevel } from './game-engine/prescience/prescience'
-import type { TroopGroup, SpiceField, Equipment, TroopTask, EquipmentKind } from './game-engine/troops/types'
+import type { TroopGroup, SpiceField, Equipment } from './game-engine/troops/types'
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type VillageId = string;
@@ -118,7 +119,11 @@ export interface WorldState {
    * and the Fremen can be asked about it.
    */
   wormSightings: WormSighting[];
+  /** Deep-desert sites, generated once per game and revealed by prospecting. */
+  desertSites: DesertSite[];
 }
+
+export type { DesertSite, SiteKind } from './game-engine/desert/sites';
 
 export interface WormSighting {
   fieldId: string;
@@ -149,6 +154,10 @@ export type {
   GoalStatus, FactionGoal, FactionProfile, Goal,
 } from './game-engine/faction/types';
 
+// The EventBus contract lives in its own module, re-exported so every
+// existing import keeps working.
+export type { BusEvents } from './types.bus';
+
 export type RegionId = string;
 
 export interface Region {
@@ -164,33 +173,6 @@ export type TerritoryEvent =
   | { type: 'region_defected'; regionId: RegionId; fromOwner: FactionId }
   | { type: 'unrest_high'; regionId: RegionId; unrest: number };
 
-export interface BusEvents {
-  'village:selected': { villageId: VillageId };
-  'world:updated': { state: WorldState };
-  'dialogue:started': { nodeId: string; villageId: VillageId };
-  'dialogue:ended': void;
-  'event:fired': { event: GameEvent };
-  'audio:changed': { isPlaying: boolean; isMuted: boolean; volume: number };
-  'player:travel': { targetVillageId: VillageId };
-  'player:choose': { choiceId: string };
-  'game:speed': { speed: number };
-  'game:difficulty': { difficulty: Difficulty };
-  'territory:selected': { regionId: RegionId };
-  'audio:mute': void;
-  'player:pledge_sietch': { villageId: VillageId };
-  'player:assign_sietch_task': { villageId: VillageId; task: SietchTask };
-  'player:attack_village': { targetVillageId: VillageId; troopsCommitted: number };
-  'player:scout_village': { targetVillageId: VillageId };
-  'player:stop_sietch_task': { villageId: VillageId };
-  'game:pause': { paused: boolean };
-  'player:assign_crew': { groupId: string; task: TroopTask; targetId: string | null };
-  'player:assault_fort': { fortId: string };
-  'player:buy_equipment': { kind: EquipmentKind };
-  'player:issue_equipment': { equipmentId: string; groupId: string };
-  // Render -> React only. No engine command may be added here.
-  'scene:mode': { mode: SceneModeId };
-  'assets:progress': { loaded: number; total: number };
-}
 
 /** Which 3D scene assembly is on screen. Shared contract: render + React + E2E. */
 export type SceneModeId =

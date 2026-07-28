@@ -24,6 +24,7 @@ import { createMoons } from './Moons'
 import { createNamedStars } from './NamedStars'
 import { createPlanetEcology } from './PlanetEcology'
 import { createWormSign } from './WormSign'
+import { createDesertSites } from './DesertSites'
 
 const DAY_SECONDS = 60
 const RADIUS = 1000
@@ -83,6 +84,9 @@ export function createPlanetMode(
 
   const wormSign = createWormSign(world, RADIUS, d => planet.radiusAt(d))
   scene.add(wormSign.group)
+
+  const sites = createDesertSites(world.desertSites, RADIUS, d => planet.radiusAt(d))
+  scene.add(sites.group)
 
   const SUN_AXIS = new Vector3(0, 1, 0)
   const sunDirection = new Vector3()
@@ -159,6 +163,7 @@ export function createPlanetMode(
       moons.update(state.time)
       ecology.update(state)
       wormSign.update(state, DAY_SECONDS)
+      sites.update(state.desertSites, orbit.zoom)
     },
     dispose(): void {
       orbit.dispose()
@@ -169,10 +174,12 @@ export function createPlanetMode(
       scene.remove(moons.group)
       scene.remove(worlds.group)
       scene.remove(wormSign.group)
+      scene.remove(sites.group)
       lighting.dispose()
       moons.dispose()
       worlds.dispose()
       wormSign.dispose()
+      sites.dispose()
       planet.dispose()
       stars.dispose()
       air.dispose()

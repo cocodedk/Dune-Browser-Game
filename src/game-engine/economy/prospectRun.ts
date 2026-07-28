@@ -10,6 +10,24 @@ function regionFinds(regionId: string): number {
 import { world } from '../GameState'
 import { pushEvent } from '../EventSystem'
 import { findChance, resolveFind, regionExhausted, findMessage } from '../troops/prospect'
+import { nextFind, siteYield } from '../desert/sites'
+
+/**
+ * How far a crew can range, in days.
+ *
+ * On foot the deep desert is out of reach entirely; a thopter is what opens
+ * it. That is the point of the vehicle, and the reason the far side of the
+ * planet is worth anything.
+ */
+function prospectRange(hasThopter: boolean): number {
+  return hasThopter ? 7 : 2
+}
+
+/**
+ * A prospecting crew's chance of turning up something out in the deep desert
+ * rather than another field in the settled regions.
+ */
+const DEEP_DESERT_CHANCE = 0.18
 
 /**
  * Run one day of prospecting for every crew out looking.
@@ -18,6 +36,7 @@ import { findChance, resolveFind, regionExhausted, findMessage } from '../troops
  * take injected rolls so they stay deterministic under test.
  */
 export function runProspectDay(): void {
+  revealDesertSite()
   for (const group of world.troopGroups) {
     if (group.task !== 'prospect') continue
     if (group.changeoverDaysLeft > 0) continue
@@ -55,4 +74,30 @@ export function runProspectDay(): void {
 
     pushEvent('sietch_task_assigned', findMessage(outcome))
   }
+}
+
+
+/**
+ * Sometimes a prospecting crew comes back with a location instead of a field.
+ *
+ * Rolls come from Math.random at this mutation layer; the rules stay pure.
+ */
+function revealDesertSite(): void {
+  const crews = world.troopGroups.filter(
+    g => g.task === 'prospect' && g.changeoverDaysLeft === 0,
+  )
+  if (crews.length === 0) return
+  if (Math.random() >= DEEP_DESERT_CHANCE) return
+
+  const hasThopter = world.equipment.some(
+    e => crews.some(c => c.id === e.groupId) &&
+         (e.kind === 'thopter' || e.kind === 'lr_thopter'),
+  )
+
+  const site = nextFind(world.desertSites, prospectRange(hasThopter), Math.random())
+  if (!site) return
+
+  const index = world.desertSites.findIndex(s => s.id === site.id)
+  world.desertSites[index] = { ...site, discovered: true }
+  pushEvent('village_selected', siteYield(site.kind).message)
 }
