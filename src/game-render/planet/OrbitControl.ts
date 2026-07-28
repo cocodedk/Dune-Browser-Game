@@ -32,9 +32,17 @@ export function createOrbitControl(
   // not carry it — the view became a flat brown wall. 1.32 keeps the closest
   // zoom reading as terrain seen from altitude, which is what a strategic map
   // wants anyway.
-  const range = { far: radius * 4.2, near: radius * 1.32 }
+  // Far limit widened from 4.2 once the moons went in. Krelln orbits at 3.45
+  // radii, so at a 4.2 ceiling the camera sat almost exactly on the moon's
+  // orbit and both moons spent most of their time outside a 50-degree frustum
+  // — measured once at x = -3310 on a 1400-wide screen. At 8 the whole system
+  // fits, so pulling all the way out now means "see Arrakis and its moons".
+  const range = { far: radius * 8, near: radius * 1.32 }
 
-  let zoom = 0.18          // Start pulled back: the first sight is a world.
+  // Start zoom re-solved for the wider range so the opening framing is
+  // unchanged: distance = far * (near/far)^zoom, and 0.475 lands at the same
+  // ~3400 units 0.18 used to give.
+  let zoom = 0.475         // Start pulled back: the first sight is a world.
   let eased = zoom
   // The inhabited band centres on +X (lat 0, lon 0 maps there), so the camera
   // must start a quarter turn round or every sietch sits on the limb.

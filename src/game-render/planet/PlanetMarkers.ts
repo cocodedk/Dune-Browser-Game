@@ -7,7 +7,7 @@
 // standing them along the outward normal, scaling with altitude, and hiding
 // the ones that have gone round the back.
 
-import { Group, Object3D, Vector3, type PerspectiveCamera } from 'three'
+import { Group, Object3D, Vector3, type PerspectiveCamera, type Sprite } from 'three'
 import type { WorldState } from '../../types'
 import { createSietchMarkers, PILLAR_HEIGHT } from '../modes/strategic/SietchMarkers'
 import { createMarkerLabels } from '../modes/strategic/MarkerLabels'
@@ -38,6 +38,12 @@ interface Seat {
 // along +Y, so lookAt lays them flat. A quaternion from +Y to the outward
 // normal is what actually stands them up.
 const UP = new Vector3(0, 1, 0)
+
+/** Local smoothstep — keeps this module free of a util dependency. */
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)))
+  return t * t * (3 - 2 * t)
+}
 
 export function createPlanetMarkers(
   world: WorldState,
@@ -122,11 +128,19 @@ export function createPlanetMarkers(
       const horizon = radius / distance
       const lift = PILLAR_HEIGHT * scale
 
+      // Name plates are screen-relative, so pulling back to see the whole
+      // system piles all eight on top of each other in a heap of overlapping
+      // text. Fade them out down there: at that distance the player is
+      // looking at Arrakis and its moons, not choosing a sietch.
+      const labelOpacity = smoothstep(0.12, 0.38, zoom)
+
       for (const seat of seats) {
         seat.object.visible = seat.out.dot(toCamera) > horizon
-        if (seat.anchor) {
-          seat.object.position.copy(seat.anchor).addScaledVector(seat.out, lift)
-        }
+        if (!seat.anchor) continue
+        seat.object.position.copy(seat.anchor).addScaledVector(seat.out, lift)
+        const material = (seat.object as Sprite).material
+        if (material) material.opacity = labelOpacity
+        if (labelOpacity <= 0.01) seat.object.visible = false
       }
     },
     dispose(): void {

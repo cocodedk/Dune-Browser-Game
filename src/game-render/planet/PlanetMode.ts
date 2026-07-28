@@ -20,6 +20,8 @@ import { createStarfield } from './Starfield'
 import { createAtmosphereShell } from './AtmosphereShell'
 import { createPlanetMarkers } from './PlanetMarkers'
 import { createOrbitControl } from './OrbitControl'
+import { createMoons } from './Moons'
+import { createNamedStars } from './NamedStars'
 
 const DAY_SECONDS = 60
 const RADIUS = 1000
@@ -65,6 +67,13 @@ export function createPlanetMode(
 
   const markers = createPlanetMarkers(world, RADIUS, d => planet.radiusAt(d))
   scene.add(markers.group)
+
+  const moons = createMoons(RADIUS, DAY_SECONDS)
+  scene.add(moons.group)
+
+  // Far beyond the moons, so they never sort in front of the system.
+  const worlds = createNamedStars(RADIUS * 26)
+  scene.add(worlds.group)
 
   const orbit = createOrbitControl(camera, canvas, { radius: RADIUS, onDescend })
 
@@ -117,6 +126,7 @@ export function createPlanetMode(
       applyTime(state)
       orbit.step(deltaMs)
       markers.update(state, camera, orbit.zoom)
+      moons.update(state.time)
     },
     dispose(): void {
       orbit.dispose()
@@ -124,7 +134,11 @@ export function createPlanetMode(
       scene.remove(stars.points)
       scene.remove(air.mesh)
       scene.remove(markers.group)
+      scene.remove(moons.group)
+      scene.remove(worlds.group)
       lighting.dispose()
+      moons.dispose()
+      worlds.dispose()
       planet.dispose()
       stars.dispose()
       air.dispose()
