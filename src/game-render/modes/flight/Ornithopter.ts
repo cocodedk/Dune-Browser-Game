@@ -9,7 +9,7 @@
 
 import {
   Group, Mesh, MeshStandardMaterial, BoxGeometry, CylinderGeometry,
-  SphereGeometry, ConeGeometry, type BufferGeometry,
+  SphereGeometry, ConeGeometry, Color, type BufferGeometry,
 } from 'three'
 
 export interface Ornithopter {
@@ -35,10 +35,37 @@ export function createOrnithopter(): Ornithopter {
   const group = new Group()
   const geometries: BufferGeometry[] = []
 
-  const hull = new MeshStandardMaterial({ color: HULL_COLOR, roughness: 0.6, metalness: 0.35 })
-  const trim = new MeshStandardMaterial({ color: TRIM_COLOR, roughness: 0.75, metalness: 0.25 })
+  // Metalness near zero, deliberately.
+  //
+  // A metal in three.js has no diffuse response at all — its entire look is a
+  // reflection of the environment, and this scene has no environment map. Flown
+  // backlit over the dunes, which is the shot the whole cinematic exists for,
+  // the hull at metalness 0.35 rendered as a flat black cutout. The emissive
+  // floor keeps the shadow side reading as painted composite rather than a
+  // hole in the sky.
+  const hull = new MeshStandardMaterial({
+    color: HULL_COLOR,
+    roughness: 0.62,
+    metalness: 0.05,
+    emissive: new Color(0x3a2a18),
+    emissiveIntensity: 0.55,
+  })
+  const trim = new MeshStandardMaterial({
+    color: TRIM_COLOR,
+    roughness: 0.78,
+    metalness: 0.05,
+    emissive: new Color(0x241a10),
+    emissiveIntensity: 0.5,
+  })
+  // The canopy keeps a little metal — a glass highlight is the one place a
+  // reflection is meant to read as a reflection — but is emissive enough to
+  // stay a canopy when there is nothing behind the camera to reflect.
   const canopy = new MeshStandardMaterial({
-    color: CANOPY_COLOR, roughness: 0.15, metalness: 0.7,
+    color: CANOPY_COLOR,
+    roughness: 0.18,
+    metalness: 0.35,
+    emissive: new Color(0x16303a),
+    emissiveIntensity: 0.7,
   })
 
   // Fuselage — long and tapered, nose forward along -Z.
