@@ -37,12 +37,18 @@ interface BiomeDef {
 const DEFS: Record<BiomeId, BiomeDef> = {
   // Ice and rime over rock. Barely any dune relief — wind cannot pile what it
   // cannot lift.
-  // Measured at [1.14, 1.34, 2.10] this read as slightly paler brown, not ice:
-  // multiplying an orange palette by warm-biased numbers keeps it orange. Red
-  // has to come *down* for the cap to read cold. Relief is low both because
-  // wind cannot pile what it cannot lift, and because the sphere's noise
-  // pinches at the poles and less relief there shows less of it.
-  polar: { relief: 0.20, tint: [0.88, 1.18, 2.60] },
+  // [0.88, 1.18, 2.60] was reported reading as open water or a shader error,
+  // not ice — blue alone in the top channel is the one hue this palette
+  // reserves for spice, and pushing it to 2.60 spent that accent on a polar
+  // ribbon. Retinted as pale frost instead of saturated blue: raised the
+  // floor (red 0.88 -> 1.30) so the cap is bright rather than merely blue,
+  // and pulled the ceiling down (2.60 -> 1.72) so no channel runs far enough
+  // ahead of the other two to read as a distinct colour rather than a pale,
+  // slightly cool white. Chosen by arithmetic against that ratio, not
+  // measured from a render. Relief is low both because wind cannot pile what
+  // it cannot lift, and because the sphere's noise pinches at the poles and
+  // less relief there shows less of it.
+  polar: { relief: 0.20, tint: [1.30, 1.42, 1.72] },
   // The great sand seas. This is the baseline the dune tuning was done against.
   erg: { relief: 1.00, tint: [1.00, 1.00, 1.00] },
   // Shield wall and massif: bare rock, sharply higher and much darker than
@@ -104,7 +110,14 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
  * already cool), so this pushes blue up and pulls red down rather than
  * darkening every channel by the same amount.
  */
-const NIGHT_TINT: readonly [number, number, number] = [0.16, 0.20, 0.62]
+// Dark, not merely blue. At [0.16, 0.20, 0.62] this was a mid-value colour, and
+// mid-value is the problem: sRGB-encoded it lands near rgb(112, 124, 207), so
+// the night hemisphere rendered as a bright flat periwinkle disc with no relief
+// visible anywhere on it — measured off a captured midnight frame, which showed
+// exactly that value across the whole dark side. Night has to be dark enough
+// that terrain shading, settlement lights and the starfield all read against
+// it; the hue still says night, the value now says night too.
+const NIGHT_TINT: readonly [number, number, number] = [0.05, 0.07, 0.20]
 
 /**
  * Blend a tint toward the night colour above.

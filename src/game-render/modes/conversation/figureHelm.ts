@@ -7,14 +7,37 @@
 import type { PortraitDef } from '../../../data/portraits'
 import { mix } from './figureDetails'
 
+// The critic's Major 6: every existing metal value here mixes 35-60% from
+// def.figure with soft gradient transitions and no specular, which is what
+// read as a pageboy haircut rather than metal. 0.85 is well past the
+// dome/crest's own maximum (0.6) precisely because a specular has to be a
+// harder jump than any of the surrounding shading, not another gradient.
+export const HELM_SPECULAR_MIX = 0.85
+export const HELM_BRIM_MIX = 0.7
+
 /** Rigid, cool-toned, straight-edged: reads as metal, never as cloth. */
 export function drawHelm(
   ctx: CanvasRenderingContext2D, def: PortraitDef,
   headX: number, headY: number, headR: number,
 ): void {
   drawDome(ctx, def, headX, headY, headR)
+  drawDomeSpecular(ctx, def, headX, headY, headR)
+  drawBrimLine(ctx, def, headX, headY, headR)
   drawCrest(ctx, def, headX, headY, headR)
   drawCheekGuards(ctx, def, headX, headY, headR)
+}
+
+/** The dome's own outer path — shared with drawDomeSpecular so the specular
+ * clips to the same curve it fills, rather than an approximation of it. */
+function buildDomePath(headX: number, headY: number, headR: number): Path2D {
+  const domePath = new Path2D()
+  domePath.moveTo(headX - headR * 0.98, headY - headR * 0.05)
+  domePath.quadraticCurveTo(headX - headR * 1.05, headY - headR * 1.15, headX, headY - headR * 1.22)
+  domePath.quadraticCurveTo(headX + headR * 1.05, headY - headR * 1.15, headX + headR * 0.98, headY - headR * 0.05)
+  domePath.lineTo(headX + headR * 0.82, headY - headR * 0.4)
+  domePath.lineTo(headX - headR * 0.82, headY - headR * 0.4)
+  domePath.closePath()
+  return domePath
 }
 
 /** The dome, shaded with the same upper-left key light as the face so the
@@ -23,14 +46,6 @@ function drawDome(
   ctx: CanvasRenderingContext2D, def: PortraitDef,
   headX: number, headY: number, headR: number,
 ): void {
-  const domePath = new Path2D()
-  domePath.moveTo(headX - headR * 0.98, headY - headR * 0.05)
-  domePath.quadraticCurveTo(headX - headR * 1.05, headY - headR * 1.15, headX, headY - headR * 1.22)
-  domePath.quadraticCurveTo(headX + headR * 1.05, headY - headR * 1.15, headX + headR * 0.98, headY - headR * 0.05)
-  domePath.lineTo(headX + headR * 0.82, headY - headR * 0.4)
-  domePath.lineTo(headX - headR * 0.82, headY - headR * 0.4)
-  domePath.closePath()
-
   const grad = ctx.createLinearGradient(
     headX - headR, headY - headR * 1.2, headX + headR * 0.6, headY - headR * 0.05,
   )
@@ -38,7 +53,46 @@ function drawDome(
   grad.addColorStop(0.5, mix(def.figure, '#8a96a0', 0.35))
   grad.addColorStop(1, mix(def.figure, '#4a545c', 0.4))
   ctx.fillStyle = grad
-  ctx.fill(domePath)
+  ctx.fill(buildDomePath(headX, headY, headR))
+}
+
+/** A hard-edged specular streak following the dome's own curvature in the
+ * upper-left quadrant — a solid stroke, not a gradient, because metal reads
+ * from value jumps and a specular that fades is just another soft shade. */
+function drawDomeSpecular(
+  ctx: CanvasRenderingContext2D, def: PortraitDef,
+  headX: number, headY: number, headR: number,
+): void {
+  ctx.save()
+  ctx.clip(buildDomePath(headX, headY, headR))
+  ctx.strokeStyle = mix(def.figure, '#eef4f8', HELM_SPECULAR_MIX)
+  ctx.lineWidth = headR * 0.16
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(headX - headR * 0.68, headY - headR * 0.12)
+  ctx.quadraticCurveTo(headX - headR * 0.78, headY - headR * 0.8, headX - headR * 0.18, headY - headR * 1.1)
+  ctx.stroke()
+  ctx.restore()
+}
+
+/** A hard, dark line at the dome-to-brow transition, and a cast shadow just
+ * below it on the forehead already painted by figureHead.ts — this is what
+ * seats the helm on the head rather than floating above it. */
+function drawBrimLine(
+  ctx: CanvasRenderingContext2D, def: PortraitDef,
+  headX: number, headY: number, headR: number,
+): void {
+  ctx.fillStyle = 'rgba(6, 5, 8, 0.4)'
+  ctx.beginPath()
+  ctx.ellipse(headX, headY - headR * 0.3, headR * 0.84, headR * 0.12, 0, 0, Math.PI)
+  ctx.fill()
+
+  ctx.strokeStyle = mix(def.figure, '#000000', HELM_BRIM_MIX)
+  ctx.lineWidth = Math.max(1.5, headR * 0.045)
+  ctx.beginPath()
+  ctx.moveTo(headX - headR * 0.82, headY - headR * 0.4)
+  ctx.lineTo(headX + headR * 0.82, headY - headR * 0.4)
+  ctx.stroke()
 }
 
 /**

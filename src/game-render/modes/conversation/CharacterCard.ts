@@ -14,8 +14,9 @@ import {
 import { portraitFor } from '../../../data/portraits'
 import type { PortraitDef } from '../../../data/portraits'
 import { drawFigure } from './drawFigure'
-import { headSilhouette } from './figureSilhouette'
-import { withAlpha } from './figureDetails'
+import { computeHeadPlacement } from './figureFaceLayout'
+import { paintBackdropBase, paintKeyShaft, paintEdgeDarken } from './cardBackdrop'
+import { paintFigureLightWash, paintRim } from './cardFigureLight'
 
 export interface CharacterCard {
   group: Group
@@ -47,73 +48,24 @@ function drawPortrait(name: string, role: string, def: PortraitDef): CanvasTextu
   const ctx = canvas.getContext('2d')!
   ctx.scale(SUPERSAMPLE, SUPERSAMPLE)
 
-  const backdrop = ctx.createLinearGradient(0, 0, 0, CARD_HEIGHT)
-  backdrop.addColorStop(0, def.backTop)
-  backdrop.addColorStop(1, def.backBottom)
-  ctx.fillStyle = backdrop
-  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+  const { headX, headY, headR } = computeHeadPlacement(def, CARD_WIDTH, CARD_HEIGHT)
 
-  // Flat warm lift across the whole card. The diorama gets its readability
-  // from exactly this step — a 28% apricot tint over its gradient — and the
-  // card had only a radial glow. This was the one compositing difference
-  // between the two, and the card is the one that read as black.
-  ctx.globalAlpha = 0.28
-  ctx.fillStyle = '#e8a86a'
-  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
-  ctx.globalAlpha = 1
+  // Backdrop: base gradient, flat lift, a diagonal key shaft anchored off
+  // the head axis, then an edge-darken multiply so the area bordering the
+  // head sits below the face's own lit value (critic's Critical 3/Major 4).
+  paintBackdropBase(ctx, def, CARD_WIDTH, CARD_HEIGHT)
+  paintKeyShaft(ctx, def, CARD_WIDTH, CARD_HEIGHT)
+  paintEdgeDarken(ctx, headX, headY, headR)
 
-  // Key light. Hardness controls how tightly the glow falls off, which is what
-  // separates a soldier from a scientist without changing the drawing at all.
-  const spread = CARD_WIDTH * (1.05 - def.keyHardness * 0.62)
-  const glow = ctx.createRadialGradient(
-    CARD_WIDTH * 0.38, 190, 12, CARD_WIDTH * 0.38, 190, spread,
-  )
-  glow.addColorStop(0, `rgba(255, 214, 156, ${0.2 + def.keyHardness * 0.32})`)
-  glow.addColorStop(1, 'rgba(255, 214, 156, 0)')
-  ctx.fillStyle = glow
-  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+  drawFigure(ctx, def, { width: CARD_WIDTH, height: CARD_HEIGHT })
 
-  const { headX, headY, headR } = drawFigure(ctx, def, {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-  })
-
-  // Rim light from the upper left, matching the scene's sun direction. Its
-  // colour is the character's single identifying accent. It used to stroke
-  // a fixed hood-shaped ellipse regardless of headgear, so a bare head or a
-  // helm got a ring floating outside its own silhouette; headSilhouette
-  // gives each headgear its actual outer edge, and the stroke's own gradient
-  // (bright on the lit corner, transparent on the shadow side) is what makes
-  // it read as light catching that edge rather than a drawn hoop.
-  const { rx, ry, offsetY } = headSilhouette(def, headR)
-  const rimCx = headX
-  const rimCy = headY + offsetY
-  const rimPath = new Path2D()
-  rimPath.ellipse(rimCx, rimCy, rx, ry, 0, 0, Math.PI * 2)
-
-  const rimGrad = ctx.createLinearGradient(
-    rimCx - rx * 1.1, rimCy - ry * 1.1, rimCx + rx * 0.6, rimCy + ry * 0.6,
-  )
-  rimGrad.addColorStop(0, withAlpha(def.rim, 0.95))
-  rimGrad.addColorStop(0.5, withAlpha(def.rim, 0.35))
-  rimGrad.addColorStop(1, withAlpha(def.rim, 0))
-  ctx.strokeStyle = rimGrad
-  ctx.lineWidth = 2.5 + def.keyHardness * 3.5
-  ctx.stroke(rimPath)
-
-  // A faint wash of the same light on the surface itself, clipped to the
-  // silhouette so it reads as light landing on a head, not a stroke sitting
-  // beside one.
-  ctx.save()
-  ctx.clip(rimPath)
-  const wash = ctx.createRadialGradient(
-    rimCx - rx * 0.5, rimCy - ry * 0.5, 0, rimCx - rx * 0.5, rimCy - ry * 0.5, rx * 1.4,
-  )
-  wash.addColorStop(0, withAlpha(def.rim, 0.22))
-  wash.addColorStop(1, withAlpha(def.rim, 0))
-  ctx.fillStyle = wash
-  ctx.fillRect(rimCx - rx * 1.5, rimCy - ry * 1.5, rx * 3, ry * 3)
-  ctx.restore()
+  // Lighting passes that touch the figure itself, painted after drawFigure
+  // so the key light actually lands on the person (critic's Major 4)
+  // instead of only ever illuminating the backdrop behind them, and a rim
+  // that separates the shadow side from the backdrop rather than
+  // outlining the lit side a second time (critic's Major 5).
+  paintFigureLightWash(ctx, def, headX, headY, headR)
+  paintRim(ctx, def, headX, headY, headR)
 
   // The robe reaches the bottom edge, so the name needs its own ground or it
   // competes with the folds behind it. Sits above the card's lower edge, not on it: the dialogue box overlaps

@@ -6,6 +6,7 @@
 import { BufferAttribute, Mesh, SphereGeometry, type Material, Vector3 } from 'three'
 import { createNoiseField } from '../terrain/noise'
 import { surfaceHeight, biomeFor } from './planetField'
+import { clampedRelief, slopeAt, terrainShade } from './reliefShading'
 import { greened } from './biomes'
 import type { Massif } from './massifs'
 
@@ -69,13 +70,18 @@ export function createPlanetMesh(
     const biome = biomeFor(field, unit, massifs)
 
     const h = surfaceHeight(field, unit.x, unit.y, unit.z)
-    const r = radius * (1 + h * relief * biome.relief)
+    // Geometry gets only the clamped share (see reliefShading) — the rest of
+    // the noise's own range survives as a per-vertex shade instead, or rock's
+    // 2.05x multiplier alone would still bulge the limb past a stylised
+    // planet's silhouette.
+    const r = radius * (1 + clampedRelief(h, relief, biome.relief))
     position.setXYZ(i, unit.x * r, unit.y * r, unit.z * r)
 
-    baseTints[i] = [biome.tint[0], biome.tint[1], biome.tint[2]]
-    colors[i * 3] = biome.tint[0]
-    colors[i * 3 + 1] = biome.tint[1]
-    colors[i * 3 + 2] = biome.tint[2]
+    const shade = terrainShade(h, slopeAt(field, unit.x, unit.y, unit.z))
+    baseTints[i] = [biome.tint[0] * shade, biome.tint[1] * shade, biome.tint[2] * shade]
+    colors[i * 3] = baseTints[i][0]
+    colors[i * 3 + 1] = baseTints[i][1]
+    colors[i * 3 + 2] = baseTints[i][2]
   }
   position.needsUpdate = true
   geometry.setAttribute('color', new BufferAttribute(colors, 3))
@@ -121,11 +127,12 @@ export function createPlanetMesh(
       colorAttribute.needsUpdate = true
     },
     radiusAt(direction: Vector3): number {
-      // Must apply the same biome relief scaling as the mesh build above, or
+      // Must apply the same clamped relief as the mesh build above, or
       // markers sink into rock and float over the pans.
       const unit = direction.clone().normalize()
       const h = surfaceHeight(field, unit.x, unit.y, unit.z)
-      return radius * (1 + h * relief * biomeFor(field, unit, massifs).relief)
+      const biomeRelief = biomeFor(field, unit, massifs).relief
+      return radius * (1 + clampedRelief(h, relief, biomeRelief))
     },
     dispose(): void {
       geometry.dispose()

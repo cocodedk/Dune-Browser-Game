@@ -32,7 +32,10 @@ import { createSunPlacer } from './PlanetSun'
 
 const DAY_SECONDS = 60
 const RADIUS = 1000
-const RELIEF = 0.055
+// Down from 0.055: sampling the real field found the erg's own *median*
+// height already displaced ~3.5% of radius at that constant, before rock's
+// 2.05x multiplier (see reliefShading.ts's cap). By arithmetic, not a render.
+const RELIEF = 0.015
 
 function rgb(c: readonly [number, number, number]): Color {
   return new Color(c[0], c[1], c[2])
@@ -47,21 +50,26 @@ export function createPlanetMode(
   onDescend?: (centre: { lat: number; lon: number }) => void,
 ): SceneMode {
   const scene = new Scene()
+  // Left unset, this shows the renderer's own clear colour ('#1a1208',
+  // core/Renderer.ts — a "no mode loaded yet" placeholder) through every gap
+  // the sparse starfield leaves, so "space" read as the same warm khaki as
+  // unlit dune. Set explicitly, and darker than that placeholder since the
+  // composer's tone-mapping sits between this value and the screen and was
+  // reported to lift it — unconfirmed against a render, a deliberate undershoot.
+  scene.background = new Color('#040306')
 
   const sand = createSandMaterial({
     glintStrength: quality.tier === 'low' ? 0 : 0.06,
     // The globe carries per-vertex biome tints; the flat surface mesh does not.
     vertexColors: true,
-    // mapRepeat's 180 default was tuned against the flat desert's 4400-unit
-    // plane (~24.4 world units per ripple). Left at that default here it
-    // tiles across the sphere's own UV space instead, which has nothing to do
-    // with the globe's 1000-unit radius — the ripples came out too coarse to
-    // read at 700px on screen. Recomputed for the same ~24-unit wavelength
-    // against this sphere's ~6283-unit equatorial circumference.
+    // mapRepeat's 180 default was tuned to the flat desert's 4400-unit plane
+    // (~24.4 units/ripple); left at that default here it tiles the sphere's
+    // own UV space instead and reads too coarse. Recomputed for the same
+    // ~24-unit wavelength against this sphere's ~6283-unit circumference.
     mapRepeat: 260,
   })
-  // Sietches are caves cut into rock, never open sand — so the rock goes
-  // where they are. A couple of places get a lower line than a mountain.
+  // Sietches are caves cut into rock, never open sand — the rock goes where
+  // they are, a couple of places at a lower line than a mountain.
   const massifs = massifsForSettlements(
     world.villages,
     p => canvasToLatLon(p, SOURCE_WIDTH, SOURCE_HEIGHT),
@@ -73,11 +81,9 @@ export function createPlanetMode(
       radius: RADIUS,
       seed: 20250727,
       relief: RELIEF,
-      // The mesh is built once, so segment count is a one-time cost, not a
-      // per-frame one — the previous 192 (~74k triangles) had room to spare,
-      // and the enriched height field's mountain chains and fine grain need
-      // vertices at their own frequency to actually show up rather than being
-      // filtered out by an under-sampled mesh.
+      // Built once, so segment count is a one-time cost — the height field's
+      // mountain chains and fine grain need vertices at their own frequency
+      // or an under-sampled mesh filters them straight back out.
       segments: quality.tier === 'low' ? 128 : 256,
       massifs,
     },
@@ -115,9 +121,8 @@ export function createPlanetMode(
 
   const ecology = createPlanetEcology(planet, world)
 
-  // Shares markers.anchors rather than re-projecting village positions: that
-  // projection has a hand-written inverse elsewhere (sietch-aiming) and a
-  // second copy here would be a second place for the two to drift apart.
+  // Shares markers.anchors rather than re-projecting: that projection has a
+  // hand-written inverse elsewhere (sietch-aiming) a second copy could drift from.
   const furniture = createPlanetFurniture(
     world, RADIUS, d => planet.radiusAt(d), markers.anchors, planet.mesh.geometry, DAY_SECONDS,
   )
@@ -128,19 +133,21 @@ export function createPlanetMode(
   function applyTime(state: WorldState): void {
     const palette = paletteForTime(state.time, DAY_SECONDS)
 
-    // Colours and fill from the palette; the sun's own placement is overridden
-    // straight afterwards, for the reasons in placeSun.
+    // Colours/fill from the palette; placeSun overrides sun placement right after.
     lighting.applyPalette(palette, RADIUS * 3)
     placeSun(palette.sunElevation)
 
-    const shadow = new Color('#6e3113').lerp(rgb(palette.ambient), 0.18)
-    const crest = new Color('#dcab5c').lerp(rgb(palette.sun), 0.10)
+    // Base hues moved, not the blend fraction: the old shadow anchor
+    // ('#6e3113') only lerped 0.18 toward ambient, so it stayed brown
+    // regardless of hour. New anchor is already blue-violet; crest lifted
+    // off '#dcab5c' (chocolate at sun intensity 1.9) toward pale apricot.
+    const shadow = new Color('#5a3550').lerp(rgb(palette.ambient), 0.18)
+    const crest = new Color('#f2cf92').lerp(rgb(palette.sun), 0.10)
     sand.setPalette(shadow, crest, shadow.clone().multiplyScalar(0.62))
     sand.setGlint(Math.max(0, palette.sunElevation) * 0.06)
 
-    // The haze takes its colour from the horizon — the same light that would
-    // be scattering through it — and its direction from the sun the lighting
-    // rig just placed, so the bright limb can never drift off the day side.
+    // Haze colour from the horizon (the light scattering through it);
+    // direction from the sun placeSun just set, so the limb stays on the day side.
     air.setPalette(rgb(palette.horizon), lighting.sun.position)
   }
 
@@ -148,14 +155,9 @@ export function createPlanetMode(
     id: 'strategic' as SceneModeId,
     scene,
     /**
-     * A click on the globe resolves to the sietch nearest where the ray meets
-     * the planet.
-     *
-     * Against the sphere, not the y=0 plane. The plane version could not work:
-     * it compared a flat intersection against anchors sitting on a sphere, so
-     * anything above about 12 degrees of latitude was unclickable and
-     * travelling by clicking the map — the game's only travel verb — silently
-     * did nothing for most of the world.
+     * A click on the globe resolves to the nearest sietch on the sphere the
+     * ray meets, not the y=0 plane — that version left everything above ~12
+     * degrees of latitude unclickable, and clicking is the only travel verb.
      */
     pickRay(ray): string | null {
       const surface = ray.intersectSphere(pickSphere, pickHit)
@@ -182,10 +184,8 @@ export function createPlanetMode(
       scene.remove(moons.group)
       scene.remove(worlds.group)
       lighting.dispose()
-      // Before planet.dispose(): furniture's night lights never dispose the
-      // geometry they borrow from the planet, but tearing down while the
-      // mesh sharing it still exists keeps the ordering obviously safe
-      // rather than merely accidentally so.
+      // Before planet.dispose(): night lights borrow the planet's geometry
+      // without owning it, so tear down while it still exists.
       furniture.dispose()
       moons.dispose()
       worlds.dispose()

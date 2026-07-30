@@ -16,8 +16,8 @@ describe('nightAmount', () => {
   })
 
   it('sits at the edges of its own band', () => {
-    expect(nightAmount(0.22)).toBe(0)
-    expect(nightAmount(-0.12)).toBeCloseTo(1, 9)
+    expect(nightAmount(0.02)).toBe(0)
+    expect(nightAmount(-0.32)).toBeCloseTo(1, 9)
   })
 
   it('is monotonically non-increasing as the surface faces the sun more', () => {

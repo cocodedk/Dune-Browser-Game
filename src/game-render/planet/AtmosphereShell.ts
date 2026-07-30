@@ -61,8 +61,14 @@ void main() {
 
   // Forward scattering: the rim on the sunlit side is far brighter than the
   // one on the night side, which is what stops the halo reading as a decal.
+  //
+  // The old (-0.55, 0.65) band kept "day" well above zero deep into the night
+  // hemisphere, so the base rim below never actually died on the anti-sun
+  // limb — it just dimmed to its 0.18 floor and stayed a full 360-degree
+  // ring. Narrowed so day reaches 0 close to the terminator instead of a
+  // third of the way round the back.
   float lit = dot(normalize(vWorldNormal), normalize(uSun));
-  float day = smoothstep(-0.55, 0.65, lit);
+  float day = smoothstep(-0.15, 0.55, lit);
 
   // The day-side limb gets an extra hot edge on top of the base rim — real
   // scattering peaks exactly where the sightline first grazes lit air, which
@@ -71,7 +77,9 @@ void main() {
   // it stays a thin arc rather than washing out the whole terminator.
   float hotEdge = core * smoothstep(0.15, 0.85, day) * 0.6;
 
-  float strength = (rim * (0.18 + 0.82 * day) + hotEdge) * uIntensity;
+  // Night floor down from 0.18: that alone was enough, on a dark disc, for
+  // the rim to read as several stops brighter than the surface it wraps.
+  float strength = (rim * (0.05 + 0.95 * day) + hotEdge) * uIntensity;
   gl_FragColor = vec4(uRim * strength, strength);
 }
 `
@@ -90,7 +98,13 @@ export function createAtmosphereShell(radius: number, scale = 1.075): Atmosphere
     uniforms: {
       uRim: { value: new Color('#e9a765') },
       uSun: { value: new Vector3(1, 0.4, 0.2) },
-      uIntensity: { value: 1.0 },
+      // Was 1.0, tuned back when the disc it wraps was several stops darker
+      // than it should have been (see PlanetMode's shadow/crest anchors). A
+      // now-brighter disc needs a dimmer rim to keep reading as the world's
+      // edge rather than reclaiming the contrast the surface fix just
+      // restored. Picked by arithmetic against that ratio, not re-measured
+      // against a render.
+      uIntensity: { value: 0.6 },
     },
     side: BackSide,
     blending: AdditiveBlending,

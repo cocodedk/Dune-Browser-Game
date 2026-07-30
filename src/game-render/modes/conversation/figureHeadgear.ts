@@ -51,8 +51,28 @@ function drawHood(
   ctx.fillStyle = hoodFill
   ctx.beginPath()
   ctx.ellipse(headX, headY - headR * 0.06, headR * 1.16, headR * 1.28, 0, 0, Math.PI * 2)
-  ctx.ellipse(headX, headY + headR * 0.06, headR * 0.78, headR * 0.96, 0, 0, Math.PI * 2)
+  // Face-hole ellipse shifted off the outer ellipse's own centre — two true
+  // concentric ellipses is what read as a perfect torus (critic's
+  // Critical 1); an asymmetric cutout gives the band a varying width the
+  // way gathered cloth actually would.
+  ctx.ellipse(headX + headR * 0.06, headY + headR * 0.09, headR * 0.78, headR * 0.96, 0, 0, Math.PI * 2)
   ctx.fill('evenodd')
+
+  // Fold creases fanning from the crown, echoing the robe's own folds in
+  // drawFigure.ts — without them the band is one smooth gradient across a
+  // ring shape, which is most of what made it read as machined rather than
+  // cloth.
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)'
+  ctx.lineWidth = Math.max(1, headR * 0.035)
+  for (const side of [-1, 1]) {
+    ctx.beginPath()
+    ctx.moveTo(headX + side * headR * 0.3, headY - headR * 1.05)
+    ctx.quadraticCurveTo(
+      headX + side * headR * 0.55, headY - headR * 0.3,
+      headX + side * headR * 0.7, headY + headR * 0.5,
+    )
+    ctx.stroke()
+  }
 
   ctx.beginPath()
   ctx.moveTo(headX - headR * 1.14, headY + headR * 0.5)

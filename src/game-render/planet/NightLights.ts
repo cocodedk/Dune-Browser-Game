@@ -42,11 +42,16 @@ void main() {
   // nightAmount(lit) below, inlined rather than called — kept in step with
   // the exported JS copy of this formula so the settlement lights switch on
   // across exactly the band the wash uses.
-  float night = clamp((0.22 - lit) / 0.34, 0.0, 1.0);
+  float night = clamp((0.02 - lit) / 0.34, 0.0, 1.0);
   night = night * night * (3.0 - 2.0 * night);
-  // Held under 1 so terrain shading still shows through the wash at full
-  // night instead of flattening every biome into one silhouette.
-  gl_FragColor = vec4(uNightColor, night * 0.78);
+  // 0.78 did not leave terrain showing through, whatever the intent: at that
+  // alpha the wash contributes four fifths of the final pixel, and a captured
+  // midnight frame was a single flat colour across the entire dark hemisphere
+  // with no dune, no biome and no relief anywhere in it. A wash should bend
+  // the hue and drop the value of what is underneath, not replace it, so this
+  // is now a minority of the pixel and the darkening is carried by the tint
+  // itself (see NIGHT_TINT in biomes.ts, which came down at the same time).
+  gl_FragColor = vec4(uNightColor, night * 0.30);
 }
 `
 
@@ -56,9 +61,13 @@ void main() {
  * The exact formula the fragment shader above inlines — kept here too so it
  * is testable, and so the settlement lights below switch on across the same
  * band the wash uses rather than an independently-tuned one.
+ *
+ * Band start down from 0.22 to 0.02: at 0.22 the wash began before the
+ * surface was even facing away from the sun, which is most of why the whole
+ * disc read as uniformly dim rather than showing a real day side.
  */
 export function nightAmount(lit: number): number {
-  const t = Math.min(1, Math.max(0, (0.22 - lit) / 0.34))
+  const t = Math.min(1, Math.max(0, (0.02 - lit) / 0.34))
   return t * t * (3 - 2 * t)
 }
 

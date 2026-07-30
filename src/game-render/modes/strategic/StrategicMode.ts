@@ -11,6 +11,7 @@ import type { QualitySettings } from '../../core/Quality'
 import { createSandMaterial } from '../../materials/SandMaterial'
 import { createDesertTerrain, WORLD_SIZE } from './DesertTerrain'
 import { createDesertSky } from './DesertSky'
+import { SURFACE_SUN_AZIMUTH, yawToFaceAzimuth } from './skyMath'
 import { createCameraRig } from '../../core/CameraRig'
 import { createSietchMarkers } from './SietchMarkers'
 import { localPlacements } from './localMap'
@@ -99,6 +100,11 @@ export function createStrategicMode(
     // one. Back to a low angle.
     pitchRadians: (27 * Math.PI) / 180,
   })
+  // Finding 2: dawn and golden-pm were captioned "sun on the horizon" yet held
+  // no sun — CameraRig's default yaw (0) and DesertSky's fixed sun azimuth
+  // had never been reconciled. yaw starts at 0, so one relative turn here is
+  // the same as setting it outright.
+  rig.orbitBy(yawToFaceAzimuth(SURFACE_SUN_AZIMUTH))
 
   // Zooming out past the rig's far limit returns the player to orbit.
   function onSurfaceWheel(e: WheelEvent): void {

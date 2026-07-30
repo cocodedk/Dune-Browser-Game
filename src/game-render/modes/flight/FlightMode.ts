@@ -18,6 +18,7 @@ import { createSkyDome } from '../../materials/SkyDome'
 import { createLighting } from '../../env/Lighting'
 import { paletteForTime } from '../../materials/Atmosphere'
 import { createTerrainMesh } from '../strategic/TerrainMesh'
+import { fogColorFor } from '../strategic/DesertSky'
 import { currentTravelProgress } from '../../../game-engine/TravelSystem'
 import { positionAt, chaseCameraAt, yawOf, bankAt } from './FlightPath'
 import { createOrnithopter } from './Ornithopter'
@@ -87,7 +88,13 @@ export function createFlightMode(
     sky.setSunDirection(
       lighting.sun.position.x, lighting.sun.position.y, lighting.sun.position.z,
     )
-    fog.color = rgb(palette.fog)
+    // Leaned toward the zenith, exactly as the surface view does. palette.fog
+    // resolves to the same triple the sky dome paints its horizon band with, so
+    // using it directly fades the ground into the sky at the identical RGB and
+    // erases the horizon — a dust storm rather than a desert. The flight view
+    // kept doing that after the surface view stopped, which left the two
+    // disagreeing about what haze is for.
+    fog.color = rgb(fogColorFor(palette.horizon, palette.zenith))
 
     const shadow = new Color('#7d3a18').lerp(rgb(palette.ambient), 0.3)
     const crest = new Color('#e3b972').lerp(rgb(palette.sun), 0.22)

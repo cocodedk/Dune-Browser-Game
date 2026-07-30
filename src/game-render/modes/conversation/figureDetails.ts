@@ -1,55 +1,19 @@
 // src/game-render/modes/conversation/figureDetails.ts
-// The details that say who someone is: eyes, beard, dress and a mark.
-//
-// Split from drawFigure because the silhouette and the identifying marks are
-// separate decisions — the hood is the same for everyone, the eyes are not.
+// The details that say who someone is: beard, dress and a mark, plus the
+// shared colour helpers everything in this directory draws with. Eyes moved
+// to figureEyes.ts (see the critic's Critical 1 fix); the silhouette and
+// these marks stay separate decisions — the hood is the same for everyone,
+// a scar is not.
 
 import type { PortraitDef } from '../../../data/portraits'
 import { HAIR_TONES } from '../../../data/portraits'
 
-/**
- * The eyes of Ibad: total blue, sclera and all, from a life on spice. It is
- * the one detail everybody remembers, so the Fremen get it and nobody else.
- *
- * `eyeTilt` rotates each ellipse about its own centre (mirrored so both eyes
- * slant the same emotional direction) and nudges it vertically — a cheap
- * lever that separates a fierce Naib from a friendly waterseller without
- * touching anything else on the face.
- */
-export function drawEyes(
-  ctx: CanvasRenderingContext2D,
-  def: PortraitDef,
-  headX: number, headY: number, headR: number,
-): void {
-  const ibad = def.dress === 'fremen'
-  const eyeY = headY - headR * 0.1
-  const dx = headR * 0.32
-  const rx = headR * 0.17
-  const ry = headR * 0.1
-
-  for (const side of [-1, 1]) {
-    const cy = eyeY - side * def.eyeTilt * headR * 0.3
-    const angle = side * def.eyeTilt
-
-    if (ibad) {
-      // A glow behind the eye is what sells "lit from within" at this size.
-      const glow = ctx.createRadialGradient(
-        headX + side * dx, cy, 0, headX + side * dx, cy, rx * 3.4,
-      )
-      glow.addColorStop(0, 'rgba(90, 200, 235, 0.55)')
-      glow.addColorStop(1, 'rgba(90, 200, 235, 0)')
-      ctx.fillStyle = glow
-      ctx.beginPath()
-      ctx.arc(headX + side * dx, cy, rx * 3.4, 0, Math.PI * 2)
-      ctx.fill()
-    }
-
-    ctx.fillStyle = ibad ? '#3fa8d8' : 'rgba(28, 18, 10, 0.9)'
-    ctx.beginPath()
-    ctx.ellipse(headX + side * dx, cy, rx, ry, angle, 0, Math.PI * 2)
-    ctx.fill()
-  }
-}
+// Was 0.78 / 0.4. At 0.78 the beard sat over the mouth as one flat block
+// with no shading coming through, and read as a hard black slot rather than
+// facial hair (critic's Critical 1). Lower alpha lets the mouth and chin
+// shading painted underneath still show through the beard tint.
+export const BEARD_ALPHA_FULL = 0.55
+export const BEARD_ALPHA_STUBBLE = 0.22
 
 /** none/stubble/full, shaded onto the lower face below the eyes. */
 export function drawBeard(
@@ -59,7 +23,7 @@ export function drawBeard(
 ): void {
   if (def.beard === 'none') return
   const reach = def.beard === 'full' ? 1.05 : 0.55
-  const alpha = def.beard === 'full' ? 0.78 : 0.4
+  const alpha = def.beard === 'full' ? BEARD_ALPHA_FULL : BEARD_ALPHA_STUBBLE
 
   ctx.fillStyle = withAlpha(HAIR_TONES[def.hairTone], alpha)
   ctx.beginPath()

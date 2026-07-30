@@ -13,9 +13,11 @@
 // All geometry is authored against a 300x420 card and scaled from there.
 
 import type { PortraitDef } from '../../../data/portraits'
-import { drawEyes, drawBeard, drawDress, drawMark, mix } from './figureDetails'
+import { drawBeard, drawDress, drawMark, mix } from './figureDetails'
+import { drawEyes } from './figureEyes'
 import { drawHead } from './figureHead'
 import { drawHeadgear } from './figureHeadgear'
+import { drawNeck } from './figureNeck'
 import { computeHeadPlacement } from './figureFaceLayout'
 
 export interface FigureMetrics {
@@ -86,9 +88,16 @@ export function drawFigure(
 
   // --- Head, face, then whatever covers it -----------------------------------
   //
-  // Face first: it must be visible *inside* whatever headgear covers it, so
-  // headgear is drawn on top (the hood cuts a ring through its own fill; a
-  // cap or helm simply sits above the hairline).
+  // Neck before face: figureNeck.ts's trapezoid overlaps the face ellipse's
+  // own bottom edge, so drawHead seals the seam between them. Drawing them
+  // in the other order was the critic's Critical 2 — no neck ever existed,
+  // and the jaw sat roughly 50px above the shoulders over raw backdrop.
+  //
+  // Face first, then whatever covers it: it must be visible *inside*
+  // whatever headgear covers it, so headgear is drawn on top (the hood cuts
+  // a ring through its own fill; a cap or helm simply sits above the
+  // hairline).
+  drawNeck(ctx, def, headX, headY, headR, shoulderY)
   drawHead(ctx, def, headX, headY, headR)
   drawEyes(ctx, def, headX, headY, headR)
   drawBeard(ctx, def, headX, headY, headR)

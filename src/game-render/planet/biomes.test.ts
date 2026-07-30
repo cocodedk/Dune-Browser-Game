@@ -100,8 +100,11 @@ describe('biomeAt: tint', () => {
 
   it('makes ice cool and rock dark', () => {
     const ice = biomeAt(88, SAND).tint
-    // Blue lifted well above red is what reads as ice against orange sand.
-    expect(ice[2]).toBeGreaterThan(ice[0] * 1.5)
+    // Cool but desaturated: blue still leads red, but not by so much that it
+    // reads as saturated blue (open water) instead of pale frost — see the
+    // polar tint's own comment for why the ratio was pulled in from ~3x.
+    expect(ice[2]).toBeGreaterThan(ice[0])
+    expect(ice[2]).toBeLessThan(ice[0] * 1.5)
 
     const rock = biomeAt(10, 0.95).tint
     expect(Math.max(...rock)).toBeLessThan(1)

@@ -11,6 +11,9 @@ import { createLighting } from '../../env/Lighting'
 import { paletteForTime, type Rgb } from '../../materials/Atmosphere'
 import type { SandMaterial } from '../../materials/SandMaterial'
 import { configureSunShadow, type ShadowSettings } from '../../env/shadowRig'
+// Imported, not edited — orbits.ts is out of scope for this task.
+import { moonPosition, KRELLN } from '../../planet/orbits'
+import { SURFACE_SUN_AZIMUTH } from './skyMath'
 
 /** Matches TimeSystem's DAY_SECONDS so the sky tracks the engine's clock. */
 const DAY_SECONDS = 60
@@ -114,7 +117,7 @@ export function createDesertSky(
         rgbToColor(palette.zenith),
         rgbToColor(palette.sun),
       )
-      lighting.applyPalette(palette, worldSize * 0.6)
+      lighting.applyPalette(palette, worldSize * 0.6, SURFACE_SUN_AZIMUTH)
 
       // Once only. Lighting keeps |sun.position| within about 15% of the
       // distance it is handed across the whole day, so a bracket fitted at the
@@ -135,6 +138,22 @@ export function createDesertSky(
       // same sun straight overhead — atmosphere scatters more of its light
       // into the surrounding glow the lower it sits. See sunDiskBoostFor.
       sky.setSunBoost(sunDiskBoostFor(palette.sunElevation))
+      // Same direction the sand's own specular gate needs (Finding 5) — one
+      // sun, one uniform, fed to both.
+      sand.setSunDirection(
+        lighting.sun.position.x,
+        lighting.sun.position.y,
+        lighting.sun.position.z,
+      )
+
+      // Finding 4: midnight was a dead black screen. Krelln only — the bigger
+      // of Arrakis's two moons (orbits.ts: KRELLN_RADIUS 0.21 vs ARVON_RADIUS
+      // 0.088) — since the brief asks for "a moon disk", singular. The radius
+      // argument only scales the vector, so 1 is as good as the real planet
+      // radius for a direction-only read.
+      const moon = moonPosition(KRELLN, timeSeconds, DAY_SECONDS, 1)
+      sky.setMoonDirection(moon.x, moon.y, moon.z)
+      sky.setSunElevation(palette.sunElevation)
 
       fog.color = rgbToColor(fogColorFor(palette.horizon, palette.zenith))
 

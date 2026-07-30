@@ -18,6 +18,14 @@ import {
   paintKeyShade, paintBrowRidge, paintNose, paintCheekbones, paintMouth, paintChinAndJaw,
 } from './figureFaceShade'
 
+// Mixed to 0.68 rather than the previous 0.55: at 0.55 the face read as
+// close to a black silhouette and barely separated from the hood behind it.
+// Chosen by eye from the palette arithmetic, not from a rendered frame —
+// verify in scripts/shoot.mjs before trusting the exact value. Exported so
+// figureValueTargets.ts's pure compositing model uses this constant rather
+// than a second copy of it, which would drift from the real draw silently.
+export const FACE_SKIN_MIX = 0.68
+
 /** Fill the face and build its structure from light, not outlines. */
 export function drawHead(
   ctx: CanvasRenderingContext2D,
@@ -27,11 +35,7 @@ export function drawHead(
   const layout = computeFaceLayout(def, headR)
   const faceHalfH = headR * 0.92
 
-  // Mixed to 0.68 rather than the previous 0.55: at 0.55 the face read as
-  // close to a black silhouette and barely separated from the hood behind it.
-  // Chosen by eye from the palette arithmetic, not from a rendered frame —
-  // verify in scripts/shoot.mjs before trusting the exact value.
-  const faceShade = mix(def.figure, SKIN_TONES[def.skinTone], 0.68)
+  const faceShade = mix(def.figure, SKIN_TONES[def.skinTone], FACE_SKIN_MIX)
   ctx.fillStyle = faceShade
   ctx.beginPath()
   ctx.ellipse(headX, headY, layout.jawHalfW, faceHalfH, 0, 0, Math.PI * 2)

@@ -16,6 +16,12 @@ import { seedForLocation } from './localMap'
 export const WORLD_SIZE = 4400
 const TERRAIN_SEED = 20250727
 
+// Peak dune height. Named rather than inlined because SandMaterial's fog
+// height falloff (Finding 1, skyMath.ts's heightFogFactor) wants the same
+// order of magnitude — shadowRig.ts's STRATEGIC_TERRAIN_AMPLITUDE duplicates
+// this value for the same reason, on the shadow side.
+export const DUNE_AMPLITUDE = 124
+
 export interface DesertTerrain {
   heightAt(x: number, z: number): number
   /** Retint the floor so the far flat reads as more desert, not a backdrop. */
@@ -41,7 +47,7 @@ export function createDesertTerrain(
     // Seen from a low angle, 78 read as ripples on a beach rather than dunes.
     // Sand can stand at about 34 degrees before it slips, and this is the
     // amplitude that puts the steep faces near that limit at this wavelength.
-    amplitude: 124,
+    amplitude: DUNE_AMPLITUDE,
     // Scaled with WORLD_SIZE to hold dune wavelength constant (~230 world
     // units across-wind). The first pass at 6 octaves produced fine wrinkles
     // that read as crumpled paper rather than dunes.
@@ -60,6 +66,21 @@ export function createDesertTerrain(
     // the skyline, so the taper has to be long enough to read as the dunes
     // simply running out — which is what a real erg does at its margin.
     edgeFalloff: 0.4,
+    // Finding 3: "no skyline shape, no rock, no landmark" — one wall near the
+    // +Z edge, tall enough to read as vast rather than as dune. Slope at its
+    // steepest is amplitudeMultiplier*amplitude*0.8578/(falloffWidth*worldSize)
+    // (the Gaussian's own peak-derivative bound) β‰ˆ 3*124*0.8578/(0.05*4400)
+    // β‰ˆ 55 degrees — arithmetic, not measured from a render, but comfortably
+    // past both sand's ~34-degree repose limit and the shader's rock-band
+    // threshold (sandShader.glsl.ts, 0.5..0.72 flatness) with margin either
+    // side of it.
+    escarpment: {
+      edgeDistance: 0.08,
+      falloffWidth: 0.05,
+      amplitudeMultiplier: 3,
+      frequencyScale: 0.5,
+      edgeTaper: 0.04,
+    },
   })
 
   const terrain = createTerrainMesh(heightfield, sandMaterial, shadows)

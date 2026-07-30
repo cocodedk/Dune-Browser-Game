@@ -36,6 +36,25 @@ export interface HeightfieldOptions {
    * a distant ground plane seamlessly, so there is no boundary to hide.
    */
   edgeFalloff?: number
+  /**
+   * One rock wall running the field's width, near the v (row / +Z) edge —
+   * Finding 3's landform, the fix for "no skyline shape ... horizon is a
+   * featureless fog band". Undefined leaves the field pure dune.
+   */
+  escarpment?: EscarpmentOptions
+}
+
+export interface EscarpmentOptions {
+  /** Distance from the v=1 edge, in the same 0..1 units as v, where the ridge crests. */
+  edgeDistance: number
+  /** Gaussian half-width of the ridge in the same units — how quickly it rises and falls. */
+  falloffWidth: number
+  /** Peak height as a multiple of `amplitude` — a wall reads as vast only if it dwarfs the dunes. */
+  amplitudeMultiplier: number
+  /** Frequency of the ridge's own along-the-wall undulation, in cycles per field width. Low: a wall is not a dune. */
+  frequencyScale: number
+  /** Fraction of each edge over which the ridge itself ramps to zero — independent of, and much smaller than, `edgeFalloff`, or the ridge would be crushed by the same taper that hides the dune field's border. */
+  edgeTaper: number
 }
 
 export interface Heightfield {
@@ -71,6 +90,17 @@ function edgeWeight(coord: number, falloff: number): number {
   if (distance >= f) return 1
   const t = Math.max(0, distance / f)
   return t * t * (3 - 2 * t)
+}
+
+/**
+ * Gaussian weight in [0, 1] peaking at `edgeDistance` in from the v=1 edge —
+ * a ridge that rises out of the dune field and settles back toward the true
+ * border on both sides, not a plateau with a crease at either end of it.
+ */
+export function escarpmentWeight(v: number, edgeDistance: number, falloffWidth: number): number {
+  const width = Math.max(1e-6, falloffWidth)
+  const t = ((1 - v) - edgeDistance) / width
+  return Math.exp(-t * t)
 }
 
 export function generateHeightfield(options: HeightfieldOptions): Heightfield {
@@ -110,7 +140,18 @@ export function generateHeightfield(options: HeightfieldOptions): Heightfield {
       // rolling is [-1,1] and crests is [0,1]; map rolling to [0,1] first so
       // the mix does not bias the field downward.
       const combined = (1 - ridgeMix) * (rolling * 0.5 + 0.5) + ridgeMix * crests
-      const height = combined * amplitude * edgeWeight(u, edgeFalloff) * edgeWeight(v, edgeFalloff)
+      let height = combined * amplitude * edgeWeight(u, edgeFalloff) * edgeWeight(v, edgeFalloff)
+
+      if (options.escarpment) {
+        const esc = options.escarpment
+        // Offset far from the dune terms' noise-space coordinates so this is
+        // not just a taller copy of the same crest pattern, and no ridge()
+        // fold at all — a wall is a smooth rock mass, not a folded dune.
+        const shape = field.warpedFbm(u * esc.frequencyScale + 50, v * esc.frequencyScale + 90, 2, 0.3)
+        height += (shape * 0.5 + 0.5) * amplitude * esc.amplitudeMultiplier
+          * escarpmentWeight(v, esc.edgeDistance, esc.falloffWidth)
+          * edgeWeight(u, esc.edgeTaper) * edgeWeight(v, esc.edgeTaper)
+      }
 
       const index = row * resolution + col
       data[index] = height

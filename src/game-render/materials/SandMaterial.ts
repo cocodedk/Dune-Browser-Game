@@ -3,7 +3,7 @@
 // ShaderMaterial from scratch, so three's lighting, tone mapping and fog keep
 // working and only the sand-specific behaviour is custom.
 
-import { MeshStandardMaterial, Color, Vector2, type IUniform } from 'three'
+import { MeshStandardMaterial, Color, Vector2, Vector3, type IUniform } from 'three'
 import {
   SAND_VERTEX_DECLARATIONS,
   SAND_VERTEX_BODY,
@@ -11,7 +11,11 @@ import {
   SAND_FRAGMENT_COLOR,
   SAND_FRAGMENT_GLINT,
 } from './sandShader.glsl'
+import { SAND_FOG_DECLARATIONS, SAND_FOG_FRAGMENT } from './sandFogShader.glsl'
 import { getSandTextures } from './sandTextures'
+// Reused, not duplicated: shadowRig.ts already names 124 as the dune
+// amplitude; the fog height scale (Finding 1) wants the same order of size.
+import { STRATEGIC_TERRAIN_AMPLITUDE } from '../env/shadowRig'
 
 export interface SandMaterialOptions {
   /** Deep trough colour — burnt orange. */
@@ -45,6 +49,10 @@ export interface SandMaterialOptions {
   mapRepeat?: number
   /** Bump intensity of the baked ripple normal map. */
   normalStrength?: number
+  /** Darker, redder band for slope past any dune's angle of repose (Finding 3). */
+  rockColor?: string
+  /** Fog's exp(-worldY / scale) falloff (Finding 1, skyMath.ts's heightFogFactor). */
+  fogHeightScale?: number
 }
 
 export interface SandMaterial {
@@ -53,6 +61,8 @@ export interface SandMaterial {
   setPalette(shadow: string | Color, crest: string | Color, slip: string | Color): void
   /** Scale the mica sparkle with light level. */
   setGlint(strength: number): void
+  /** World-space sun direction — feeds the ripple relight and glint gate (Findings 5, 6). */
+  setSunDirection(x: number, y: number, z: number): void
   dispose(): void
 }
 
@@ -67,6 +77,8 @@ const DEFAULTS: Required<SandMaterialOptions> = {
   detailMaps: true,
   mapRepeat: 180,
   normalStrength: 2.2,
+  rockColor: '#3d1a12',
+  fogHeightScale: STRATEGIC_TERRAIN_AMPLITUDE,
 }
 
 export function createSandMaterial(options: SandMaterialOptions = {}): SandMaterial {
@@ -81,6 +93,10 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
     },
     uGlintStrength: { value: opts.glintStrength },
     uRippleScale: { value: opts.rippleScale },
+    // Placeholder matching SkyDome's own, until the first setSunDirection.
+    uSunDirection: { value: new Vector3(0.4, 0.6, 0.7).normalize() },
+    uRockColor: { value: new Color(opts.rockColor) },
+    uFogHeightScale: { value: opts.fogHeightScale },
   }
 
   const material = new MeshStandardMaterial({
@@ -138,7 +154,10 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
       )
 
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${SAND_FRAGMENT_DECLARATIONS}`)
+      .replace(
+        '#include <common>',
+        `#include <common>\n${SAND_FRAGMENT_DECLARATIONS}\n${SAND_FOG_DECLARATIONS}`,
+      )
       .replace(
         '#include <color_fragment>',
         `#include <color_fragment>\n${SAND_FRAGMENT_COLOR}`,
@@ -149,6 +168,8 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
         '#include <tonemapping_fragment>',
         `#include <tonemapping_fragment>\n${SAND_FRAGMENT_GLINT}`,
       )
+      // Full override, not an addition — see sandFogShader.glsl.ts (Finding 1).
+      .replace('#include <fog_fragment>', SAND_FOG_FRAGMENT)
   }
 
   // Forces a recompile if the material is reused across quality changes.
@@ -164,6 +185,9 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
     },
     setGlint(strength: number): void {
       uniforms.uGlintStrength.value = Math.max(0, strength)
+    },
+    setSunDirection(x, y, z): void {
+      ;(uniforms.uSunDirection.value as Vector3).set(x, y, z).normalize()
     },
     dispose(): void {
       material.dispose()

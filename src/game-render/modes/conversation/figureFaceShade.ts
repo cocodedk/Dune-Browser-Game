@@ -10,6 +10,12 @@
 
 import type { FaceLayout } from './figureFaceLayout'
 
+// Named so figureValueTargets.ts's pure luminance model reads the exact
+// alpha this gradient's brightest stop uses, instead of a second literal
+// that could silently drift from the real draw.
+export const KEY_SHADE_HILITE_BASE_ALPHA = 0.16
+export const KEY_SHADE_HILITE_HARDNESS = 0.18
+
 /** One diagonal wash before any feature is drawn — cheekbone and jaw read as
  * much from this gradient as from any shape painted on top of it. Shadow
  * side is tinted blue-violet, not black, per the game's palette direction. */
@@ -20,7 +26,8 @@ export function paintKeyShade(
   const grad = ctx.createLinearGradient(
     headX - jawHalfW, headY - faceHalfH, headX + jawHalfW * 0.6, headY + faceHalfH,
   )
-  grad.addColorStop(0, `rgba(255, 224, 180, ${0.16 + hardness * 0.18})`)
+  const hilite = KEY_SHADE_HILITE_BASE_ALPHA + hardness * KEY_SHADE_HILITE_HARDNESS
+  grad.addColorStop(0, `rgba(255, 224, 180, ${hilite})`)
   grad.addColorStop(0.5, 'rgba(255, 224, 180, 0)')
   grad.addColorStop(1, `rgba(30, 20, 55, ${0.22 + hardness * 0.2})`)
   ctx.fillStyle = grad
@@ -86,6 +93,15 @@ export function paintNose(
   ctx.fill()
 }
 
+// Same reasoning as KEY_SHADE_HILITE_BASE_ALPHA above: the pure luminance
+// model needs the real alpha this radial's own centre stop uses.
+export const CHEEK_HILITE_ALPHA = 0.26
+
+// The critic's Critical 3 fix: a small hard specular is a genuine extreme,
+// where the soft wash above is a gradient — without it, the brightest value
+// on the whole card was empty backdrop rather than any point on the face.
+export const CHEEK_SPECULAR_ALPHA = 0.4
+
 /** Lit cheek toward the temple on the key-light side; a hollow on the far
  * side that `ageHollow` deepens for a gaunt elder and barely shows on the
  * young. */
@@ -97,11 +113,19 @@ export function paintCheekbones(
   const litCx = headX - layout.cheekHalfW * 0.5
   const litCy = cy - headR * 0.1
   const lit = ctx.createRadialGradient(litCx, litCy, 0, litCx, litCy, layout.cheekHalfW * 0.9)
-  lit.addColorStop(0, 'rgba(255, 220, 180, 0.26)')
+  lit.addColorStop(0, `rgba(255, 220, 180, ${CHEEK_HILITE_ALPHA})`)
   lit.addColorStop(1, 'rgba(255, 220, 180, 0)')
   ctx.fillStyle = lit
   ctx.beginPath()
   ctx.ellipse(litCx, litCy, layout.cheekHalfW * 0.9, headR * 0.34, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  // A small hard specular sitting on top of the soft wash, not another
+  // gradient — a true bright extreme is what the value hierarchy needs on
+  // the face, and a second diffuse blob does not supply one.
+  ctx.fillStyle = `rgba(255, 248, 235, ${CHEEK_SPECULAR_ALPHA})`
+  ctx.beginPath()
+  ctx.ellipse(litCx, litCy - headR * 0.06, headR * 0.09, headR * 0.06, -0.3, 0, Math.PI * 2)
   ctx.fill()
 
   ctx.fillStyle = `rgba(18, 12, 34, ${0.16 + layout.ageHollow * 0.24})`
