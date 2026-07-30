@@ -10,6 +10,7 @@ import { createSkyDome } from '../../materials/SkyDome'
 import { createLighting } from '../../env/Lighting'
 import { paletteForTime } from '../../materials/Atmosphere'
 import type { SandMaterial } from '../../materials/SandMaterial'
+import { configureSunShadow, type ShadowSettings } from '../../env/shadowRig'
 
 /** Matches TimeSystem's DAY_SECONDS so the sky tracks the engine's clock. */
 const DAY_SECONDS = 60
@@ -31,6 +32,12 @@ export function createDesertSky(
   scene: Scene,
   sand: SandMaterial,
   worldSize: number,
+  /**
+   * Shadow tier and the world-unit radius around the camera target that needs
+   * to cast. Omitted (or null) leaves the sun shadowless, which is what the
+   * 'low' tier and any caller that has not opted in should get.
+   */
+  shadows?: { settings: ShadowSettings; extent: number } | null,
 ): DesertSky {
   const sky = createSkyDome(worldSize * 1.6)
   scene.add(sky.mesh)
@@ -52,6 +59,11 @@ export function createDesertSky(
   const fog = new FogExp2(0xe0a070, 0.00032)
   scene.fog = fog
 
+  // Fitted after the first applyTime rather than here, because the shadow
+  // camera's near/far bracket is derived from where the sun actually is and at
+  // construction it is still on its placeholder position from createLighting.
+  let shadowsFitted = false
+
   return {
     applyTime(timeSeconds: number): Color {
       const palette = paletteForTime(timeSeconds, DAY_SECONDS)
@@ -62,6 +74,17 @@ export function createDesertSky(
         rgbToColor(palette.sun),
       )
       lighting.applyPalette(palette, worldSize * 0.6)
+
+      // Once only. Lighting keeps |sun.position| within about 15% of the
+      // distance it is handed across the whole day, so a bracket fitted at the
+      // first hour stays a good fit for every later one, and refitting per frame
+      // would rebuild the shadow camera's projection sixty times a second for a
+      // few percent of near/far.
+      if (shadows && !shadowsFitted) {
+        configureSunShadow(lighting.sun, shadows.settings, shadows.extent)
+        shadowsFitted = true
+      }
+
       sky.setSunDirection(
         lighting.sun.position.x,
         lighting.sun.position.y,

@@ -13,7 +13,9 @@
 // All geometry is authored against a 300x420 card and scaled from there.
 
 import type { PortraitDef } from '../../../data/portraits'
-import { drawEyes, drawDress, mix } from './figureDetails'
+import { drawEyes, drawBeard, drawDress, drawMark, mix } from './figureDetails'
+import { drawHead } from './figureHead'
+import { drawHeadgear } from './figureHeadgear'
 
 export interface FigureMetrics {
   width: number
@@ -88,54 +90,17 @@ export function drawFigure(
     ctx.stroke()
   }
 
-  // --- Head, then the hood over it ------------------------------------------
+  // --- Head, face, then whatever covers it -----------------------------------
   //
-  // Face first: it must be visible *inside* the hood opening, so the hood is
-  // drawn on top and its opening cut through by drawing the cowl as a ring.
-  const faceShade = mix(def.figure, '#c99a6a', 0.55)
-  ctx.fillStyle = faceShade
-  ctx.beginPath()
-  ctx.ellipse(headX, headY, headR * 0.74, headR * 0.92, 0, 0, Math.PI * 2)
-  ctx.fill()
-
-  // Brow shadow — the hood keeps the upper face dark, which is the whole look.
-  ctx.fillStyle = 'rgba(0,0,0,0.42)'
-  ctx.beginPath()
-  ctx.ellipse(headX, headY - headR * 0.34, headR * 0.74, headR * 0.5, 0, 0, Math.PI * 2)
-  ctx.fill()
-
+  // Face first: it must be visible *inside* whatever headgear covers it, so
+  // headgear is drawn on top (the hood cuts a ring through its own fill; a
+  // cap or helm simply sits above the hairline).
+  drawHead(ctx, def, headX, headY, headR)
   drawEyes(ctx, def, headX, headY, headR)
-
-  // Hood: an arch that clears the face opening. Two arcs — outer silhouette,
-  // inner opening — filled with the even-odd rule so the face shows through.
-  // Graded like the robe, and for the same reason.
-  const hoodFill = ctx.createLinearGradient(
-    headX - headR * 1.2, headY - headR, headX + headR * 0.6, headY + headR,
-  )
-  hoodFill.addColorStop(0, mix(def.figure, '#e8a86a', 0.34))
-  hoodFill.addColorStop(1, def.figure)
-  ctx.fillStyle = hoodFill
-  ctx.beginPath()
-  ctx.ellipse(headX, headY - headR * 0.06, headR * 1.16, headR * 1.28, 0, 0, Math.PI * 2)
-  ctx.ellipse(headX, headY + headR * 0.06, headR * 0.78, headR * 0.96, 0, 0, Math.PI * 2)
-  ctx.fill('evenodd')
-
-  // The cowl gathers at the shoulders rather than floating.
-  ctx.beginPath()
-  ctx.moveTo(headX - headR * 1.14, headY + headR * 0.5)
-  ctx.quadraticCurveTo(
-    headX - headR * 1.5, shoulderY - headR * 0.2,
-    headX - headR * 1.05, shoulderY + headR * 0.1,
-  )
-  ctx.lineTo(headX + headR * 1.05, shoulderY + headR * 0.1)
-  ctx.quadraticCurveTo(
-    headX + headR * 1.5, shoulderY - headR * 0.2,
-    headX + headR * 1.14, headY + headR * 0.5,
-  )
-  ctx.closePath()
-  ctx.fill()
-
+  drawBeard(ctx, def, headX, headY, headR)
+  drawHeadgear(ctx, def, headX, headY, headR, shoulderY)
   drawDress(ctx, def, headX, shoulderY, headR)
+  drawMark(ctx, def, headX, headY, headR, shoulderY)
 
   ctx.restore()
   return { headX, headY, headR }

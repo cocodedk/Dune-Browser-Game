@@ -29,6 +29,8 @@ export function createDesertTerrain(
   sandMaterial: Material,
   /** Where on the globe this patch of desert is. */
   centre: { lat: number; lon: number } = { lat: 0, lon: 0 },
+  /** Let the dunes cast and receive — see createTerrainMesh. */
+  shadows = false,
 ): DesertTerrain {
   const heightfield = generateHeightfield({
     resolution: quality.terrainResolution,
@@ -60,7 +62,7 @@ export function createDesertTerrain(
     edgeFalloff: 0.4,
   })
 
-  const terrain = createTerrainMesh(heightfield, sandMaterial)
+  const terrain = createTerrainMesh(heightfield, sandMaterial, shadows)
   scene.add(terrain.mesh)
 
   // Extends well past the fog distance. With the field now reaching the

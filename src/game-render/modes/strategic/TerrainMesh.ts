@@ -14,6 +14,18 @@ export interface TerrainMesh {
 export function createTerrainMesh(
   heightfield: Heightfield,
   material: Material,
+  /**
+   * Let the dunes shadow each other.
+   *
+   * Both flags together, not just receive: the point is self-shadowing. A dune
+   * casting across the trough behind it is what gives the field scale at a low
+   * sun, and measured at dusk the foreground carried a shading spread of under
+   * one luma value out of 255 without it — a flat slab exactly when raking light
+   * should be at its most sculptural. Off by default so the 'low' tier and the
+   * flight view opt in deliberately; drawing this mesh again into the shadow map
+   * is the single most expensive thing either view can ask for.
+   */
+  shadows = false,
 ): TerrainMesh {
   const { resolution, worldSize, data } = heightfield
 
@@ -39,8 +51,8 @@ export function createTerrainMesh(
 
   const mesh = new Mesh(geometry, material)
   mesh.name = 'terrain'
-  mesh.receiveShadow = false
-  mesh.castShadow = false
+  mesh.receiveShadow = shadows
+  mesh.castShadow = shadows
 
   return {
     mesh,

@@ -31,3 +31,6 @@ blob-report/
 .idea/
 .DS_Store
 *.swp
+
+# Visual-review screenshots (scripts/shoot.mjs)
+.shots/

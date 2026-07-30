@@ -16,6 +16,7 @@ import { createSietchMarkers } from './SietchMarkers'
 import { localPlacements } from './localMap'
 import { createPlayerToken } from './PlayerToken'
 import { createMarkerLabels } from './MarkerLabels'
+import { shadowSettingsFor } from '../../env/shadowRig'
 
 export function createStrategicMode(
   camera: PerspectiveCamera,
@@ -32,11 +33,22 @@ export function createStrategicMode(
   const sand = createSandMaterial({
     glintStrength: quality.tier === 'low' ? 0 : 0.07,
   })
-  const terrain = createDesertTerrain(scene, quality, sand.material as Material, centre)
-  const sky = createDesertSky(scene, sand, WORLD_SIZE)
-
   // Villages occupy the readable middle of the map, not the fogged distance.
   const MARKER_SPREAD = WORLD_SIZE * 0.42
+
+  // Shadows are fitted to MARKER_SPREAD, not WORLD_SIZE. The full 4400 spread
+  // across even a 2048 map is over two world units per texel, which reads as a
+  // blocky stair-stepped edge; MARKER_SPREAD is where the sietches, the player
+  // token and the camera's whole pan range actually live, and fitting to it
+  // keeps a shadow texel under one world unit. Null on the 'low' tier.
+  const shadowSettings = shadowSettingsFor(quality)
+  const terrain = createDesertTerrain(
+    scene, quality, sand.material as Material, centre, shadowSettings !== null,
+  )
+  const sky = createDesertSky(
+    scene, sand, WORLD_SIZE,
+    shadowSettings ? { settings: shadowSettings, extent: MARKER_SPREAD } : null,
+  )
 
   // The surface view is one dune field, and it now knows which one. Markers
   // are laid out by bearing and distance from where the player came down, so

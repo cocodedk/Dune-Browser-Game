@@ -11,6 +11,7 @@ import {
   SAND_FRAGMENT_COLOR,
   SAND_FRAGMENT_GLINT,
 } from './sandShader.glsl'
+import { getSandTextures } from './sandTextures'
 
 export interface SandMaterialOptions {
   /** Deep trough colour — burnt orange. */
@@ -33,6 +34,17 @@ export interface SandMaterialOptions {
    * that lacks one leaves vColor undefined.
    */
   vertexColors?: boolean
+  /** false skips the procedural normal/roughness/AO bake (low quality tier). */
+  detailMaps?: boolean
+  /**
+   * UV tiling factor for the detail maps. Caller-controlled because one
+   * material serves both the flat desert (WORLD_SIZE 4400 units) and the
+   * planet globe (radius 1000) — a single default cannot read as fine
+   * ripples on both without this.
+   */
+  mapRepeat?: number
+  /** Bump intensity of the baked ripple normal map. */
+  normalStrength?: number
 }
 
 export interface SandMaterial {
@@ -52,6 +64,9 @@ const DEFAULTS: Required<SandMaterialOptions> = {
   glintStrength: 0.06,
   rippleScale: 0.9,
   vertexColors: false,
+  detailMaps: true,
+  mapRepeat: 180,
+  normalStrength: 2.2,
 }
 
 export function createSandMaterial(options: SandMaterialOptions = {}): SandMaterial {
@@ -75,10 +90,42 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
     // and modulates the whole palette rather than replacing it.
     vertexColors: opts.vertexColors,
     // Sand is rough and non-metallic; specular comes from the glint term only.
+    // With a roughnessMap bound this is the factor the map's G channel
+    // multiplies, so the map's crest/trough contrast still lands near 0.95.
     roughness: 0.95,
     metalness: 0.0,
     flatShading: false,
   })
+
+  // Assigning normalMap/roughnessMap/aoMap here (rather than in the
+  // onBeforeCompile below) lets three's own MeshStandardMaterial shader
+  // chunks handle them — normal_fragment_maps, roughnessmap_fragment,
+  // aomap_fragment — none of which touch <color_fragment> or
+  // <tonemapping_fragment>, the two chunks the sand shader patches. The
+  // vertexColors and palette-injection paths are therefore untouched.
+  const maps = opts.detailMaps
+    ? getSandTextures({
+        repeat: opts.mapRepeat,
+        normalStrength: opts.normalStrength,
+        ripple: { windDirection: opts.windDirection },
+      })
+    : null
+  if (maps) {
+    material.normalMap = maps.normalMap
+    // Green inverted on purpose. The bake computes its height gradient in
+    // canvas space, which is y-down, but CanvasTexture leaves flipY at its
+    // default true and v-mirrors the image on upload — so the G channel that
+    // reaches the shader encodes exactly the negation of the OpenGL-convention
+    // normal for the field actually being sampled. Left at (1, 1) the ripples
+    // light inverted: crests read as troughs, and the shading disagrees with
+    // the windward/slip-face term in the sand shader, which reads the same
+    // wind direction the bake was given. Flipping here rather than in the bake
+    // keeps sandTextures.ts at its 200-line cap.
+    material.normalScale = new Vector2(1, -1)
+    material.roughnessMap = maps.ormMap
+    material.aoMap = maps.ormMap
+    material.aoMapIntensity = 1
+  }
 
   material.onBeforeCompile = shader => {
     Object.assign(shader.uniforms, uniforms)
@@ -106,7 +153,7 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
 
   // Forces a recompile if the material is reused across quality changes.
   material.customProgramCacheKey = () =>
-    `sand-${opts.glintStrength}-${opts.vertexColors}`
+    `sand-${opts.glintStrength}-${opts.vertexColors}-${!!maps}`
 
   return {
     material,
