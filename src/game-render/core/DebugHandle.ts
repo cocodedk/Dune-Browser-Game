@@ -9,6 +9,7 @@
 import type { Camera, Object3D } from 'three'
 import type { SceneModeId } from '../../types'
 import { inspectScene } from './inspectScene'
+import { inspectLights, type InspectedLight } from './inspectLights'
 
 export { inspectScene }
 
@@ -44,6 +45,11 @@ export interface DebugHandle {
    * transform takes one call.
    */
   inspect?: () => InspectedObject[]
+  /**
+   * Every light in the active scene, with the angle each makes to the camera.
+   * The number that says whether a body seen from orbit should read as lit.
+   */
+  lights?: () => InspectedLight[]
   /**
    * Populated by ThreeContainer. Scrubs the engine clock, so the whole day
    * cycle can be inspected without waiting a minute per rotation.
@@ -174,4 +180,5 @@ export function wireDebugHandle(
     const { width, height } = sources.size()
     return inspectScene(scene, sources.camera(), width, height)
   }
+  handle.lights = () => inspectLights(sources.scene(), sources.camera())
 }

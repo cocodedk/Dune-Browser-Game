@@ -37,23 +37,23 @@ interface BiomeDef {
 const DEFS: Record<BiomeId, BiomeDef> = {
   // Ice and rime over rock. Barely any dune relief — wind cannot pile what it
   // cannot lift.
-  // [0.88, 1.18, 2.60] was reported reading as open water or a shader error,
-  // not ice — blue alone in the top channel is the one hue this palette
-  // reserves for spice, and pushing it to 2.60 spent that accent on a polar
-  // ribbon. Retinted as pale frost instead of saturated blue: raised the
-  // floor (red 0.88 -> 1.30) so the cap is bright rather than merely blue,
-  // and pulled the ceiling down (2.60 -> 1.72) so no channel runs far enough
-  // ahead of the other two to read as a distinct colour rather than a pale,
-  // slightly cool white. Chosen by arithmetic against that ratio, not
-  // measured from a render. Relief is low both because wind cannot pile what
-  // it cannot lift, and because the sphere's noise pinches at the poles and
-  // less relief there shows less of it.
+  // [0.88, 1.18, 2.60] read as open water or a shader error, not ice: blue is
+  // the one hue this palette reserves for spice, and 2.60 spent that accent on
+  // a polar ribbon. Retinted as pale frost — floor raised (0.88 -> 1.30) so the
+  // cap is bright rather than merely blue, ceiling pulled down (2.60 -> 1.72)
+  // so no channel runs far enough ahead to read as a colour. By arithmetic
+  // against that ratio, not from a render.
   polar: { relief: 0.20, tint: [1.30, 1.42, 1.72] },
   // The great sand seas. This is the baseline the dune tuning was done against.
   erg: { relief: 1.00, tint: [1.00, 1.00, 1.00] },
   // Shield wall and massif: bare rock, sharply higher and much darker than
   // sand, which is what makes it read as a different material from orbit.
-  rock: { relief: 2.05, tint: [0.60, 0.48, 0.40] },
+  // Sun-baked stone. Tints MULTIPLY the sand palette per vertex, and at
+  // 0.60/0.48/0.40 rock gave up half the light falling on it — wrong for
+  // ground in direct sun. Tried as a cause of the globe's "chocolate mud" and
+  // it is NOT one: over a captured noon disc it moved mean luma 37.1 -> 38.5.
+  // Kept on merit; inspectLights.ts's header lists what that has ruled out.
+  rock: { relief: 2.05, tint: [0.88, 0.76, 0.62] },
   // Salt pans left by seas that dried before the Fremen arrived. Flat, pale,
   // and slightly cool against all that orange.
   pan: { relief: 0.16, tint: [1.16, 1.09, 0.88] },
