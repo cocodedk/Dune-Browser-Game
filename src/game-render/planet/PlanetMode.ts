@@ -50,12 +50,10 @@ export function createPlanetMode(
   onDescend?: (centre: { lat: number; lon: number }) => void,
 ): SceneMode {
   const scene = new Scene()
-  // Left unset, this shows the renderer's own clear colour ('#1a1208',
-  // core/Renderer.ts — a "no mode loaded yet" placeholder) through every gap
-  // the sparse starfield leaves, so "space" read as the same warm khaki as
-  // unlit dune. Set explicitly, and darker than that placeholder since the
-  // composer's tone-mapping sits between this value and the screen and was
-  // reported to lift it — unconfirmed against a render, a deliberate undershoot.
+  // Left unset this shows the renderer's clear colour ('#1a1208', a "no mode
+  // yet" placeholder) through every gap the starfield leaves, so space read as
+  // the same warm khaki as unlit dune. Undershot deliberately: the composer's
+  // tone mapping sits between this and the screen.
   scene.background = new Color('#040306')
 
   const sand = createSandMaterial({
@@ -67,6 +65,10 @@ export function createPlanetMode(
     // own UV space instead and reads too coarse. Recomputed for the same
     // ~24-unit wavelength against this sphere's ~6283-unit circumference.
     mapRepeat: 260,
+    // A sphere's up is radial; see uRadialUp in sandShader.glsl.ts. Without it
+    // the equatorial belt classifies as vertical rock face and paints itself
+    // dark — the "chocolate mud, not apricot desert" of the art-director review.
+    radialUp: true,
   })
   // Sietches are caves cut into rock, never open sand — the rock goes where
   // they are, a couple of places at a lower line than a mountain.
@@ -137,10 +139,8 @@ export function createPlanetMode(
     lighting.applyPalette(palette, RADIUS * 3)
     placeSun(palette.sunElevation)
 
-    // Base hues moved, not the blend fraction: the old shadow anchor
-    // ('#6e3113') only lerped 0.18 toward ambient, so it stayed brown
-    // regardless of hour. New anchor is already blue-violet; crest lifted
-    // off '#dcab5c' (chocolate at sun intensity 1.9) toward pale apricot.
+    // Base hues moved, not the blend fraction: the old '#6e3113' anchor lerped
+    // only 0.18 toward ambient and stayed brown at every hour.
     const shadow = new Color('#5a3550').lerp(rgb(palette.ambient), 0.18)
     const crest = new Color('#f2cf92').lerp(rgb(palette.sun), 0.10)
     sand.setPalette(shadow, crest, shadow.clone().multiplyScalar(0.62))

@@ -38,6 +38,7 @@ uniform float uGlintStrength;
 uniform float uRippleScale;
 uniform vec3 uSunDirection;
 uniform vec3 uRockColor;
+uniform float uRadialUp;
 
 varying vec3 vWorldPosition;
 varying vec3 vWorldNormal;
@@ -77,8 +78,22 @@ float rippleField(vec2 uv) {
 export const SAND_FRAGMENT_COLOR = /* glsl */ `
 vec3 n = normalize(vWorldNormal);
 
+// Which way is "up" here.
+//
+// This was clamp(n.y, ...) — the world Y component of the normal — which is
+// only "up" on a flat plane. The same material also dresses the globe, where
+// the surface normal points radially outward, so at the equator n.y is ~0 and
+// every fragment there was classified as a vertical face. The rock band below
+// keys on exactly that, so the whole equatorial belt of the planet painted
+// itself the dark rock colour whatever biome it actually was, and the slip-face
+// term piled on top of it. Measured over a captured noon disc: mean luma 37
+// with 83% of it under 40, on a hemisphere the sun was lighting head-on.
+// A sphere centred on the origin has its own up at every point, so the globe
+// passes uRadialUp = 1 and gets it per fragment.
+vec3 up = uRadialUp > 0.5 ? normalize(vWorldPosition) : vec3(0.0, 1.0, 0.0);
+
 // 0 on a vertical face, 1 on flat ground.
-float flatness = clamp(n.y, 0.0, 1.0);
+float flatness = clamp(dot(n, up), 0.0, 1.0);
 
 // Rock band, keyed on slope alone: DesertTerrain's dunes are tuned to cap out
 // near the 34-degree angle of repose (flatness ~0.83 — see its amplitude

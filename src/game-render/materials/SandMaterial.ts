@@ -53,6 +53,12 @@ export interface SandMaterialOptions {
   rockColor?: string
   /** Fog's exp(-worldY / scale) falloff (Finding 1, skyMath.ts's heightFogFactor). */
   fogHeightScale?: number
+  /**
+   * Up is radially outward, not world +Y. The globe must set this: slope-keyed
+   * terms ask how far a normal tilts from up, and on a sphere world +Y is up
+   * only at the pole, so the equator reads as cliff and paints itself rock.
+   */
+  radialUp?: boolean
 }
 
 export interface SandMaterial {
@@ -79,6 +85,7 @@ const DEFAULTS: Required<SandMaterialOptions> = {
   normalStrength: 2.2,
   rockColor: '#3d1a12',
   fogHeightScale: STRATEGIC_TERRAIN_AMPLITUDE,
+  radialUp: false,
 }
 
 export function createSandMaterial(options: SandMaterialOptions = {}): SandMaterial {
@@ -97,6 +104,7 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
     uSunDirection: { value: new Vector3(0.4, 0.6, 0.7).normalize() },
     uRockColor: { value: new Color(opts.rockColor) },
     uFogHeightScale: { value: opts.fogHeightScale },
+    uRadialUp: { value: opts.radialUp ? 1 : 0 },
   }
 
   const material = new MeshStandardMaterial({
@@ -128,15 +136,11 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
     : null
   if (maps) {
     material.normalMap = maps.normalMap
-    // Green inverted on purpose. The bake computes its height gradient in
-    // canvas space, which is y-down, but CanvasTexture leaves flipY at its
-    // default true and v-mirrors the image on upload — so the G channel that
-    // reaches the shader encodes exactly the negation of the OpenGL-convention
-    // normal for the field actually being sampled. Left at (1, 1) the ripples
-    // light inverted: crests read as troughs, and the shading disagrees with
-    // the windward/slip-face term in the sand shader, which reads the same
-    // wind direction the bake was given. Flipping here rather than in the bake
-    // keeps sandTextures.ts at its 200-line cap.
+    // Green inverted on purpose: the bake works in canvas space (y-down) while
+    // CanvasTexture leaves flipY true and v-mirrors on upload, so G arrives as
+    // the exact negation of the OpenGL convention. At (1, 1) the ripples light
+    // inverted — crests read as troughs. Flipped here, not in the bake, which
+    // is already at its line cap.
     material.normalScale = new Vector2(1, -1)
     material.roughnessMap = maps.ormMap
     material.aoMap = maps.ormMap
@@ -174,7 +178,7 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
 
   // Forces a recompile if the material is reused across quality changes.
   material.customProgramCacheKey = () =>
-    `sand-${opts.glintStrength}-${opts.vertexColors}-${!!maps}`
+    `sand-${opts.glintStrength}-${opts.vertexColors}-${!!maps}-${opts.radialUp}`
 
   return {
     material,

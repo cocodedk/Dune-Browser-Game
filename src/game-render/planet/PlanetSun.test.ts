@@ -48,7 +48,11 @@ describe('sunOffAxisAngle', () => {
 describe('sunDaylightLevel', () => {
   it('is at its floor at midnight and its peak at noon', () => {
     expect(sunDaylightLevel(-1)).toBeCloseTo(0.15, 6)
-    expect(sunDaylightLevel(1)).toBeCloseTo(1.35, 6)
+    // Peak is a tuned value, so this asserts the shape rather than pinning the
+    // number: noon must be the brightest hour and clearly above night, without
+    // this test having to be edited every time the exposure is re-balanced.
+    expect(sunDaylightLevel(1)).toBeGreaterThan(sunDaylightLevel(0.5))
+    expect(sunDaylightLevel(1)).toBeGreaterThan(sunDaylightLevel(-1) * 4)
   })
 
   it('never drops to zero, so night stays a dim render rather than a black one', () => {

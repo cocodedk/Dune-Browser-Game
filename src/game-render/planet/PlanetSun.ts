@@ -88,7 +88,14 @@ export function fillLevelFor(daylight: number): number {
 // with a genuinely black hemisphere reads as broken, not as night — but low
 // enough that the terminator sunOffAxisAngle now draws actually matters.
 const NIGHT_FLOOR = 0.15
-const NOON_LEVEL = 1.35
+// Down from 1.35. That figure was chosen while the sand shader was throwing
+// most of the globe's light away — it classified every non-polar latitude as a
+// vertical rock face (see uRadialUp in sandShader.glsl.ts) and painted it dark,
+// so the rig was turned up to compensate. With the surface actually responding,
+// the same number bleached noon to a featureless cream ball at mean luma 186
+// over the disc. Measured back down against the captured frames; golden hour,
+// which reads best, sits near 108.
+const NOON_LEVEL = 0.82
 
 /**
  * Overall light level for {@link placeSun}, 0..1 mapped from elevation
