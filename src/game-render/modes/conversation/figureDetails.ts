@@ -112,7 +112,8 @@ export function drawMark(
   ctx.fill()
 }
 
-function withAlpha(hex: string, a: number): string {
+/** Hex colour to rgba() at a given alpha — shared with CharacterCard's rim pass. */
+export function withAlpha(hex: string, a: number): string {
   const [r, g, b] = parseHex(hex)
   return `rgba(${r}, ${g}, ${b}, ${a})`
 }

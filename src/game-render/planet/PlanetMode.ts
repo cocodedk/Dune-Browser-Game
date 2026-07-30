@@ -23,13 +23,10 @@ import { createOrbitControl } from './OrbitControl'
 import { createMoons } from './Moons'
 import { createNamedStars } from './NamedStars'
 import { createPlanetEcology } from './PlanetEcology'
+import { createPlanetFurniture } from './PlanetFurniture'
 import { massifsForSettlements } from './massifs'
 import { canvasToLatLon } from './sphere'
 import { SOURCE_WIDTH, SOURCE_HEIGHT } from '../modes/strategic/markerLayout'
-import { createWormSign } from './WormSign'
-import { createDesertSites } from './DesertSites'
-import { createCrewUnits } from './CrewUnits'
-import { createPlayerBeacon } from './PlayerBeacon'
 import { nearestAnchor } from './pickAnchor'
 import { createSunPlacer } from './PlanetSun'
 
@@ -55,6 +52,13 @@ export function createPlanetMode(
     glintStrength: quality.tier === 'low' ? 0 : 0.06,
     // The globe carries per-vertex biome tints; the flat surface mesh does not.
     vertexColors: true,
+    // mapRepeat's 180 default was tuned against the flat desert's 4400-unit
+    // plane (~24.4 world units per ripple). Left at that default here it
+    // tiles across the sphere's own UV space instead, which has nothing to do
+    // with the globe's 1000-unit radius — the ripples came out too coarse to
+    // read at 700px on screen. Recomputed for the same ~24-unit wavelength
+    // against this sphere's ~6283-unit equatorial circumference.
+    mapRepeat: 260,
   })
   // Sietches are caves cut into rock, never open sand — so the rock goes
   // where they are. A couple of places get a lower line than a mountain.
@@ -69,7 +73,12 @@ export function createPlanetMode(
       radius: RADIUS,
       seed: 20250727,
       relief: RELIEF,
-      segments: quality.tier === 'low' ? 96 : 192,
+      // The mesh is built once, so segment count is a one-time cost, not a
+      // per-frame one — the previous 192 (~74k triangles) had room to spare,
+      // and the enriched height field's mountain chains and fine grain need
+      // vertices at their own frequency to actually show up rather than being
+      // filtered out by an under-sampled mesh.
+      segments: quality.tier === 'low' ? 128 : 256,
       massifs,
     },
     sand.material as Material,
@@ -106,18 +115,13 @@ export function createPlanetMode(
 
   const ecology = createPlanetEcology(planet, world)
 
-  const wormSign = createWormSign(world, RADIUS, d => planet.radiusAt(d))
-  scene.add(wormSign.group)
-
-  const sites = createDesertSites(world.desertSites, RADIUS, d => planet.radiusAt(d))
-  scene.add(sites.group)
-
-  const crews = createCrewUnits(RADIUS, d => planet.radiusAt(d))
-  scene.add(crews.group)
-
-  const beacon = createPlayerBeacon(RADIUS, d => planet.radiusAt(d))
-  scene.add(beacon.group)
-  let elapsedMs = 0
+  // Shares markers.anchors rather than re-projecting village positions: that
+  // projection has a hand-written inverse elsewhere (sietch-aiming) and a
+  // second copy here would be a second place for the two to drift apart.
+  const furniture = createPlanetFurniture(
+    world, RADIUS, d => planet.radiusAt(d), markers.anchors, planet.mesh.geometry, DAY_SECONDS,
+  )
+  scene.add(furniture.group)
 
   const placeSun = createSunPlacer(lighting, camera, RADIUS)
 
@@ -164,11 +168,9 @@ export function createPlanetMode(
       markers.update(state, camera, orbit.zoom)
       moons.update(state.time)
       ecology.update(state)
-      wormSign.update(state, DAY_SECONDS)
-      sites.update(state.desertSites, orbit.zoom)
-      elapsedMs += deltaMs
-      crews.update(state, elapsedMs)
-      beacon.update(state, camera, elapsedMs)
+      // After applyTime: furniture's night lights read the sun position
+      // placeSun just set for this frame.
+      furniture.update(state, camera, orbit.zoom, deltaMs, lighting.sun.position)
     },
     dispose(): void {
       orbit.dispose()
@@ -176,19 +178,17 @@ export function createPlanetMode(
       scene.remove(stars.points)
       scene.remove(air.mesh)
       scene.remove(markers.group)
+      scene.remove(furniture.group)
       scene.remove(moons.group)
       scene.remove(worlds.group)
-      scene.remove(wormSign.group)
-      scene.remove(sites.group)
-      scene.remove(crews.group)
-      scene.remove(beacon.group)
       lighting.dispose()
+      // Before planet.dispose(): furniture's night lights never dispose the
+      // geometry they borrow from the planet, but tearing down while the
+      // mesh sharing it still exists keeps the ordering obviously safe
+      // rather than merely accidentally so.
+      furniture.dispose()
       moons.dispose()
       worlds.dispose()
-      wormSign.dispose()
-      sites.dispose()
-      crews.dispose()
-      beacon.dispose()
       planet.dispose()
       stars.dispose()
       air.dispose()

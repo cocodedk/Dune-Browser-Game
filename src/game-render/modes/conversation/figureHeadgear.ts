@@ -10,6 +10,7 @@
 import type { PortraitDef } from '../../../data/portraits'
 import { HAIR_TONES } from '../../../data/portraits'
 import { mix } from './figureDetails'
+import { drawHelm } from './figureHelm'
 
 export function drawHeadgear(
   ctx: CanvasRenderingContext2D,
@@ -66,41 +67,6 @@ function drawHood(
   )
   ctx.closePath()
   ctx.fill()
-}
-
-/** Rigid, cool-toned, straight-edged: reads as metal, never as cloth. */
-function drawHelm(
-  ctx: CanvasRenderingContext2D, def: PortraitDef,
-  headX: number, headY: number, headR: number,
-): void {
-  ctx.fillStyle = mix(def.figure, '#8a96a0', 0.35)
-  ctx.beginPath()
-  ctx.moveTo(headX - headR * 0.98, headY - headR * 0.05)
-  ctx.quadraticCurveTo(headX - headR * 1.05, headY - headR * 1.15, headX, headY - headR * 1.22)
-  ctx.quadraticCurveTo(headX + headR * 1.05, headY - headR * 1.15, headX + headR * 0.98, headY - headR * 0.05)
-  ctx.lineTo(headX + headR * 0.82, headY - headR * 0.4)
-  ctx.lineTo(headX - headR * 0.82, headY - headR * 0.4)
-  ctx.closePath()
-  ctx.fill()
-
-  // Crest ridge — the one straight highlight in a cast otherwise built from curves.
-  ctx.strokeStyle = mix(def.figure, '#c8d0d8', 0.55)
-  ctx.lineWidth = Math.max(2, headR * 0.06)
-  ctx.beginPath()
-  ctx.moveTo(headX, headY - headR * 1.2)
-  ctx.lineTo(headX, headY - headR * 0.42)
-  ctx.stroke()
-
-  // Cheek guards: rigid flares, not draped cloth.
-  ctx.fillStyle = def.figure
-  for (const side of [-1, 1]) {
-    ctx.beginPath()
-    ctx.moveTo(headX + side * headR * 0.9, headY - headR * 0.35)
-    ctx.lineTo(headX + side * headR * 1.02, headY + headR * 0.35)
-    ctx.lineTo(headX + side * headR * 0.68, headY + headR * 0.28)
-    ctx.closePath()
-    ctx.fill()
-  }
 }
 
 /** A small close cap over the crown; hair shows at the temples below it. */

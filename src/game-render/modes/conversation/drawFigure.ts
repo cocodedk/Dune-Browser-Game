@@ -16,6 +16,7 @@ import type { PortraitDef } from '../../../data/portraits'
 import { drawEyes, drawBeard, drawDress, drawMark, mix } from './figureDetails'
 import { drawHead } from './figureHead'
 import { drawHeadgear } from './figureHeadgear'
+import { computeHeadPlacement } from './figureFaceLayout'
 
 export interface FigureMetrics {
   width: number
@@ -38,14 +39,7 @@ export function drawFigure(
   def: PortraitDef,
   { width: W, height: H }: FigureMetrics,
 ): FigureLayout {
-  // A closer subject sits lower and larger in the frame.
-  const scale = 0.86 + def.framing * 0.34
-  const headR = 46 * scale * def.build
-  const headX = W / 2
-  const headY = H * 0.42 - def.framing * 22
-
-  const shoulderY = headY + headR * 2.25
-  const shoulderHalf = headR * 2.5 * def.build
+  const { headX, headY, headR, shoulderY, shoulderHalf } = computeHeadPlacement(def, W, H)
 
   ctx.save()
 

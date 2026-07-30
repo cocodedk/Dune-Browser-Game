@@ -14,6 +14,8 @@ import {
 import { portraitFor } from '../../../data/portraits'
 import type { PortraitDef } from '../../../data/portraits'
 import { drawFigure } from './drawFigure'
+import { headSilhouette } from './figureSilhouette'
+import { withAlpha } from './figureDetails'
 
 export interface CharacterCard {
   group: Group
@@ -77,18 +79,41 @@ function drawPortrait(name: string, role: string, def: PortraitDef): CanvasTextu
   })
 
   // Rim light from the upper left, matching the scene's sun direction. Its
-  // colour is the character's single identifying accent, and it traces the
-  // hood rather than the skull — the hood is the silhouette you actually see.
-  ctx.strokeStyle = def.rim
-  ctx.lineWidth = 2.5 + def.keyHardness * 3.5
-  ctx.globalAlpha = 0.92
-  ctx.beginPath()
-  ctx.ellipse(
-    headX, headY - headR * 0.06, headR * 1.16, headR * 1.28, 0,
-    Math.PI * 0.72, Math.PI * 1.58,
+  // colour is the character's single identifying accent. It used to stroke
+  // a fixed hood-shaped ellipse regardless of headgear, so a bare head or a
+  // helm got a ring floating outside its own silhouette; headSilhouette
+  // gives each headgear its actual outer edge, and the stroke's own gradient
+  // (bright on the lit corner, transparent on the shadow side) is what makes
+  // it read as light catching that edge rather than a drawn hoop.
+  const { rx, ry, offsetY } = headSilhouette(def, headR)
+  const rimCx = headX
+  const rimCy = headY + offsetY
+  const rimPath = new Path2D()
+  rimPath.ellipse(rimCx, rimCy, rx, ry, 0, 0, Math.PI * 2)
+
+  const rimGrad = ctx.createLinearGradient(
+    rimCx - rx * 1.1, rimCy - ry * 1.1, rimCx + rx * 0.6, rimCy + ry * 0.6,
   )
-  ctx.stroke()
-  ctx.globalAlpha = 1
+  rimGrad.addColorStop(0, withAlpha(def.rim, 0.95))
+  rimGrad.addColorStop(0.5, withAlpha(def.rim, 0.35))
+  rimGrad.addColorStop(1, withAlpha(def.rim, 0))
+  ctx.strokeStyle = rimGrad
+  ctx.lineWidth = 2.5 + def.keyHardness * 3.5
+  ctx.stroke(rimPath)
+
+  // A faint wash of the same light on the surface itself, clipped to the
+  // silhouette so it reads as light landing on a head, not a stroke sitting
+  // beside one.
+  ctx.save()
+  ctx.clip(rimPath)
+  const wash = ctx.createRadialGradient(
+    rimCx - rx * 0.5, rimCy - ry * 0.5, 0, rimCx - rx * 0.5, rimCy - ry * 0.5, rx * 1.4,
+  )
+  wash.addColorStop(0, withAlpha(def.rim, 0.22))
+  wash.addColorStop(1, withAlpha(def.rim, 0))
+  ctx.fillStyle = wash
+  ctx.fillRect(rimCx - rx * 1.5, rimCy - ry * 1.5, rx * 3, ry * 3)
+  ctx.restore()
 
   // The robe reaches the bottom edge, so the name needs its own ground or it
   // competes with the folds behind it. Sits above the card's lower edge, not on it: the dialogue box overlaps

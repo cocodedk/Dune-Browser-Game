@@ -94,6 +94,40 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
 }
 
 /**
+ * What the deep-night side of Arrakis reads as, before any lit rock or
+ * settlement lights are drawn over it.
+ *
+ * The night hemisphere was reading as the daytime sand palette simply dimmed
+ * by ambient light, which comes out as a muddy dark brown — an unlit render,
+ * not a night one. A real night sky biases blue (the residual light left
+ * after direct sun is gone scatters more at the blue end, and moonlight is
+ * already cool), so this pushes blue up and pulls red down rather than
+ * darkening every channel by the same amount.
+ */
+const NIGHT_TINT: readonly [number, number, number] = [0.16, 0.20, 0.62]
+
+/**
+ * Blend a tint toward the night colour above.
+ *
+ * @param amount 0 (full day, tint unchanged) .. 1 (full night).
+ *
+ * Same shape as {@link greened}: a straight lerp per channel, because the
+ * caller already owns the falloff curve (the night wash's own terminator
+ * band) and a second easing here would just fight it.
+ */
+export function nightTint(
+  tint: readonly [number, number, number],
+  amount: number,
+): [number, number, number] {
+  const t = Math.max(0, Math.min(1, amount))
+  return [
+    tint[0] + (NIGHT_TINT[0] - tint[0]) * t,
+    tint[1] + (NIGHT_TINT[1] - tint[1]) * t,
+    tint[2] + (NIGHT_TINT[2] - tint[2]) * t,
+  ]
+}
+
+/**
  * Blend the biomes at a point.
  *
  * @param latitudeDeg  -90 at the south pole, +90 at the north.

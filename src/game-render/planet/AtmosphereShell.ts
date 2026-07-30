@@ -48,18 +48,30 @@ varying vec3 vWorldNormal;
 void main() {
   // Back faces, so the view normal points away; the grazing angle is where
   // its z component approaches zero.
-  float grazing = 1.0 - abs(vNormalView.z);
+  float grazing = clamp(1.0 - abs(vNormalView.z), 0.0, 1.0);
 
-  // Raised to a high power so the band hugs the silhouette instead of
-  // fogging the whole disc into milk.
-  float rim = pow(clamp(grazing, 0.0, 1.0), 5.0);
+  // Two bands, not one: a tight, high-power core that reads as the crisp edge
+  // of the air, plus a softer, wider skirt underneath it. A single pow(5)
+  // term is a hairline with nothing behind it — real air has depth, and the
+  // skirt is what sells "the sightline is passing through several hundred
+  // kilometres of atmosphere" rather than "there is a bright line here".
+  float core = pow(grazing, 5.0);
+  float skirt = pow(grazing, 2.2) * 0.35;
+  float rim = core + skirt;
 
   // Forward scattering: the rim on the sunlit side is far brighter than the
   // one on the night side, which is what stops the halo reading as a decal.
   float lit = dot(normalize(vWorldNormal), normalize(uSun));
   float day = smoothstep(-0.55, 0.65, lit);
 
-  float strength = rim * uIntensity * (0.18 + 0.82 * day);
+  // The day-side limb gets an extra hot edge on top of the base rim — real
+  // scattering peaks exactly where the sightline first grazes lit air, which
+  // is the cue that light is passing *through* something instead of the
+  // planet just having a bright outline. Built from the tight core only, so
+  // it stays a thin arc rather than washing out the whole terminator.
+  float hotEdge = core * smoothstep(0.15, 0.85, day) * 0.6;
+
+  float strength = (rim * (0.18 + 0.82 * day) + hotEdge) * uIntensity;
   gl_FragColor = vec4(uRim * strength, strength);
 }
 `

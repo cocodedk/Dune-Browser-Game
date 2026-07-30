@@ -46,16 +46,46 @@ function timeAtPhase(phase) {
   return ((t % DAY_SECONDS) + DAY_SECONDS) % DAY_SECONDS
 }
 
+/** Engine time at which the sun stands at a given elevation, rising or setting. */
+function timeAtElevation(elevation, rising) {
+  // elevation = -cos(phase * 2PI), so phase = arccos(-elevation) / 2PI on the
+  // rising half and its mirror on the setting half.
+  const phase = Math.acos(-elevation) / (Math.PI * 2)
+  return timeAtPhase(rising ? phase : 1 - phase)
+}
+
+// The golden entries are the point of this list, not decoration. Relief is cast
+// by the angle between the sun and the ground, so it peaks when the sun is low
+// but genuinely above the horizon — measured here, +15 degrees gave 3.14 luma of
+// dune-scale contrast against 2.06 at noon and 1.05 at a sun exactly on the
+// horizon. The original four hours sampled 0, 71, 0 and below-horizon, missing
+// the entire 10-35 degree band where the shadow map earns its cost, so the
+// best-looking light in the game was never being looked at.
 const HOURS = [
-  { name: 'dawn', at: timeAtPhase(0.25), elevation: 0 },      // sun on the horizon, rising
-  { name: 'noon', at: timeAtPhase(0.5), elevation: +1 },      // straight overhead
-  { name: 'dusk', at: timeAtPhase(0.75), elevation: 0 },      // sun on the horizon, falling
-  { name: 'midnight', at: timeAtPhase(0), elevation: -1 },    // fully dark
+  { name: 'dawn', at: timeAtPhase(0.25), elevation: 0 },        // on the horizon, rising
+  { name: 'golden-am', at: timeAtElevation(0.26, true), elevation: +0.26 },  // ~15 deg up
+  { name: 'noon', at: timeAtPhase(0.5), elevation: +1 },        // straight overhead
+  { name: 'golden-pm', at: timeAtElevation(0.26, false), elevation: +0.26 }, // ~15 deg, setting
+  { name: 'dusk', at: timeAtPhase(0.75), elevation: 0 },        // on the horizon, falling
+  { name: 'midnight', at: timeAtPhase(0), elevation: -1 },      // fully dark
 ]
 
 const manifest = []
 
-async function shoot(page, name, note) {
+/**
+ * @param at Engine time to re-pin immediately before the shutter, if any.
+ *
+ * Re-pinning matters more than it looks. The simulation clock keeps running
+ * while the renderer settles, at one time unit per second against a 60-unit
+ * day, so several seconds of settling walks the sun a visible distance along
+ * its arc. Setting "dusk" (t=23.4) and then waiting put the capture at t=26,
+ * which is a sun 15 degrees BELOW the horizon, while "dawn" (t=53.4) drifted
+ * up to t=56 and a sun 15 degrees above it. Two hours that are meant to be
+ * symmetric came out on opposite sides of sunset, and the resulting 3x gap in
+ * measured relief read exactly like a dusk rendering bug.
+ */
+async function shoot(page, name, note, at) {
+  if (at !== undefined) await page.evaluate(t => window.__DUNE__.setTime?.(t), at)
   const cost = await M.renderCost(page)
   const file = `${name}.png`
   await page.screenshot({ path: join(OUT, file), animations: 'disabled' })
@@ -92,7 +122,7 @@ async function main() {
   for (const h of HOURS) {
     await M.setTime(page, h.at)
     await M.settle(page, 10)
-    await shoot(page, `strategic-${h.name}`, `globe at ${h.name} (t=${h.at.toFixed(1)}, sun ${h.elevation})`)
+    await shoot(page, `strategic-${h.name}`, `globe at ${h.name} (t=${h.at.toFixed(1)}, sun ${h.elevation})`, h.at)
   }
 
   console.log('\nsurface (descended):')
@@ -101,7 +131,7 @@ async function main() {
     for (const h of HOURS) {
       await M.setTime(page, h.at)
       await M.settle(page, 10)
-      await shoot(page, `surface-${h.name}`, `dune field at ${h.name} (t=${h.at.toFixed(1)}, sun ${h.elevation})`)
+      await shoot(page, `surface-${h.name}`, `dune field at ${h.name} (t=${h.at.toFixed(1)}, sun ${h.elevation})`, h.at)
     }
   } else {
     console.log(`  SKIPPED — descent landed in "${surfaceMode}", not surface`)
@@ -114,7 +144,7 @@ async function main() {
     const mode = await M.talkAt(page, village)
     if (mode === 'conversation' || mode === 'location') {
       await M.setTime(page, 30)
-      await shoot(page, `conversation-${who}`, `${who} at ${village} (${mode})`)
+      await shoot(page, `conversation-${who}`, `${who} at ${village} (${mode})`, 30)
     } else {
       console.log(`  SKIPPED ${who} — landed in "${mode}"`)
       manifest.push({ file: null, mode, note: `talkAt(${village}) did not open a conversation` })

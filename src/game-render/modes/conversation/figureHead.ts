@@ -1,41 +1,48 @@
 // src/game-render/modes/conversation/figureHead.ts
-// The face itself: skin tone, brow shadow, and the age lines that keep a
-// Reverend Mother from sharing a face with a girl of seventeen.
+// The face itself: skin tone, then structure — brow, nose, cheekbone, mouth,
+// chin and jaw — then the age lines that keep a Reverend Mother from sharing
+// a face with a girl of seventeen.
 //
 // Split from drawFigure because the head is a decision about who someone is
 // (skin, age, jaw), while drawFigure only cares where things sit on the card.
+// The feature geometry itself lives in figureFaceLayout.ts (pure, tested);
+// the shading passes live in figureFaceShade.ts. This file just calls them
+// in the order light would actually build up on a face: base tone, then the
+// one diagonal wash, then each feature back to front.
 
 import type { PortraitDef } from '../../../data/portraits'
 import { SKIN_TONES } from '../../../data/portraits'
 import { mix } from './figureDetails'
+import { computeFaceLayout } from './figureFaceLayout'
+import {
+  paintKeyShade, paintBrowRidge, paintNose, paintCheekbones, paintMouth, paintChinAndJaw,
+} from './figureFaceShade'
 
-/**
- * Face width relative to the old fixed 0.74 * headR. jaw runs roughly
- * 0.75 (ascetic) to 1.3 (heavy); dampened so the ellipse warps rather than
- * grotesques — a Baron and a Chani should still both read as heads.
- */
-function jawWidth(headR: number, jaw: number): number {
-  return headR * 0.74 * (0.7 + 0.3 * jaw)
-}
-
-/** Fill the face and lay the brow shadow the hood/scarf/cap relies on. */
+/** Fill the face and build its structure from light, not outlines. */
 export function drawHead(
   ctx: CanvasRenderingContext2D,
   def: PortraitDef,
   headX: number, headY: number, headR: number,
 ): void {
-  const faceShade = mix(def.figure, SKIN_TONES[def.skinTone], 0.55)
+  const layout = computeFaceLayout(def, headR)
+  const faceHalfH = headR * 0.92
+
+  // Mixed to 0.68 rather than the previous 0.55: at 0.55 the face read as
+  // close to a black silhouette and barely separated from the hood behind it.
+  // Chosen by eye from the palette arithmetic, not from a rendered frame —
+  // verify in scripts/shoot.mjs before trusting the exact value.
+  const faceShade = mix(def.figure, SKIN_TONES[def.skinTone], 0.68)
   ctx.fillStyle = faceShade
   ctx.beginPath()
-  ctx.ellipse(headX, headY, jawWidth(headR, def.jaw), headR * 0.92, 0, 0, Math.PI * 2)
+  ctx.ellipse(headX, headY, layout.jawHalfW, faceHalfH, 0, 0, Math.PI * 2)
   ctx.fill()
 
-  // Brow shadow — the hood (or the eye socket itself, bare-headed) keeps the
-  // upper face dark, which is the whole look.
-  ctx.fillStyle = 'rgba(0,0,0,0.42)'
-  ctx.beginPath()
-  ctx.ellipse(headX, headY - headR * 0.34, headR * 0.74, headR * 0.5, 0, 0, Math.PI * 2)
-  ctx.fill()
+  paintKeyShade(ctx, headX, headY, layout.jawHalfW, faceHalfH, def.keyHardness)
+  paintBrowRidge(ctx, headX, headY, headR, layout)
+  paintNose(ctx, headX, headY, headR, layout)
+  paintCheekbones(ctx, headX, headY, headR, layout)
+  paintMouth(ctx, headX, headY, headR, layout)
+  paintChinAndJaw(ctx, headX, headY, headR, layout.jawHalfW, layout)
 
   drawAgeLines(ctx, def, headX, headY, headR)
 }
