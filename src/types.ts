@@ -137,17 +137,6 @@ export interface AIDecision {
   reason: string;
 }
 
-export interface LLMMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-export interface AIConfig {
-  baseUrl: string;
-  model: string;
-  temperature: number;
-}
-
 // Faction simulation types live in game-engine/faction/types.ts (200-line cap).
 export type {
   FactionType, Resources, StrategyProfile, Relation,

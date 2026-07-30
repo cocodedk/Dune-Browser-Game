@@ -1,7 +1,6 @@
 import { world } from './GameState';
 import { pushEvent } from './EventSystem';
 import { harkonnenAttack, harkonnenBribe } from './VillageSystem';
-import { decideFactionMove } from './LLMClient';
 import type { AIDecision, FactionProfile, Goal } from '../types';
 import { generateGoals } from './faction/goals';
 import { toGoalWorldView } from './faction/adapter';
@@ -9,6 +8,24 @@ import { getDifficultyConfig } from './difficulty';
 
 const DECISION_INTERVAL = 10;
 
+/**
+ * Harkonnen pressure on the player's holdings.
+ *
+ * Synchronous, and deliberately so. This used to ask a local Ollama instance to
+ * play the Harkonnen and fall back to the rule below whenever that failed —
+ * which was always, in any browser without an LLM listening on port 11434. The
+ * request fired every DECISION_INTERVAL, so a deployed build spent the whole
+ * session making a doomed call every ten game-seconds, and would have reached
+ * for whatever Ollama a *player* happened to be running locally. The prompt had
+ * also gone stale: it offered the model three village ids from a map that has
+ * grown to nineteen, so even a reachable model could only ever act on three.
+ *
+ * The rule is what actually shipped, so nothing about how the game plays
+ * changes here. This is also the only thing in the codebase that mechanically
+ * attacks or bribes: updateFactionAI below narrates the other factions but has
+ * no effect on the world, so removing this path would leave the player
+ * unopposed.
+ */
 export function updateAI(): void {
   const timer = world.aiTimers.harkonnen;
   if (!timer) return;
@@ -16,29 +33,14 @@ export function updateAI(): void {
 
   timer.nextDecisionAt = world.time + DECISION_INTERVAL;
 
-  getDecision().then(decision => {
-    if (!decision) return;
-    timer.lastDecision = decision;
-    executeDecision(decision);
-  }).catch(() => {
-    const fallback = fallbackDecision();
-    if (fallback) {
-      timer.lastDecision = fallback;
-      executeDecision(fallback);
-    }
-  });
+  const decision = harkonnenDecision();
+  if (!decision) return;
+  timer.lastDecision = decision;
+  executeDecision(decision);
 }
 
-async function getDecision(): Promise<AIDecision | null> {
-  try {
-    return await decideFactionMove(world);
-  } catch {
-    return fallbackDecision();
-  }
-}
-
-function fallbackDecision(): AIDecision | null {
-  // Rule-based: attack the player's weakest village, or ignore if no player villages
+/** Attack the player's weakest holding; stand down if they hold nothing. */
+function harkonnenDecision(): AIDecision | null {
   const playerVillages = world.villages.filter(v => v.owner === 'player');
   if (playerVillages.length === 0) return null;
 
@@ -68,9 +70,9 @@ function executeDecision(decision: AIDecision): void {
   }
 }
 
-// Expose for manual testing
+/** Force a Harkonnen move now, bypassing the interval. Manual testing only. */
 export function triggerFallbackDecision(): void {
-  const d = fallbackDecision();
+  const d = harkonnenDecision();
   if (d) executeDecision(d);
 }
 

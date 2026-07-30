@@ -16,10 +16,6 @@ vi.mock('./VillageSystem', () => ({
   harkonnenBribe: vi.fn(),
 }));
 
-vi.mock('./LLMClient', () => ({
-  decideFactionMove: vi.fn().mockResolvedValue(null),
-}));
-
 vi.mock('./faction/goals', () => ({
   generateGoals: vi.fn().mockReturnValue([]),
 }));
