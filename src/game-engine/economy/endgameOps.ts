@@ -17,11 +17,13 @@ import { carriedKinds } from './carried'
  * repeating a ritual that silently does nothing.
  */
 export function attemptRitual(): void {
+  const ritualsUsed = typeof world.flags['ritual.count'] === 'number'
+    ? (world.flags['ritual.count'] as number) : 0
+
   const check = checkGrant({
     level: world.player.prescience,
     charisma: world.charisma,
-    ritualsUsed: typeof world.flags['ritual.count'] === 'number'
-      ? (world.flags['ritual.count'] as number) : 0,
+    ritualsUsed,
     fortsDestroyed: typeof world.flags['forts.destroyed'] === 'number'
       ? (world.flags['forts.destroyed'] as number) : 0,
     act: world.act,
@@ -34,6 +36,10 @@ export function attemptRitual(): void {
 
   world.player.prescience = check.level
   world.flags['prescience'] = check.level
+  // Only a successful grant spends one of the three uses — a refusal already
+  // costs the player spice via the dialogue effect, and should not also
+  // burn down the cap that sova.ritual_available checks.
+  world.flags['ritual.count'] = ritualsUsed + 1
   pushEvent('poc_goal_achieved', levelDescription(check.level))
 }
 

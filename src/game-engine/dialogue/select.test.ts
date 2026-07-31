@@ -39,6 +39,28 @@ describe('rootNodeForCharacter', () => {
   })
 })
 
+describe('rootNodeForCharacter: sova.ritual_available', () => {
+  // pledged.count was read by this gate and written by nothing, so Ramallo
+  // could only ever open on sova.greeting — the written ritual conversation
+  // was unreachable through this exact function. This is the reachability
+  // check for that fix, at the level a player actually experiences it.
+  it('opens the ritual conversation once a sietch is pledged and uses remain', () => {
+    const root = rootNodeForCharacter('sova', INITIAL_DIALOGUE_STATES, {
+      'pledged.count': 1,
+      'ritual.count': 0,
+    })
+    expect(root).toBe('sova_ritual_root')
+  })
+
+  it('falls back to the greeting when no sietch is pledged yet', () => {
+    const root = rootNodeForCharacter('sova', INITIAL_DIALOGUE_STATES, {
+      'pledged.count': 0,
+      'ritual.count': 0,
+    })
+    expect(root).toBe('sova_greeting_root')
+  })
+})
+
 describe('story roster reachability', () => {
   const byId = new Set(STORY_NODES.map(n => n.id))
 

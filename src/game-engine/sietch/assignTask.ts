@@ -45,3 +45,15 @@ export function pledgeSietch(sietches: SietchState[], villageId: VillageId): Sie
     return { ...s, pledgedToPlayer: true }
   })
 }
+
+/**
+ * Number of sietches currently pledged.
+ *
+ * Callers write this straight into world.flags['pledged.count'] after any
+ * mutation that can change pledge state, rather than incrementing a counter
+ * — a loaded save has to land on the true count, not on how many pledge
+ * calls happened this session.
+ */
+export function pledgedCount(sietches: readonly SietchState[]): number {
+  return sietches.filter(s => s.pledgedToPlayer).length
+}

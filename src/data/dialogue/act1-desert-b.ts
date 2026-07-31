@@ -23,7 +23,7 @@ export const DESERT_NODES_B: DialogueNode[] = [
       'twenty measures and you may not like what it makes of you.',
     choices: [
       { id: 'sova_r1', text: 'Do it.', nextId: 'sova_after',
-        effect: { spiceDelta: -20, influenceDelta: 5 } },
+        effect: { spiceDelta: -20, influenceDelta: 5, ritual: true } },
       { id: 'sova_r2', text: 'Not yet.', nextId: null },
     ],
   },

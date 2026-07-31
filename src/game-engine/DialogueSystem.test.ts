@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { chooseDialogue, startDialogue } from './DialogueSystem';
 import { world, setWorld, createInitialState } from './GameState';
+import { STORY_TREE_ID } from '../data/dialogue';
 import type { FactionProfile, WorldState } from '../types';
 
 function makeFaction(id: FactionProfile['id'], trust = 0, fear = 0): FactionProfile {
@@ -77,5 +78,35 @@ describe('DialogueSystem: reputation dispatch', () => {
 
     const fremenAfter = world.factionProfiles.find(f => f.id === 'fremen')!;
     expect(fremenAfter.relations['player']!.trust).toBe(28);
+  });
+});
+
+describe('DialogueSystem: ritual effect', () => {
+  beforeEach(() => {
+    setWorld(freshState());
+  });
+
+  it('raises player.prescience and sets ritual.count on a successful ritual', () => {
+    // Fresh state is act1 with prescience 0 — checkGrant's Awareness branch
+    // grants unconditionally there, so "Do it." should succeed outright.
+    startDialogue(STORY_TREE_ID, world.villages[0].id, 'sova_ritual_root');
+    chooseDialogue('sova_r1');
+
+    expect(world.player.prescience).toBe(1);
+    expect(world.flags['ritual.count']).toBe(1);
+  });
+
+  it('leaves ritual.count unchanged when a repeat ritual is refused', () => {
+    startDialogue(STORY_TREE_ID, world.villages[0].id, 'sova_ritual_root');
+    chooseDialogue('sova_r1'); // grants Awareness: prescience 0 -> 1
+
+    // Still act1: the next grant would be Farspeech, which checkGrant
+    // refuses with 'wrong-act' until act2+ regardless of charisma. A
+    // refusal must not also spend one of the three ritual uses.
+    startDialogue(STORY_TREE_ID, world.villages[0].id, 'sova_ritual_root');
+    chooseDialogue('sova_r1');
+
+    expect(world.player.prescience).toBe(1);
+    expect(world.flags['ritual.count']).toBe(1);
   });
 });

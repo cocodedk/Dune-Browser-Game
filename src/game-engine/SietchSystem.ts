@@ -5,7 +5,7 @@
 import { world } from './GameState'
 import { CHARISMA_PER_PLEDGE } from './sietch/loyalty'
 import { pushEvent } from './EventSystem'
-import { pledgeSietch, assignTask, canAssignTask } from './sietch/assignTask'
+import { pledgeSietch, pledgedCount, assignTask, canAssignTask } from './sietch/assignTask'
 import type { SietchTask } from './sietch/types'
 import type { VillageId } from '../types'
 
@@ -32,6 +32,10 @@ export function pledgePlayerSietch(villageId: VillageId): void {
   world.charisma += CHARISMA_PER_PLEDGE
 
   world.sietches = pledgeSietch(world.sietches, villageId)
+  // Derived from the list rather than incremented — sova.ritual_available
+  // gates on this flag, and a loaded save must report the true number
+  // pledged, not how many pledge calls happened in this session.
+  world.flags['pledged.count'] = pledgedCount(world.sietches)
   pushEvent(
     'sietch_pledged',
     `The Fremen at ${village.name} pledge their loyalty to you.`,

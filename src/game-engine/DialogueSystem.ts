@@ -8,6 +8,11 @@ import { STORY_NODES, STORY_TREE_ID } from '../data/dialogue';
 import { checkOwnershipTransition } from './VillageSystem';
 import { applyPlayerAction } from './faction/reputation';
 import { toReputationWorld } from './faction/adapter';
+// Imported straight from endgameOps rather than the EconomySystem facade —
+// EconomySystem re-exports dozens of day-runners this module has no use for,
+// and pulling in the whole facade for one function is the kind of import
+// that turns into a cycle the first time EconomySystem needs a dialogue hook.
+import { attemptRitual } from './economy/endgameOps';
 
 /**
  * Runtime tree lookup, local to this module.
@@ -93,5 +98,12 @@ function applyEffect(effect: DialogueEffect, villageId: VillageId): void {
     const repWorld = toReputationWorld(world);
     const updated = applyPlayerAction(effect.reputationAction, repWorld);
     world.factionProfiles = updated.factions;
+  }
+  // attemptRitual re-checks its own gate (act, charisma, forts, uses-left)
+  // and refuses silently-to-the-caller (it pushes its own event) rather than
+  // trusting the choice was only offered when eligible — the same defence
+  // every other engine entry point takes against a stale UI.
+  if (effect.ritual) {
+    attemptRitual();
   }
 }

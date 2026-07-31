@@ -42,5 +42,7 @@ export interface DialogueEffect {
   charismaDelta?: number;
   revealLocation?: VillageId;
   recruitCharacter?: string;
+  /** Attempt the Water of Life ritual — see attemptRitual() in endgameOps.ts. */
+  ritual?: boolean;
 }
 

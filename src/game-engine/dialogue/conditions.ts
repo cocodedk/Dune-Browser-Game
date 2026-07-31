@@ -104,3 +104,25 @@ export function applyFlagEffects(
   }
   return next
 }
+
+/**
+ * Every flag key a condition tree reads, walking and/or/not to arbitrary
+ * depth.
+ *
+ * Exists so a coverage test can ask "does anything ever write this?" for
+ * every gate in the roster, rather than by eye — pledged.count was read here
+ * and written nowhere, and nothing caught it until a player did.
+ */
+export function collectConditionKeys(condition: FlagCondition): string[] {
+  switch (condition.op) {
+    case 'eq':
+    case 'gte':
+    case 'lte':
+      return [condition.key]
+    case 'and':
+    case 'or':
+      return condition.terms.flatMap(collectConditionKeys)
+    case 'not':
+      return collectConditionKeys(condition.term)
+  }
+}
