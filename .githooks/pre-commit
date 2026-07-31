@@ -1,7 +1,13 @@
 #!/bin/sh
 set -eu
 
+# Enforce repository file-size rule before slower checks.
+scripts/check-file-length.sh
+
 # Fast smoke check: lint + type-check + build
 SMOKE_CMD="npm run lint && npx tsc --noEmit && npm run build"
+TEST_CMD="npm test"
 
 eval "$SMOKE_CMD"
+npm run test:unit
+eval "$TEST_CMD"
