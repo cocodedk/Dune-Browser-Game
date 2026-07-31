@@ -95,6 +95,7 @@ const stats = async (dataUrl, rect, floor) =>
         max,
         darkPct: n ? (dark / n) * 100 : 0,
         rgb: n ? [rSum / n, gSum / n, bSum / n] : [0, 0, 0],
+        block2: blockContrast(2),
         block6: blockContrast(6),
         block24: blockContrast(24),
       }
@@ -104,7 +105,7 @@ const stats = async (dataUrl, rect, floor) =>
 
 console.log(
   `${'frame'.padEnd(26)} ${'cover'.padStart(6)} ${'mean'.padStart(7)} ${'max'.padStart(5)} ` +
-  `${'dark%'.padStart(6)} ${'blk6'.padStart(6)} ${'blk24'.padStart(6)}  rgb`,
+  `${'dark%'.padStart(6)} ${'blk2'.padStart(6)} ${'blk6'.padStart(6)} ${'blk24'.padStart(6)}  rgb`,
 )
 for (const f of files) {
   const b64 = (await readFile(f)).toString('base64')
@@ -112,7 +113,8 @@ for (const f of files) {
   console.log(
     `${basename(f).padEnd(26)} ${(s.coverage * 100).toFixed(1).padStart(5)}% ` +
     `${s.mean.toFixed(1).padStart(7)} ${s.max.toFixed(0).padStart(5)} ` +
-    `${s.darkPct.toFixed(1).padStart(6)} ${s.block6.toFixed(2).padStart(6)} ` +
+    `${s.darkPct.toFixed(1).padStart(6)} ${s.block2.toFixed(2).padStart(6)} ` +
+    `${s.block6.toFixed(2).padStart(6)} ` +
     `${s.block24.toFixed(2).padStart(6)}  ` +
     `${s.rgb.map(v => v.toFixed(0).padStart(3)).join(',')}`,
   )

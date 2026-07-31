@@ -78,11 +78,30 @@ export function slopeAt(field: NoiseField, x: number, y: number, z: number): num
 // 0..1 before the altitude term below scales it.
 const ALTITUDE_LOW = 0.3
 const ALTITUDE_HIGH = 1.2
-const ALTITUDE_GAIN = 0.25
+// Up from 0.25, with SLOPE_DARKEN from 0.3, because the old pair barely used
+// the range they were allowed. Sampled over the real field, terrainShade came
+// out at p10 0.733, p50 0.834, p90 0.928 — a span of 0.2 inside a permitted
+// 0.55..1.3, so neither clamp ever bound and the erg painted itself very nearly
+// one flat colour.
+//
+// That matters specifically at noon. Measured on captured frames, fine-scale
+// contrast over the disc runs 10.7% of mean at dusk and 4.1% at golden hour,
+// where raking light does the work — but 1.3% at noon, when the sun sits behind
+// the camera and shading has nothing to cast. A full-phase planet can only read
+// through albedo, which is what this term is, and it was contributing almost
+// none.
+const ALTITUDE_GAIN = 0.5
 // slope p90 measured ~4.1 on the real field; a gain of 1/6 puts p90 at ~0.68
 // and only the rare p99+ spikes (~7.6 and up) reach full steepness.
 const SLOPE_GAIN = 1 / 6
-const SLOPE_DARKEN = 0.3
+const SLOPE_DARKEN = 0.45
+// The slope term only ever subtracts, so widening it darkens the whole planet
+// rather than spreading it: measured, raising the two gains alone moved the
+// median from 0.834 to 0.718 and pushed p10 onto the SHADE_MIN clamp, which
+// throws away variation at the dark end — the opposite of the point. This lift
+// re-centres the distribution on where it already sat, so the extra range is
+// spent on contrast instead of on making Arrakis dimmer.
+const SHADE_LIFT = 0.12
 const SHADE_MIN = 0.55
 const SHADE_MAX = 1.3
 
@@ -100,6 +119,8 @@ export function terrainShade(height: number, slope: number): number {
     0, Math.min(1, (height - ALTITUDE_LOW) / (ALTITUDE_HIGH - ALTITUDE_LOW)),
   )
   const steepness = Math.max(0, Math.min(1, slope * SLOPE_GAIN))
-  const shade = 1 + (altitude - 0.5) * 2 * ALTITUDE_GAIN - steepness * SLOPE_DARKEN
+  const shade = 1 + SHADE_LIFT
+    + (altitude - 0.5) * 2 * ALTITUDE_GAIN
+    - steepness * SLOPE_DARKEN
   return Math.max(SHADE_MIN, Math.min(SHADE_MAX, shade))
 }

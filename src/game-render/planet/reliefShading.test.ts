@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest'
 import { createNoiseField } from '../terrain/noise'
 import { clampedRelief, slopeAt, terrainShade, SILHOUETTE_CAP } from './reliefShading'
+import { surfaceHeight } from './planetField'
 import type { NoiseField } from '../terrain/noise'
 
 describe('clampedRelief', () => {
@@ -84,5 +85,52 @@ describe('terrainShade', () => {
         expect(shade).toBeLessThanOrEqual(1.3)
       }
     }
+  })
+})
+
+describe('terrainShade over the real field', () => {
+  // The properties the constants were actually tuned against. Every other test
+  // here is qualitative — crest brighter than trough, output inside the clamp
+  // band — and all of them pass just as happily on a distribution so narrow the
+  // planet paints one flat colour, which is the state this replaced.
+  //
+  // Sampled, terrainShade previously ran p10 0.733 / p50 0.834 / p90 0.928: a
+  // span of 0.195 inside a permitted 0.55..1.3, so neither clamp ever bound.
+  // On the rendered disc that showed as fine-scale contrast of 1.3% of mean at
+  // noon, when the sun sits behind the camera and only albedo can carry the
+  // picture.
+  const shades: number[] = (() => {
+    const field = createNoiseField(20250727)
+    const out: number[] = []
+    for (let iy = 0; iy < 40; iy++) {
+      for (let ix = 0; ix < 80; ix++) {
+        const lat = ((iy + 0.5) / 40) * Math.PI - Math.PI / 2
+        const lon = ((ix + 0.5) / 80) * Math.PI * 2
+        const x = Math.cos(lat) * Math.cos(lon)
+        const y = Math.sin(lat)
+        const z = Math.cos(lat) * Math.sin(lon)
+        out.push(terrainShade(surfaceHeight(field, x, y, z), slopeAt(field, x, y, z)))
+      }
+    }
+    return out.sort((a, b) => a - b)
+  })()
+
+  const at = (p: number) => shades[Math.min(shades.length - 1, Math.floor((p / 100) * shades.length))]
+
+  it('spreads widely enough for the erg to read at full phase', () => {
+    expect(at(90) - at(10)).toBeGreaterThan(0.28)
+  })
+
+  it('keeps the planet as bright as it was while spreading', () => {
+    // The trap the first attempt fell into: raising the gains alone widened the
+    // span but dragged the median from 0.834 to 0.718 and pushed p10 onto the
+    // floor, dimming Arrakis instead of giving it contrast.
+    expect(at(50)).toBeGreaterThan(0.78)
+    expect(at(50)).toBeLessThan(0.92)
+  })
+
+  it('rarely saturates either clamp, so the range is spent on detail', () => {
+    const pinned = shades.filter(s => s <= 0.5501 || s >= 1.2999).length
+    expect(pinned / shades.length).toBeLessThan(0.05)
   })
 })
