@@ -28,6 +28,17 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Test
-        run: npm test -- --run
-        continue-on-error: true
+      # `npm test` is Playwright. It was invoked as `npm test -- --run`, and
+      # --run is a Vitest flag that Playwright's CLI rejects outright with
+      # "unknown option '--run'" — so the step failed instantly, every time,
+      # and continue-on-error swallowed it. Browsers were never installed
+      # either. The end-to-end suite has therefore never run in CI: the badge
+      # was green because nothing was being checked.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: End-to-end tests
+        run: npm test

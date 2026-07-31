@@ -5,6 +5,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# GitHub Pages staging directory assembled by deploy-pages.yml
+.pages-site/
+
 # Secrets — .env.example IS committed, .env is NOT
 .env
 .env.local
