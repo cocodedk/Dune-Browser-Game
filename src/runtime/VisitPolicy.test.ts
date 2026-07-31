@@ -3,8 +3,9 @@
 
 import { describe, it, expect } from 'vitest'
 import { createInitialState } from '../game-engine/GameState'
-import { decideVisit } from './VisitPolicy'
-import type { WorldState } from '../types'
+import { decideVisit, treeForOwner, routedTrees, FALLBACK_TREE } from './VisitPolicy'
+import { DIALOGUES } from '../data/dialogues'
+import type { FactionId, WorldState } from '../types'
 
 function stateAt(overrides: Partial<WorldState> = {}): WorldState {
   return { ...createInitialState(), ...overrides }
@@ -54,19 +55,59 @@ describe('decideVisit', () => {
     expect(action).toEqual({ kind: 'dialogue', treeId: 'harkonnen_stronghold', villageId: here.id })
   })
 
-  it('opens the village_leader dialogue at any other owner\'s current location', () => {
-    const state = stateAt()
-    const here = state.villages.find(v => v.id === state.player.location)!
-    here.owner = 'neutral'
-    const action = decideVisit(state, here.id)
-    expect(action).toEqual({ kind: 'dialogue', treeId: 'village_leader', villageId: here.id })
-  })
-
-  it('opens the village_leader dialogue for a fremen-held current location', () => {
+  // These two previously asserted that a fremen sietch and a neutral
+  // settlement both opened `village_leader` — the generic tree — which is
+  // exactly the defect. Written as a description of what the code did rather
+  // than of what the game should do, they made the bug permanent: any fix
+  // would fail the suite and read as a regression.
+  it('opens the fremen tree at a fremen-held current location', () => {
     const state = stateAt()
     const here = state.villages.find(v => v.id === state.player.location)!
     here.owner = 'fremen'
     const action = decideVisit(state, here.id)
-    expect(action).toEqual({ kind: 'dialogue', treeId: 'village_leader', villageId: here.id })
+    expect(action).toEqual({ kind: 'dialogue', treeId: 'fremen_sietch', villageId: here.id })
+  })
+
+  it('gives every faction its own conversation', () => {
+    const expected: [FactionId, string][] = [
+      ['harkonnen', 'harkonnen_stronghold'],
+      ['fremen', 'fremen_sietch'],
+      ['atreides', 'atreides_embassy'],
+      ['smugglers', 'smuggler_outpost'],
+      ['emperor', 'emperor_delegation'],
+      ['neutral', 'neutral_settlement'],
+    ]
+    for (const [owner, treeId] of expected) {
+      const state = stateAt()
+      const here = state.villages.find(v => v.id === state.player.location)!
+      here.owner = owner
+      expect(decideVisit(state, here.id))
+        .toEqual({ kind: 'dialogue', treeId, villageId: here.id })
+    }
+  })
+})
+
+describe('tree routing', () => {
+  it('only ever names trees that actually exist', () => {
+    for (const treeId of routedTrees()) {
+      expect(DIALOGUES[treeId], `no tree authored for "${treeId}"`).toBeDefined()
+    }
+  })
+
+  // The guard for the whole class of bug this module was fixed for. Five of
+  // the seven authored trees — fremen_sietch, atreides_embassy,
+  // smuggler_outpost, emperor_delegation, neutral_settlement, 78 dialogue
+  // nodes between them — had no runtime reference anywhere, because
+  // decideVisit named two tree ids inline and had no third branch. Every
+  // existing dialogue test passed: they check a tree is internally well-formed,
+  // and a tree nothing opens is perfectly well-formed.
+  it('leaves no authored tree unreachable', () => {
+    const routed = new Set(routedTrees())
+    const orphaned = Object.keys(DIALOGUES).filter(id => !routed.has(id))
+    expect(orphaned, 'authored but no player can reach it').toEqual([])
+  })
+
+  it('falls back rather than going silent for an unrouted faction', () => {
+    expect(treeForOwner('nonesuch' as FactionId)).toBe(FALLBACK_TREE)
   })
 })
