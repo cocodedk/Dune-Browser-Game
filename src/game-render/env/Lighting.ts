@@ -10,6 +10,7 @@
 
 import { DirectionalLight, HemisphereLight, Color, type Scene } from 'three'
 import type { AtmospherePalette } from '../materials/Atmosphere'
+import { keyAltitude, keyAzimuth, keyColor, keyIntensity } from './nightKey'
 
 // --- Direct/ambient split -----------------------------------------------
 //
@@ -134,7 +135,10 @@ export function createLighting(scene: Scene): LightingRig {
     sun,
     fill,
     applyPalette(palette, distance = 700, azimuthRadians = Math.PI * 0.25): void {
-      sun.color = toColor(palette.sun)
+      // Elevation runs -1 (midnight) to 1 (noon).
+      const elevation = palette.sunElevation
+      // Past sunset the key light is the moons, not the sun — see nightKey.ts.
+      sun.color = toColor(keyColor(palette.sun, elevation))
       // The sky fill lands on exactly the up-facing crests the sun already
       // lights, so a literal blue zenith greys out the brightest sand on the
       // screen: measured, it held daytime saturation at 0.38 while dusk
@@ -144,16 +148,17 @@ export function createLighting(scene: Scene): LightingRig {
       fill.color = toColor(palette.zenith).lerp(toColor(palette.sun), 0.62)
       fill.groundColor = toColor(palette.horizon)
 
-      // Elevation runs -1 (midnight) to 1 (noon). Keep a sliver of light below
-      // the horizon so night is legible rather than pitch black.
-      const elevation = palette.sunElevation
-      const altitude = Math.max(elevation, -0.25)
+      // The old `max(elevation, -0.25)` put the key light under the sand at
+      // night, where it lit nothing at all; keyAltitude lifts the moons above
+      // the horizon instead.
+      const altitude = keyAltitude(elevation)
       // Fixed by default, which is right for a small patch of desert where the
       // sun simply rises and sets. On the globe it is not: with a fixed
       // azimuth one hemisphere is lit permanently and the other is never lit
       // at all, so half the planet could not be looked at. The planet view
-      // sweeps this through a full turn over its day.
-      const azimuth = azimuthRadians
+      // sweeps this through a full turn over its day. After dark the bearing
+      // swings again, to the moons'.
+      const azimuth = keyAzimuth(azimuthRadians, elevation)
 
       sun.position.set(
         Math.cos(azimuth) * distance * Math.max(0.35, 1 - Math.abs(altitude)),
@@ -167,7 +172,7 @@ export function createLighting(scene: Scene): LightingRig {
       // deliberately a much higher direct share than the first pass (sun 2.4 +
       // fill 0.9 blew the sand to near-white under ACES — same risk, addressed
       // by moving ambient down rather than only pushing direct up further).
-      sun.intensity = sunIntensityFor(elevation)
+      sun.intensity = keyIntensity(sunIntensityFor(elevation), elevation)
       fill.intensity = fillIntensityFor(elevation)
     },
     dispose(): void {
