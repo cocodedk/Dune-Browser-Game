@@ -3,6 +3,7 @@ import { EventBus } from '../EventBus'
 import type { Village } from '../types'
 import SietchCommandSection from './SietchCommandSection'
 import AttackSection from './AttackSection'
+import PeopleHere from './PeopleHere'
 import TravelAction from './TravelAction'
 
 const OWNER_LABEL: Record<string, string> = {
@@ -41,6 +42,16 @@ export default function VillagePanel() {
     <div style={styles.panel}>
       <h3 style={styles.title}>{selectedVillage.name}</h3>
       <p style={styles.owner}>{OWNER_LABEL[selectedVillage.owner] ?? selectedVillage.owner}</p>
+
+      {/*
+        Above the statistics on purpose. Talking to people is the primary verb
+        at a location you are standing in, and this panel is long enough that
+        anything below the attack section falls off the bottom of a 800px
+        window — captured, the list rendered entirely below the fold with only
+        its heading visible. It draws nothing when the player is elsewhere, so
+        inspecting a distant village is unchanged.
+      */}
+      <PeopleHere villageId={selectedVillage.id} playerIsHere={isHere} />
 
       <div style={styles.row}>
         <span style={styles.label}>Population</span>
@@ -98,7 +109,7 @@ export default function VillagePanel() {
 
       <div style={{ marginTop: 12 }}>
         {isHere ? (
-          <span style={{ color: '#4caf50', fontSize: 13 }}>📍 You are here — click to talk</span>
+          <span style={{ color: '#4caf50', fontSize: 13 }}>📍 You are here</span>
         ) : (
           <TravelAction
             name={selectedVillage.name}

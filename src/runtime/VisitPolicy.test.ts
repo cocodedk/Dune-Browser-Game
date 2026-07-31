@@ -3,8 +3,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { createInitialState } from '../game-engine/GameState'
-import { decideVisit, treeForOwner, routedTrees, FALLBACK_TREE } from './VisitPolicy'
-import { DIALOGUES } from '../data/dialogues'
+import { decideVisit, decideSpeakTo } from './VisitPolicy'
 import { STORY_TREE_ID } from '../data/dialogue'
 import type { FactionId, WorldState } from '../types'
 
@@ -121,27 +120,40 @@ describe('decideVisit', () => {
   })
 })
 
-describe('tree routing', () => {
-  it('only ever names trees that actually exist', () => {
-    for (const treeId of routedTrees()) {
-      expect(DIALOGUES[treeId], `no tree authored for "${treeId}"`).toBeDefined()
-    }
+describe('decideSpeakTo', () => {
+  // The defect decideSpeakTo exists to fix: Sietch Tabr is the default start
+  // and holds two residents, Chani (ysane) then Sova. decideVisit's
+  // first-resident default can only ever reach Chani; Sova was permanently
+  // stranded behind her until a caller could name a resident directly.
+  it("opens the second resident's own story node, unreachable via decideVisit", () => {
+    const state = stateAt()
+    const action = decideSpeakTo(state, 'sova')
+    expect(action).toEqual({
+      kind: 'dialogue', treeId: STORY_TREE_ID, villageId: state.player.location, nodeId: 'sova_greeting_root',
+    })
   })
 
-  // The guard for the whole class of bug this module was fixed for. Five of
-  // the seven authored trees — fremen_sietch, atreides_embassy,
-  // smuggler_outpost, emperor_delegation, neutral_settlement, 78 dialogue
-  // nodes between them — had no runtime reference anywhere, because
-  // decideVisit named two tree ids inline and had no third branch. Every
-  // existing dialogue test passed: they check a tree is internally well-formed,
-  // and a tree nothing opens is perfectly well-formed.
-  it('leaves no authored tree unreachable', () => {
-    const routed = new Set(routedTrees())
-    const orphaned = Object.keys(DIALOGUES).filter(id => !routed.has(id))
-    expect(orphaned, 'authored but no player can reach it').toEqual([])
+  it('returns none for a character who is elsewhere', () => {
+    const state = stateAt()
+    // Stilgar (shadir) lives at red_wall_sietch; the player starts at sietch_tabr.
+    const action = decideSpeakTo(state, 'shadir')
+    expect(action).toEqual({ kind: 'none' })
   })
 
-  it('falls back rather than going silent for an unrouted faction', () => {
-    expect(treeForOwner('nonesuch' as FactionId)).toBe(FALLBACK_TREE)
+  it('returns none while the player is traveling', () => {
+    const state = stateAt()
+    state.player.state = 'traveling'
+    expect(decideSpeakTo(state, 'sova')).toEqual({ kind: 'none' })
+  })
+
+  it('returns none while a dialogue is active', () => {
+    const state = stateAt()
+    state.dialogue = { treeId: 'village_leader', currentNodeId: 'n1', villageId: state.villages[0].id }
+    expect(decideSpeakTo(state, 'sova')).toEqual({ kind: 'none' })
+  })
+
+  it('returns none for an unknown character id', () => {
+    const state = stateAt()
+    expect(decideSpeakTo(state, 'no_such_character')).toEqual({ kind: 'none' })
   })
 })

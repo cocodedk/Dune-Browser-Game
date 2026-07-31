@@ -3,11 +3,14 @@
 // EventBus, no engine mutation — the caller (render layer) dispatches the
 // returned action.
 
-import type { FactionId, VillageId, WorldState } from '../types'
+import type { FactionId, Village, VillageId, WorldState } from '../types'
 import { INITIAL_CHARACTERS } from '../data/characters'
 import { INITIAL_DIALOGUE_STATES } from '../data/dialogueStates'
 import { STORY_TREE_ID } from '../data/dialogue'
 import { rootNodeForCharacter } from '../game-engine/dialogue/select'
+import { residentsAt } from '../game-engine/dialogue/residents'
+import type { Character } from '../game-engine/dialogue/types'
+import type { FlagStore } from '../game-engine/dialogue/conditions'
 
 /**
  * Which conversation each faction opens when you stand in its territory.
@@ -63,15 +66,43 @@ export type VisitAction =
   | { kind: 'event'; message: string } // own territory
 
 /**
+ * The conversation a given resident (or no resident at all) opens at
+ * `village`: the resident's own written state if {@link rootNodeForCharacter}
+ * finds one, otherwise the generic tree {@link treeForOwner} routes to.
+ *
+ * Both decideVisit (first resident, or none) and decideSpeakTo (one named
+ * resident, always present) reduce to this one branch, so the two entry
+ * points cannot answer differently for the same person — the whole defect
+ * this module fixes was two divergent ideas of "who can I talk to here".
+ */
+function dialogueForResident(
+  resident: Character | undefined,
+  village: Village,
+  flags: FlagStore,
+): VisitAction {
+  if (resident) {
+    const nodeId = rootNodeForCharacter(resident.id, INITIAL_DIALOGUE_STATES, flags)
+    if (nodeId) {
+      return { kind: 'dialogue', treeId: STORY_TREE_ID, villageId: village.id, nodeId }
+    }
+  }
+
+  return {
+    kind: 'dialogue',
+    treeId: treeForOwner(village.owner),
+    villageId: village.id,
+  }
+}
+
+/**
  * Decide what a click on `locationId` should do, given the current world.
  *
  * Blocked while traveling or mid-dialogue. At the player's own location:
  * owner === 'player' fires the "your territory" event; otherwise, whoever
- * INITIAL_CHARACTERS places here gets first say — their own written
- * conversation, gated by story flags through {@link rootNodeForCharacter} —
- * and only a location with no written resident, or a resident with nothing
- * currently to say, falls back to the generic tree {@link treeForOwner}
- * routes to. Anywhere else, the click starts travel.
+ * {@link residentsAt} lists first here gets first say — this is the "click
+ * the village" default, not the only way to reach anyone at that address; a
+ * player who wants someone else uses {@link decideSpeakTo} instead. Anywhere
+ * else, the click starts travel.
  */
 export function decideVisit(world: WorldState, locationId: VillageId): VisitAction {
   if (world.player.state === 'traveling') return { kind: 'none' }
@@ -88,17 +119,33 @@ export function decideVisit(world: WorldState, locationId: VillageId): VisitActi
     return { kind: 'event', message: `You are at ${village.name} — your territory.` }
   }
 
-  const resident = INITIAL_CHARACTERS.find(c => c.locationId === locationId)
-  if (resident) {
-    const nodeId = rootNodeForCharacter(resident.id, INITIAL_DIALOGUE_STATES, world.flags)
-    if (nodeId) {
-      return { kind: 'dialogue', treeId: STORY_TREE_ID, villageId: village.id, nodeId }
-    }
-  }
+  const [resident] = residentsAt(INITIAL_CHARACTERS, locationId)
+  return dialogueForResident(resident, village, world.flags)
+}
 
-  return {
-    kind: 'dialogue',
-    treeId: treeForOwner(village.owner),
-    villageId: village.id,
-  }
+/**
+ * Decide what happens when the player picks a specific person to speak to,
+ * by id, rather than accepting the village's default resident.
+ *
+ * `none` while traveling or mid-dialogue (same guards as decideVisit), for
+ * an id that doesn't match anyone in INITIAL_CHARACTERS, or for someone real
+ * but not at `world.player.location` — you cannot address a person standing
+ * on the other side of the planet just because you know their name. Once
+ * those pass, the character is by definition a resident of where the player
+ * is standing, so {@link dialogueForResident} is handed a village that must
+ * exist; the guard still checks, since a corrupt save is a `none`, not a
+ * crash.
+ */
+export function decideSpeakTo(world: WorldState, characterId: string): VisitAction {
+  if (world.player.state === 'traveling') return { kind: 'none' }
+  if (world.dialogue !== null) return { kind: 'none' }
+
+  const character = INITIAL_CHARACTERS.find(c => c.id === characterId)
+  if (!character) return { kind: 'none' }
+  if (character.locationId !== world.player.location) return { kind: 'none' }
+
+  const village = world.villages.find(v => v.id === world.player.location)
+  if (!village) return { kind: 'none' }
+
+  return dialogueForResident(character, village, world.flags)
 }

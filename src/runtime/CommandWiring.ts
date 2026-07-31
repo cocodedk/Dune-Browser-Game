@@ -8,7 +8,7 @@ import { world } from '../game-engine/GameState'
 import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue, startDialogue } from '../game-engine/DialogueSystem'
 import { pushEvent } from '../game-engine/EventSystem'
-import { decideVisit } from './VisitPolicy'
+import { decideVisit, decideSpeakTo } from './VisitPolicy'
 import { pledgePlayerSietch, assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
 import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
 import {
@@ -31,6 +31,19 @@ export function wireCommands(): () => void {
    */
   const onTalk = (): void => {
     const action = decideVisit(world, world.player.location)
+    if (action.kind === 'dialogue') startDialogue(action.treeId, action.villageId, action.nodeId)
+    else if (action.kind === 'event') pushEvent('village_selected', action.message)
+  }
+
+  /**
+   * Speak to one named resident, picked from the PeopleHere list instead of
+   * accepting decideVisit's first-resident default. Same dispatch as onTalk
+   * — only the decision function differs — because a resident's own tree
+   * opening any other way than startDialogue would leave dialogue:started
+   * unfired and the UI stuck.
+   */
+  const onSpeakTo = ({ characterId }: BusEvents['player:speak_to']): void => {
+    const action = decideSpeakTo(world, characterId)
     if (action.kind === 'dialogue') startDialogue(action.treeId, action.villageId, action.nodeId)
     else if (action.kind === 'event') pushEvent('village_selected', action.message)
   }
@@ -82,6 +95,7 @@ export function wireCommands(): () => void {
   }
 
   EventBus.on('player:talk', onTalk)
+  EventBus.on('player:speak_to', onSpeakTo)
   EventBus.on('player:travel', onTravel)
   EventBus.on('player:choose', onChoose)
   EventBus.on('game:speed', onSpeed)
@@ -98,6 +112,8 @@ export function wireCommands(): () => void {
   EventBus.on('game:pause', onPause)
 
   return () => {
+    EventBus.off('player:talk', onTalk)
+    EventBus.off('player:speak_to', onSpeakTo)
     EventBus.off('player:travel', onTravel)
     EventBus.off('player:choose', onChoose)
     EventBus.off('game:speed', onSpeed)

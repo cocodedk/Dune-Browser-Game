@@ -14,6 +14,8 @@ import type { SietchTask } from './game-engine/sietch/types'
 export interface BusEvents {
   /** Speak to whoever is at the player's location. Sent from a location hotspot. */
   'player:talk': Record<string, never>;
+  /** Speak to one named resident, chosen from the PeopleHere list rather than the village default. */
+  'player:speak_to': { characterId: string };
   'village:selected': { villageId: VillageId };
   'world:updated': { state: WorldState };
   'dialogue:started': { nodeId: string; villageId: VillageId };
