@@ -99,6 +99,16 @@ test('event log renders with empty state', async ({ page }) => {
 // Test 7 — Events appear over time (AI integration)
 // ---------------------------------------------------------------------------
 test('events appear in the log after running at 5× speed', async ({ page }) => {
+  // This test sleeps 15s wall-clock on purpose, waiting for the simulation to
+  // produce something, and the suite default is 30s. That left barely any room
+  // for the rest: locally it finished in 24.8s, and on a CI runner — where
+  // WebGL falls back to SwiftShader and first paint alone costs ~10s — it went
+  // over and failed on timeout while every assertion in it still passed.
+  //
+  // Worth being precise about why this only surfaced now: CI invoked the suite
+  // as `npm test -- --run`, which Playwright rejects outright, under
+  // continue-on-error. These tests had never actually run here.
+  test.setTimeout(90_000)
   await page.goto('/')
 
   // Accelerate game time to trigger AI decision cycles quickly
