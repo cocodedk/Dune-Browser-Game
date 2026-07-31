@@ -11,6 +11,7 @@ import { world } from '../GameState'
 import { pushEvent } from '../EventSystem'
 import { findChance, resolveFind, regionExhausted, findMessage } from '../troops/prospect'
 import { nextFind, siteYield } from '../desert/sites'
+import { canSenseHidden } from '../prescience/prescience'
 
 /**
  * How far a crew can range, in days.
@@ -50,6 +51,15 @@ export function runProspectDay(): void {
     const chance = findChance(group.skills.prospect, richness, false)
     const outcome = resolveFind(chance, Math.random(), Math.random(), richness)
     if (outcome.kind === 'nothing') continue
+
+    // A hidden sietch is not the player's to find without Awareness — the
+    // prescience ladder documents this as its level-1 grant, and it is
+    // inert unless something actually checks it. Treat the roll exactly
+    // like `nothing`: no count, no reveal, no message. The alternative —
+    // counting the find and announcing "a sietch no map records" while
+    // revealing nothing — tells the player they got a reward they did not
+    // earn, which is worse than staying silent.
+    if (outcome.kind === 'sietch' && !canSenseHidden(world.player.prescience)) continue
 
     world.flags[`finds.${regionId}`] = regionFinds(regionId) + 1
 

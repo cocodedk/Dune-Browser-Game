@@ -9,6 +9,10 @@ import { useGameStore } from './store'
 import { harvestYield } from '../game-engine/troops/harvest'
 import { effectiveDensity, extractionTier } from '../game-engine/troops/types'
 import type { TroopGroup, SpiceField, Equipment } from '../game-engine/troops/types'
+import { canSeeDensity } from '../game-engine/prescience/prescience'
+import { isRegionDiscovered } from '../game-engine/prescience/regionDiscovery'
+import type { PrescienceLevel } from '../game-engine/prescience/prescience'
+import type { Village } from '../types'
 import { palette, type as typo, space, panelShell, button, divider } from './theme'
 
 function tierFor(group: TroopGroup, equipment: Equipment[]) {
@@ -28,9 +32,20 @@ function rateFor(group: TroopGroup, field: SpiceField | undefined, equipment: Eq
   })
 }
 
+/**
+ * Whether a field's density can be shown for this player, right now.
+ *
+ * Region is not itself markable "discovered" (see regionDiscovery.ts), so
+ * this is the same composition CrewPanel needs at both call sites below —
+ * kept in one place so the two never drift apart.
+ */
+function densityKnown(field: SpiceField, level: PrescienceLevel, villages: readonly Village[]): boolean {
+  return canSeeDensity(level, isRegionDiscovered(field.regionId, villages))
+}
+
 export default function CrewPanel() {
   const { world } = useGameStore()
-  const { troopGroups, spiceFields, equipment } = world
+  const { troopGroups, spiceFields, equipment, villages, player } = world
 
   const availableFields = spiceFields.filter(f => f.discovered && f.remaining > 0)
 
@@ -57,6 +72,11 @@ export default function CrewPanel() {
       {troopGroups.map(group => {
         const field = spiceFields.find(f => f.id === group.taskTargetId)
         const rate = rateFor(group, field, equipment)
+        // The rate is a function of density (see rateFor -> harvestYield), so
+        // showing an exact number would leak the very figure canSeeDensity is
+        // gating a few lines below. Tie its visibility to the same check
+        // rather than exposing it unconditionally.
+        const rateKnown = field ? densityKnown(field, player.prescience, villages) : false
         const busy = group.changeoverDaysLeft > 0
 
         return (
@@ -72,7 +92,7 @@ export default function CrewPanel() {
               {busy
                 ? 'Moving to new orders…'
                 : group.task === 'harvest' && field
-                  ? `Harvesting ${field.id} · ${rate.toFixed(1)}/day`
+                  ? `Harvesting ${field.id} · ${rateKnown ? `${rate.toFixed(1)}/day` : 'yield unclear'}`
                   : group.task === 'prospect'
                     ? 'Prospecting for new sand'
                     : group.task === 'train'
@@ -83,19 +103,27 @@ export default function CrewPanel() {
             </div>
 
             <div style={styles.actions}>
-              {availableFields.map(f => (
-                <button
-                  key={f.id}
-                  style={{
-                    ...styles.btn,
-                    ...(group.taskTargetId === f.id ? styles.btnActive : {}),
-                  }}
-                  onClick={() => order(group.id, 'harvest', f.id)}
-                  title={`Density ${effectiveDensity(f).toFixed(0)}, ${f.remaining.toFixed(0)} left`}
-                >
-                  {f.id.replace('field_', '')}
-                </button>
-              ))}
+              {availableFields.map(f => {
+                // Foresight's documented grant is seeing density without
+                // prospecting; showing it to everyone unconditionally is the
+                // exact bug that made the level inert. "—" marks it unknown
+                // rather than a number nobody paid for.
+                const known = densityKnown(f, player.prescience, villages)
+                const density = known ? effectiveDensity(f).toFixed(0) : '—'
+                return (
+                  <button
+                    key={f.id}
+                    style={{
+                      ...styles.btn,
+                      ...(group.taskTargetId === f.id ? styles.btnActive : {}),
+                    }}
+                    onClick={() => order(group.id, 'harvest', f.id)}
+                    title={`Density ${density}, ${f.remaining.toFixed(0)} left`}
+                  >
+                    {f.id.replace('field_', '')}
+                  </button>
+                )
+              })}
               <button
                   style={{
                     ...styles.btn,
