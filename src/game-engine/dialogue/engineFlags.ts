@@ -10,6 +10,7 @@
 // bug, not as documentation.
 
 export const ENGINE_WRITTEN_FLAGS: Readonly<Record<string, string>> = {
+  'act': 'economy/actRun.runActCheck(), seeded in GameState.createInitialState()',
   'pledged.count': 'SietchSystem.pledgePlayerSietch(), CombatSystem.attackVillage()',
   'ritual.count': 'economy/endgameOps.attemptRitual()',
   'forts.destroyed': 'economy/endgameOps.assaultFort()',

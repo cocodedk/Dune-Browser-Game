@@ -32,7 +32,7 @@ function actView(): ActWorldView {
 import { world } from '../GameState'
 import { currentDay } from '../TimeSystem'
 import { pushEvent } from '../EventSystem'
-import { evaluateAct, actQuotaMultiplier } from '../acts/transitions'
+import { evaluateAct, actQuotaMultiplier, actNumber } from '../acts/transitions'
 import { onActTransition } from '../quota/quota'
 import type { ActWorldView, EndingId } from '../acts/transitions'
 import { greenRegionCount, maxVegetation } from '../ecology/ecology'
@@ -56,6 +56,9 @@ export function runActCheck(): void {
 
   if (nextAct) {
     world.act = nextAct
+    // Mirrored as a number because dialogue gates compare numerically; see
+    // actNumber. Written beside world.act so the two cannot fall out of step.
+    world.flags['act'] = actNumber(nextAct)
     world.flags['act.startedDay'] = currentDay()
     world.quota = onActTransition(world.quota)
     world.quota = {

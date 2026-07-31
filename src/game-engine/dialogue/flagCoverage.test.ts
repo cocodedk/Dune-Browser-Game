@@ -22,8 +22,6 @@ import { STORY_NODES } from '../../data/dialogue'
  * entry has to happen alongside actually wiring up its write path, not by
  * accident.
  *
- *   - 'act' (corvin.final_demand): compares to the number 4; nothing writes
- *     a numeric 'act' flag — world.act is the string 'act1'..'act4'.
  *   - 'pledged.red_wall_sietch' / 'loyalty.red_wall_sietch'
  *     (shadir.pledged, shadir.considering): no per-sietch pledge or loyalty
  *     flag is ever written; only the aggregate pledged.count is (this fix).
@@ -33,7 +31,6 @@ import { STORY_NODES } from '../../data/dialogue'
  *     flag either, despite types.ts citing it as the example dotted key.
  */
 const PRE_EXISTING_UNREACHABLE_GATES = new Set<string>([
-  'act',
   'pledged.red_wall_sietch',
   'loyalty.red_wall_sietch',
   'recruited.ysane',

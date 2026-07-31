@@ -100,6 +100,25 @@ export function evaluateAct(view: ActWorldView): ActEvaluation {
   return { ending: null, nextAct: evaluateActTransition(view) }
 }
 
+/**
+ * The act as a number, for dialogue gates.
+ *
+ * Conditions compare against a number — `corvin.final_demand` is
+ * `{ op: 'eq', key: 'act', value: 4 }` — while `world.act` is the string
+ * 'act1'..'act4'. Nothing bridged the two, so that gate could never be true and
+ * Count Fenring's final demand was unreachable however far the story ran. The
+ * flag is written from here rather than parsed at each comparison, so the two
+ * representations cannot drift.
+ */
+export function actNumber(act: ActId): number {
+  switch (act) {
+    case 'act1': return 1
+    case 'act2': return 2
+    case 'act3': return 3
+    case 'act4': return 4
+  }
+}
+
 /** Quota multiplier applied on entering an act — the escalation curve. */
 export function actQuotaMultiplier(act: ActId): number {
   switch (act) {

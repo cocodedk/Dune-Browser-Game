@@ -10,6 +10,7 @@ import { INITIAL_TROOP_GROUPS } from '../data/troopGroups';
 import { INITIAL_SPICE_FIELDS } from '../data/spiceFields';
 import { INITIAL_FORTS } from '../data/forts';
 import { generateSites } from './desert/sites';
+import { actNumber } from './acts/transitions';
 
 /** Fixes the deep desert for a game, so a reload finds the same secrets. */
 const DESERT_SEED = 20250727;
@@ -45,7 +46,11 @@ export function createInitialState(): WorldState {
     difficulty: 'normal' as Difficulty,
     scoutedDefense: {},
     paused: false,
-    flags: {},
+    // 'act' mirrors the act as a number for dialogue gates, which compare
+    // numerically while world.act is the string 'act1'..'act4'. Seeded here as
+    // well as written on transition, or every act-gated conversation would be
+    // unreadable until the story first turned. See actNumber in acts/transitions.
+    flags: { act: actNumber('act1') },
     quota: createQuotaState(getDifficultyConfig('normal').quotaMultiplier),
     troopGroups: INITIAL_TROOP_GROUPS.map(g => ({ ...g, skills: { ...g.skills } })),
     spiceFields: INITIAL_SPICE_FIELDS.map(f => ({ ...f })),
