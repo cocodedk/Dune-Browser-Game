@@ -1,22 +1,16 @@
 // src/data/dialogue/act1.test.ts
 // Content-integrity tests. At ~650 nodes in the finished game these cannot be
 // checked by eye, so the structural guarantees run in CI instead.
+//
+// Runs against STORY_NODES rather than a locally-built array, so this now
+// guards the exact data the game ships, not a private test fixture that
+// happened to match it.
 
 import { describe, it, expect } from 'vitest'
-import { PALACE_NODES } from './act1-palace'
-import { DESERT_NODES } from './act1-desert'
-import { ACT2_NODES } from './act2'
-import { ACT3_NODES } from './act3'
-import { REACHES_DESERT_NODES } from './reaches-desert'
-import { REACHES_BASIN_NODES } from './reaches-basin'
-import { DUNCAN_NODES } from './duncan'
+import { STORY_NODES } from './index'
 import { INITIAL_DIALOGUE_STATES } from '../dialogueStates'
-import type { DialogueNode } from '../../types'
 
-const ALL: DialogueNode[] = [
-  ...PALACE_NODES, ...DESERT_NODES, ...ACT2_NODES, ...ACT3_NODES,
-  ...REACHES_DESERT_NODES, ...REACHES_BASIN_NODES, ...DUNCAN_NODES,
-]
+const ALL = STORY_NODES
 const BY_ID = new Map(ALL.map(n => [n.id, n]))
 
 describe('dialogue integrity', () => {

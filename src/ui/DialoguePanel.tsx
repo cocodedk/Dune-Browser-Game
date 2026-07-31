@@ -7,6 +7,7 @@ import { FACTION_CSS_COLORS } from '../game-render/factionColors'
 import { COMMAND_COLUMN_WIDTH } from './theme'
 import { displaySpeaker } from '../game-engine/dialogue/resident'
 import { INITIAL_CHARACTERS } from '../data/characters'
+import { portraitFor } from '../data/portraits'
 
 export default function DialoguePanel() {
   const { currentDialogueNode, world } = useGameStore()
@@ -20,11 +21,6 @@ export default function DialoguePanel() {
 
   if (!currentDialogueNode || !world.dialogue) return null
 
-  const portraitKey = world.dialogue ? getPortraitKey(world.dialogue.treeId) : undefined
-  const factionId = portraitKey ? PORTRAIT_FACTION[portraitKey] : undefined
-  const portraitColor = factionId ? FACTION_CSS_COLORS[factionId] : '#d4a017'
-  const portraitLabel = portraitKey ? portraitKey.replace(/_/g, ' ').toUpperCase() : ''
-
   // The generic trees say "Village Elder"; the character card behind them
   // names whoever actually lives here. Reconciled so the player is not shown
   // two names for one speaker.
@@ -32,6 +28,24 @@ export default function DialoguePanel() {
   const speakerName = currentDialogueNode
     ? displaySpeaker(currentDialogueNode.speaker, resident?.name)
     : ''
+
+  const portraitKey = world.dialogue ? getPortraitKey(world.dialogue.treeId) : undefined
+  const factionId = portraitKey ? PORTRAIT_FACTION[portraitKey] : undefined
+
+  // getPortraitKey only covers the seven generic trees, so a story
+  // conversation has no faction portrait key — and without a fallback this
+  // rendered an empty, uncoloured box. portraitFor() is the same per-character
+  // lookup CharacterCard uses for the 3D scene, so falling back to it keeps
+  // the box on-character; falling back again to the speaker's own name
+  // (rather than leaving portraitLabel blank) covers a story node with no
+  // resident recorded at this location at all.
+  const residentPortrait = !portraitKey && resident ? portraitFor(resident.id) : undefined
+  const portraitColor = factionId
+    ? FACTION_CSS_COLORS[factionId]
+    : residentPortrait?.rim ?? '#d4a017'
+  const portraitLabel = portraitKey
+    ? portraitKey.replace(/_/g, ' ').toUpperCase()
+    : speakerName.toUpperCase()
 
   function choose(choiceId: string) {
     EventBus.emit('player:choose', { choiceId })

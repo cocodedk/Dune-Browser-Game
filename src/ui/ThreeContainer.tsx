@@ -27,7 +27,7 @@ import { pushEvent } from '../game-engine/EventSystem'
 function dispatchPick(id: string): void {
   const action = decideVisit(world, id)
   if (action.kind === 'travel') startTravel(action.targetId)
-  else if (action.kind === 'dialogue') startDialogue(action.treeId, action.villageId)
+  else if (action.kind === 'dialogue') startDialogue(action.treeId, action.villageId, action.nodeId)
   else if (action.kind === 'event') pushEvent('village_selected', action.message)
   if (action.kind !== 'none') EventBus.emit('village:selected', { villageId: id })
 }

@@ -4,6 +4,10 @@
 // returned action.
 
 import type { FactionId, VillageId, WorldState } from '../types'
+import { INITIAL_CHARACTERS } from '../data/characters'
+import { INITIAL_DIALOGUE_STATES } from '../data/dialogueStates'
+import { STORY_TREE_ID } from '../data/dialogue'
+import { rootNodeForCharacter } from '../game-engine/dialogue/select'
 
 /**
  * Which conversation each faction opens when you stand in its territory.
@@ -55,16 +59,19 @@ export function routedTrees(): string[] {
 export type VisitAction =
   | { kind: 'none' } // traveling or in dialogue — click is ignored
   | { kind: 'travel'; targetId: VillageId }
-  | { kind: 'dialogue'; treeId: string; villageId: VillageId }
+  | { kind: 'dialogue'; treeId: string; villageId: VillageId; nodeId?: string }
   | { kind: 'event'; message: string } // own territory
 
 /**
  * Decide what a click on `locationId` should do, given the current world.
  *
  * Blocked while traveling or mid-dialogue. At the player's own location:
- * owner === 'player' fires the "your territory" event, and every other faction
- * opens the conversation {@link treeForOwner} routes it to. Anywhere else, the
- * click starts travel.
+ * owner === 'player' fires the "your territory" event; otherwise, whoever
+ * INITIAL_CHARACTERS places here gets first say — their own written
+ * conversation, gated by story flags through {@link rootNodeForCharacter} —
+ * and only a location with no written resident, or a resident with nothing
+ * currently to say, falls back to the generic tree {@link treeForOwner}
+ * routes to. Anywhere else, the click starts travel.
  */
 export function decideVisit(world: WorldState, locationId: VillageId): VisitAction {
   if (world.player.state === 'traveling') return { kind: 'none' }
@@ -80,6 +87,15 @@ export function decideVisit(world: WorldState, locationId: VillageId): VisitActi
   if (village.owner === 'player') {
     return { kind: 'event', message: `You are at ${village.name} — your territory.` }
   }
+
+  const resident = INITIAL_CHARACTERS.find(c => c.locationId === locationId)
+  if (resident) {
+    const nodeId = rootNodeForCharacter(resident.id, INITIAL_DIALOGUE_STATES, world.flags)
+    if (nodeId) {
+      return { kind: 'dialogue', treeId: STORY_TREE_ID, villageId: village.id, nodeId }
+    }
+  }
+
   return {
     kind: 'dialogue',
     treeId: treeForOwner(village.owner),

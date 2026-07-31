@@ -2,16 +2,36 @@ import { world } from './GameState';
 import { applyFlagEffects } from './dialogue/conditions';
 import { pushEvent } from './EventSystem';
 import { EventBus } from '../EventBus';
-import type { VillageId, DialogueEffect } from '../types';
+import type { VillageId, DialogueEffect, DialogueNode } from '../types';
 import { DIALOGUES } from '../data/dialogues';
+import { STORY_NODES, STORY_TREE_ID } from '../data/dialogue';
 import { checkOwnershipTransition } from './VillageSystem';
 import { applyPlayerAction } from './faction/reputation';
 import { toReputationWorld } from './faction/adapter';
 
-export function startDialogue(treeId: string, villageId: VillageId): void {
-  const tree = DIALOGUES[treeId];
+/**
+ * Runtime tree lookup, local to this module.
+ *
+ * STORY_TREE_ID is deliberately absent from the exported `DIALOGUES` record
+ * in data/dialogues.ts: VisitPolicy.test.ts's `leaves no authored tree
+ * unreachable` diffs that record against the faction-routed trees, and
+ * merging story content into it would break that invariant even though the
+ * story tree is fully playable through this lookup.
+ */
+const TREES: Record<string, DialogueNode[]> = {
+  ...DIALOGUES,
+  [STORY_TREE_ID]: STORY_NODES,
+};
+
+/**
+ * @param nodeId Node to open on, for a conversation gated to a specific story
+ *   state (see VisitPolicy). Omitted, this opens on tree[0] as before.
+ */
+export function startDialogue(treeId: string, villageId: VillageId, nodeId?: string): void {
+  const tree = TREES[treeId];
   if (!tree) return;
-  const firstNode = tree[0];
+  const firstNode = nodeId ? tree.find(n => n.id === nodeId) : tree[0];
+  if (!firstNode) return;
   world.dialogue = { treeId, currentNodeId: firstNode.id, villageId };
   pushEvent('dialogue_start', `\ud83d\udcac Speaking with ${firstNode.speaker}...`);
   EventBus.emit('dialogue:started', { nodeId: firstNode.id, villageId });
@@ -19,7 +39,7 @@ export function startDialogue(treeId: string, villageId: VillageId): void {
 
 export function currentNode() {
   if (!world.dialogue) return null;
-  const tree = DIALOGUES[world.dialogue.treeId];
+  const tree = TREES[world.dialogue.treeId];
   return tree?.find(n => n.id === world.dialogue!.currentNodeId) ?? null;
 }
 

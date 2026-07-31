@@ -31,7 +31,7 @@ export function wireCommands(): () => void {
    */
   const onTalk = (): void => {
     const action = decideVisit(world, world.player.location)
-    if (action.kind === 'dialogue') startDialogue(action.treeId, action.villageId)
+    if (action.kind === 'dialogue') startDialogue(action.treeId, action.villageId, action.nodeId)
     else if (action.kind === 'event') pushEvent('village_selected', action.message)
   }
 
