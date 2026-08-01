@@ -1,25 +1,34 @@
 // vehicle-shop/ornihopter/src/debug.ts
 // The capture and measurement handle. This is the lead's instrument: every
-// number in the bar that is not a unit test is read through here, so it has to
+// number in the bar that is not a unit test is read through here, so it must
 // let a headless browser place the craft and camera deterministically rather
-// than screenshotting whatever frame the animation happened to be on.
+// than screenshotting whatever frame the animation happened to land on.
 
 import { Box3, Vector3 } from 'three'
 import type { Object3D } from 'three'
-import type { FlightModel } from './contracts'
+import type { FlightModel, CraftModel } from './contracts'
 import type { CameraRig, CameraMode } from './camera/cameraRig'
-import type { Stage } from './stage/scene'
-import type { CraftModel } from './contracts'
+
+export interface CraftMeasurement {
+  span: number
+  length: number
+  height: number
+  spanOverLength: number
+  triangles: number
+  meshes: number
+}
 
 export interface DebugHandle {
-  /** Freeze the sim so a capture is repeatable. */
+  /** Freeze the sim. Frames still render, so a capture is repeatable. */
   pause(): void
   resume(): void
+  isPaused(): boolean
   setCamera(mode: CameraMode): void
-  /** Park the craft at a fixed pose for reference-matched renders. */
-  pose(x: number, y: number, z: number, yawDeg: number, beatPhase: number): void
-  /** Measured bounding box of the craft, for the scale question in the bar. */
-  measure(): { span: number; length: number; height: number; ratio: number; triangles: number; meshes: number }
+  /** Park the camera on a sphere around the craft, in the craft's own frame. */
+  viewpoint(azimuthDeg: number, elevationDeg: number, distance: number): void
+  /** Park the craft at a fixed pose and beat phase for matched renders. */
+  pose(y: number, yawDeg: number, beatPhase: number): void
+  measure(): CraftMeasurement
   state(): unknown
 }
 
@@ -33,11 +42,11 @@ interface Deps {
   flight: FlightModel
   rig: CameraRig
   craft: CraftModel
-  stage: Stage
 }
 
-export function installDebugHandle({ flight, rig, craft, stage }: Deps): void {
+export function installDebugHandle({ flight, rig, craft }: Deps): DebugHandle {
   let paused = false
+  const root = craft.root as unknown as Object3D
 
   const handle: DebugHandle = {
     pause() {
@@ -46,26 +55,33 @@ export function installDebugHandle({ flight, rig, craft, stage }: Deps): void {
     resume() {
       paused = false
     },
+    isPaused() {
+      return paused
+    },
     setCamera(mode) {
       rig.setMode(mode)
     },
-    pose(x, y, z, yawDeg, beatPhase) {
-      const root = craft.root as unknown as Object3D
-      root.position.set(x, y, z)
+    viewpoint(azimuthDeg, elevationDeg, distance) {
+      rig.setViewpoint(azimuthDeg, elevationDeg, distance)
+    },
+    pose(y, yawDeg, beatPhase) {
+      paused = true
       const half = (yawDeg * Math.PI) / 360
+      root.position.set(0, y, 0)
       root.quaternion.set(0, Math.sin(half), 0, Math.cos(half))
-      craft.update({ ...(flight.state as object), beatPhase } as never)
+      craft.update({ ...flight.state, beatPhase })
       root.updateMatrixWorld(true)
     },
     measure() {
-      const root = craft.root as unknown as Object3D
       root.updateMatrixWorld(true)
-      const box = new Box3().setFromObject(root)
-      const size = box.getSize(new Vector3())
+      const size = new Box3().setFromObject(root).getSize(new Vector3())
       let triangles = 0
       let meshes = 0
-      root.traverse((child: Object3D) => {
-        const mesh = child as unknown as { isMesh?: boolean; geometry?: { index?: { count: number }; attributes?: { position?: { count: number } } } }
+      root.traverse((child) => {
+        const mesh = child as Object3D & {
+          isMesh?: boolean
+          geometry?: { index?: { count: number } | null; attributes?: { position?: { count: number } } }
+        }
         if (!mesh.isMesh || !mesh.geometry) return
         meshes++
         const index = mesh.geometry.index
@@ -76,7 +92,7 @@ export function installDebugHandle({ flight, rig, craft, stage }: Deps): void {
         span: size.x,
         length: size.z,
         height: size.y,
-        ratio: size.z > 0 ? size.x / size.z : 0,
+        spanOverLength: size.z > 0 ? size.x / size.z : 0,
         triangles,
         meshes,
       }
@@ -86,9 +102,6 @@ export function installDebugHandle({ flight, rig, craft, stage }: Deps): void {
     },
   }
 
-  // Paused frames still need to render, so the loop asks this rather than
-  // being stopped outright.
-  Object.defineProperty(handle, 'paused', { get: () => paused })
-  void stage
   window.__THOPTER__ = handle
+  return handle
 }

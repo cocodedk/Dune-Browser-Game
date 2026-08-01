@@ -5,7 +5,7 @@
 // its world transform recomputed each frame from the craft's state. A parented
 // camera cannot drift out of the seat, and cannot lag the craft by a frame.
 
-import { PerspectiveCamera, Object3D, Vector3 } from 'three'
+import { PerspectiveCamera, Object3D, Vector3, Quaternion } from 'three'
 import { PILOT_EYE, OVERALL } from '../spec'
 import type { FlightState } from '../contracts'
 
@@ -47,6 +47,7 @@ export function createCameraRig(craftRoot: Object3D): CameraRig {
 
   const scratch = new Vector3()
   const target = new Vector3()
+  const free = { azimuth: 40, elevation: 22, distance: 2.4 }
 
   const apply = (next: CameraMode) => {
     mode = next
@@ -75,11 +76,41 @@ export function createCameraRig(craftRoot: Object3D): CameraRig {
       return next
     },
     setMode: apply,
+    setViewpoint(azimuthDeg, elevationDeg, distance) {
+      free.azimuth = azimuthDeg
+      free.elevation = elevationDeg
+      free.distance = distance
+      if (mode !== 'free') apply('free')
+    },
     update(state, elapsed) {
       if (mode === 'pilot') return // parented; nothing to do.
 
       const { position } = state
       target.set(position.x, position.y, position.z)
+
+      if (mode === 'free') {
+        // Spherical placement in the craft's OWN frame, so a reference-matched
+        // view stays matched regardless of which way the craft is pointing.
+        const az = (free.azimuth * Math.PI) / 180
+        const el = (free.elevation * Math.PI) / 180
+        const r = OVERALL.length * free.distance
+        scratch.set(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az))
+        scratch.applyQuaternion(
+          new Quaternion(
+            state.orientation.x,
+            state.orientation.y,
+            state.orientation.z,
+            state.orientation.w
+          )
+        )
+        camera.position.set(
+          target.x + scratch.x * r,
+          target.y + scratch.y * r,
+          target.z + scratch.z * r
+        )
+        camera.lookAt(target)
+        return
+      }
 
       if (mode === 'chase') {
         // Placed from the craft's world heading, taken from its velocity when

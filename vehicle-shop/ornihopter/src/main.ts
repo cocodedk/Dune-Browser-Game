@@ -37,6 +37,8 @@ const resize = () => {
 window.addEventListener('resize', resize)
 resize()
 
+const debug = installDebugHandle({ flight, rig, craft })
+
 let last = performance.now()
 let elapsed = 0
 let fps = 60
@@ -48,23 +50,31 @@ function frame(now: number): void {
   // integrating one enormous step and flinging the craft out of the area.
   const dt = Math.min((now - last) / 1000, 0.1)
   last = now
-  elapsed += dt
   fps += ((dt > 0 ? 1 / dt : 60) - fps) * 0.08
 
   if (controls.takeCameraCycle()) rig.cycle()
   if (controls.takeReset()) flight.reset()
 
-  flight.step(controls.read(), dt)
+  // When the capture harness has paused us, the scene still renders — but the
+  // sim, the clock and the craft transform are left exactly where pose() put
+  // them, so two captures of the same pose are identical frames.
+  const frozen = debug.isPaused()
+  if (!frozen) {
+    elapsed += dt
+    flight.step(controls.read(), dt)
+  }
   const state = flight.state
 
-  craft.root.position.set(state.position.x, state.position.y, state.position.z)
-  craft.root.quaternion.set(
-    state.orientation.x,
-    state.orientation.y,
-    state.orientation.z,
-    state.orientation.w
-  )
-  craft.update(state)
+  if (!frozen) {
+    craft.root.position.set(state.position.x, state.position.y, state.position.z)
+    craft.root.quaternion.set(
+      state.orientation.x,
+      state.orientation.y,
+      state.orientation.z,
+      state.orientation.w
+    )
+    craft.update(state)
+  }
   cockpit.update(state)
   rig.update(state, elapsed)
 
@@ -77,5 +87,4 @@ function frame(now: number): void {
   stage.renderer.render(stage.scene, rig.camera)
 }
 
-installDebugHandle({ flight, rig, craft, stage })
 requestAnimationFrame(frame)
