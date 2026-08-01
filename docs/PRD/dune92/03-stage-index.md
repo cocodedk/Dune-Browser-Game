@@ -32,6 +32,7 @@ Sonnet's own report is not sufficient evidence.
 | 19 | Content pass | 3 | 18 | outline | **VERIFIED** |
 | 20 | Art and audio production | 3 | 14 | outline | **PARTIAL** |
 | 21 | Balance and playtest | 3 | 19, 20 | outline | **VERIFIED** |
+| 22 | Ornithopter as a hero asset | 3 | 12, 20 | full + gauntlet prompt | **SPECCED** |
 
 ## Critical path
 
