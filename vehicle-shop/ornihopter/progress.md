@@ -419,3 +419,30 @@ re-shooting once the wing builder is out of the tree, not assumed.
 **Open:** the craft reads far too dark against the reference's pale bone/tan. The sand renders
 bright in the same frame, so this is material colour rather than scene lighting. The materials
 live in `Ornithopter.ts`, which the wing builder currently holds, so it waits.
+
+### Round 4 — dispatched: AAA hull to the kit photograph. And a bar amendment.
+
+The user rejected the hull twice in plain words — "the shape is still fat", "a submarine
+with wings" — while Q1's only hard number (span/length, a PLAN ratio) passed. Both blind
+critics also passed it on identification. The bar had no slenderness measure at all, so the
+one defect a human saw instantly was structurally invisible to every check we ran. That is
+the same lesson as the backwards-flight round, in a new coat: a bar item that cannot fail on
+the actual defect is not a bar item.
+
+**Q1 is amended.** In addition to span/length, the hull's width distribution is now part of
+the bar: stations at >= 90% of max beam may span no more than ~3.5m of the 22.896m length,
+and the boom must be at or under 30% of max beam by 16m aft. The measured cause of the
+submarine read was hullStations.ts holding >= 93% beam for 10.1m (44% of the body). The
+builder adds this as a unit test next to the station table so it cannot regress silently.
+
+Also ruled: **the kit photograph is the shape authority.** The user: "we have the images of
+the assembly kit and it is absolutely clear how this craft must look." My earlier pushback
+(MENG proportions vs a foreshortened oblique photo) is overruled for shape questions, and
+recorded here so the reasoning is not lost: the concern was real, but with the orthographic
+references deleted the photo is the best evidence we hold, and it is the user's call.
+
+Dispatched to an Opus builder: reshape (single width peak at the wing shoulder, continuous
+taper, thin boom, tail-fork/vane dedup) plus the first AAA surface pass (DataTexture
+panel-line and dirt maps per the game repo's own hullWeathering pattern, UVs added to the
+loft, bone/tan palette from the photo). Wing-root stations must stay on the hull; canopy
+seating re-verified after the height changes.
