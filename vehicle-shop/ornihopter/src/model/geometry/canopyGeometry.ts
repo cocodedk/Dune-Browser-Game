@@ -23,8 +23,9 @@ import {
   DoubleSide, Vector3, type Material,
 } from 'three'
 import { COCKPIT, stationFromNose } from '../../spec'
+import { hullHalfHeightAt } from './hullProfile'
 
-const FRAME_COLOR = 0x312f2a
+const FRAME_COLOR = 0x47443b
 const GLASS_COLOR = 0x25333a
 const BEAM_THICKNESS = 0.07
 const RIDGE_THICKNESS = 0.1
@@ -41,12 +42,24 @@ interface Station {
   readonly peakY: number
 }
 
-const NOSE: Station = { z: stationFromNose(1.1), halfWidth: 0.45, baseY: -0.95, peakY: 0.8 }
+// peakY is hullHalfHeightAt(z) times a proud-ness factor, NOT a COCKPIT
+// interior number. Measured miss, first pass: peakY was authored from
+// COCKPIT.clearHeight (interior headroom) and landed at 0.8 / 1.55 / 1.2 —
+// all BELOW hullHalfHeightAt at their own stations (1.72 / 2.15 / 2.15). The
+// whole ridge sat inside the hull's own opaque ellipse and vanished from
+// every outside view (hero.png, side.png). The interior clearance and the
+// hull's own exterior surface are different numbers; the ridge has to clear
+// the second one, or there is nothing to see from outside.
+const noseZ = stationFromNose(1.1)
+const shoulderZ = stationFromNose(2.7)
+const rearZ = stationFromNose(4.9)
+
+const NOSE: Station = { z: noseZ, halfWidth: 0.7, baseY: -0.95, peakY: hullHalfHeightAt(noseZ) * 1.05 }
 const SHOULDER: Station = {
-  z: stationFromNose(2.7), halfWidth: 2.05, baseY: CANOPY_SIDE_SILL_Y, peakY: 1.55,
+  z: shoulderZ, halfWidth: 2.5, baseY: CANOPY_SIDE_SILL_Y, peakY: hullHalfHeightAt(shoulderZ) * 1.55,
 }
 const REAR: Station = {
-  z: stationFromNose(4.9), halfWidth: 1.55, baseY: CANOPY_SIDE_SILL_Y, peakY: 1.2,
+  z: rearZ, halfWidth: 2.15, baseY: CANOPY_SIDE_SILL_Y, peakY: hullHalfHeightAt(rearZ) * 1.35,
 }
 const STATIONS: readonly Station[] = [NOSE, SHOULDER, REAR]
 
@@ -111,7 +124,7 @@ export function buildCanopy(): CanopyBuild {
   const frameMaterial = new MeshStandardMaterial({ color: FRAME_COLOR, roughness: 0.55, metalness: 0.6 })
   const glassMaterial = new MeshStandardMaterial({
     color: GLASS_COLOR, roughness: 0.15, metalness: 0.25,
-    transparent: true, opacity: 0.28, side: DoubleSide, depthWrite: false,
+    transparent: true, opacity: 0.38, side: DoubleSide, depthWrite: false,
   })
   const beamGeometry = new BoxGeometry(BEAM_THICKNESS, 1, BEAM_THICKNESS)
   const ridgeGeometry = new BoxGeometry(RIDGE_THICKNESS, 1, RIDGE_THICKNESS)

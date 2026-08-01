@@ -1,32 +1,27 @@
 // vehicle-shop/ornihopter/src/model/geometry/hullGeometry.ts
-// The hull as one lofted revolve, matching hullProfile.ts's half-width curve
-// exactly at every station — so the wing-clearance tests and the rendered
-// surface can never disagree. A circular Lathe scaled non-uniformly in Y to
-// the craft's bodyHeight/bodyWidth ratio is the simplest way to get an
-// elliptical cross-section without a second authored curve (see
-// hullProfile.ts's header).
+// The hull as one faceted mesh: hullLoft.ts's tapering hexagonal boom plus
+// hullTailFork.ts's two tail prongs, concatenated into a single buffer
+// before three.js ever sees it — buildHullGeometry()'s signature and
+// single-BufferGeometry return type are unchanged from the LatheGeometry
+// round, so Ornithopter.ts's call site never needed to change.
+//
+// Non-indexed on purpose: every panel owns its own vertices (see
+// hullCrossSection.ts's loftRingsFlat), which is what makes the hexagon
+// actually LOOK faceted instead of Gouraud-smoothed into a tube — concatenation
+// is then just appending position arrays, no index-offset bookkeeping at all.
 
-import { LatheGeometry, Vector2, type BufferGeometry } from 'three'
-import { OVERALL } from '../../spec'
-import { HULL_PROFILE_Z, hullHalfWidthAt } from './hullProfile'
+import { BufferGeometry, BufferAttribute } from 'three'
+import { buildHullLoft } from './hullLoft'
+import { buildTailFork } from './hullTailFork'
 
-const RADIAL_SEGMENTS = 14
-
-/**
- * Revolves hullProfile.ts's half-width curve around Y (three.js Lathe
- * convention: points are (radius, height)), then rotateX(PI/2) maps that
- * height axis onto world Z — the same "nose along -Z" technique used
- * throughout this codebase's other craft (see
- * src/game-render/modes/flight/geometry/fuselageGeometry.ts) — so the
- * profile's own z values land exactly where hullProfile.ts authored them.
- * Scaling Y by bodyHeight/bodyWidth afterwards turns the circular revolve
- * into the elliptical cross-section hullProfile.ts's hullHalfHeightAt
- * assumes.
- */
 export function buildHullGeometry(): BufferGeometry {
-  const points = HULL_PROFILE_Z.map((z) => new Vector2(hullHalfWidthAt(z), z))
-  const geometry = new LatheGeometry(points, RADIAL_SEGMENTS)
-  geometry.rotateX(Math.PI / 2)
-  geometry.scale(1, OVERALL.bodyHeight / OVERALL.bodyWidth, 1)
+  const positions = [
+    ...buildHullLoft().positions,
+    ...buildTailFork().flatMap((prong) => prong.positions),
+  ]
+
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
+  geometry.computeVertexNormals()
   return geometry
 }
