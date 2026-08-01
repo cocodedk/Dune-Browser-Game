@@ -29,6 +29,8 @@ Reference assets that actually exist:
 | view | file | what it is good for |
 |---|---|---|
 | 3/4, assembled, wings extended | `.shots/reference/kit-assembled.png` | **primary.** A photograph of the user's own printed kit: ball-joint wing roots, faceted hull, canopy, gear |
+| full craft, front-port 3/4, 20cm ruler | `docs/dune_ornihopter_kit-2.png` | second assembled view: landing stance, wing splay, boom taper. The ruler lies diagonal to the camera — scale sanity only, never a measurement source |
+| hull close-up, nose-on starboard 3/4 | `docs/dune_ornihopter_kit-3.png` | **best hull view held.** Hard chine, chisel nose with twin tip slots, dorsal wing-root shelf, flank intake grille, deck louvres, pod-to-boom contrast, panel language |
 | flat blade planform, root socket | `.shots/reference/kit-sprue-wings.png` | wing outline and the moulded root socket |
 | cockpit interior concept art | `.shots/reference/thopter-03.jpg` | **primary for Q3** |
 | canopy raised, crew seated | `.shots/reference/thopter-04.jpg` | canopy shape, seating posture |
@@ -446,3 +448,27 @@ taper, thin boom, tail-fork/vane dedup) plus the first AAA surface pass (DataTex
 panel-line and dirt maps per the game repo's own hullWeathering pattern, UVs added to the
 loft, bone/tan palette from the photo). Wing-root stations must stay on the hull; canopy
 seating re-verified after the height changes.
+
+**Mid-round evidence, 2026-08-02.** The user supplied two more photographs of the assembled
+kit — `docs/dune_ornihopter_kit-2.png` (full craft on a desk, printed 20cm ruler in frame)
+and `docs/dune_ornihopter_kit-3.png` (hull close-up, nose-on starboard 3/4 — the best hull
+view we hold). Both were added to the Q1 reference table above and briefed to the running
+builder before it had written a line. The close-up settles, in the lead's read: the section
+is hexagonal with a hard chine nose-to-boom (the existing loft approach is right; the defect
+was only the longitudinal plateau); the nose is a blunt chisel with two stacked horizontal
+slots at the tip; all eight wing roots ride a raised dorsal shelf on the deck edge, two
+plates per side, forward pair higher; the boom is thin AND flattened, and the pod-to-boom
+contrast is the dragonfly read; the panel language is a few large trapezoids with raised
+lighter trim over darker inset faces, plus two authored grilles (deck louvres between the
+root plates, fine-ribbed intake on the upper flank aft of the canopy).
+
+Colour ruling recorded here because the evidence is self-contradicting: the two prints are
+different filaments — kit-2 all light grey, kit-3 black plus grey — so filament colour is
+NOT colour authority. The palette stays in the accepted bone/tan family for desert-sun
+readability and adopts only the close-up's contrast structure: darker inset panels, dark
+belly, dark grilles, lighter structural trim. The ruler in kit-2 confirms print scale
+roughly and nothing else; MENG keeps absolute scale, the measured plates keep planform.
+
+The three kit photographs were `git add -f`ed past the repo-wide `*.png` ignore: the bar's
+primary shape authority must travel with the branch, not live only on one machine. The user
+also directed mid-round: builders run at max effort, the lead at xhigh.
