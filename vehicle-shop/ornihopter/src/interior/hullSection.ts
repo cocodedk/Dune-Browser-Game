@@ -97,3 +97,18 @@ export function hullSectionBreakpoints(z: number, yMin: number, yMax: number): n
     .filter((y) => y > safeLo && y < safeHi)
   return [safeLo, ...inner, safeHi]
 }
+
+/**
+ * Evenly spaced z samples from za to zb inclusive, no step longer than
+ * `step` — fine enough that hullInteriorHalfWidthAt's steepest rise (the nose
+ * crossover documented above) reads, to a caller that walks the samples
+ * pairwise, as a taper rather than a single visible kink. cabinShell.ts's
+ * buildFloor solved this same problem with its own ad hoc FLOOR_SEGMENTS
+ * constant; this is the same idea pulled out so a second caller (its side
+ * walls, which run along z at a fixed y exactly like the floor does) does
+ * not have to re-derive it or drift from the floor's own resolution.
+ */
+export function hullZSamples(za: number, zb: number, step = 0.2): number[] {
+  const steps = Math.max(1, Math.ceil(Math.abs(zb - za) / step))
+  return Array.from({ length: steps + 1 }, (_, i) => za + ((zb - za) * i) / steps)
+}

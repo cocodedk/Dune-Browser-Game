@@ -9,6 +9,13 @@
 // PROVEN FALSIFIABLE: run against the pre-fix cabinShell.ts (a flat box at
 // COCKPIT.clearWidth for both floor and bulkhead), the first two `it` blocks
 // below failed — see this round's report for the exact failing output.
+//
+// Round 4b.2 extends the same discipline to the side walls' BASE line (the
+// "defect's smaller sibling" round 4b's own report named): the third `it`
+// block below, PROVEN FALSIFIABLE the same way — run against the pre-fix
+// cabinShellWall.ts (base at a constant WALL.halfX), it failed at all 10
+// sampled base vertices, 0.77-2.15m outside the hull skin. See this round's
+// report for the exact failing output.
 
 import { describe, it, expect } from 'vitest'
 import type { Group, Object3D } from 'three'
@@ -69,6 +76,25 @@ describe('cabin floor and bulkhead are contained by the actual hull skin (round 
     expect(verts.length).toBeGreaterThan(0)
     for (const v of verts) {
       expect(isOutsideHull(v.x, v.y, v.z, MARGIN)).toBe(false)
+    }
+    shell.dispose()
+  })
+
+  it('every side-wall BASE vertex sits inside the hull skin, with margin', () => {
+    // Only the base line (y === floorY exactly, by construction) is checked
+    // against the hull: the wall's TOP line meets the canopy sill, which is
+    // deliberately proud of the hull's own opaque surface (canopyGeometry.ts's
+    // header) and is NOT expected to pass isOutsideHull. Mixing the two lines
+    // together would fail this test for a reason that has nothing to do with
+    // the base defect it exists to catch.
+    const shell = createCabinShell()
+    for (const name of ['wall-pilot', 'wall-copilot']) {
+      const verts = worldVertices(shell.group, name)
+      const baseVerts = verts.filter((v) => Math.abs(v.y - COCKPIT.floorY) < 1e-6)
+      expect(baseVerts.length).toBeGreaterThan(0)
+      for (const v of baseVerts) {
+        expect(isOutsideHull(v.x, v.y, v.z, MARGIN)).toBe(false)
+      }
     }
     shell.dispose()
   })

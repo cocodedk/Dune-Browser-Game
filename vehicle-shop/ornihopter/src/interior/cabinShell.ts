@@ -1,8 +1,12 @@
 // vehicle-shop/ornihopter/src/interior/cabinShell.ts
 // The interior liner: floor, a rear bulkhead closing the cockpit off from the
-// larger cabin behind it (per docs/info.md), and side-wall panels whose TOP
-// edge tapers to the canopy's OWN sill line (model/geometry/canopyGeometry.ts's
-// canopySectionAt) instead of sitting at one constant half-width.
+// larger cabin behind it (per docs/info.md), and — built in cabinShellWall.ts,
+// split out in round 4b.2 to stay under this file's 200-line cap — side-wall
+// panels whose TOP edge tapers to the canopy's OWN sill line
+// (model/geometry/canopyGeometry.ts's canopySectionAt) instead of sitting at
+// one constant half-width. See cabinShellWall.ts's own header for the wall's
+// round 2/3/4b.2 history; this file's history below is the floor and
+// bulkhead's alone.
 //
 // FOUND, round 4b: the floor and bulkhead were still flat boxes at a constant
 // COCKPIT.clearWidth (4.9m) regardless of the hull's own taper — the one
@@ -12,7 +16,7 @@
 // bulkhead's constant 2.45m half-width corners hung outside the hull skin
 // entirely, rendering as a black tray and wall below and beside the pod in
 // every exterior capture. Both are now built the same way the side walls
-// already were (below): from the hull's own section, via hullSection.ts's
+// already were: from the hull's own section, via hullSection.ts's
 // hullInteriorHalfWidthAt/hullSectionBreakpoints, which read hullHalfWidthAt/
 // hullHalfHeightAt/hullKeelYAt/hullShapeAt and buildRing — the SAME numbers
 // hullLoft.ts's visible mesh and hullProfile.ts's isOutsideHull use, so this
@@ -20,82 +24,19 @@
 // hullSection.ts's own header for why "just read the hull's half-width" was
 // not quite enough on its own (the keel and deck are flat caps, not points),
 // and this round's report for the measured before/after numbers.
-//
-// FOUND, round 3: the previous wall was a flat box at a constant half-width
-// (2.3m) the whole cabin length, while the canopy's own sill narrows to 0.7m
-// at the nose and bulges to 2.5m at the shoulder. The wall sat OUTSIDE the
-// canopy's own footprint for most of the forward run — not just failing to
-// meet the glazing, but standing somewhere the shell never reached, which is
-// the "entire right half... unbounded open sky" a blind critic reported.
-// canopySectionAt is now the single source for both, so the wall's top edge
-// cannot land anywhere the canopy itself does not.
-//
-// FOUND, round 2: the four black rectangular panes a blind critic reported
-// floating unattached at upper-left of the pilot frame (progress.md) were the
-// four ribs below — coded well above the wall's own top edge, attached to
-// nothing. Fixed by moving them onto the wall's own face; they now also
-// track its taper.
 
 import { Group } from 'three'
 import { COCKPIT } from '../spec'
-import { canopySectionAt, CANOPY_STATION_Z } from '../model/geometry/canopyGeometry'
 import { WALL, FLOOR_FRONT_Z, FLOOR_REAR_Z } from './layout'
 import { hullInteriorHalfWidthAt, hullSectionBreakpoints } from './hullSection'
-import { box, flatQuad, disposeGroup, type Placed } from './sceneUtils'
-import { hullLinerMaterial, gunmetalMaterial } from './materials'
+import { flatQuad, disposeGroup, type Placed } from './sceneUtils'
+import { hullLinerMaterial } from './materials'
+import { buildSideWall } from './cabinShellWall'
 
-// Kept inboard of the canopy's own sill rail beam (canopyGeometry.ts's
-// BEAM_THICKNESS) so the liner's top edge never pokes past it into the glass.
-const SILL_MARGIN = 0.08
-// The wall's outer face AT THE FLOOR — unrelated to the canopy, so it stays
-// put; only the top edge (canopySectionAt) follows the shell's own taper.
-const BASE_OUTER_X = WALL.halfX
-// Break exactly at the canopy's own stations, so each segment is linear over
-// the same span canopySectionAt is linear over — an exact match, not a
-// sampled curve that could cut a corner at the shoulder, the closest station
-// to the pilot's eye and so the most visible one.
-const WALL_ZS = [
-  FLOOR_FRONT_Z, CANOPY_STATION_Z.nose, CANOPY_STATION_Z.shoulder, CANOPY_STATION_Z.rear, FLOOR_REAR_Z,
-]
 // Fine enough that hullInteriorHalfWidthAt's steepest rise (the nose
 // crossover where the hull first grows deep enough to reach COCKPIT.floorY
 // at all — see hullSection.ts) reads as a wedge, not a visible step.
 const FLOOR_SEGMENTS = 24
-
-function buildSideWall(sign: 1 | -1): Group {
-  const group = new Group()
-  const material = hullLinerMaterial()
-
-  for (let i = 0; i < WALL_ZS.length - 1; i++) {
-    const za = WALL_ZS[i]
-    const zb = WALL_ZS[i + 1]
-    const ta = canopySectionAt(za)
-    const tb = canopySectionAt(zb)
-    const bottomA: Placed = { x: sign * BASE_OUTER_X, y: COCKPIT.floorY, z: za }
-    const bottomB: Placed = { x: sign * BASE_OUTER_X, y: COCKPIT.floorY, z: zb }
-    const topB: Placed = { x: sign * (tb.halfWidth - SILL_MARGIN), y: tb.baseY, z: zb }
-    const topA: Placed = { x: sign * (ta.halfWidth - SILL_MARGIN), y: ta.baseY, z: za }
-    group.add(flatQuad(bottomA, bottomB, topB, topA, material))
-  }
-
-  // Greeble ribs — see layout.ts WALL for why only forward of z=-9.5 is
-  // worth detailing. X/Y interpolate the same way the quads above do,
-  // between the constant floor edge and the canopy's local sill, at the
-  // rib's own height fraction, so they sit ON the tapered face, not beside it.
-  const barCount = 4
-  const span = WALL.greebleZMax - WALL.greebleZMin
-  const heightFrac = 0.6
-  for (let i = 0; i < barCount; i++) {
-    const z = WALL.greebleZMin + (span * (i + 0.5)) / barCount
-    const top = canopySectionAt(z)
-    const bottomX = sign * BASE_OUTER_X
-    const topX = sign * (top.halfWidth - SILL_MARGIN)
-    const ribX = bottomX + (topX - bottomX) * heightFrac - sign * 0.04
-    const ribY = COCKPIT.floorY + (top.baseY - COCKPIT.floorY) * heightFrac
-    group.add(box(0.03, 0.3, span / barCount - 0.05, gunmetalMaterial(), { x: ribX, y: ribY, z }))
-  }
-  return group
-}
 
 /**
  * The cabin floor: a tapered plate whose half-width at every z comes from the
