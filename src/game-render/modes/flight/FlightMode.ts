@@ -20,13 +20,15 @@ import { paletteForTime } from '../../materials/Atmosphere'
 import { createTerrainMesh } from '../strategic/TerrainMesh'
 import { fogColorFor } from '../strategic/DesertSky'
 import { currentTravelProgress } from '../../../game-engine/TravelSystem'
-import { positionAt, chaseCameraAt, yawOf, bankAt } from './FlightPath'
+import { positionAt, chaseCameraAt, yawOf, bankAt, pitchAt } from './FlightPath'
 import { createOrnithopter } from './Ornithopter'
 import type { FlightArc } from './FlightPath'
 
 const DAY_SECONDS = 60
 const FIELD_SIZE = 2200
 const ARC_LENGTH = 1500
+/** How far the skids sit above the sand at touchdown. */
+const SKID_CLEARANCE = 6
 
 function rgb(c: readonly [number, number, number]): Color {
   return new Color(c[0], c[1], c[2])
@@ -68,10 +70,20 @@ export function createFlightMode(
   scene.add(craft.group)
 
   // Flown across the middle of the field so the edges never enter frame.
+  // Where the ground actually is under the destination, so the craft lands on
+  // the dunes rather than at a guessed altitude. Sampled once — the field is a
+  // fixed treadmill, so this cannot drift.
+  const destination = { x: ARC_LENGTH / 2, z: -200 }
+  const groundY = heightfield.heightAt(destination.x, destination.z)
+
   const arc: FlightArc = {
     from: { x: -ARC_LENGTH / 2, y: 90, z: 200 },
-    to: { x: ARC_LENGTH / 2, y: 90, z: -200 },
+    to: { x: destination.x, y: 90, z: destination.z },
     apex: 70,
+    // Skid clearance above the sand. Without this the arc ended in level
+    // flight at altitude 90 and the mode switched under a craft that had never
+    // come down — the cinematic could only ever look interrupted.
+    touchdownY: groundY + SKID_CLEARANCE,
   }
   const heading = yawOf(arc)
 
@@ -115,7 +127,7 @@ export function createFlightMode(
       const position = positionAt(arc, progress)
 
       craft.group.position.set(position.x, position.y, position.z)
-      craft.group.rotation.set(0, heading, bankAt(progress))
+      craft.group.rotation.set(pitchAt(progress), heading, bankAt(progress))
       craft.update(elapsedMs)
 
       const view = chaseCameraAt(arc, progress)

@@ -1,15 +1,7 @@
 // src/game-render/modes/flight/FlightPath.test.ts
 
 import { describe, it, expect } from 'vitest'
-import {
-  clamp01,
-  easeInOut,
-  positionAt,
-  headingOf,
-  yawOf,
-  bankAt,
-  chaseCameraAt,
-} from './FlightPath'
+import { clamp01, easeInOut, positionAt, headingOf, yawOf, bankAt, chaseCameraAt } from './FlightPath'
 import type { FlightArc } from './FlightPath'
 
 const ARC: FlightArc = {
@@ -124,8 +116,13 @@ describe('headingOf and yawOf', () => {
   })
 
   it('yaws to face due east for an eastward trip', () => {
+    // This asserted +PI/2 before the stage 22 fix — which is the yaw that
+    // points the fuselage's TAIL (local +Z) east and the nose (local -Z)
+    // west. This test was passing while encoding the exact bug the stage
+    // document measured: nobody asked whether "due east" meant the nose or
+    // the tail. See FlightOrientation.test.ts for the guard against it.
     const east: FlightArc = { from: { x: 0, y: 0, z: 0 }, to: { x: 100, y: 0, z: 0 }, apex: 0 }
-    expect(yawOf(east)).toBeCloseTo(Math.PI / 2, 6)
+    expect(yawOf(east)).toBeCloseTo(-Math.PI / 2, 6)
   })
 })
 
