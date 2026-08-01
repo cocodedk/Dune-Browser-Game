@@ -8,7 +8,7 @@
 
 import {
   Mesh, MeshStandardMaterial, PlaneGeometry, Group, Object3D,
-  BoxGeometry, MeshBasicMaterial,
+  BoxGeometry,
 } from 'three'
 
 export const AREA_SIZE = 4000
@@ -50,14 +50,40 @@ export function createTerrain(): Terrain {
   // Scale posts every 500m. Without something of known size in frame there is
   // no way to tell a 23m craft from a 5m one, and "does it read as big?" is
   // part of the bar.
-  const postGeometry = new BoxGeometry(3, 40, 3)
-  const postMaterial = new MeshBasicMaterial({ color: 0x3a2a1c })
+  // These were 3 x 40 x 3 in unlit MeshBasicMaterial, and they were doing
+  // active harm on both counts.
+  //
+  // A 40m post standing beside a 22.9m craft tells the eye the craft is the
+  // small object in the frame. A blind critic, reasoning from these posts,
+  // read the craft as 12-18m long against its true 22.896m — about 35% under.
+  // A scale reference that dwarfs its subject is worse than no reference.
+  // MAST_HEIGHT is now under half the craft's length, so the craft is
+  // unambiguously the larger thing.
+  //
+  // MeshBasicMaterial ignores light entirely, so they rendered as flat black
+  // bars; a second critic, looking out of the cockpit, called them "stray
+  // geometry or debug markers, not design". Standard material with a footing
+  // makes them read as planted objects.
+  //
+  // Worth being honest that this only stops the posts from LYING about scale.
+  // It does not make the craft read big. Nothing here has a universally known
+  // size, and the real fix for scale perception is surface detail on the hull
+  // — panel lines, hatches, a crew door — which is exterior-fidelity work.
+  const MAST_HEIGHT = 10
+  const mastGeometry = new BoxGeometry(0.7, MAST_HEIGHT, 0.7)
+  const footGeometry = new BoxGeometry(2.6, 0.9, 2.6)
+  const postMaterial = new MeshStandardMaterial({ color: 0x4a3a2a, roughness: 0.85 })
   const posts = new Group()
   for (let gx = -1500; gx <= 1500; gx += 500) {
     for (let gz = -1500; gz <= 1500; gz += 500) {
-      const post = new Mesh(postGeometry, postMaterial)
-      post.position.set(gx, heightAt(gx, gz) + 20, gz)
-      posts.add(post)
+      const ground = heightAt(gx, gz)
+      const mast = new Mesh(mastGeometry, postMaterial)
+      mast.position.set(gx, ground + MAST_HEIGHT / 2, gz)
+      mast.castShadow = true
+      const foot = new Mesh(footGeometry, postMaterial)
+      foot.position.set(gx, ground + 0.45, gz)
+      foot.castShadow = true
+      posts.add(mast, foot)
     }
   }
   root.add(posts)
@@ -67,7 +93,8 @@ export function createTerrain(): Terrain {
     dispose() {
       geometry.dispose()
       material.dispose()
-      postGeometry.dispose()
+      mastGeometry.dispose()
+      footGeometry.dispose()
       postMaterial.dispose()
     },
   }
