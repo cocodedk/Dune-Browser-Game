@@ -504,3 +504,25 @@ behind 4b on purpose**: both builders' visual verification reads the same live t
 the dev server, and one builder's half-written edit rendering as a phantom defect in the
 other's captures is precisely the mid-write trap this loop has already paid for. Blind Q1/Q3
 critics re-run only after 4b and 4c land, so their round is not spent naming known defects.
+
+### Round 4b — LANDED. Verified. And it found the defect's smaller sibling.
+
+Commit `f5260d5`. The floor and bulkhead now derive from the hull's own ring:
+`interior/hullSection.ts` slices the exact ring hullLoft renders (width at a HEIGHT, inset
+0.05m, with real vertical clearance from the flat keel/deck caps — the file documents why a
+horizontal inset alone buys nothing against a horizontal edge). Worst vertex margin -0.041m
+inside the skin. The builder proved its containment test falsifiable the strong way: ran it
+fail-first against the old boxes, and it also caught two of the builder's own intermediate
+bugs (the flat-cap clearance hole, and an x=0 pinch vertex 9mm from the keel). Lead
+reproduced everything: lint 0, tsc 0, **1401/1401**, lengths clean, and in fresh captures
+the black tray is gone — the belly tapers cleanly into the boom. 150 meshes / 5991 tris.
+
+Two findings of lasting value from its report: (1) the wall-base sibling defect —
+`buildSideWall` still plants its base at a constant WALL.halfX = 2.3m, 0.95-1.3m outside
+the hull at floor height, now the only geometry breaking the belly line — confirmed in the
+lead's own crops and dispatched as **Round 4b.2** (workflow `wf_01c2d94f-730`, Sonnet, max
+effort, fail-first test required). (2) the bellyFrac headroom number: floor/bulkhead
+containment is now fully hull-derived, so the hull builder may tuck the cabin belly from
+0.51 freely down to ~0.44; the reference's 0.42 specifically at seatZ would put the seat
+edge 2.4cm outside the safe floor and needs a compensating seat nudge. Recorded so a later
+hull-polish round starts from the measured threshold, not a guess.
