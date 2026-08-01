@@ -1,76 +1,33 @@
 # CLAUDE.md — Dune Browser Game
 
-`CODEX.md` is the canonical agent guide for this repository.
-If this file and `CODEX.md` ever drift, follow `CODEX.md` and update this file to match.
+**Read [`CODEX.md`](./CODEX.md).** It is the canonical agent guide: stack, layout,
+architecture, working rules, build and test commands, enforced safeguards, and the
+completion checklist.
 
-## Current Stack
+This file exists because Claude Code loads `CLAUDE.md` by name. It used to restate
+`CODEX.md`'s stack, layout, rules and verification steps, and carried a "Files to Keep in
+Sync" list naming itself and `CODEX.md` — an admission that two copies of the same
+instructions would drift, and a standing chore to stop them. Pointing at one document
+removes the chore instead of scheduling it.
 
-- Node.js 20
-- TypeScript 5
-- React 18
-- three.js
-- Vite 6
-- npm
-- ESLint
-- Vitest (unit tests)
-- Playwright (E2E tests)
+## The short version, if you read nothing else
 
-## Current Layout
+- Simulation logic in `src/game-engine/` — pure, no three.js.
+- Scene and rendering in `src/game-render/` — never mutates world state.
+- React UI in `src/ui/`, with `EventBus` as the boundary between renderer and React.
+- **200 lines max** per source-like file, enforced by `.githooks/pre-commit`. That hook
+  runs the file-length check *before* the npm commands, so `npm run lint && npx tsc
+  --noEmit && npm run build && npm run test:unit && npm test` can all pass and the commit
+  still be rejected. Check line counts yourself.
+- Explicit `import { describe, it, expect } from 'vitest'` — no globals. Unit tests have no
+  WebGL or DOM, so anything touching `document` or a canvas belongs behind a guard or in a
+  `DataTexture` (see `materials/neutralEnvMap.ts` for the house pattern).
+- Never `--no-verify`.
 
-```text
-src/
-├── data/
-├── game-engine/
-├── game-render/
-├── shims/
-├── ui/
-├── App.tsx
-├── EventBus.ts
-├── main.tsx
-└── types.ts
-```
+Everything else, including the full verification sequence and the bundle budgets, is in
+`CODEX.md`.
 
-## Important Rules
+## Where the work is tracked
 
-- `200` lines max per source-like file is enforced by pre-commit
-- Keep simulation logic in `src/game-engine/`
-- Keep three.js scene and rendering logic in `src/game-render/`
-- Keep React UI logic in `src/ui/`
-- Use `EventBus` as the renderer <-> React boundary
-- Use explicit `import { describe, it, expect } from 'vitest'` in test files — do NOT rely on globals
-- Unit tests (`.test.ts`) live next to source files in `src/`; `npm run test:unit` runs them
-
-## Required Verification
-
-Before calling work done, run:
-
-```bash
-npm run lint
-npx tsc --noEmit
-npm run build
-npm run test:unit
-npm test
-```
-
-If your change touches commit-time enforcement or repo tooling, also run:
-
-```bash
-sh .githooks/pre-commit
-```
-
-## Enforcement Summary
-
-- `.githooks/pre-commit` runs file-length enforcement, lint, type-check, build, Vitest unit tests, and Playwright E2E tests
-- `npm run build` includes bundle-budget enforcement via `scripts/check-bundle-size.mjs`
-- three.js is split into `three-core` / `three-addons` chunks, each with its own bundle budget
-
-## Files to Keep in Sync
-
-- `CODEX.md`
-- `CLAUDE.md`
-- `package.json`
-- `.githooks/pre-commit`
-- `scripts/check-file-length.sh`
-- `scripts/check-bundle-size.mjs`
-- `vite.config.ts`
-- `playwright.config.ts`
+[`docs/PRD/dune92/03-stage-index.md`](./docs/PRD/dune92/03-stage-index.md) is the live
+status board. Per-stage specs sit in `docs/PRD/dune92/stages/`.

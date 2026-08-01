@@ -15,6 +15,8 @@ import {
 import type { QualitySettings } from './Quality'
 import { createPostPipeline, type PostPipeline } from '../post/PostPipeline'
 import { enableShadows, shadowSettingsFor } from '../env/shadowRig'
+import { createSkyEnvironment } from '../env/skyEnvironment'
+import type { AtmospherePalette } from '../materials/Atmosphere'
 
 export interface RendererHandle {
   readonly renderer: WebGLRenderer
@@ -24,6 +26,13 @@ export interface RendererHandle {
   readonly postEnabled: boolean
   /** Tone-mapping exposure for the current hour. */
   setExposure(value: number): void
+  /**
+   * Point `scene` at a PMREM of the sky's own gradient for this hour, so
+   * metals have something to reflect. Cheap to call every frame — the actual
+   * bake is throttled internally to hour-scale palette changes, never per
+   * frame; see env/skyEnvironment.ts.
+   */
+  updateEnvironment(scene: Scene, palette: AtmospherePalette): void
   /** Paint the clear colour with no scene — used before a mode has loaded. */
   clear(): void
   info(): { calls: number; triangles: number }
@@ -117,6 +126,10 @@ export function createRenderer(
   }
   canvas.addEventListener('webglcontextlost', onContextLost)
 
+  // Built once and reused for the renderer's whole lifetime — see
+  // env/skyEnvironment.ts for why rebaking is throttled rather than run here.
+  const skyEnvironment = createSkyEnvironment(renderer)
+
   return {
     renderer,
     camera,
@@ -141,6 +154,9 @@ export function createRenderer(
       // image out a little rather than turn the screen white or black.
       renderer.toneMappingExposure = Math.max(0.2, Math.min(2, value))
     },
+    updateEnvironment(scene: Scene, palette: AtmospherePalette): void {
+      skyEnvironment.update(scene, palette)
+    },
     clear(): void {
       renderer.clear()
     },
@@ -153,6 +169,7 @@ export function createRenderer(
     dispose(): void {
       resizeObserver?.disconnect()
       canvas.removeEventListener('webglcontextlost', onContextLost)
+      skyEnvironment.dispose()
       post?.dispose()
       renderer.dispose()
     },

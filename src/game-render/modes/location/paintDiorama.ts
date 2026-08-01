@@ -12,6 +12,19 @@ export const FRAME_WIDTH = 1600
 export const FRAME_HEIGHT = 1000
 
 /**
+ * Multiply a hex colour's brightness. Keeps the pillars in the diorama's own
+ * palette instead of introducing a second set of hand-picked hexes.
+ */
+function shade(hex: string, factor: number): string {
+  const n = parseInt(hex.replace('#', ''), 16)
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)))
+  const r = clamp(((n >> 16) & 255) * factor)
+  const g = clamp(((n >> 8) & 255) * factor)
+  const b = clamp((n & 255) * factor)
+  return `rgb(${r}, ${g}, ${b})`
+}
+
+/**
  * Paint the diorama to a canvas.
  *
  * Canvas rather than geometry because the whole point is a painted backdrop;
@@ -75,11 +88,40 @@ export function paintDiorama(
   ctx.fill()
 
   // Side pillars deepen the enclosure without another texture.
+  //
+  // These were flat fills of `def.massing`, and measured on a captured frame
+  // the left one sat at mean luma 6.9 against 48.2 for the scene beside it —
+  // an unlit, untextured, hard-edged column. It read as a rendering gap rather
+  // than as a wall, and was reported as "a black strip" on the edge of the
+  // screen. The right-hand one is the same, and only escaped notice because the
+  // command column covers it.
+  //
+  // The shape was right; it just had nothing in it that says "stone". Each
+  // pillar now falls off toward the frame edge rather than being one flat
+  // value, and carries a lit inner lip where it turns to face the room — the
+  // single cue that separates a near wall from a hole in the picture.
   const pillar = width * 0.09 * def.enclosure
   if (pillar > 4) {
-    ctx.fillStyle = def.massing
-    ctx.fillRect(0, 0, pillar, height)
-    ctx.fillRect(width - pillar, 0, pillar, height)
+    const lip = Math.max(3, pillar * 0.18)
+
+    for (const side of [0, 1]) {
+      const x = side === 0 ? 0 : width - pillar
+      // Darkest at the frame edge, opening toward the room.
+      const wash = ctx.createLinearGradient(x, 0, x + pillar, 0)
+      const outer = side === 0 ? 0 : 1
+      // Never below the flat value this replaced — the point is that the
+      // column reads as a lit surface, not that it recedes further.
+      wash.addColorStop(outer, shade(def.massing, 1.0))
+      wash.addColorStop(1 - outer, shade(def.massing, 2.1))
+      ctx.fillStyle = wash
+      ctx.fillRect(x, 0, pillar, height)
+
+      // The inner edge catches the hearth, so the column has a near face.
+      ctx.fillStyle = shade(def.massing, 2.9)
+      ctx.globalAlpha = 0.65
+      ctx.fillRect(side === 0 ? pillar - lip : width - pillar, 0, lip, height)
+      ctx.globalAlpha = 1
+    }
   }
 
   ctx.fillStyle = 'rgba(240, 224, 190, 0.92)'

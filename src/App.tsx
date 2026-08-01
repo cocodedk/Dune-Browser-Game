@@ -10,6 +10,7 @@ import EventLog from './ui/EventLog'
 import FactionPanel from './ui/FactionPanel'
 import GoalOverlay from './ui/GoalOverlay'
 import { COMMAND_COLUMN_WIDTH, palette } from './ui/theme'
+import EventToasts from './ui/EventToasts'
 import OrnamentFrame from './ui/Ornament'
 import ViewHint from './ui/ViewHint'
 import PositionStrip from './ui/PositionStrip'
@@ -52,6 +53,9 @@ export default function App() {
       </div>
 
       <ViewHint />
+
+      {/* Messages over the middle of the scene — see ui/toastPolicy.ts. */}
+      <EventToasts />
 
       <DialoguePanel />
       <GoalOverlay />

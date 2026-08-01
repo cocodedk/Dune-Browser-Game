@@ -11,6 +11,7 @@ import {
   SRGBColorSpace,
 } from 'three'
 import type { Hotspot } from './locationDefs'
+import { paintHeightFor, paintWidthFor } from './paintResolution'
 
 export interface HotspotLayer {
   mesh: Mesh
@@ -79,6 +80,10 @@ export function createHotspotLayer(
   spots: readonly Hotspot[],
   viewWidth: number,
   viewHeight: number,
+  /** Canvas height in CSS pixels; defaults keep the old fixed behaviour. */
+  displayHeight = 1000,
+  /** Physical pixels per CSS pixel. */
+  displayRatio = 1,
 ): HotspotLayer {
   const geometry = new PlaneGeometry(viewWidth, viewHeight)
   const material = new MeshBasicMaterial({
@@ -89,9 +94,12 @@ export function createHotspotLayer(
     toneMapped: false,
   })
 
-  // Painted at the visible aspect so the text is never stretched.
-  const pixelHeight = 768
-  const pixelWidth = Math.round(pixelHeight * (viewWidth / viewHeight))
+  // Painted at the visible aspect so the text is never stretched, and at the
+  // resolution the display can actually show. This was a fixed 768 whatever the
+  // window was, which a 1440p screen then upscaled ~1.9x — labels are text, so
+  // they show that softening more plainly than the art behind them does.
+  const pixelHeight = paintHeightFor(displayHeight, displayRatio)
+  const pixelWidth = paintWidthFor(pixelHeight, viewWidth / viewHeight)
   let texture = paint(spots, pixelWidth, pixelHeight, null)
   material.map = texture
 

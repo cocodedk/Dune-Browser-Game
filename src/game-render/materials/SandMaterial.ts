@@ -5,14 +5,12 @@
 
 import { MeshStandardMaterial, Color, Vector2, Vector3, type IUniform } from 'three'
 import {
-  SAND_VERTEX_DECLARATIONS,
-  SAND_VERTEX_BODY,
-  SAND_FRAGMENT_DECLARATIONS,
-  SAND_FRAGMENT_COLOR,
-  SAND_FRAGMENT_GLINT,
+  SAND_VERTEX_DECLARATIONS, SAND_VERTEX_BODY, SAND_FRAGMENT_DECLARATIONS,
+  SAND_FRAGMENT_COLOR, SAND_FRAGMENT_GLINT,
 } from './sandShader.glsl'
 import { SAND_FOG_DECLARATIONS, SAND_FOG_FRAGMENT } from './sandFogShader.glsl'
 import { getSandTextures } from './sandTextures'
+import { neutralEnvMap } from './neutralEnvMap'
 // Reused, not duplicated: shadowRig.ts already names 124 as the dune
 // amplitude; the fog height scale (Finding 1) wants the same order of size.
 import { STRATEGIC_TERRAIN_AMPLITUDE } from '../env/shadowRig'
@@ -95,9 +93,7 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
     uSandShadow: { value: new Color(opts.shadowColor) },
     uSandCrest: { value: new Color(opts.crestColor) },
     uSlipFace: { value: new Color(opts.slipFaceColor) },
-    uWindDirection: {
-      value: new Vector2(opts.windDirection[0], opts.windDirection[1]).normalize(),
-    },
+    uWindDirection: { value: new Vector2(opts.windDirection[0], opts.windDirection[1]).normalize() },
     uGlintStrength: { value: opts.glintStrength },
     uRippleScale: { value: opts.rippleScale },
     // Placeholder matching SkyDome's own, until the first setSunDirection.
@@ -119,6 +115,8 @@ export function createSandMaterial(options: SandMaterialOptions = {}): SandMater
     roughness: 0.95,
     metalness: 0.0,
     flatShading: false,
+    // Opts out of scene.environment — see neutralEnvMap.ts.
+    envMap: neutralEnvMap(),
   })
 
   // Assigning normalMap/roughnessMap/aoMap here (rather than in the

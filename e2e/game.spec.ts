@@ -124,7 +124,11 @@ test('events appear in the log after running at 5× speed', async ({ page }) => 
 
   expect(noEventsCount === 0 || hasTimestamp).toBe(true)
 
-  await page.screenshot({ path: 'event-log-populated.png' })
+  // Into test-results/, which is gitignored and is where Playwright already
+  // puts its own artifacts. This wrote to the repository root on every run, so
+  // a stray PNG reappeared beside package.json after every `npm test` — one of
+  // the two dozen loose images that had accumulated there.
+  await page.screenshot({ path: 'test-results/event-log-populated.png' })
 })
 
 // ---------------------------------------------------------------------------

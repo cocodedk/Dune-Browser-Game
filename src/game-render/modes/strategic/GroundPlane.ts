@@ -7,6 +7,7 @@
 // to see, so fog density can be tuned for depth instead of for concealment.
 
 import { Mesh, PlaneGeometry, MeshStandardMaterial, Color } from 'three'
+import { neutralEnvMap } from '../../materials/neutralEnvMap'
 
 export interface GroundPlane {
   mesh: Mesh
@@ -23,6 +24,8 @@ export function createGroundPlane(size: number): GroundPlane {
     color: new Color('#c08a52'),
     roughness: 1,
     metalness: 0,
+    // Opts out of scene.environment — see neutralEnvMap.ts.
+    envMap: neutralEnvMap(),
   })
 
   const mesh = new Mesh(geometry, material)
