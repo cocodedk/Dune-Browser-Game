@@ -138,4 +138,56 @@ Tooling notes for anyone reading later:
   cap applies here too. The pre-commit hook runs it before the npm commands, so lint,
   types, build and tests can all pass and the commit still be rejected.
 
-_Status: in progress._
+_Status: complete._
+
+### Round 1 — Builder A, flight model: LANDED. Verified independently.
+
+22 files, 949 lines, 38 tests, largest file 82 lines. No `three` import anywhere under
+`src/flight/`, so it is genuinely pure and genuinely unit-tested. `npx vitest run
+vehicle-shop` green in 827ms. Line counts and the three-import check re-run by me, not
+taken from the report.
+
+**The sign tests are real and I confirmed it.** `yawHeading`, `rollBank` and
+`pitchAltitude` all measure the resulting nose/starboard direction through
+`contracts.ts`, not through the flight module's own conventions, so a flipped sign
+genuinely fails them. The builder also flipped each sign to watch the matching test fail
+before reverting. Measured: yaw-left → heading exactly −40.0°; roll-right → starboard.y
+−0.856 with nose.x +0.151, i.e. banking right turns right; throttle 0.2 → 40.07 m/s,
+0.9 → 82.80 m/s; beatHz = 1.5 + 2.5 × throttle.
+
+**Finding 1 — the nose-leads test is vacuous. Bar item Q4.1 is currently unguarded.**
+`kinematics.ts` defines `velocity = scale(nose, nextSpeed)`. Therefore
+`normalise(velocity)` *is* `nose`, and `dot(nose, normalise(velocity))` is identically
+1.0 for every orientation, including a completely wrong one. The reported "dot = 1.0
+exactly" is the tell: a model that integrated velocity independently would read
+0.98–0.999, never exactly 1.
+
+The builder disclosed the architecture honestly and called it "true by construction".
+That is accurate about the model — and it is precisely why the test proves nothing about
+the thing Q4.1 exists to catch. **The historical bug was never inside the flight model.**
+It was a mismatch between the hull's modelled forward axis and the yaw maths. If the
+exterior builder models the hull nose-along +Z, this craft flies backwards and all 38
+tests still pass at exactly 1.0.
+
+The guard has to live at the seam between the flight model and the geometry, which no
+single builder owns. Lead's job: a test in a lead-owned file asserting the craft's actual
+frontmost geometry — the canopy — sits at negative local Z. Written once Builder B lands.
+
+**Finding 2 — undisclosed: there is no weight force. The craft cannot fall.** Gravity
+appears only as `GRAVITY * nose.y` in the *speed* equation. Nothing accelerates the craft
+downward. With the nose level and zero throttle it decelerates on drag alone and holds
+altitude forever, coming to a dead stop hanging in mid-air at 60 m. Altitude changes only
+by pointing the nose.
+
+The builder disclosed "no stall, no adverse yaw, no skidding" but framed it as a property
+of the velocity vector; the absence of weight is a larger simplification and was not
+named. For a flapping-wing craft, hovering is arguably *correct* — dragonflies hover —
+but this is an accident of the equations rather than a decision, and it is untested.
+Deliberately not sent back this round: "flyable first" got what it asked for, and whether
+the hover reads wrong is exactly the sort of thing a critic flying it should judge rather
+than something to pre-emptively tune.
+
+**Other honest limits, disclosed by the builder and confirmed by reading the source:**
+rate-command rotation with no inertia or smoothing; throttle passthrough with no spool
+lag; ground contact is a position clamp plus speed damping, not impact physics, and the
+craft keeps whatever pitch it landed at; no obstacle collision beyond the height field.
