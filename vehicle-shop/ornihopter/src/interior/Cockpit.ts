@@ -1,29 +1,27 @@
 // vehicle-shop/ornihopter/src/interior/Cockpit.ts
 // Assembles the cockpit interior: seats, a seated copilot figure, the
-// console, twin control sticks, the cabin shell, and the overhead panel.
-// Implements contracts.ts's CockpitModel; parented under the craft root by
-// main.ts, not by this module.
+// console, twin control sticks, the cabin shell, cabin lighting, and the
+// overhead panel — mounted to the canopy's own ridge beam, not hanging from
+// a stalk into open air (see overheadPanel.ts, layout.ts's OVERHEAD.mountTopY,
+// model/geometry/canopyGeometry.ts's ridgeHeightAt). Implements contracts.ts's
+// CockpitModel; parented under the craft root by main.ts, not by this module.
 //
-// KNOWN LIMITATION, measured rather than guessed (see layout.ts's header):
-// PILOT_EYE.z sits only 0.15m forward of COCKPIT.seatZ, so the entire
-// z=seatZ plane — both seat pans and the copilot figure alike, mirrored in x
-// or not — has camera-space z > 0 in the pilot camera (PerspectiveCamera(68,
-// 1.6, 0.25, 6000) at PILOT_EYE, matching camera/cameraRig.ts and the
-// 1600x1000 capture tools/shoot.mjs uses) and is behind it, full stop. That
-// offset is exactly what keeps the pilot from seeing their own seatback
-// (correct, and clearly intentional) but it symmetrically hides the
-// copilot's seat and figure from that one fixed forward view, regardless of
-// how they are modelled. The console, both control sticks and the overhead
-// panel are all placed and verified to clear the frustum instead (see
-// interior/frustum.test.ts), so the pilot-POV frame still carries a visible
-// second station — a matching instrument cluster and a second stick — even
-// though the second seat's cushion and the copilot figure themselves do not
-// appear in that exact frame. Both are still built at their correct spec
-// position for chase/orbit views and for overall interior correctness. A
-// future round could resolve this at the source by widening the pilot
-// camera's FOV (cockpit interior photography routinely uses a wider lens
-// than 68 degrees for exactly this reason) or by revisiting how far PILOT_EYE
-// sits forward of seatZ.
+// MEASURED, still true for the FIXED forward pilot camera (yaw 0, no
+// head-look): PILOT_EYE.z sits only 0.15m forward of COCKPIT.seatZ (see
+// layout.ts's header), so the entire z=seatZ plane — both seat pans and the
+// copilot figure alike — has camera-space z > 0 at that exact pose and is
+// behind it, full stop. That is exactly what keeps the pilot from seeing
+// their own seatback, and interior/frustum.test.ts still asserts it holds.
+// The console, both control sticks and the overhead panel are placed to
+// clear that fixed frustum regardless (bar Q3's "second station" mitigation).
+//
+// What has changed since this was a standing limitation: camera/cameraRig.ts
+// now has lookAround (hold H, or right-drag) — the pilot's head turns up to
+// 100 degrees either way, and turning right brings the copilot's own seat and
+// figure into frame directly, lit by lighting.ts and framed by the
+// shoulder-to-rear glazing bay, rather than relying on the console/stick
+// mitigation alone. Checked by hand in the running app, not just reasoned
+// about: see this round's report for what that frame actually looks like.
 
 import { Group } from 'three'
 import type { CockpitModel, FlightState } from '../contracts'
@@ -33,6 +31,7 @@ import { createConsole } from './console'
 import { createControlSticks } from './sticks'
 import { createCabinShell } from './cabinShell'
 import { createOverheadPanel } from './overheadPanel'
+import { createCabinLighting } from './lighting'
 
 export function createCockpit(): CockpitModel {
   const root = new Group()
@@ -44,6 +43,7 @@ export function createCockpit(): CockpitModel {
   const sticks = createControlSticks()
   const cabinShell = createCabinShell()
   const overheadPanel = createOverheadPanel()
+  const cabinLighting = createCabinLighting()
 
   root.add(
     cabinShell.group,
@@ -51,7 +51,8 @@ export function createCockpit(): CockpitModel {
     pilotFigure.group,
     dash.group,
     sticks.group,
-    overheadPanel.group
+    overheadPanel.group,
+    cabinLighting.group
   )
 
   return {
@@ -66,6 +67,7 @@ export function createCockpit(): CockpitModel {
       sticks.dispose()
       cabinShell.dispose()
       overheadPanel.dispose()
+      cabinLighting.dispose()
     },
   }
 }

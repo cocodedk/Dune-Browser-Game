@@ -1,37 +1,150 @@
 // vehicle-shop/ornihopter/src/model/geometry/canopyGeometry.ts
-// A single faceted glass shell over the cockpit, proud of the hull's own
-// nose taper rather than a boolean cut into it — the simplest correct shape
-// for this round (see Ornithopter.ts's header). Low sphere-segment count
-// reads as distinct angular panes once flatShading is on, matching the
-// reference's wedge-shaped multi-pane greenhouse
-// (.shots/reference/thopter-mr.jpg, mr-O4copy.jpg) rather than a smooth
-// bubble.
+// The wraparound canopy shell: three cross-sections (nose / shoulder / rear),
+// each a left-sill -> ridge -> right-sill triangle, joined by pillar beams at
+// each station and rail beams between stations, infilled with glazing panes.
+// One shell, built once here and mounted once by Ornithopter.ts — seen
+// correctly from OUTSIDE (an angular, faceted, multi-pane greenhouse, per
+// .shots/reference/mr-O4copy.jpg and mr-O9copy.jpg) and from INSIDE (the
+// pilot's eye sits inside this same volume, per spec.ts PILOT_EYE, and sees
+// the same beams as mullions framing the glazing, per
+// .shots/reference/thopter-03.jpg).
 //
-// Sized and placed entirely within the hull's own nose-to-tail span (well
-// clear of the nose tip and of every WING_ROOTS station) so it never
-// enlarges the craft's overall length past OVERALL.length — see the
-// bounding-box test in Ornithopter.test.ts.
+// Round-1's canopy was a single-sided SphereGeometry: plausible enough from
+// outside, but invisible from inside. A camera positioned inside a shell
+// looks at every triangle's back face — the vertex normal points away from
+// the shell's centre, the same general direction as the view ray from a
+// camera near that centre, so the shader reads it as the back of the
+// triangle — and the default FrontSide material culls exactly that face.
+// DoubleSide on the glazing here fixes it at the material, not by fighting
+// winding order.
 
-import { SphereGeometry, type BufferGeometry } from 'three'
-import { HALF_LENGTH } from '../../spec'
-import { hullHalfWidthAt, hullHalfHeightAt } from './hullProfile'
+import {
+  BoxGeometry, BufferGeometry, BufferAttribute, Group, Mesh, MeshStandardMaterial,
+  DoubleSide, Vector3, type Material,
+} from 'three'
+import { COCKPIT, stationFromNose } from '../../spec'
 
-/** Centre of the canopy dome, craft-local z — well inside the hull's nose taper. */
-export const CANOPY_Z = -HALF_LENGTH + 3.0
-const CANOPY_HALF_LENGTH = 2.4
+const FRAME_COLOR = 0x312f2a
+const GLASS_COLOR = 0x25333a
+const BEAM_THICKNESS = 0.07
+const RIDGE_THICKNESS = 0.1
 
-export interface CanopyPlacement {
-  geometry: BufferGeometry
-  position: { x: number; y: number; z: number }
+/** Where the canopy's side glazing starts — shared with
+ *  interior/cabinShell.ts's liner wall so the opaque cabin wall and the
+ *  canopy glass meet with no gap and no step between them. */
+export const CANOPY_SIDE_SILL_Y = COCKPIT.floorY + COCKPIT.clearHeight * 0.42
+
+interface Station {
+  readonly z: number
+  readonly halfWidth: number
+  readonly baseY: number
+  readonly peakY: number
 }
 
-export function buildCanopy(): CanopyPlacement {
-  const scaleX = hullHalfWidthAt(CANOPY_Z) * 0.95
-  const scaleY = hullHalfHeightAt(CANOPY_Z) * 1.1
-  const geometry = new SphereGeometry(1, 8, 6)
-  geometry.scale(scaleX, scaleY, CANOPY_HALF_LENGTH)
-  return {
-    geometry,
-    position: { x: 0, y: hullHalfHeightAt(CANOPY_Z) * 0.4, z: CANOPY_Z },
+const NOSE: Station = { z: stationFromNose(1.1), halfWidth: 0.45, baseY: -0.95, peakY: 0.8 }
+const SHOULDER: Station = {
+  z: stationFromNose(2.7), halfWidth: 2.05, baseY: CANOPY_SIDE_SILL_Y, peakY: 1.55,
+}
+const REAR: Station = {
+  z: stationFromNose(4.9), halfWidth: 1.55, baseY: CANOPY_SIDE_SILL_Y, peakY: 1.2,
+}
+const STATIONS: readonly Station[] = [NOSE, SHOULDER, REAR]
+
+/**
+ * Ridge (roof spine) height at a craft-local z, so interior/layout.ts can
+ * mount the overhead panel to the real frame instead of into open air.
+ * Clamped to the NOSE..REAR span this structure actually occupies.
+ */
+export function ridgeHeightAt(z: number): number {
+  const [a, b] = z <= SHOULDER.z ? [NOSE, SHOULDER] : [SHOULDER, REAR]
+  const t = Math.min(1, Math.max(0, (z - a.z) / (b.z - a.z)))
+  return a.peakY + t * (b.peakY - a.peakY)
+}
+
+const baseLeft = (s: Station): Vector3 => new Vector3(-s.halfWidth, s.baseY, s.z)
+const baseRight = (s: Station): Vector3 => new Vector3(s.halfWidth, s.baseY, s.z)
+const ridgePt = (s: Station): Vector3 => new Vector3(0, s.peakY, s.z)
+const UP = new Vector3(0, 1, 0)
+
+/** A structural beam between two points, sharing one unit box geometry that
+ *  is scaled and oriented per instance — every mullion is the same stock. */
+function beam(a: Vector3, b: Vector3, geometry: BoxGeometry, material: Material): Mesh {
+  const mesh = new Mesh(geometry, material)
+  mesh.position.copy(a).add(b).multiplyScalar(0.5)
+  const dir = b.clone().sub(a)
+  mesh.scale.set(1, dir.length(), 1)
+  mesh.quaternion.setFromUnitVectors(UP, dir.normalize())
+  return mesh
+}
+
+function facet(points: readonly Vector3[]): BufferGeometry {
+  const array = new Float32Array(points.length * 3)
+  points.forEach((p, i) => array.set([p.x, p.y, p.z], i * 3))
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(array, 3))
+  geometry.computeVertexNormals()
+  return geometry
+}
+
+/** Flat quad from four corners given in perimeter order; DoubleSide on the
+ *  glazing material handles the pilot's inside view of the same triangles. */
+function quad(a: Vector3, b: Vector3, c: Vector3, d: Vector3): BufferGeometry {
+  return facet([a, b, c, a, c, d])
+}
+
+/** Flat triangle — the nose cap, the one pane the pilot looks straight
+ *  through rather than to the side of. */
+function tri(a: Vector3, b: Vector3, c: Vector3): BufferGeometry {
+  return facet([a, b, c])
+}
+
+export interface CanopyBuild {
+  group: Group
+  geometries: BufferGeometry[]
+  materials: Material[]
+}
+
+export function buildCanopy(): CanopyBuild {
+  const group = new Group()
+  group.name = 'canopy'
+
+  const frameMaterial = new MeshStandardMaterial({ color: FRAME_COLOR, roughness: 0.55, metalness: 0.6 })
+  const glassMaterial = new MeshStandardMaterial({
+    color: GLASS_COLOR, roughness: 0.15, metalness: 0.25,
+    transparent: true, opacity: 0.28, side: DoubleSide, depthWrite: false,
+  })
+  const beamGeometry = new BoxGeometry(BEAM_THICKNESS, 1, BEAM_THICKNESS)
+  const ridgeGeometry = new BoxGeometry(RIDGE_THICKNESS, 1, RIDGE_THICKNESS)
+  const geometries: BufferGeometry[] = [beamGeometry, ridgeGeometry]
+  const materials: Material[] = [frameMaterial, glassMaterial]
+
+  // Pillars: left-to-ridge and ridge-to-right at every station — the
+  // mullions rising from the sill and meeting overhead.
+  for (const s of STATIONS) {
+    group.add(beam(baseLeft(s), ridgePt(s), beamGeometry, frameMaterial))
+    group.add(beam(ridgePt(s), baseRight(s), beamGeometry, frameMaterial))
   }
+
+  // Rails and glazing, one bay per pair of adjacent stations.
+  for (let i = 0; i < STATIONS.length - 1; i++) {
+    const a = STATIONS[i]
+    const b = STATIONS[i + 1]
+    group.add(beam(baseLeft(a), baseLeft(b), beamGeometry, frameMaterial))
+    group.add(beam(baseRight(a), baseRight(b), beamGeometry, frameMaterial))
+    group.add(beam(ridgePt(a), ridgePt(b), ridgeGeometry, frameMaterial))
+
+    const left = quad(baseLeft(a), baseLeft(b), ridgePt(b), ridgePt(a))
+    const right = quad(ridgePt(a), ridgePt(b), baseRight(b), baseRight(a))
+    geometries.push(left, right)
+    group.add(new Mesh(left, glassMaterial), new Mesh(right, glassMaterial))
+  }
+
+  // Windshield: the nose ring is otherwise an open hoop, and it is the one
+  // pane directly in the pilot's forward sightline (spec.ts PILOT_EYE sits
+  // aft of it, looking toward it down -Z) rather than off to a side.
+  const windshield = tri(baseLeft(NOSE), ridgePt(NOSE), baseRight(NOSE))
+  geometries.push(windshield)
+  group.add(new Mesh(windshield, glassMaterial))
+
+  return { group, geometries, materials }
 }

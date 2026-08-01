@@ -314,3 +314,47 @@ craft still reads 35% too small. Measurement and perception came apart in both d
 which is the argument for having critics at all. And the one bar item written specifically
 to catch the historical defect — Q4.1 — was guarded by a test that could not fail until
 the lead rewrote it, twice, after an invalid fault injection that proved nothing.
+
+## img2threejs — verdict and what the kit photograph gave us
+
+The skill at `~/.claude-personal/skills/img2threejs` **is** a clone of
+`github.com/img2threejs/img2threejs` — nothing to fetch. Its intake gates admit
+`docs/dune_ornihopter_kit.png` (1278x995, technical suitability pass, pHash recorded).
+
+**Used in analysis-only mode. The code-generating stages were deliberately not run**, for
+three reasons, the first of which is already recorded from the previous ornithopter loop:
+
+1. `stage3_build/generate_threejs_factory.py` emits **one factory file** from a JSON spec.
+   This repo caps every source file at 200 lines and the craft is deliberately split across
+   hand-authored modules under `model/`, `interior/` and `flight/`, each with its own tests.
+   A generated monolith would replace tested work with untested work and fail the hook.
+2. By the skill's own validation rubric this photograph is a **weak reconstruction target**:
+   the assembled craft occupies a small fraction of the frame, it is a single oblique view in
+   hard sunlight, and much of the model is self-occluding.
+3. **The model in the photograph appears partially assembled** — the sprues around it are
+   still full of parts. Its visible wing count must not be used to re-litigate anything.
+
+Analysis-only is the right mode here and it paid for itself. `.shots/reference/kit-assembled.png`
+is a 3x crop of the built craft and is now a first-class reference; it shows things the flat
+3mf plates structurally cannot.
+
+**What the assembled photograph settles that the plates could not:**
+
+- **The wing roots are ball joints.** Distinct spherical housings sit in a row along the dorsal
+  spine, each blade attaching through a narrow neck. Our wings currently emerge from the hull
+  with no mechanism at all, which is exactly what the blind critic called "wing roots are not
+  attached... a black mounting plate that floats with a visible gap".
+- **The blades are not flat plates and not straight.** Each carries a visible spar along its
+  length and steps down in width at a distinct kink partway out, rather than tapering smoothly.
+  This corroborates the `offset` range of -0.064..+0.251 measured off the kit's wing plate,
+  which `WING.chordProfile` does not currently capture — our blades are straight where the real
+  ones sweep.
+- **The blades are not coplanar.** They fan in elevation as well as in plan, with visible
+  dihedral variation between pairs.
+- **The fuselage is faceted with a flat underside and hard chine lines.** Our hull is a single
+  `LatheGeometry` revolve, which is a circular cross-section by construction and cannot produce
+  a chine. This is a structural mismatch, not a texture one.
+- **The canopy is a distinct faceted glazed volume** with visible framing, seated on the nose —
+  consistent with `thopter-03.jpg` and `mr-O4copy.jpg`.
+
+None of this changes round 2, which is already scoped to the cockpit. It is the round 3 brief.

@@ -61,7 +61,9 @@ describe('createCockpit contract', () => {
   it('contains a named group for every part', () => {
     const cockpit = createCockpit()
     const root = cockpit.root as unknown as Object3D
-    const names = ['seats', 'pilotFigure', 'console', 'sticks', 'cabinShell', 'overheadPanel']
+    const names = [
+      'seats', 'pilotFigure', 'console', 'sticks', 'cabinShell', 'overheadPanel', 'cabinLighting',
+    ]
     for (const name of names) expect(root.getObjectByName(name)).toBeTruthy()
     cockpit.dispose()
   })

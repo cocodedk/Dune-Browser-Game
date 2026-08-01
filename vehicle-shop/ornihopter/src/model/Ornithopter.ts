@@ -28,7 +28,6 @@ import type { WingSide } from './wingKinematics'
 const HULL_COLOR = 0x9c9280
 const METAL_COLOR = 0x54514a
 const WING_COLOR = 0x2b2822
-const CANOPY_COLOR = 0x1c2f33
 
 export function createOrnithopter(): CraftModel {
   const root = new Group()
@@ -41,21 +40,16 @@ export function createOrnithopter(): CraftModel {
   const wingMaterial = new MeshStandardMaterial({
     color: WING_COLOR, roughness: 0.45, metalness: 0.5, side: DoubleSide,
   })
-  const canopyMaterial = new MeshStandardMaterial({
-    color: CANOPY_COLOR, roughness: 0.2, metalness: 0.2, transparent: true, opacity: 0.55,
-  })
-  materials.push(hullMaterial, metalMaterial, wingMaterial, canopyMaterial)
+  materials.push(hullMaterial, metalMaterial, wingMaterial)
 
   const hullGeometry = buildHullGeometry()
   geometries.push(hullGeometry)
   root.add(new Mesh(hullGeometry, hullMaterial))
 
   const canopy = buildCanopy()
-  geometries.push(canopy.geometry)
-  const canopyMesh = new Mesh(canopy.geometry, canopyMaterial)
-  canopyMesh.name = 'canopy'
-  canopyMesh.position.set(canopy.position.x, canopy.position.y, canopy.position.z)
-  root.add(canopyMesh)
+  geometries.push(...canopy.geometries)
+  materials.push(...canopy.materials)
+  root.add(canopy.group)
 
   const vanes = buildTailVanes()
   geometries.push(vanes.geometry)

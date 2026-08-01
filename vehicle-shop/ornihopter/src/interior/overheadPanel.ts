@@ -1,9 +1,11 @@
 // vehicle-shop/ornihopter/src/interior/overheadPanel.ts
 // The hanging avionics panel from thopter-03's "ILLUMINATED LIGHTS" inset:
-// a mount reaching up toward the canopy structure, a box, and a row of lit
-// switches on its underside where a pilot looking up-and-forward sees them.
-// Position from layout.ts OVERHEAD — chosen off-centre because the pilot's
-// eye itself is off-centre with no toe-in (see layout.ts's header note).
+// a mount reaching up to a bracket clamped on the canopy's own ridge beam
+// (OVERHEAD.mountTopY is canopyGeometry.ts's ridgeHeightAt — see layout.ts),
+// a box, and a row of lit switches on its underside where a pilot looking
+// up-and-forward sees them. Position from layout.ts OVERHEAD — chosen
+// off-centre because the pilot's eye itself is off-centre with no toe-in
+// (see layout.ts's header note).
 
 import { Group } from 'three'
 import { OVERHEAD } from './layout'
@@ -29,13 +31,21 @@ export function createOverheadPanel(): OverheadPanel {
     z: OVERHEAD.z,
   })
 
+  // Clamp bracket where the stalk meets the canopy's ridge beam — the actual
+  // physical join, not just a stalk that stops in open air.
+  const bracket = box(0.16, 0.04, 0.14, gunmetalMaterial(), {
+    x: OVERHEAD.x,
+    y: OVERHEAD.mountTopY,
+    z: OVERHEAD.z,
+  })
+
   const panel = box(OVERHEAD.halfWidth * 2, PANEL_HEIGHT, PANEL_DEPTH, consoleBodyMaterial(), {
     x: OVERHEAD.x,
     y: PANEL_CENTER_Y,
     z: OVERHEAD.z,
   })
 
-  group.add(mount, panel)
+  group.add(mount, bracket, panel)
 
   const lights = [amberLitMaterial, greenLitMaterial, amberLitMaterial, greenLitMaterial]
   const lightXs = lights.map((_, i) => {

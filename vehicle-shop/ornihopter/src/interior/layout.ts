@@ -20,6 +20,7 @@
 // mitigation this drove and interior/frustum.test.ts for the assertions.
 
 import { COCKPIT, OVERALL, BODY, PILOT_EYE, stationFromNose } from '../spec'
+import { ridgeHeightAt } from '../model/geometry/canopyGeometry'
 
 export const EYE = PILOT_EYE
 
@@ -82,6 +83,8 @@ export const STICK = {
   gripRadius: 0.07,
 } as const
 
+const OVERHEAD_Z = -9.15
+
 export const OVERHEAD = {
   // Centred slightly toward the pilot's side (x=-0.05, not 0) because the
   // pilot's eye itself sits off-centre at x=-0.85 looking straight down -Z
@@ -89,10 +92,14 @@ export const OVERHEAD = {
   // centreline; centring the panel exactly on x=0 clips its right edge.
   x: -0.05,
   halfWidth: 0.28,
-  z: -9.15,
+  z: OVERHEAD_Z,
   panelBottomY: 0.175,
   panelTopY: 0.525,
-  mountTopY: 1.6,
+  // The mount's top is the canopy's own ridge beam at this z, not an
+  // independently-guessed height — see canopyGeometry.ts's ridgeHeightAt.
+  // Round 1 hung this panel from a stalk that exited the top of frame with
+  // no ceiling anywhere; this is the fix, not a cosmetic tweak.
+  mountTopY: ridgeHeightAt(OVERHEAD_Z),
 } as const
 
 export const WALL = {
