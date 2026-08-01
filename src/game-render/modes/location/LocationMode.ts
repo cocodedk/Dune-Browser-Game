@@ -18,11 +18,23 @@ import { hotspotsFor } from './locationDefs'
 import type { Hotspot } from './locationDefs'
 import { paintDiorama, FRAME_WIDTH, FRAME_HEIGHT } from './paintDiorama'
 import { createFraming } from './framing'
+import { paintHeightFor, paintWidthFor } from './paintResolution'
 import { createPointerRouter } from './pointerRouter'
 import { INITIAL_CHARACTERS } from '../../../data/characters'
 import { paletteForTime } from '../../materials/Atmosphere'
 
 const DAY_SECONDS = 60
+
+/** Canvas height in CSS pixels, falling back to the window. */
+function displayHeightFrom(canvas?: HTMLElement): number {
+  const rect = canvas?.getBoundingClientRect?.()
+  if (rect && rect.height > 0) return rect.height
+  return typeof window !== 'undefined' ? window.innerHeight : 1000
+}
+
+function displayRatioFrom(): number {
+  return typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+}
 
 export function createLocationMode(
   canvas?: HTMLElement,
@@ -32,6 +44,8 @@ export function createLocationMode(
   onSpot?: (id: string) => void,
 ): SceneMode {
   const scene = new Scene()
+  const displayHeight = () => displayHeightFrom(canvas)
+  const displayRatio = () => displayRatioFrom()
 
   const view = new OrthographicCamera(
     -FRAME_WIDTH / 2, FRAME_WIDTH / 2,
@@ -95,11 +109,10 @@ export function createLocationMode(
 
     texture?.dispose()
     const { viewWidth, viewHeight } = framing.fit
-    // Capped so a very wide window does not allocate an enormous canvas.
-    const pixelHeight = 1000
-    const pixelWidth = Math.min(
-      3000, Math.round(pixelHeight * (viewWidth / viewHeight)),
-    )
+    // Painted at the resolution the screen can actually show, rather than a
+    // fixed 1000px that a large display then upscaled. See paintResolution.ts.
+    const pixelHeight = paintHeightFor(displayHeight(), displayRatio())
+    const pixelWidth = paintWidthFor(pixelHeight, viewWidth / viewHeight)
     texture = paintDiorama(
       place.kind,
       place.name,
@@ -142,6 +155,7 @@ export function createLocationMode(
     }
     hotspots = createHotspotLayer(
       spots, framing.fit.viewWidth, framing.fit.viewHeight,
+      displayHeight(), displayRatio(),
     )
     scene.add(hotspots.mesh)
   }
