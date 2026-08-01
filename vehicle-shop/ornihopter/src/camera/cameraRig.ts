@@ -48,6 +48,7 @@ export function createCameraRig(craftRoot: Object3D): CameraRig {
   const scratch = new Vector3()
   const target = new Vector3()
   const free = { azimuth: 40, elevation: 22, distance: 2.4 }
+  const freeRotation = new Quaternion()
 
   const apply = (next: CameraMode) => {
     mode = next
@@ -89,20 +90,20 @@ export function createCameraRig(craftRoot: Object3D): CameraRig {
       target.set(position.x, position.y, position.z)
 
       if (mode === 'free') {
+        // Target the craft root's ACTUAL world position, not state.position.
+        // The capture harness parks the craft with debug.pose(), which writes
+        // the root transform directly and deliberately leaves the flight
+        // state alone — so the two disagree, and aiming at state.position
+        // pointed the camera at empty desert with the craft nowhere in frame.
+        craftRoot.getWorldPosition(target)
+
         // Spherical placement in the craft's OWN frame, so a reference-matched
         // view stays matched regardless of which way the craft is pointing.
         const az = (free.azimuth * Math.PI) / 180
         const el = (free.elevation * Math.PI) / 180
         const r = OVERALL.length * free.distance
         scratch.set(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az))
-        scratch.applyQuaternion(
-          new Quaternion(
-            state.orientation.x,
-            state.orientation.y,
-            state.orientation.z,
-            state.orientation.w
-          )
-        )
+        scratch.applyQuaternion(craftRoot.getWorldQuaternion(freeRotation))
         camera.position.set(
           target.x + scratch.x * r,
           target.y + scratch.y * r,

@@ -79,7 +79,14 @@ await page.waitForFunction(() => Boolean(window.__THOPTER__), null, { timeout: 3
 // Let the first frames settle so materials and shadow maps are resident.
 await page.waitForTimeout(1200)
 
-const measurement = await page.evaluate(() => window.__THOPTER__.measure())
+// Measure at a DEFINED pose, wings at rest. Measuring whatever frame the sim
+// happened to be on reads the span mid-beat, with the blades flapped up out of
+// the horizontal — which is why an earlier run reported 51.32m against the
+// builder's at-rest 51.76m and neither number was wrong.
+const measurement = await page.evaluate(() => {
+  window.__THOPTER__.pose(140, 0, 0)
+  return window.__THOPTER__.measure()
+})
 
 const manifest = { width: WIDTH, height: HEIGHT, measurement, views: [], errors }
 
@@ -87,7 +94,9 @@ for (const view of VIEWS) {
   await page.evaluate(
     ([az, el, dist, beat]) => {
       const t = window.__THOPTER__
-      t.pose(0, 0, beat)
+      // Well clear of the dunes: terrain at the origin stands at 10.91m, so
+      // posing at y=0 buried the craft in sand for every exterior view.
+      t.pose(140, 0, beat)
       t.viewpoint(az, el, dist)
     },
     [view.az, view.el, view.dist, view.beat]

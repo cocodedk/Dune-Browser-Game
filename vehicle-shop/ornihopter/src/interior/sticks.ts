@@ -10,8 +10,9 @@ import { STICK } from './layout'
 import { box, cylinderY, disposeGroup, type Placed } from './sceneUtils'
 import { stickGripMaterial, gunmetalMaterial } from './materials'
 
-function buildStick(grip: Placed): Group {
+function buildStick(grip: Placed, name: string): Group {
   const group = new Group()
+  group.name = name
   const base: Placed = { x: grip.x, y: COCKPIT.floorY + 0.04, z: grip.z }
   const shaftHeight = grip.y - base.y
 
@@ -35,7 +36,10 @@ export interface Sticks {
 export function createControlSticks(): Sticks {
   const group = new Group()
   group.name = 'sticks'
-  group.add(buildStick(STICK.pilotGrip), buildStick(STICK.copilotGrip))
+  group.add(
+    buildStick(STICK.pilotGrip, 'stick-pilot'),
+    buildStick(STICK.copilotGrip, 'stick-copilot')
+  )
 
   return {
     group,

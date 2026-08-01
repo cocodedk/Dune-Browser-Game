@@ -30,6 +30,7 @@ function buildHarness(x: number, y: number, z: number): Group {
 
 function buildSeat(side: Side): Group {
   const group = new Group()
+  group.name = side < 0 ? 'seat-pilot' : 'seat-copilot'
   const x = seatX(side)
   const cushion = seatMaterial()
   const trim = seatDarkMaterial()

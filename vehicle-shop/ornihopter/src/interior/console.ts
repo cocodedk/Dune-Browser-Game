@@ -14,7 +14,7 @@ import {
 
 const CENTER_Z = (CONSOLE.nearZ + CONSOLE.farZ) / 2
 const BODY_HEIGHT = CONSOLE.topY - CONSOLE.baseY
-const THROTTLE_AT: Placed = { x: -0.9, y: CONSOLE.topY, z: CONSOLE.nearZ + 0.15 }
+const THROTTLE_AT: Placed = { x: -0.9, y: CONSOLE.topY, z: CONSOLE.nearZ - 0.15 }
 
 const LIT = [amberLitMaterial, greenLitMaterial, redLitMaterial]
 
@@ -52,7 +52,10 @@ export function createConsole(): Console {
 
   // Centre hood: the one part of the dash raised above the flat top, holding
   // the primary gauge. Measured visible at ~27 degrees below the sightline.
-  const hoodZ = CONSOLE.nearZ + 0.15
+  // Offsets below are SUBTRACTED from nearZ (the pilot-facing edge) to move
+  // further into the console body, toward the nose — nearZ is the larger
+  // (least-negative) end of the console's z-span, since -Z is forward.
+  const hoodZ = CONSOLE.nearZ - 0.15
   const hood = box(0.5, 0.2, 0.3, consoleBodyMaterial(), { x: 0, y: CONSOLE.topY + 0.1, z: hoodZ })
   group.add(hood)
   dialRow(group, [-0.15, 0, 0.15], CONSOLE.topY + 0.2 + 0.015, hoodZ)
@@ -60,19 +63,23 @@ export function createConsole(): Console {
   // Pilot's side: the wide, fully-visible half of the dash gets most of the
   // readable structure — two rows, dials then switches.
   const pilotXs = [-1.9, -1.6, -1.3, -1.0, -0.7, -0.45]
-  dialRow(group, pilotXs, CONSOLE.topY + 0.015, CONSOLE.nearZ + 0.1)
-  switchRow(group, pilotXs, CONSOLE.nearZ + 0.35)
+  dialRow(group, pilotXs, CONSOLE.topY + 0.015, CONSOLE.nearZ - 0.08)
+  switchRow(group, pilotXs, CONSOLE.nearZ - 0.35)
 
   // Copilot's side: per layout.ts, only the far strip of the console clears
   // the camera frustum on this side, so the cluster sits back there, not at
-  // the near edge where the pilot's own dials are.
+  // the near edge where the pilot's own dials are. Named as its own group so
+  // frustum.test.ts can check it independently of the rest of the dash.
+  const copilotCluster = new Group()
+  copilotCluster.name = 'console-copilot-cluster'
   const copilotXs = [
     CONSOLE.copilotClusterXMin,
     (CONSOLE.copilotClusterXMin + CONSOLE.copilotClusterXMax) / 2,
     CONSOLE.copilotClusterXMax,
   ]
   const copilotZ = (CONSOLE.copilotClusterZMin + CONSOLE.copilotClusterZMax) / 2
-  dialRow(group, copilotXs, CONSOLE.topY + 0.015, copilotZ)
+  dialRow(copilotCluster, copilotXs, CONSOLE.topY + 0.015, copilotZ)
+  group.add(copilotCluster)
 
   const throttlePivot = new Group()
   throttlePivot.position.set(THROTTLE_AT.x, THROTTLE_AT.y, THROTTLE_AT.z)
