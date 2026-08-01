@@ -68,7 +68,14 @@ export function createCameraRig(craftRoot: Object3D): CameraRig {
     // an axis that has already been tilted by the pitch — the difference
     // between turning your head and rolling it.
     camera.rotation.order = 'YXZ'
-    camera.rotation.set((head.pitch * Math.PI) / 180, (head.yaw * Math.PI) / 180, 0)
+    // Yaw is NEGATED here so the public contract above — "positive to
+    // starboard" — is actually true. A camera looks down -Z, and rotating
+    // (0,0,-1) by a positive angle about +Y sends it to (-sin, 0, -cos): that
+    // is toward -X, which is PORT. Without this negation the documented sign
+    // was backwards and dragging the mouse right turned the head left. Found
+    // by a builder that could not reach the copilot's seat without a strongly
+    // negative yaw, then confirmed by arithmetic rather than by argument.
+    camera.rotation.set((head.pitch * Math.PI) / 180, (-head.yaw * Math.PI) / 180, 0)
   }
 
   const apply = (next: CameraMode) => {

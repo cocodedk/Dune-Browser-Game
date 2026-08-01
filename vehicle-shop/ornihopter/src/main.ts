@@ -33,9 +33,22 @@ stage.scene.add(craft.root as never)
 // in the geometry modules because it applies to the whole craft and belongs to
 // whoever owns the scene, not to whoever authored a given part.
 ;(craft.root as unknown as Object3D).traverse((child: Object3D) => {
-  const mesh = child as Object3D & { isMesh?: boolean }
+  const mesh = child as Object3D & {
+    isMesh?: boolean
+    material?: { transparent?: boolean; opacity?: number } | Array<{ transparent?: boolean; opacity?: number }>
+  }
   if (!mesh.isMesh) return
-  mesh.castShadow = true
+
+  // Transparent surfaces must NOT cast. three.js's shadow map ignores opacity,
+  // so canopy glazing was casting a fully opaque shadow and sealing the cabin
+  // in darkness — direct sun could not reach the cockpit at all, whatever the
+  // material said. The cockpit builder hit this from the inside and had to add
+  // fill lights to work around it. Opting everything in with one blunt
+  // traverse was my shortcut, and this is what it cost.
+  const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : []
+  const seeThrough = materials.some((m) => m.transparent === true && (m.opacity ?? 1) < 0.95)
+
+  mesh.castShadow = !seeThrough
   mesh.receiveShadow = true
 })
 
