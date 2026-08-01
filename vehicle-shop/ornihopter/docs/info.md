@@ -6,66 +6,90 @@ I could not find a publicly released studio blueprint or CAD file. The best reco
 
 ![Image](https://images.openai.com/static-rsc-4/Fx2kR3yp1AxQyv6iVlmvC6u0HPbizWnvYiQiQ41DNzaa1wwvv2C9_2W45pw2O5K_OBUBKG0RmbYbUJdHQYck1caYUs7D-1JZe5n4ukxzPf4HMrSbyp-rPXnWboAqsDYTBqEru_CJga9yfXfN6hsAjxrd8O8pHNgEN_iPU0AU0dIuDcYbHroLf9LFZy9zProD?purpose=fullsize)
 
+## Which source wins on which question
+
+Added after the MakerWorld print kit landed in this folder. No single source is best
+for everything, and treating one as authoritative across the board is how the wrong
+numbers got into this document in the first place.
+
+| question | best source | why |
+| --- | --- | --- |
+| absolute length and span | **MENG 1:72 kit** | licensed, and it states a scale ratio |
+| wing count, part breakdown | **the print kit in this folder** | real part counts; agrees with MENG |
+| wing planform and chord | **the print kit in this folder** | its plates are true 2D profiles |
+| silhouette, surface, proportion | **Master Replicas photos** in `.shots/reference/` | licensed, screen-accurate collectible |
+| anything from actor comparison | **weakest — verify before use** | already proven wrong on chord, below |
+
+**The print kit cannot give absolute scale, and it is important not to ask it to.**
+`Wing_Fullscale_left.stl` measures 197.66 mm, which is a *print-bed* dimension. "Full
+scale" there means full-size for that kit, not 1:1 with the aircraft, and no scale ratio
+appears anywhere in the 3mf. It is also a fan reconstruction, not a licensed product.
+What makes it trustworthy is that it *corroborates* the licensed sources where they
+overlap and overturns only the weakest one.
+
 ## Confirmed dimensions
 
 MENG’s licensed 1:72 kit is 720 mm wide with the wings extended and 318 mm long. At full scale:
 
-| Measurement         |                          Full-size value | Confidence                             |
+| Measurement         |                          Full-size value | Source and confidence                  |
 | ------------------- | ---------------------------------------: | -------------------------------------- |
-| Wingspan            |                                  51.84 m | High, derived from licensed model      |
-| Nose-to-tail length |                                 22.896 m | High, derived from licensed model      |
-| Number of wings     |                         8, four per side | High                                   |
-| Wing movement       |         Rotate, retract, unfold and flap | High                                   |
-| Cockpit             | Two pilots in front; larger cabin behind | High                                   |
-| Landing system      |   Retractable landing feet and rear ramp | High                                   |
+| Wingspan            |                                  51.84 m | MENG. High — licensed, stated ratio    |
+| Nose-to-tail length |                                 22.896 m | MENG. High — licensed, stated ratio    |
+| Number of wings     |                         8, four per side | **Print kit. Measured** — see below    |
+| Wing length / max chord |                            **20.69** | **Print kit. Measured** — see below    |
+| Wing movement       |         Rotate, retract, unfold and flap | MENG + LEGO. High                      |
+| Cockpit             | Two pilots in front; larger cabin behind | MENG. High                             |
+| Landing system      |   Retractable landing feet and rear ramp | MENG + LEGO. High                      |
 | Practical prop mass |                          About 11 tonnes | Prop only, not fictional aircraft mass |
+
+### What the print kit in this folder settles
+
+`Dune+-+House+Atreides+Ornithopter+-+Kit.zip` and `A1_Mini_Wings_Short_Kit.3mf` are
+primary evidence, not commentary, and two things were read straight off them.
+
+**Wing count: eight, four per side.** `Dune_Ornithopte_Standard_Kit_with_FullScale_Wings.3mf`
+lays out `8 x Wing_full_size.stl`; `Wings_Fullscale_Kit.3mf` lays out `4 x l1` + `4 x r1`.
+This confirms the MENG figure. Note that a top-down *photograph* reads as three per side,
+because blades overlap at that angle — measuring the photograph gives the wrong answer.
+
+**Wing planform: 20.69:1, chord near-constant, taper only near the tip.** The kit's parts
+are flat ~1.8 mm plates, which makes each one a true 2D profile. `Wing_Fullscale_left.stl`
+measures 197.66 × 12.37 mm, with chord holding roughly constant across the middle 60% of
+span and falling away only in the last few stations. The Master Replicas photographs agree.
+This **contradicts the Leicester figures below**, which are what the old version of this
+document propagated.
 
 The MENG mechanism allows corresponding left and right wing pairs to move together while each pair remains independently positionable. Its manual also separates the canopy, cockpit, fuselage shells, eight wings, wing linkages, ramp and landing gear. [MENG model details](https://www.meng-model.com/en/contents/59/618.html), [licensed kit measurements and features](https://kingshobby.com/store/atreides-ornithopter-dune-movie-meng-ds-007), [MENG assembly manual](https://www.manualslib.de/manual/1582326/Meng-Dune-Atreides-Ornithopter.html)
 
 LEGO’s licensed model confirms the functional arrangement: folding and flapping wings, 180-degree wing retraction, retractable landing feet, rear ramp and opening cockpit. [LEGO specifications](https://www.lego.com/static/product/dune-atreides-royal-ornithopter-10327), [official LEGO instructions](https://www.lego.com/en-id/service/building-instructions/10327)
 
-A University of Leicester study found no official specifications. Based on actor comparisons, it estimated each wing at 20 m including a 2 m root rod, approximately 2.5 m wide, moving through a total arc of about 20 degrees. These are useful estimates, but they conflict slightly with the larger MENG-derived span. [Physics study PDF](https://journals.le.ac.uk/index.php/pst/article/download/4178/3636/13443)
+A University of Leicester study found no official specifications. Based on actor comparisons, it estimated each wing at 20 m including a 2 m root rod, approximately 2.5 m wide, moving through a total arc of about 20 degrees. [Physics study PDF](https://journals.le.ac.uk/index.php/pst/article/download/4178/3636/13443)
+
+> **Superseded on chord. Do not use the 2.5 m figure.** That number is an actor-comparison
+> estimate, and it made the wings roughly twice as broad as they should be — 8:1
+> length-to-chord against the kit's measured 20.69:1. It is the single wrong number this
+> document propagated into a build, and it survived because the table above originally
+> rated everything "High" without saying what each figure came from. The wing arc and the
+> ~20 m length are still reasonable; the width is not.
 
 ## Working Three.js dimensions
 
-Use one Three.js unit as one metre. These values produce the correct overall proportions; values marked “estimated” should be adjusted against orthographic images.
+**The live spec is [`../src/spec.ts`](../src/spec.ts). Read that, not this section.**
 
-```js
-export const THOPTER_SPEC = {
-  overall: {
-    length: 22.896,
-    wingspan: 51.84,
-    bodyWidth: 5.4,       // estimated
-    bodyHeight: 4.3,      // estimated, gear retracted
-    landedHeight: 7.2,    // estimated
-  },
+This document used to carry a full `THOPTER_SPEC` object literal. It has been removed
+rather than updated, because it had become a second copy of the real thing and had already
+drifted: it still carried `maxChord: 2.5` / `tipChord: 0.35` after those were measured
+wrong, and anyone who copied the block would have rebuilt the defect. Two copies of one
+spec is a standing chore to keep them in sync, and this repo's `CLAUDE.md` exists
+specifically to argue against exactly that arrangement.
 
-  body: {
-    cockpitLength: 5.8,
-    cabinLength: 9.2,
-    tailLength: 7.896,
-    rampWidth: 2.8,
-    rampLength: 3.3,
-  },
+`src/spec.ts` carries the same numbers with a provenance note on each one, plus the
+measured 20-station chord profile taken off the kit's wing plate, and it is what the code
+actually reads. Where it disagrees with this document, it wins.
 
-  wing: {
-    count: 8,
-    rootArmLength: 3.0,
-    bladeLength: 20.2,
-    maxChord: 2.5,
-    tipChord: 0.35,
-    thickness: 0.08,
-    flapHalfAngleDeg: 10, // approximately 20° total travel
-  },
-
-  landingGear: {
-    strutLength: 3.0,
-    footLength: 1.3,
-  }
-};
-```
-
-Treat 51.84 m as the target bounding-box width. A wing should reach roughly 25.92 m from the centreline. With the proposed 2.7 m half-body width, that leaves about 23.2 m for the root mechanism and blade.
+One derivation worth keeping here because it is not obvious from the code: treat 51.84 m
+as the target bounding-box width, so a wing reaches roughly 25.92 m from the centreline.
+With a 2.7 m half-body width that leaves about 23.2 m for the root mechanism and blade.
 
 ## Required object hierarchy
 
@@ -178,6 +202,15 @@ const canopyMaterial = new THREE.MeshPhysicalMaterial({
 The craft should look nearly black with a dark olive-khaki tint and heavy sand accumulation, rather than clean military green. A model builder who compared the kit with the film and official art book reached the same conclusion. [MENG model reference](https://spruepiewithfrets.wordpress.com/2024/07/20/call-it-dune-er-done-meng-1-72-atreides-ornithopter/)
 
 ## Fastest route to an accurate model
+
+> **Not the route taken, and the reasoning below is now doubtful.** This craft was built
+> procedurally in three.js instead. The mesh-download route needs a Blender step, adds a
+> CC-BY attribution obligation to the shipped game, and — the deciding point — a
+> build-and-critique loop can barely improve a mesh it cannot author. The claim that a
+> procedural rebuild "would still be less accurate" also did not survive contact: a blind
+> critic shown the procedural craft, told nothing, named it as the Villeneuve *Dune*
+> ornithopter with high confidence on the first round. Kept for reference in case the
+> decision is ever revisited.
 
 A downloadable fan model on Sketchfab is UV-mapped, rigged, 32,600 triangles and explicitly attempts to match the CGI version rather than the slightly different practical prop. It has a Creative Commons Attribution licence. [Rigged CGI-style model](https://sketchfab.com/3d-models/denis-villeneuve-dune-ornithopter-uv-rigged-2167c358e08143aa83f44c626e54c881)
 
