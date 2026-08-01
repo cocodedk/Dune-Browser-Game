@@ -1,16 +1,27 @@
 // vehicle-shop/ornihopter/src/model/geometry/hullCrossSection.ts
-// The hull's cross-section polygon: a faceted hexagon (flat dorsal deck,
-// hard chine at the widest point, flat ventral belly), not a circle. This is
-// the fix for the "cigar fuselage" defect (progress.md, Round 3) — a
-// LatheGeometry revolve is circular by construction and cannot produce a
-// chine or a flat underside; lofting hexagons instead of circles
-// (hullLoft.ts) is the only change needed to get hard edges.
+// The hull's cross-section polygon: an eight-point faceted section, not a
+// circle and no longer a plain hexagon.
+//
+// The kit close-up (docs/dune_ornihopter_kit-3.png) reads, top to bottom, as:
+// a flat-ish dorsal deck, an ANGLED UPPER FLANK, a hard chine at the widest
+// line running from the nose tip aft along the whole pod, then a long, deeply
+// tucked LOWER FLANK down to a narrow keel. The old hexagon had no break
+// between deck and chine, so the upper flank was one long face and the deck
+// edge read as a soft corner instead of the hard trim line the kit shows.
+// Adding the upper-flank vertex costs two triangles per bay and buys the
+// chine, the trim line, and a section that reads as machined plate.
+//
+// Point order, counter-clockwise in the local X-Y plane (+X right, +Y up):
+//   0 chine-R  1 upper-R  2 deck-R  3 deck-L  4 upper-L  5 chine-L
+//   6 keel-L   7 keel-R
+// so the eight lofted panels are, in order: lower-upper-flank R, upper-flank R,
+// DECK, upper-flank L, lower-upper-flank L, lower flank L, KEEL, lower flank R.
+// hullWeathering.ts paints its v bands against exactly that order.
 //
 // hullProfile.ts's isOutsideHull and hullLoft.ts's visible mesh both call
-// buildRing with the same (halfWidth, halfHeight, shape) numbers from
-// hullStations.ts, so the rendered surface and the containment test can
-// never disagree — the single-source-of-truth discipline this file exists
-// to keep (see hullProfile.ts's own header for what broke before it did).
+// buildRing with the same numbers from hullStations.ts, so the rendered
+// surface and the "does a wing clip the hull" check can never disagree — the
+// single-source-of-truth discipline this file exists to keep.
 
 export interface Point2 {
   readonly x: number
@@ -20,24 +31,38 @@ export interface Point2 {
 export interface CrossSectionShape {
   /** Flat deck half-width, as a fraction of the chine half-width. */
   readonly deckHalfWidthFrac: number
-  /** Flat belly half-width, as a fraction of the chine half-width. Wider
-   *  than the deck fraction reads as "flat underside" (kit-assembled.png). */
+  /** Flat keel half-width, as a fraction of the chine half-width. NARROWER
+   *  than the deck fraction over the pod: the close-up's tucked lower flanks. */
   readonly bellyHalfWidthFrac: number
 }
 
-/** The chine (widest point) sits below the vertical centre, as a fraction of
- *  halfHeight — a low hard chine with a short belly rise and a tall flank up
- *  to the deck, the boat-hull look the reference photographs show. */
-const CHINE_Y_FRAC = -0.3
+/** The chine (widest point) sits a little below the section's vertical centre,
+ *  as a fraction of halfHeight. High enough that the lower flank is the long,
+ *  strongly tucked face the kit shows, low enough that the deck still reads as
+ *  a distinct top surface rather than the whole upper half. */
+const CHINE_Y_FRAC = -0.12
 
-/** Vertices per ring. hullLoft.ts and hullTailFork.ts both loft rings this size. */
-const RING_SIZE = 6
+/** Height of the upper-flank break, as a fraction of halfHeight. */
+const UPPER_Y_FRAC = 0.58
+
+/** How far the upper-flank break sits from the deck edge toward the chine:
+ *  0 puts it at the deck half-width, 1 at full beam. Measured against the
+ *  first render at 0.7, the section read as a smooth lozenge rather than
+ *  machined plate — the deck-to-flank corner was too shallow to catch a
+ *  different light value. 0.58 turns it into a real corner while keeping the
+ *  section convex at every deck fraction the station table uses (asserted in
+ *  hullSlenderness.test.ts, which outwardDistance depends on). */
+const UPPER_BLEND = 0.58
+
+/** Vertices per ring. loftRingsFlat reads the count off the ring itself, so a
+ *  future section change needs no edit there; this stays exported because
+ *  hullWeathering.ts sizes its v bands to it. */
+export const RING_SIZE = 8
 
 /**
- * Six points, counter-clockwise in the local X-Y plane (+X right, +Y up):
- * chine-right, deck-right, deck-left, chine-left, belly-left, belly-right.
- * loftRingsFlat's winding rule depends on this exact order and on the ring
- * being convex, which holds whenever both shape fractions are below 1.
+ * Eight points, counter-clockwise. loftRingsFlat's winding rule depends on
+ * this exact order and on the ring being convex, which holds for every
+ * deck/belly fraction in hullStations.ts.
  */
 export function buildRing(
   halfWidth: number,
@@ -47,15 +72,19 @@ export function buildRing(
   centreY = 0,
 ): Point2[] {
   const chineY = CHINE_Y_FRAC * halfHeight
+  const upperY = UPPER_Y_FRAC * halfHeight
   const deckHalfW = shape.deckHalfWidthFrac * halfWidth
-  const bellyHalfW = shape.bellyHalfWidthFrac * halfWidth
+  const keelHalfW = shape.bellyHalfWidthFrac * halfWidth
+  const upperHalfW = deckHalfW + (halfWidth - deckHalfW) * UPPER_BLEND
   const local: Point2[] = [
     { x: halfWidth, y: chineY },
+    { x: upperHalfW, y: upperY },
     { x: deckHalfW, y: halfHeight },
     { x: -deckHalfW, y: halfHeight },
+    { x: -upperHalfW, y: upperY },
     { x: -halfWidth, y: chineY },
-    { x: -bellyHalfW, y: -halfHeight },
-    { x: bellyHalfW, y: -halfHeight },
+    { x: -keelHalfW, y: -halfHeight },
+    { x: keelHalfW, y: -halfHeight },
   ]
   return local.map((p) => ({ x: p.x + centreX, y: p.y + centreY }))
 }
@@ -64,8 +93,8 @@ export function buildRing(
  * Signed outward distance of (x, y) from a convex, counter-clockwise ring:
  * positive (or within epsilon of zero) means outside-or-on-skin, negative
  * means inside. The max over every edge's outward half-plane — the polygon
- * equivalent of the old ellipse formula `(x/a)^2 + (y/b)^2 >= 1 - epsilon`,
- * exact for the actual faceted shape instead of an inscribed approximation.
+ * equivalent of the old ellipse formula, exact for the actual faceted shape
+ * instead of an inscribed approximation.
  */
 export function outwardDistance(x: number, y: number, ring: readonly Point2[]): number {
   let max = -Infinity
@@ -78,41 +107,4 @@ export function outwardDistance(x: number, y: number, ring: readonly Point2[]): 
     max = Math.max(max, (x - a.x) * nx + (y - a.y) * ny)
   }
   return max
-}
-
-/**
- * Every consecutive pair of rings, lofted into flat-shaded triangles: each
- * of the RING_SIZE side panels gets its OWN four vertices (never shared with
- * its neighbour), as plain (x, y, z) triples appended straight into a
- * non-indexed position array. This is deliberate, not an oversight — an
- * indexed loft sharing vertices between adjacent panels is exactly what the
- * previous LatheGeometry-successor round shipped, and computeVertexNormals()
- * then averages each shared vertex's normal across both neighbouring
- * panels, which SMOOTHS the lighting straight across every chine — the
- * render still reads as a round tube even though the polygon itself is a
- * hard-edged hexagon (measured: .shots/thopter-shop/top.png before this
- * fix). Duplicating vertices per panel means no vertex is ever shared
- * between two different panels, so computeVertexNormals() cannot blend
- * across an edge it should not.
- *
- * Winding (A0,A1,B1) then (A0,B1,B0), ring A forward (smaller z) of ring B,
- * derived by hand from the ring's CCW convention (cross-product worked
- * through for a shoulder edge and a belly edge, both outward) and confirmed
- * against the actual built geometry, edge by edge, station by station.
- */
-export function loftRingsFlat(rings: readonly Point2[][], zs: readonly number[]): number[] {
-  const positions: number[] = []
-  const push = (p: Point2, z: number) => positions.push(p.x, p.y, z)
-  for (let s = 0; s < rings.length - 1; s++) {
-    const ringA = rings[s]
-    const ringB = rings[s + 1]
-    const zA = zs[s]
-    const zB = zs[s + 1]
-    for (let k = 0; k < RING_SIZE; k++) {
-      const k1 = (k + 1) % RING_SIZE
-      push(ringA[k], zA); push(ringA[k1], zA); push(ringB[k1], zB)
-      push(ringA[k], zA); push(ringB[k1], zB); push(ringB[k], zB)
-    }
-  }
-  return positions
 }

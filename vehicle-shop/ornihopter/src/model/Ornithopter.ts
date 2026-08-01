@@ -13,20 +13,20 @@
 // contracts.ts's CraftModel contract.
 
 import {
-  Group, Mesh, MeshStandardMaterial, DoubleSide, type BufferGeometry, type Material,
+  Group, Mesh, MeshStandardMaterial, DoubleSide,
+  type BufferGeometry, type Material, type Texture,
 } from 'three'
 import type { CraftModel, FlightState } from '../contracts'
 import { WING, WING_ROOTS } from '../spec'
 import { buildHullGeometry } from './geometry/hullGeometry'
+import { buildHullWeatheringMaps } from './geometry/hullWeathering'
 import { buildCanopy } from './geometry/canopyGeometry'
-import { buildTailVanes } from './geometry/tailGeometry'
 import { GEAR_LEG_MOUNTS, buildGearGeometries, footDropFromHip } from './geometry/gearGeometry'
 import { buildWingBladeGeometry } from './geometry/wingGeometry'
 import { seatOnHull, wingPivotAt, buildRootPodGeometries } from './geometry/wing/rootPod'
 import { createWingRig, type WingRig } from './WingRig'
 import type { WingSide } from './wingKinematics'
 
-const HULL_COLOR = 0x9c9280
 const METAL_COLOR = 0x54514a
 const WING_COLOR = 0x5c5548
 
@@ -35,8 +35,21 @@ export function createOrnithopter(): CraftModel {
   root.name = 'ornithopter'
   const geometries: BufferGeometry[] = []
   const materials: Material[] = []
+  const textures: Texture[] = []
 
-  const hullMaterial = new MeshStandardMaterial({ color: HULL_COLOR, roughness: 0.75, metalness: 0.1 })
+  // The hull's colour now comes from geometry/hullWeathering.ts's procedural
+  // maps rather than a single authored constant — panel fields, raised trim,
+  // dark belly, chine grime, the fine-rib intake grilles and the nose's two
+  // slots are all painted into them, and hullLoft.ts emits the UVs they land
+  // on. color stays white so the maps carry the palette unmodulated;
+  // flatShading keeps the facets hard even where a future edit might share a
+  // vertex the loft currently duplicates.
+  const hull = buildHullWeatheringMaps()
+  textures.push(...hull.textures)
+  const hullMaterial = new MeshStandardMaterial({
+    color: 0xffffff, map: hull.map, roughnessMap: hull.roughnessMap,
+    roughness: 1, metalness: 0.08, flatShading: true,
+  })
   const metalMaterial = new MeshStandardMaterial({ color: METAL_COLOR, roughness: 0.5, metalness: 0.7 })
   // Dark metal with real specular response, not flat unlit black: a blind
   // critic read the previous wings as "black pencil lines" and the whole
@@ -57,14 +70,12 @@ export function createOrnithopter(): CraftModel {
   materials.push(...canopy.materials)
   root.add(canopy.group)
 
-  const vanes = buildTailVanes()
-  geometries.push(vanes.geometry)
-  for (const placement of vanes.placements) {
-    const vane = new Mesh(vanes.geometry, metalMaterial)
-    vane.position.set(placement.position.x, placement.position.y, placement.position.z)
-    vane.rotation.z = placement.rotationZ
-    root.add(vane)
-  }
+  // The tail's crossed vanes are GONE, not moved. They sat in the same place
+  // as the hull's own tail fork and doubled it up; a blind critic read the
+  // pair as "leftover quill spikes". geometry/hullTailFork.ts now owns the
+  // tail tip alone, as the flattened slotted paddle the reference shows, and
+  // it is part of the hull mesh rather than two separate meshes floating at
+  // the end of the boom.
 
   const gear = buildGearGeometries()
   geometries.push(gear.strut, gear.foot)
@@ -134,6 +145,9 @@ export function createOrnithopter(): CraftModel {
     dispose(): void {
       for (const geometry of geometries) geometry.dispose()
       for (const material of materials) material.dispose()
+      // Textures are NOT released by Material.dispose(); they hold their own
+      // GPU allocation and have to be disposed by whoever created them.
+      for (const texture of textures) texture.dispose()
       root.clear()
     },
   }

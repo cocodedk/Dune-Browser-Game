@@ -1,21 +1,81 @@
 // vehicle-shop/ornihopter/src/model/geometry/hullLoft.ts
-// The main hull loft: hullStations.ts's station table, each turned into a
-// hexagon ring (hullCrossSection.ts) and stitched to its neighbour with
-// flat-shaded, non-shared vertices — see loftRingsFlat's header for why
-// sharing vertices between panels defeats the faceted look entirely.
-// hullGeometry.ts appends hullTailFork.ts's prongs onto the same array
-// before building the buffer, so the fuselage and its tail fork end up in
-// one mesh, matching buildHullGeometry()'s unchanged contract.
+// The main hull loft, and the flat-shaded ring stitcher both it and
+// hullTailFork.ts use: hullStations.ts's station table, each row turned into
+// an eight-point ring (hullCrossSection.ts) and stitched to its neighbour
+// with non-shared vertices.
+//
+// PER-PANEL VERTICES ARE DELIBERATE, not an oversight. An indexed loft that
+// shares vertices between adjacent panels is what an earlier round shipped,
+// and computeVertexNormals() then averages each shared vertex's normal across
+// both neighbouring panels — which SMOOTHS the lighting straight across every
+// chine, so the render reads as a round tube even though the polygon is a
+// hard-edged section. Duplicating vertices per panel means no vertex is ever
+// shared between two panels, so computeVertexNormals() cannot blend across an
+// edge it should not.
+//
+// UVs are emitted here for the first time (hullWeathering.ts's maps have
+// nothing to land on otherwise): u along the length, one texture cell per
+// bay; v around the perimeter, one cell per panel. See hullUv.ts for why the
+// cell counts are derived rather than authored.
+//
+// Winding (A0,A1,B1) then (A0,B1,B0), ring A forward (smaller z) of ring B,
+// derived from the ring's CCW convention and confirmed against the built
+// geometry edge by edge.
 
-import { STATION_Z, hullHalfWidthAt, hullHalfHeightAt, hullShapeAt } from './hullStations'
-import { buildRing, loftRingsFlat } from './hullCrossSection'
+import { STATION_Z, hullHalfWidthAt, hullHalfHeightAt, hullShapeAt, hullKeelYAt } from './hullStations'
+import { buildRing, type Point2 } from './hullCrossSection'
+import { HULL_U_MAX } from './hullUv'
 
 export interface LoftMesh {
   positions: number[]
+  uvs: number[]
+}
+
+/**
+ * Every consecutive pair of rings, lofted into flat-shaded triangles, with
+ * matching UVs spanning [uStart, uEnd] along the length and the full v range
+ * around the perimeter.
+ */
+export function loftRingsFlat(
+  rings: readonly Point2[][],
+  zs: readonly number[],
+  uStart: number,
+  uEnd: number,
+): LoftMesh {
+  const positions: number[] = []
+  const uvs: number[] = []
+  const bays = Math.max(1, rings.length - 1)
+  const push = (p: Point2, z: number, u: number, v: number) => {
+    positions.push(p.x, p.y, z)
+    uvs.push(u, v)
+  }
+
+  for (let s = 0; s < rings.length - 1; s++) {
+    const ringA = rings[s]
+    const ringB = rings[s + 1]
+    const size = ringA.length
+    const zA = zs[s]
+    const zB = zs[s + 1]
+    const uA = uStart + ((uEnd - uStart) * s) / bays
+    const uB = uStart + ((uEnd - uStart) * (s + 1)) / bays
+    for (let k = 0; k < size; k++) {
+      const k1 = (k + 1) % size
+      const vA = k / size
+      const vB = (k + 1) / size
+      push(ringA[k], zA, uA, vA)
+      push(ringA[k1], zA, uA, vB)
+      push(ringB[k1], zB, uB, vB)
+      push(ringA[k], zA, uA, vA)
+      push(ringB[k1], zB, uB, vB)
+      push(ringB[k], zB, uB, vA)
+    }
+  }
+  return { positions, uvs }
 }
 
 /** One ring per station in STATION_Z, nose to tail, lofted flat-shaded. */
 export function buildHullLoft(): LoftMesh {
-  const rings = STATION_Z.map((z) => buildRing(hullHalfWidthAt(z), hullHalfHeightAt(z), hullShapeAt(z)))
-  return { positions: loftRingsFlat(rings, STATION_Z) }
+  const rings = STATION_Z.map((z) =>
+    buildRing(hullHalfWidthAt(z), hullHalfHeightAt(z), hullShapeAt(z), 0, hullKeelYAt(z)))
+  return loftRingsFlat(rings, STATION_Z, 0, HULL_U_MAX)
 }
