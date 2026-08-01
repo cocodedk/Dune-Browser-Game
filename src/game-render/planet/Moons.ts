@@ -14,6 +14,7 @@ import {
 } from './orbits'
 import type { MoonOrbit } from './orbits'
 import { drawKrelln, drawArvon } from './moonTextures'
+import { neutralEnvMap } from '../materials/neutralEnvMap'
 
 export interface Moons {
   group: Group
@@ -83,6 +84,10 @@ export function createMoons(planetRadius: number, daySeconds: number): Moons {
       // environment map, which is the mistake the ornithopter made.
       metalness: 0,
       fog: false,
+      // Opts out of scene.environment (see neutralEnvMap.ts) — these two
+      // hand-painted phases are out of scope here; a sky-coloured IBL term
+      // would shift a crescent tuned to agree with the terminator below it.
+      envMap: neutralEnvMap(),
     })
     const mesh = new Mesh(geometry, material)
     mesh.name = `moon:${name}`

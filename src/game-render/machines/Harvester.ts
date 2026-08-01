@@ -14,6 +14,7 @@ import {
   Group, Mesh, BoxGeometry, CylinderGeometry, MeshStandardMaterial, Color,
   type BufferGeometry,
 } from 'three'
+import { neutralEnvMap } from '../materials/neutralEnvMap'
 
 export interface Harvester {
   group: Group
@@ -39,9 +40,13 @@ export function createHarvester(scale = 1): Harvester {
   const materials: MeshStandardMaterial[] = []
 
   function material(color: number, rough: number): MeshStandardMaterial {
-    // Metalness stays near zero for the same reason it does on the
-    // ornithopter: a metal with no environment map to reflect renders black,
-    // and these are usually seen backlit against bright sand.
+    // Metalness stays near zero for the same reason it did on the
+    // ornithopter before its own fix (env/skyEnvironment.ts): a metal with no
+    // environment map to reflect renders black, and these are usually seen
+    // backlit against bright sand. Revisiting the emissive workaround itself
+    // is out of scope here — this machine is not part of this change — but
+    // it opts out of the now-global scene.environment (neutralEnvMap.ts) so
+    // that cannot silently shift its tuned look either.
     const m = new MeshStandardMaterial({
       color,
       roughness: rough,
@@ -49,6 +54,7 @@ export function createHarvester(scale = 1): Harvester {
       emissive: new Color(0x2a1e12),
       emissiveIntensity: 0.45,
       fog: false,
+      envMap: neutralEnvMap(),
     })
     materials.push(m)
     return m
@@ -102,6 +108,8 @@ export function createHarvester(scale = 1): Harvester {
     emissiveIntensity: 0.6,
     depthWrite: false,
     fog: false,
+    // Same reasoning as the hull material above: opted out (neutralEnvMap.ts).
+    envMap: neutralEnvMap(),
   })
   materials.push(plumeMaterial)
   const plume = new Mesh(plumeGeometry, plumeMaterial)

@@ -120,14 +120,23 @@ export default function ThreeContainer() {
 
       modes.update(deltaMs, world)
 
-      // Exposure follows the hour. The palette has always computed this; until
-      // now nothing read it, so tone mapping sat at a fixed 1.0 and noon
-      // bleached the desert flat while midnight crushed it.
-      handle.setExposure(paletteForTime(world.time, DAY_SECONDS).exposure)
+      // One palette, read for two things. Exposure follows the hour, as it
+      // always has; the same palette also feeds updateEnvironment, which
+      // PMREMs the sky dome's own gradient into scene.environment so metals
+      // reflect sky-above/sand-below instead of rendering black or leaning on
+      // an emissive workaround. The bake itself is throttled internally to
+      // real palette changes — see env/skyEnvironment.ts — so calling this
+      // every frame costs nothing on the frames that do not rebake.
+      const palette = paletteForTime(world.time, DAY_SECONDS)
+      handle.setExposure(palette.exposure)
 
       const scene = modes.scene
-      if (scene) handle.render(scene, modes.active?.camera)
-      else handle.clear() // no mode registered yet — still paint the base colour
+      if (scene) {
+        handle.updateEnvironment(scene, palette)
+        handle.render(scene, modes.active?.camera)
+      } else {
+        handle.clear() // no mode registered yet — still paint the base colour
+      }
 
       // Wind rises and falls with the sun, on the same clock as the sky.
       audio.setDayFraction((world.time % 60) / 60)
