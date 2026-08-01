@@ -110,8 +110,21 @@ function frame(now: number): void {
 
   // Keep the sun's shadow frustum over the craft; it is a 220m box around the
   // light target, and the test area is 4km across.
+  //
+  // The lateral offset used to be -520 against +340 of height, which put the
+  // sun well off the craft's port side. Two blind critics independently read
+  // the resulting shading as a defect — "one side's blades render bright and
+  // the other's near-black; under one sun, mirrored wings should shade
+  // mirrored". They were wrong about the cause and I nearly changed correct
+  // geometry on their agreement. wingSymmetry.test.ts measures the world-space
+  // blade normals and they mirror exactly at every beat phase. "Mirrored wings
+  // shade mirrored" only holds when the light lies in the symmetry plane, and
+  // that sun did not: mirrored normals have opposite X components, so a light
+  // with a large X component lights them differently, correctly. Bringing the
+  // sun closer to the centreline and higher keeps the relief that makes the
+  // facets read while removing an asymmetry that kept being mistaken for a bug.
   stage.sun.target.position.set(state.position.x, state.position.y, state.position.z)
-  stage.sun.position.set(state.position.x - 520, state.position.y + 340, state.position.z + 420)
+  stage.sun.position.set(state.position.x - 190, state.position.y + 560, state.position.z + 330)
 
   hud.update(state, rig.mode, fps)
   stage.renderer.render(stage.scene, rig.camera)
