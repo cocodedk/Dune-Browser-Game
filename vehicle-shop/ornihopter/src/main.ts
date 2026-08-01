@@ -1,6 +1,7 @@
 // vehicle-shop/ornihopter/src/main.ts
 // Boot and frame loop for the standalone ornithopter test area.
 
+import type { Object3D } from 'three'
 import { createStage } from './stage/scene'
 import { createTerrain } from './stage/terrain'
 import { createFlightModel } from './flight/flightModel'
@@ -23,6 +24,20 @@ const craft = createOrnithopter()
 const cockpit = createCockpit()
 craft.root.add(cockpit.root as never)
 stage.scene.add(craft.root as never)
+
+// Opt the craft into the shadow map. stage/scene.ts enables shadowMap and sets
+// sun.castShadow, but three.js still requires every mesh to opt in — and none
+// did, so a 2048px shadow map was being computed and thrown away every frame.
+// A blind critic reported "no cast shadow from the craft in any frame, flat
+// shadowless lighting scene-wide" and was exactly right. Done here rather than
+// in the geometry modules because it applies to the whole craft and belongs to
+// whoever owns the scene, not to whoever authored a given part.
+;(craft.root as unknown as Object3D).traverse((child: Object3D) => {
+  const mesh = child as Object3D & { isMesh?: boolean }
+  if (!mesh.isMesh) return
+  mesh.castShadow = true
+  mesh.receiveShadow = true
+})
 
 const rig = createCameraRig(craft.root as never)
 const hud = createHud()
@@ -54,6 +69,8 @@ function frame(now: number): void {
 
   if (controls.takeCameraCycle()) rig.cycle()
   if (controls.takeReset()) flight.reset()
+  const aim = controls.head()
+  rig.lookAround(aim.yaw, aim.pitch)
 
   // When the capture harness has paused us, the scene still renders — but the
   // sim, the clock and the craft transform are left exactly where pose() put

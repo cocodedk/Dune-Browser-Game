@@ -22,6 +22,7 @@ export function createHud(): Hud {
       'A / D    roll',
       'Q / E    yaw',
       'Shift    throttle up      Ctrl  throttle down',
+      'H + mouse / right-drag   look around',
       'C        cycle camera     R     reset',
     ].join('\n')
   }

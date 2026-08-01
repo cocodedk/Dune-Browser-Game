@@ -25,6 +25,17 @@ export interface CameraRig {
    * nose; elevation 90 is directly overhead. distance is in craft lengths.
    */
   setViewpoint(azimuthDeg: number, elevationDeg: number, distance: number): void
+  /**
+   * Turn the pilot's head, in degrees, independently of the craft. Yaw is
+   * positive to starboard. Only meaningful in the pilot view.
+   *
+   * This exists because the two crew seats sit at the same station as the eye,
+   * so they are roughly 90 degrees off-axis and no forward field of view can
+   * ever contain them — a real cockpit photograph does not show the seat beside
+   * you either. Looking around is the honest fix, and a pilot's perspective
+   * that cannot turn its head is missing something regardless.
+   */
+  lookAround(yawDeg: number, pitchDeg: number): void
   update(state: Readonly<FlightState>, elapsed: number): void
   resize(width: number, height: number): void
 }
@@ -49,14 +60,25 @@ export function createCameraRig(craftRoot: Object3D): CameraRig {
   const target = new Vector3()
   const free = { azimuth: 40, elevation: 22, distance: 2.4 }
   const freeRotation = new Quaternion()
+  const head = { yaw: 0, pitch: 0 }
+
+  /** Point the seated camera where the pilot's head is turned. */
+  const applyHead = (): void => {
+    // YXZ so yaw is applied about the cabin's own vertical rather than about
+    // an axis that has already been tilted by the pitch — the difference
+    // between turning your head and rolling it.
+    camera.rotation.order = 'YXZ'
+    camera.rotation.set((head.pitch * Math.PI) / 180, (head.yaw * Math.PI) / 180, 0)
+  }
 
   const apply = (next: CameraMode) => {
     mode = next
     if (next === 'pilot') {
       seatNode.add(camera)
       camera.position.set(0, 0, 0)
-      // Looking along the craft's own -Z, which spec.ts fixes as the nose.
-      camera.rotation.set(0, 0, 0)
+      // Looking along the craft's own -Z, which spec.ts fixes as the nose,
+      // plus wherever the pilot has turned their head.
+      applyHead()
       camera.fov = 68
     } else {
       craftRoot.parent?.add(camera)
@@ -77,6 +99,13 @@ export function createCameraRig(craftRoot: Object3D): CameraRig {
       return next
     },
     setMode: apply,
+    lookAround(yawDeg, pitchDeg) {
+      // Clamped to a human neck. Beyond about 100 degrees you would be looking
+      // through your own shoulder, and the copilot's seat sits well inside it.
+      head.yaw = Math.max(-100, Math.min(100, yawDeg))
+      head.pitch = Math.max(-70, Math.min(70, pitchDeg))
+      if (mode === 'pilot') applyHead()
+    },
     setViewpoint(azimuthDeg, elevationDeg, distance) {
       free.azimuth = azimuthDeg
       free.elevation = elevationDeg

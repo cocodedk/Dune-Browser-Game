@@ -9,6 +9,8 @@ export interface Controls {
   /** True on the frame a camera-cycle was requested. Consumed by the caller. */
   takeCameraCycle(): boolean
   takeReset(): boolean
+  /** Where the pilot's head is turned, in degrees. Yaw positive to starboard. */
+  head(): { yaw: number; pitch: number }
   dispose(): void
 }
 
@@ -32,9 +34,24 @@ export function createControls(target: EventTarget = window): Controls {
   const onUp = (event: Event) => down.delete((event as KeyboardEvent).key.toLowerCase())
   const onBlur = () => down.clear()
 
+  // Head-look. Held right mouse button, or hold H and move the mouse — no
+  // pointer lock, so a capture harness and a casual visitor both get at it
+  // without a click to grab the cursor.
+  const headAim = { yaw: 0, pitch: 0 }
+  const onMove = (event: Event) => {
+    const mouse = event as MouseEvent
+    const looking = mouse.buttons === 2 || down.has('h')
+    if (!looking) return
+    headAim.yaw += mouse.movementX * 0.22
+    headAim.pitch -= mouse.movementY * 0.22
+  }
+  const onContext = (event: Event) => event.preventDefault()
+
   target.addEventListener('keydown', onDown)
   target.addEventListener('keyup', onUp)
   target.addEventListener('blur', onBlur)
+  target.addEventListener('mousemove', onMove)
+  target.addEventListener('contextmenu', onContext)
 
   const axis = (negative: string[], positive: string[]): number => {
     const n = negative.some((k) => down.has(k)) ? 1 : 0
@@ -72,10 +89,21 @@ export function createControls(target: EventTarget = window): Controls {
       reset = false
       return value
     },
+    head() {
+      // Zero the head when nothing is holding it, so letting go recentres
+      // rather than leaving the pilot permanently looking at their own wing.
+      if (!down.has('h')) {
+        headAim.yaw *= 0.86
+        headAim.pitch *= 0.86
+      }
+      return headAim
+    },
     dispose() {
       target.removeEventListener('keydown', onDown)
       target.removeEventListener('keyup', onUp)
       target.removeEventListener('blur', onBlur)
+      target.removeEventListener('mousemove', onMove)
+      target.removeEventListener('contextmenu', onContext)
     },
   }
 }

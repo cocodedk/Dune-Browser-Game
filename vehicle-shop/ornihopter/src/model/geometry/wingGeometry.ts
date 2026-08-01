@@ -61,6 +61,32 @@ export function buildWingBladeGeometry(side: WingSide, reach: number): BufferGeo
   const tip = (SPAN_STATIONS - 1) * 4
   indices.push(tip, tip + 3, tip + 1, tip, tip + 2, tip + 3)
 
+  // Mirroring by negating X inverts every triangle's handedness, so the same
+  // index list that winds counter-clockwise on the right wing winds clockwise
+  // on the left. computeVertexNormals() then points the mirrored side's
+  // normals INWARD and that wing renders black under the same light that lits
+  // its twin — which is exactly what a blind critic saw in the top view:
+  // "left blades render lit tan and the right blades render pitch black".
+  // Swapping two indices per triangle restores the winding.
+  //
+  // Worth noting how this survived: the wing tests measured vertex POSITIONS,
+  // which were correct, and nothing measured winding at all. The test below
+  // this file's fix asserts the normals themselves.
+  // Measured, not reasoned: with no swap at all, the RIGHT wing's upper-surface
+  // normals average -0.995 in Y (pointing at the ground) while the left wing's
+  // are correct. The index list above is therefore authored for the negative-X
+  // orientation, and it is the positive-X side that needs re-winding. My first
+  // attempt swapped `sign < 0` on the strength of reading the code, and the
+  // normals test caught it immediately — the blind critic had said the right
+  // blades were the black ones and the critic was right.
+  if (sign > 0) {
+    for (let i = 0; i < indices.length; i += 3) {
+      const swap = indices[i + 1]
+      indices[i + 1] = indices[i + 2]
+      indices[i + 2] = swap
+    }
+  }
+
   const geometry = new BufferGeometry()
   geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
   geometry.setIndex(new Uint16BufferAttribute(indices, 1))
