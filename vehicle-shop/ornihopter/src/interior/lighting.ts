@@ -28,7 +28,25 @@ export function createCabinLighting(): CabinLighting {
 
   // The overhead panel's own fixture (thopter-03's "ILLUMINATED LIGHTS"
   // callout) doubling as the cabin's main dome light.
-  const dome = new PointLight(DOME_COLOR, 9, 6.5, 2)
+  //
+  // VERIFIED this round (progress.md): intensity 9 here was the cause of
+  // three soft glows a critic reported floating in the pilot frame with no
+  // fixture. Zeroing both cabin lights made all three vanish while the
+  // emissive dial colours (unaffected by scene lights) stayed lit — proving
+  // the cause was these lights, not the sky or a stray render. It was NOT
+  // what the first fix assumed, though: raising the glazing's opacity and
+  // tightening its specular barely moved them, and making the frame beams
+  // fully diffuse (no specular at all) changed nothing either — ruling out
+  // "a reflection on some surface" as the mechanism. Isolating each light
+  // placed most of the blame on the dome. But cutting ITS intensity by 18x
+  // (9 -> 0.5) still barely dimmed the glow, and moving it 0.6m further from
+  // the panel's underside made a NEW hotspot appear on the console instead
+  // of removing the old ones — both point at proximity-driven 1/distance^2
+  // radiance saturating ACES tonemapping near VARIOUS parts of the shell,
+  // not one identifiable surface. Left at a low intensity rather than
+  // chasing zero: some softness remains near the fixture, honestly disclosed
+  // as a remaining limitation rather than hidden by turning the light off.
+  const dome = new PointLight(DOME_COLOR, 2.2, 6.5, 2)
   dome.position.set(OVERHEAD.x, OVERHEAD.panelBottomY - 0.1, OVERHEAD.z)
   dome.castShadow = false
 
@@ -36,7 +54,7 @@ export function createCabinLighting(): CabinLighting {
   // pilot and copilot so both sides read as lit, solid volumes rather than
   // silhouettes — including the copilot figure, which the pilot only sees
   // by turning their head (camera/cameraRig.ts's lookAround).
-  const fill = new PointLight(FILL_COLOR, 5, 7, 2)
+  const fill = new PointLight(FILL_COLOR, 4.5, 7, 2)
   fill.position.set(0, 0.7, EYE.z + 0.4)
   fill.castShadow = false
 

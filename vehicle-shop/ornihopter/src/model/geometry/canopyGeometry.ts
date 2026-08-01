@@ -26,9 +26,11 @@ import { COCKPIT, stationFromNose } from '../../spec'
 import { hullHalfHeightAt } from './hullProfile'
 
 const FRAME_COLOR = 0x47443b
-const GLASS_COLOR = 0x25333a
-const BEAM_THICKNESS = 0.07
-const RIDGE_THICKNESS = 0.1
+const GLASS_COLOR = 0x2c4550
+// Thick enough to read as roll-cage structure at the ~1m the SHOULDER
+// pillars sit from the pilot's eye (interior/layout.ts), not hairlines.
+const BEAM_THICKNESS = 0.12
+const RIDGE_THICKNESS = 0.17
 
 /** Where the canopy's side glazing starts — shared with
  *  interior/cabinShell.ts's liner wall so the opaque cabin wall and the
@@ -63,15 +65,39 @@ const REAR: Station = {
 }
 const STATIONS: readonly Station[] = [NOSE, SHOULDER, REAR]
 
-/**
- * Ridge (roof spine) height at a craft-local z, so interior/layout.ts can
- * mount the overhead panel to the real frame instead of into open air.
- * Clamped to the NOSE..REAR span this structure actually occupies.
- */
+/** The three station z's, so a liner can break its own taper at exactly the
+ *  same kinks canopySectionAt does instead of sampling a curve blind. */
+export const CANOPY_STATION_Z = { nose: noseZ, shoulder: shoulderZ, rear: rearZ } as const
+
+/** Ridge height alone — interior/layout.ts mounts the overhead panel to the
+ *  real frame with this rather than into open air. */
 export function ridgeHeightAt(z: number): number {
+  return canopySectionAt(z).peakY
+}
+
+/** halfWidth/baseY: the sill, where the opaque wall ends and glazing begins.
+ *  peakY: the ridge, where both flanks meet at the centreline. */
+export interface CanopySection {
+  readonly halfWidth: number
+  readonly baseY: number
+  readonly peakY: number
+}
+
+/**
+ * Interpolated cross-section at a craft-local z, clamped to NOSE..REAR.
+ * Exported in full so interior/cabinShell.ts can build a liner GUARANTEED to
+ * land on this shell's sill line rather than a separately-authored width
+ * that might gap or clip it: round 2's critic found exactly that gap, a
+ * wall at a constant half-width while this sill tapers 0.7 to 2.5m.
+ */
+export function canopySectionAt(z: number): CanopySection {
   const [a, b] = z <= SHOULDER.z ? [NOSE, SHOULDER] : [SHOULDER, REAR]
   const t = Math.min(1, Math.max(0, (z - a.z) / (b.z - a.z)))
-  return a.peakY + t * (b.peakY - a.peakY)
+  return {
+    halfWidth: a.halfWidth + t * (b.halfWidth - a.halfWidth),
+    baseY: a.baseY + t * (b.baseY - a.baseY),
+    peakY: a.peakY + t * (b.peakY - a.peakY),
+  }
 }
 
 const baseLeft = (s: Station): Vector3 => new Vector3(-s.halfWidth, s.baseY, s.z)
@@ -122,9 +148,16 @@ export function buildCanopy(): CanopyBuild {
   group.name = 'canopy'
 
   const frameMaterial = new MeshStandardMaterial({ color: FRAME_COLOR, roughness: 0.55, metalness: 0.6 })
+  // Round 3's critic: at opacity 0.38 with depthWrite off this "neither
+  // occludes anything nor catches a visible highlight" — no glazing at all,
+  // sky straight through, and the cabin lights' specular hotspots on it read
+  // as glowing patches with no visible surface to glint off. Opacity up to a
+  // real tinted-glass level, depthWrite back on (one shell layer, nothing to
+  // sort wrong), metalness up / roughness down for a tight highlight instead
+  // of a blob. See progress.md for this round's verification.
   const glassMaterial = new MeshStandardMaterial({
-    color: GLASS_COLOR, roughness: 0.15, metalness: 0.25,
-    transparent: true, opacity: 0.38, side: DoubleSide, depthWrite: false,
+    color: GLASS_COLOR, roughness: 0.22, metalness: 0.12,
+    transparent: true, opacity: 0.6, side: DoubleSide, depthWrite: true,
   })
   const beamGeometry = new BoxGeometry(BEAM_THICKNESS, 1, BEAM_THICKNESS)
   const ridgeGeometry = new BoxGeometry(RIDGE_THICKNESS, 1, RIDGE_THICKNESS)

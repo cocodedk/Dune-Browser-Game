@@ -45,10 +45,16 @@ describe('pilot-cam visibility, measured against the built geometry', () => {
 
   afterAll(() => cockpit.dispose())
 
-  it('KNOWN LIMITATION: neither seat, nor the copilot figure, is visible in this frame', () => {
+  it('KNOWN LIMITATION: neither seat, the copilot figure, nor the copilot stick is visible here', () => {
     expect(frustum.intersectsBox(boxFor(root, 'seat-pilot'))).toBe(false)
     expect(frustum.intersectsBox(boxFor(root, 'seat-copilot'))).toBe(false)
     expect(frustum.intersectsBox(boxFor(root, 'pilotFigure'))).toBe(false)
+    // layout.ts's STICK now sits at each seat's OWN x — the ergonomically
+    // correct place, and the same reason the copilot's seat is not visible
+    // either. This fixed forward frame was never going to show anything at
+    // the copilot's x; camera/cameraRig.ts's lookAround (headLook.test.ts)
+    // is the actual fix, not a stick position chosen to cheat this frustum.
+    expect(frustum.intersectsBox(boxFor(root, 'stick-copilot'))).toBe(false)
   })
 
   it('mitigation: the console, including the copilot-side cluster, is visible', () => {
@@ -56,9 +62,8 @@ describe('pilot-cam visibility, measured against the built geometry', () => {
     expect(frustum.intersectsBox(boxFor(root, 'console-copilot-cluster'))).toBe(true)
   })
 
-  it('mitigation: both control sticks are visible', () => {
+  it('mitigation: the pilot\'s own stick is visible', () => {
     expect(frustum.intersectsBox(boxFor(root, 'stick-pilot'))).toBe(true)
-    expect(frustum.intersectsBox(boxFor(root, 'stick-copilot'))).toBe(true)
   })
 
   it('mitigation: the shared overhead panel is visible', () => {

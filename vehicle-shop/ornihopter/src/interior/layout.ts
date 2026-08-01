@@ -72,13 +72,16 @@ export const CONSOLE = {
 } as const
 
 export const STICK = {
-  // Ergonomically each stick would sit at its own seat's x, close to the
-  // knees — but at that x/z the copilot's stick lands in exactly the hidden
-  // zone above. Both sticks are pulled inward toward a shared centre
-  // pedestal instead: still reachable from either seat, and both measured
-  // inside the frame.
-  pilotGrip: { x: -0.55, y: -0.5, z: -8.75 },
-  copilotGrip: { x: 0.25, y: -0.55, z: -9.15 },
+  // Each stick sits at its OWN seat's x, close to the knees — the
+  // ergonomically correct place. Earlier rounds pulled both sticks inward to
+  // a shared centre pedestal because the fixed forward camera could never
+  // see the copilot's own x at all. That workaround is obsolete: the pilot
+  // can now turn their head up to 100 degrees (camera/cameraRig.ts
+  // lookAround, held H or right-drag), which is the honest fix for a seat
+  // the forward view was never going to contain — see frustum.test.ts for
+  // what the fixed forward frame does and does not show.
+  pilotGrip: { x: seatX(-1), y: -0.5, z: -8.75 },
+  copilotGrip: { x: seatX(1), y: -0.55, z: -9.15 },
   shaftRadius: 0.035,
   gripRadius: 0.07,
 } as const

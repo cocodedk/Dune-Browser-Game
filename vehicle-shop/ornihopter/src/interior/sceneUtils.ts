@@ -3,7 +3,8 @@
 // box-mesh boilerplate and dispose traversal.
 
 import {
-  Group, Object3D, Mesh, BoxGeometry, CylinderGeometry, SphereGeometry, MeshStandardMaterial,
+  Group, Object3D, Mesh, BoxGeometry, BufferGeometry, BufferAttribute, CylinderGeometry,
+  SphereGeometry, MeshStandardMaterial,
 } from 'three'
 
 interface Disposable {
@@ -75,4 +76,29 @@ export function ball(radius: number, material: MeshStandardMaterial, at: Placed)
   const mesh = new Mesh(new SphereGeometry(radius, 10, 8), material)
   mesh.position.set(at.x, at.y, at.z)
   return mesh
+}
+
+/**
+ * A flat panel from four corners given in perimeter order (two triangles,
+ * a-b-c and a-c-d) — the same technique model/geometry/canopyGeometry.ts
+ * uses for its glazing panes, duplicated here rather than imported so the
+ * canopy module does not have to widen its exported surface for an interior
+ * concern. Used to fair opaque liner panels exactly onto the canopy shell's
+ * own sill/rail line (see canopySectionAt), so "the wall meets the canopy"
+ * is a shared number, not two guesses that happen to agree.
+ */
+export function flatQuad(
+  a: Placed,
+  b: Placed,
+  c: Placed,
+  d: Placed,
+  material: MeshStandardMaterial
+): Mesh {
+  const points = [a, b, c, a, c, d]
+  const array = new Float32Array(points.length * 3)
+  points.forEach((p, i) => array.set([p.x, p.y, p.z], i * 3))
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(array, 3))
+  geometry.computeVertexNormals()
+  return new Mesh(geometry, material)
 }

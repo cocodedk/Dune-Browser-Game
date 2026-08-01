@@ -1,10 +1,14 @@
 // vehicle-shop/ornihopter/src/interior/Cockpit.ts
 // Assembles the cockpit interior: seats, a seated copilot figure, the
-// console, twin control sticks, the cabin shell, cabin lighting, and the
-// overhead panel — mounted to the canopy's own ridge beam, not hanging from
-// a stalk into open air (see overheadPanel.ts, layout.ts's OVERHEAD.mountTopY,
-// model/geometry/canopyGeometry.ts's ridgeHeightAt). Implements contracts.ts's
-// CockpitModel; parented under the craft root by main.ts, not by this module.
+// console, twin control sticks (each now at its OWN seat's x — see
+// layout.ts's STICK), the cabin shell and canopy liner that close the shell
+// (cabinShell.ts's tapered walls + canopyLiner.ts's dash-to-sill fairing,
+// both keyed to model/geometry/canopyGeometry.ts's canopySectionAt so they
+// cannot land anywhere the canopy shell itself does not), cabin lighting,
+// and the overhead panel — mounted to the canopy's own ridge beam, not
+// hanging from a stalk into open air (overheadPanel.ts, layout.ts's
+// OVERHEAD.mountTopY). Implements contracts.ts's CockpitModel; parented
+// under the craft root by main.ts, not by this module.
 //
 // MEASURED, still true for the FIXED forward pilot camera (yaw 0, no
 // head-look): PILOT_EYE.z sits only 0.15m forward of COCKPIT.seatZ (see
@@ -12,8 +16,9 @@
 // copilot figure alike — has camera-space z > 0 at that exact pose and is
 // behind it, full stop. That is exactly what keeps the pilot from seeing
 // their own seatback, and interior/frustum.test.ts still asserts it holds.
-// The console, both control sticks and the overhead panel are placed to
-// clear that fixed frustum regardless (bar Q3's "second station" mitigation).
+// The console and both control sticks are placed to clear that fixed
+// frustum regardless (bar Q3's "second station" mitigation); the overhead
+// panel too.
 //
 // What has changed since this was a standing limitation: camera/cameraRig.ts
 // now has lookAround (hold H, or right-drag) — the pilot's head turns up to
@@ -30,6 +35,7 @@ import { createPilotFigure } from './pilotFigure'
 import { createConsole } from './console'
 import { createControlSticks } from './sticks'
 import { createCabinShell } from './cabinShell'
+import { createCanopyLiner } from './canopyLiner'
 import { createOverheadPanel } from './overheadPanel'
 import { createCabinLighting } from './lighting'
 
@@ -42,11 +48,13 @@ export function createCockpit(): CockpitModel {
   const dash = createConsole()
   const sticks = createControlSticks()
   const cabinShell = createCabinShell()
+  const canopyLiner = createCanopyLiner()
   const overheadPanel = createOverheadPanel()
   const cabinLighting = createCabinLighting()
 
   root.add(
     cabinShell.group,
+    canopyLiner.group,
     seats.group,
     pilotFigure.group,
     dash.group,
@@ -66,6 +74,7 @@ export function createCockpit(): CockpitModel {
       dash.dispose()
       sticks.dispose()
       cabinShell.dispose()
+      canopyLiner.dispose()
       overheadPanel.dispose()
       cabinLighting.dispose()
     },

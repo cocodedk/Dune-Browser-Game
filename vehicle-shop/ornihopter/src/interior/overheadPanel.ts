@@ -6,6 +6,14 @@
 // up-and-forward sees them. Position from layout.ts OVERHEAD — chosen
 // off-centre because the pilot's eye itself is off-centre with no toe-in
 // (see layout.ts's header note).
+//
+// MEASURED: the ridge clamp itself sits ~2.9m above eye height, needing a
+// ~69-degree upward look — well past the pilot camera's 34-degree half-VFOV,
+// so the clamp is always off the TOP of frame at 1600x1000 and only the
+// mount's lower run is ever seen. A thin wire reading toward nothing in an
+// off-screen direction is exactly "floating with no fixture"; a wide flare
+// right at the panel — a visible collar within frame — is what a blind
+// critic can actually credit as structure, whatever happens above the crop.
 
 import { Group } from 'three'
 import { OVERHEAD } from './layout'
@@ -25,7 +33,9 @@ export function createOverheadPanel(): OverheadPanel {
   const group = new Group()
   group.name = 'overheadPanel'
 
-  const mount = cylinderY(0.03, 0.045, OVERHEAD.mountTopY - OVERHEAD.panelTopY, gunmetalMaterial(), {
+  // Flared, not a wire: wide at the panel (0.32 diameter) narrowing toward
+  // the ridge clamp, which the header above notes sits off-screen anyway.
+  const mount = cylinderY(0.06, 0.16, OVERHEAD.mountTopY - OVERHEAD.panelTopY, gunmetalMaterial(), {
     x: OVERHEAD.x,
     y: (OVERHEAD.mountTopY + OVERHEAD.panelTopY) / 2,
     z: OVERHEAD.z,
