@@ -6,6 +6,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { buildWingBladeGeometry } from './wingGeometry'
+import { sweepOffsetAt } from './wing/sweepProfile'
 import { WING } from '../../spec'
 
 describe('buildWingBladeGeometry', () => {
@@ -37,11 +38,23 @@ describe('buildWingBladeGeometry', () => {
     expect(triangleCount).toBeLessThan(1000)
   })
 
-  it('every vertex stays within +-half the max measured chord of the span centreline', () => {
+  it('every vertex stays within +-half the max measured chord of its OWN station\'s swept centreline', () => {
+    // Updated for WING.sweepProfile: the centreline itself now bows per
+    // sweepOffsetAt (geometry/wing/sweepProfile.ts), so a vertex's Z is
+    // measured relative to that station's own centreline, not a fixed 0.
+    // The previous version of this assertion predates sweepProfile being
+    // consumed at all — spec.ts's own comment on the array: "chordProfile
+    // records only WIDTH... a builder... had no way to know the centreline
+    // moves at all". The envelope itself (chord never exceeds its own
+    // measured max) is unchanged and still what this guards.
     const geometry = buildWingBladeGeometry('right', WING.reach)
     const position = geometry.attributes.position
+    const stations = position.count / 4
+    const halfMaxChord = WING.reach / WING.lengthOverMaxChord / 2
     for (let i = 0; i < position.count; i++) {
-      expect(Math.abs(position.getZ(i))).toBeLessThanOrEqual(WING.reach / WING.lengthOverMaxChord / 2 + 1e-6)
+      const spanFraction = Math.floor(i / 4) / (stations - 1)
+      const centreline = sweepOffsetAt(spanFraction)
+      expect(Math.abs(position.getZ(i) - centreline)).toBeLessThanOrEqual(halfMaxChord + 1e-6)
     }
   })
 })

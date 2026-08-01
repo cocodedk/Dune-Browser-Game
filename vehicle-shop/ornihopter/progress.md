@@ -17,23 +17,33 @@ of every critic, every round, without exception.**
 
 ### Q1 — Exterior fidelity, against a real reference, side by side
 
-Reference assets, already in the repo:
+**The reference set changed on 2026-08-01 and this section was rewritten to match.** The five
+Master Replicas photographs (`mr-O9copy`, `mr-O4copy`, `mr-IMG_9407`, `mr-IMG_9428copy`,
+`thopter-mr`) were deleted by the user, who judged them wrong and misleading because they
+read as three blades per side where the craft has four. They were never tracked — `.shots/`
+is gitignored — so they are gone for good. Any round scored against them is not reproducible
+now, and this is recorded so a later reader does not think the bar was simply sloppy.
 
-| view | file |
-|---|---|
-| top, near-orthographic | `.shots/reference/mr-O9copy.jpg` |
-| side | `.shots/reference/mr-O4copy.jpg` |
-| 3/4 hero, lit | `.shots/reference/thopter-mr.jpg` |
-| 3/4 rear, wings visible | `.shots/reference/mr-IMG_9407.jpg` |
-| landed, wings raised | `.shots/reference/mr-IMG_9428copy.jpg` |
+Reference assets that actually exist:
 
-We render the craft from three matched viewpoints and a fresh critic scores each 0–10
-against the photograph placed beside it, then names the single largest difference.
-**Target: ≥7/10 on all three.**
+| view | file | what it is good for |
+|---|---|---|
+| 3/4, assembled, wings extended | `.shots/reference/kit-assembled.png` | **primary.** A photograph of the user's own printed kit: ball-joint wing roots, faceted hull, canopy, gear |
+| flat blade planform, root socket | `.shots/reference/kit-sprue-wings.png` | wing outline and the moulded root socket |
+| cockpit interior concept art | `.shots/reference/thopter-03.jpg` | **primary for Q3** |
+| canopy raised, crew seated | `.shots/reference/thopter-04.jpg` | canopy shape, seating posture |
+| ingress/egress, landing gear | `.shots/reference/thopter-05.jpg` | gear and ramp arrangement |
 
-Measured sub-part, parameters fixed here so a number can be reproduced rather than
-argued: span/length ratio from our top render must be within **±10%** of the same ratio
-measured off `mr-O9copy.jpg`, which measures **1804 px span / 767 px length = 2.35**.
+A fresh critic scores our renders 0–10 against `kit-assembled.png` placed beside them, then
+names the single largest difference. **Target: ≥7/10.**
+
+Measured sub-part: span/length ratio from our top render must be within **±10%** of **2.35**.
+That figure was measured by pixel off `mr-O9copy.jpg` (1804 px span / 767 px length) while it
+still existed, and it is retained as a recorded historical measurement — the number survives
+even though the image does not. It cannot be re-derived from `kit-assembled.png`, which is an
+oblique three-quarter view and cannot give a true planform ratio. If that target is ever
+disputed, it must be re-measured against a new orthographic reference rather than defended
+from this line.
 
 ### Q2 — Blind identification, exterior
 

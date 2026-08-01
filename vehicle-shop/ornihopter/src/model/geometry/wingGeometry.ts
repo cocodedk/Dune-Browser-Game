@@ -1,8 +1,15 @@
 // vehicle-shop/ornihopter/src/model/geometry/wingGeometry.ts
-// One wing blade: a thin solid ribbon, span along local X (root at x=0),
-// chord along local Z, thickness along local Y. Chord width comes from
-// chordProfile.ts's interpolation of spec.ts's measured planform; this file
-// only turns that curve into a BufferGeometry.
+// One wing blade: a solid ribbon with real volume, from the ball-joint pivot
+// out to the tip. Chord width comes from chordProfile.ts (spec.ts's measured
+// planform); the blade's own centreline BOWS per geometry/wing/sweepProfile.ts
+// (spec.ts's WING.sweepProfile, likewise measured off the kit's wing plate) —
+// until this round that array went unconsumed, which is exactly why the
+// wings were dead straight. Cross-section character blends from a rounder,
+// near-uniform ARM (spanFraction < WING.rootArmFraction, a real physical rod
+// between the ball and the blade, not merely a narrow chord) into a
+// wedge-profiled BLADE with a thicker leading-edge spar, a thin trailing
+// edge and slight camber — see buildCrossSection for why this still fits in
+// 4 points/station.
 //
 // `side` mirrors which way "outboard" points (+X for the right wing, -X for
 // the left) so the same pivot-rotation signs in WingRig.ts make both wings
@@ -14,24 +21,81 @@
 import { BufferGeometry, BufferAttribute, Uint16BufferAttribute } from 'three'
 import { WING } from '../../spec'
 import { chordWidthAt } from './chordProfile'
+import { sweepOffsetAt, rootBlendAt } from './wing/sweepProfile'
 import type { WingSide } from '../wingKinematics'
 
 const SPAN_STATIONS = 40 // smooth resampling of the 20 measured control points
+
+// Cross-section character: the arm (near the ball) reads as a rounder,
+// near-uniform rod; the blade proper as a thin membrane with a fat
+// leading-edge spar and a knife trailing edge. Both blend across
+// WING.rootArmFraction, which is what turns chordProfile's existing width
+// dip into a real KINK in physical FORM too, not just a narrower bit of the
+// same flat ribbon (spec.ts WING.rootArmFraction's own comment: "a real
+// physical arm... not merely a narrow chord").
+const ARM_ROUND_SCALE = 1.5
+const BLADE_LEADING_SCALE = 1.3
+const BLADE_TRAILING_SCALE = 0.45
+const CAMBER_LIFT = 0.28
 
 function outboardSign(side: WingSide): 1 | -1 {
   return side === 'right' ? 1 : -1
 }
 
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t
+}
+
+function smoothstep(t: number): number {
+  const clamped = Math.max(0, Math.min(1, t))
+  return clamped * clamped * (3 - 2 * clamped)
+}
+
+interface CrossSection {
+  readonly topFront: number
+  readonly bottomFront: number
+  readonly topBack: number
+  readonly bottomBack: number
+  readonly centreline: number
+}
+
 /**
- * Lofted rectangular cross-section (top, bottom, leading-edge and
- * trailing-edge surfaces, plus root and tip caps) so the blade reads as a
- * real thin solid rather than a zero-thickness plane, using WING.thickness
- * for the Y extent. Four vertices per span station: top-front, top-back,
- * bottom-front, bottom-back (front = leading edge, -Z).
+ * The four Y offsets (top/bottom x leading/trailing) and the Z centreline
+ * for one span station. Deliberately still 4 points, not a richer polygon:
+ * wingRootAttachment.test.ts reads the first 4 emitted vertices as one rigid
+ * ring and requires their LOCAL centroid to be exactly (0,0,0). Leading vs
+ * trailing thickness asymmetry (the spar wedge) always nets to zero in that
+ * average — front and back cancel top-for-bottom regardless of their
+ * magnitudes — but the centreline and camber terms only net to zero once
+ * blended to zero at the root, which is exactly what sweepProfile.ts's
+ * rootBlendAt already does; reusing it here zeroes both at the identical
+ * station.
+ */
+function buildCrossSection(spanFraction: number): CrossSection {
+  const halfThickness = WING.thickness / 2
+  const armEase = smoothstep(spanFraction / WING.rootArmFraction)
+  const leadingHalf = halfThickness * lerp(ARM_ROUND_SCALE, BLADE_LEADING_SCALE, armEase)
+  const trailingHalf = halfThickness * lerp(ARM_ROUND_SCALE, BLADE_TRAILING_SCALE, armEase)
+  const camberFront = rootBlendAt(spanFraction) * CAMBER_LIFT * halfThickness
+
+  return {
+    topFront: camberFront + leadingHalf,
+    bottomFront: camberFront - leadingHalf,
+    topBack: trailingHalf,
+    bottomBack: -trailingHalf,
+    centreline: sweepOffsetAt(spanFraction),
+  }
+}
+
+/**
+ * Lofted cross-section (top, bottom, leading-edge and trailing-edge
+ * surfaces, plus root and tip caps) so the blade reads as a real thin solid
+ * with volume, a leading-edge spar and slight camber, rather than a flat
+ * unlit plane — using buildCrossSection for the Y/Z shape at each of
+ * SPAN_STATIONS resampled positions along the span.
  */
 export function buildWingBladeGeometry(side: WingSide, reach: number): BufferGeometry {
   const sign = outboardSign(side)
-  const halfThickness = WING.thickness / 2
   const positions: number[] = []
   const indices: number[] = []
 
@@ -39,11 +103,14 @@ export function buildWingBladeGeometry(side: WingSide, reach: number): BufferGeo
     const spanFraction = i / (SPAN_STATIONS - 1)
     const x = sign * spanFraction * reach
     const halfChord = chordWidthAt(spanFraction) / 2
+    const cross = buildCrossSection(spanFraction)
+    const front = cross.centreline - halfChord
+    const back = cross.centreline + halfChord
     positions.push(
-      x, halfThickness, -halfChord,
-      x, halfThickness, halfChord,
-      x, -halfThickness, -halfChord,
-      x, -halfThickness, halfChord,
+      x, cross.topFront, front,
+      x, cross.topBack, back,
+      x, cross.bottomFront, front,
+      x, cross.bottomBack, back,
     )
   }
 

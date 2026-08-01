@@ -16,18 +16,19 @@ import {
   Group, Mesh, MeshStandardMaterial, DoubleSide, type BufferGeometry, type Material,
 } from 'three'
 import type { CraftModel, FlightState } from '../contracts'
-import { WING, WING_ROOTS, WING_ROOT_X } from '../spec'
+import { WING, WING_ROOTS } from '../spec'
 import { buildHullGeometry } from './geometry/hullGeometry'
 import { buildCanopy } from './geometry/canopyGeometry'
 import { buildTailVanes } from './geometry/tailGeometry'
 import { GEAR_LEG_MOUNTS, buildGearGeometries, footDropFromHip } from './geometry/gearGeometry'
 import { buildWingBladeGeometry } from './geometry/wingGeometry'
+import { seatOnHull, wingPivotAt, buildRootPodGeometries } from './geometry/wing/rootPod'
 import { createWingRig, type WingRig } from './WingRig'
 import type { WingSide } from './wingKinematics'
 
 const HULL_COLOR = 0x9c9280
 const METAL_COLOR = 0x54514a
-const WING_COLOR = 0x2b2822
+const WING_COLOR = 0x5c5548
 
 export function createOrnithopter(): CraftModel {
   const root = new Group()
@@ -37,8 +38,13 @@ export function createOrnithopter(): CraftModel {
 
   const hullMaterial = new MeshStandardMaterial({ color: HULL_COLOR, roughness: 0.75, metalness: 0.1 })
   const metalMaterial = new MeshStandardMaterial({ color: METAL_COLOR, roughness: 0.5, metalness: 0.7 })
+  // Dark metal with real specular response, not flat unlit black: a blind
+  // critic read the previous wings as "black pencil lines" and the whole
+  // craft as too dark against the reference's pale bone/tan. Lower roughness
+  // and higher metalness than the hull's own material so the beat cycle's
+  // motion actually sweeps a highlight across the blade.
   const wingMaterial = new MeshStandardMaterial({
-    color: WING_COLOR, roughness: 0.45, metalness: 0.5, side: DoubleSide,
+    color: WING_COLOR, roughness: 0.32, metalness: 0.65, side: DoubleSide,
   })
   materials.push(hullMaterial, metalMaterial, wingMaterial)
 
@@ -72,6 +78,34 @@ export function createOrnithopter(): CraftModel {
     root.add(foot)
   }
 
+  // Ball-joint root housings: static, faired into the hull deck at each
+  // WING_ROOTS station (geometry/wing/rootPod.ts) — a row along the dorsal
+  // deck, per .shots/reference/kit-assembled.png. Fixed to the hull, NOT
+  // part of the wing rig: mechanically the ball half of a ball joint mounts
+  // to the fuselage, not the part that swings. seatOnHull/wingPivotAt read
+  // the hull's real surface (geometry/hullProfile.ts) rather than the old
+  // guessed WING_ROOT_X/mount.y, which floated outside the hull's actual
+  // faceted skin — the "black mounting plate... a visible gap" defect.
+  const pods = buildRootPodGeometries()
+  geometries.push(pods.ball, pods.post)
+  const stations = WING_ROOTS.map((mount) => ({
+    seat: seatOnHull(mount.z),
+    pivot: wingPivotAt(mount.z),
+    z: mount.z,
+  }))
+  for (const station of stations) {
+    for (const mirror of [1, -1] as const) {
+      const post = new Mesh(pods.post, metalMaterial)
+      post.name = 'wing-root-post'
+      post.position.set(mirror * station.seat.x, station.seat.y, station.z)
+      root.add(post)
+      const ball = new Mesh(pods.ball, metalMaterial)
+      ball.name = 'wing-root-ball'
+      ball.position.set(mirror * station.pivot.x, station.pivot.y, station.z)
+      root.add(ball)
+    }
+  }
+
   // All four pairs on a side share one blade geometry (spec.ts's WING
   // constants do not vary per pair — only the static Fold fan angle and the
   // beat phase do), so this builds it exactly twice, not eight times.
@@ -79,10 +113,14 @@ export function createOrnithopter(): CraftModel {
   const rightBlade = buildWingBladeGeometry('right', WING.reach)
   geometries.push(leftBlade, rightBlade)
 
+  // Attachment is the SAME real hull-seated pivot the ball housings above
+  // are drawn at (wingPivotAt), so the rotating arm always reaches exactly
+  // into the static ball at every station, not a separately guessed point.
   const sides: readonly WingSide[] = ['left', 'right']
-  const wings: WingRig[] = WING_ROOTS.flatMap((mount, pairIndex) => sides.map((side) => {
+  const wings: WingRig[] = stations.flatMap((station, pairIndex) => sides.map((side) => {
     const blade = side === 'left' ? leftBlade : rightBlade
-    const attachment = { x: side === 'right' ? WING_ROOT_X : -WING_ROOT_X, y: mount.y, z: mount.z }
+    const mirror = side === 'right' ? 1 : -1
+    const attachment = { x: mirror * station.pivot.x, y: station.pivot.y, z: station.z }
     const rig = createWingRig(side, pairIndex, attachment, blade, wingMaterial)
     root.add(rig.root)
     return rig

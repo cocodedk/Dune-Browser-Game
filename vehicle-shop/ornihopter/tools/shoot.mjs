@@ -23,15 +23,23 @@ const PORT = Number(flag('port', 5219))
 // Viewpoints chosen to match the reference photographs the bar scores against.
 // azimuth 0 looks up the craft's tail, 90 is its port flank; elevation 90 is
 // straight down. Distance is in craft lengths.
+// AZIMUTHS ARE NEGATIVE ON PURPOSE. main.ts parks the sun at craft +
+// (-520, +340, +420), which is off the craft's PORT side. The first version of
+// this list used positive azimuths, putting the camera at +X — starboard —
+// so every single exterior view photographed the flank that was in shadow.
+// The craft looked almost black in all of them and I misread that as a
+// material problem; the hull colour is 0x9c9280, a pale bone. Negative
+// azimuth swings the camera round to the lit flank. The craft is bilaterally
+// symmetric, so nothing is lost by shooting it from the other side.
 const VIEWS = [
-  { name: 'top', ref: 'mr-O9copy.jpg', az: 0, el: 88, dist: 1.9, beat: 0 },
-  { name: 'side', ref: 'mr-O4copy.jpg', az: 90, el: 3, dist: 2.1, beat: 0 },
-  { name: 'hero', ref: 'thopter-mr.jpg', az: 42, el: 24, dist: 1.7, beat: 0 },
-  { name: 'rear34', ref: 'mr-IMG_9407.jpg', az: 145, el: 20, dist: 1.7, beat: 0 },
+  { name: 'top', ref: 'kit-assembled.png', az: 0, el: 88, dist: 1.9, beat: 0 },
+  { name: 'side', ref: 'kit-assembled.png', az: -90, el: 3, dist: 2.1, beat: 0 },
+  { name: 'hero', ref: 'kit-assembled.png', az: -42, el: 24, dist: 1.7, beat: 0 },
+  { name: 'rear34', ref: 'kit-assembled.png', az: -145, el: 20, dist: 1.7, beat: 0 },
   // The same hero angle across the beat, because one unlucky phase is not a
   // verdict — the previous loop was judged harshly on a single edge-on frame.
-  { name: 'hero-beat-up', ref: '', az: 42, el: 24, dist: 1.7, beat: Math.PI / 2 },
-  { name: 'hero-beat-down', ref: '', az: 42, el: 24, dist: 1.7, beat: (3 * Math.PI) / 2 },
+  { name: 'hero-beat-up', ref: '', az: -42, el: 24, dist: 1.7, beat: Math.PI / 2 },
+  { name: 'hero-beat-down', ref: '', az: -42, el: 24, dist: 1.7, beat: (3 * Math.PI) / 2 },
 ]
 
 await rm(OUT, { recursive: true, force: true })
