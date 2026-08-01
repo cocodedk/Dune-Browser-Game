@@ -187,7 +187,130 @@ Deliberately not sent back this round: "flyable first" got what it asked for, an
 the hover reads wrong is exactly the sort of thing a critic flying it should judge rather
 than something to pre-emptively tune.
 
+### Round 1 — blind exterior critic: **Q2 PASSED. Quality 2/10.**
+
+Fresh context, six frames, told nothing:
+
+> "An ornithopter — specifically the dragonfly-style thopter from Denis Villeneuve's
+> *Dune* (2021)... High confidence... unmistakably a Dune-thopter homage, built low-poly."
+
+It counted **8 blades, four per side**, independently. **Q2 is met on round 1**, and the
+silhouette — the hard part — is right. Quality against a shipped AAA asset: **2/10,
+"programmer art, a competent blockout, nothing more"**, which is what "flyable first"
+bought and is not a surprise.
+
+**Two defects it found by eye that I then confirmed at source. Neither builder reported
+either, and both builders' own tests passed.**
+
+1. **Mirrored wing geometry has inverted normals.** The critic: "left blades render lit
+   tan and the right blades render pitch black... a symmetric craft under symmetric light
+   should not do this." Confirmed in `model/geometry/wingGeometry.ts`: the index list is
+   fixed for both sides while vertex X is multiplied by `outboardSign` (−1 for left).
+   Negating one axis inverts triangle handedness, so `computeVertexNormals()` points the
+   mirrored side's normals inward. Builder B's tests measured vertex *positions* and
+   passed; nothing measured winding.
+
+2. **Nothing in the scene casts or receives shadows.** `grep castShadow` across
+   `model/` and `interior/` returns nothing. `stage/scene.ts` enables `shadowMap` and sets
+   `sun.castShadow`, so a 2048² shadow map is being computed every frame and thrown away —
+   costing performance and producing nothing. That is my hole: I enabled shadows in the
+   stage and never told either builder that meshes must opt in.
+
+Other defects named, not yet root-caused: wing roots read as unattached (floating mount
+plate, blades emerging through the hull with no fairing) even though Builder B's
+containment test passes at 0.56 units — mechanically contained is not the same as visually
+attached; an unclosed rectangular box hanging under the aft hull; gear struts a different
+value from the hull, one apparently hanging off a wing bracket, and all legs clustered
+under the mid/aft body with nothing under the heavy nose, so it would tip onto its canopy
+on touchdown; fore and aft blades visibly overlapping at the root cluster in the
+beat-down frame.
+
+**A scale-readability failure the numbers hide.** The craft measures exactly 22.896 m by
+51.76 m. The critic, reasoning from the cockpit bulb and the scale posts, read it as
+**12–18 m long with a 30–40 m span** — roughly 35% under. The dimensions are right and the
+craft still does not read as big. Bar item Q4.5 is met by measurement and failed by eye,
+which is worth more than the measurement.
+
+**A correction to my own reading.** Looking at `hero.png` I took the long black bars
+radiating across the sand for wing shadows. They are the wings themselves, rendered flat
+black and unlit. There are no shadows in any frame, as above.
+
+**Its single named gap for round 2:** rebuild the wings as real objects — tapered planform
+with actual thickness, rooted into modelled hinge pods faired into the hull, and a
+material that is not pure black. "They are ~70% of every silhouette and currently read as
+black pencil lines... that one change transforms all six shots at once."
+
+### Round 1 — blind cockpit critic: **2/10. The named gap is a lead's error, not a builder's.**
+
+Fresh context, shown one frame, told nothing about what it was.
+
+> "What the frame actually reads as is a control desk standing in open desert air. There
+> is no visible hull, canopy, windshield, or any enclosure connecting the pieces, so
+> 'inside a vehicle' is inferred from the props, not seen."
+
+**The single biggest gap, in the critic's words: there is no canopy.** The cockpit is not
+a volume — dash, side slab, overhead box and control sticks are disconnected islands with
+open sky between them. The reference reads as a cockpit precisely because everything is
+mounted to a continuous faceted canopy frame; ours is furniture floating in the air.
+
+**This is my fault, and it is a fault in how I split the work.** I told the exterior
+builder "you own the hull shell and the canopy shell" and told the interior builder "the
+hull shell and canopy shell belong to the exterior builder, not you". So the canopy exists
+as an exterior blob and nothing at all encloses the pilot's view. Neither builder was
+wrong; the boundary I drew had a hole in it, and the hole is exactly the thing the frame
+most needed. Round 2 gives the canopy — inside face and outside face — to a single owner.
+
+Other specific defects the critic named, none of which any builder reported:
+- Four black rectangular panes float unattached at upper left. Not the wings: the wing
+  roots sit 3.9–8.7 m *aft* of the pilot's eye, well outside a forward 47-degree half-FOV.
+  Still unidentified; round 2 must find them.
+- The overhead console hangs from a single stalk that exits the top of frame, with no
+  ceiling anywhere — a box suspended in the sky.
+- Interior geometry is near-total black silhouette against a bright sky. Nothing lights
+  the cabin, so solid shapes read as cutouts.
+- The terrain's scale posts read as "stray geometry or debug markers" from inside, and one
+  stands dead centre bisecting the sightline. They are mine, added to give the eye
+  something of known size; from the cockpit they cost more than they give.
+- No seat is visible at all — not the copilot's, not even the pilot's own.
+
+Confirmed against the bar: Q3 target was 7/10. **Scored 2/10. Fails.**
+
 **Other honest limits, disclosed by the builder and confirmed by reading the source:**
 rate-command rotation with no inertia or smoothing; throttle passthrough with no spool
 lag; ground contact is a position clamp plus speed damping, not impact physics, and the
 craft keeps whatever pitch it landed at; no obstacle collision beyond the height field.
+
+### Round 1 — verdict against the bar
+
+| | target | result | |
+|---|---|---|---|
+| Q1 exterior fidelity | ≥7/10 | **2/10** | fail — expected, "flyable first" |
+| Q2 blind identification | names it | **"unmistakably a Dune-thopter", high confidence** | **PASS** |
+| Q3 cockpit | ≥7/10 | **2/10** | fail |
+| Q4.1 nose leads | dot > 0.99 | guard written, proven falsifiable, passes | **PASS** |
+| Q4.2 pilot camera / 2nd seat | seat visible | seat plane sits behind the camera | fail — my spec |
+| Q4.3 controls | 4 assertions | all four, falsifiable, verified | **PASS** |
+| Q4.4 wings beat | 8, symmetric, contained | 8 counted by a blind eye; roots contained at 0.56u | **PASS mechanically**, fails visually |
+| Q4.5 scale | 22.896 × 51.84 m | exact by measurement; reads 35% smaller to a fresh eye | measured pass, perceptual fail |
+| Q4.6 ground | never negative | min altitude 0.0 over 60s | **PASS** |
+
+Gate: lint, shop type-check, **1357 unit tests**, no file over 200 lines. 96 meshes,
+4304 triangles.
+
+**Four root causes carried into round 2, and three of the four are mine, not a builder's:**
+
+1. *(lead)* **The canopy has no inside.** I gave the canopy shell to the exterior builder
+   and explicitly told the interior builder it was not theirs. Nothing encloses the
+   pilot's view. One owner takes the canopy — both faces — in round 2.
+2. *(lead)* **Shadows are enabled but nothing opts in.** Cost paid, nothing rendered.
+3. *(lead)* **`PILOT_EYE.z` sits 0.15 m forward of `seatZ`**, so no forward FOV can ever
+   show either seat. Either head-look, or move the eye, or amend the bar — this one needs
+   a decision, not a fix.
+4. *(builder)* **Mirrored wing normals.** Fixed winding with a negated axis.
+
+**What the loop learned this round.** Builder tests passed on wing containment and the
+craft still reads as having unattached wings; builder tests passed on dimensions and the
+craft still reads 35% too small. Measurement and perception came apart in both directions,
+which is the argument for having critics at all. And the one bar item written specifically
+to catch the historical defect — Q4.1 — was guarded by a test that could not fail until
+the lead rewrote it, twice, after an invalid fault injection that proved nothing.
