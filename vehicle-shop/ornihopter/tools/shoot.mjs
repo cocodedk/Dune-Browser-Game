@@ -45,10 +45,18 @@ const VIEWS = [
 await rm(OUT, { recursive: true, force: true })
 await mkdir(OUT, { recursive: true })
 
-const server = spawn('npx', ['vite', 'vehicle-shop/ornihopter', '--port', String(PORT), '--strictPort'], {
-  stdio: ['ignore', 'pipe', 'pipe'],
-})
+// Reuse a dev server if one is already listening. Spawning our own is
+// convenient but fragile — a stray server from a previous run holds the port,
+// and spawn/stdio behaviour varies enough between shells and sandboxes that
+// chasing it wastes more time than it saves. Start one yourself with
+// `npm run shop:thopter -- --port 5219` and this just attaches.
+const alive = await fetch(`http://127.0.0.1:${PORT}/`, { method: 'GET' })
+  .then((r) => r.ok)
+  .catch(() => false)
+
+let server = null
 const kill = () => {
+  if (!server) return
   try {
     server.kill('SIGTERM')
   } catch {
@@ -57,20 +65,27 @@ const kill = () => {
 }
 process.on('exit', kill)
 
-const ready = await new Promise((resolve) => {
-  const timer = setTimeout(() => resolve(false), 60000)
-  const watch = (chunk) => {
-    if (String(chunk).includes(`:${PORT}`)) {
-      clearTimeout(timer)
-      resolve(true)
+if (alive) {
+  console.log(`attaching to the dev server already on :${PORT}`)
+} else {
+  server = spawn('npx', ['vite', 'vehicle-shop/ornihopter', '--port', String(PORT), '--strictPort'], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  const ready = await new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(false), 60000)
+    const watch = (chunk) => {
+      if (String(chunk).includes(`:${PORT}`)) {
+        clearTimeout(timer)
+        resolve(true)
+      }
     }
+    server.stdout.on('data', watch)
+    server.stderr.on('data', watch)
+  })
+  if (!ready) {
+    kill()
+    throw new Error('vite did not start')
   }
-  server.stdout.on('data', watch)
-  server.stderr.on('data', watch)
-})
-if (!ready) {
-  kill()
-  throw new Error('vite did not start')
 }
 
 const browser = await chromium.launch()
