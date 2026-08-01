@@ -3,7 +3,9 @@
 ## Purpose
 
 This is the canonical agent guidance file for this repository.
-If `CLAUDE.md` and `CODEX.md` ever disagree, follow `CODEX.md` and bring `CLAUDE.md` back into sync.
+This is the single canonical guide. `CLAUDE.md` and `AGENTS.md` exist only because those
+filenames are loaded by name, and are thin pointers here — there is nothing to keep in sync
+with them, which is the point.
 
 ## Project Snapshot
 
@@ -163,7 +165,8 @@ sh .githooks/pre-commit
 ## Key Files
 
 - `CODEX.md`: canonical repo instructions for coding agents
-- `CLAUDE.md`: secondary agent guide kept aligned with `CODEX.md`
+- `CLAUDE.md`, `AGENTS.md`: pointers to this file, not copies of it
+- `docs/PRD/dune92/03-stage-index.md`: the live status board
 - `.githooks/pre-commit`: enforced local quality gate
 - `scripts/check-file-length.sh`: `200`-line enforcement
 - `scripts/check-bundle-size.mjs`: bundle budget enforcement
