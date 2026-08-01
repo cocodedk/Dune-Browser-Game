@@ -358,3 +358,26 @@ is a 3x crop of the built craft and is now a first-class reference; it shows thi
   consistent with `thopter-03.jpg` and `mr-O4copy.jpg`.
 
 None of this changes round 2, which is already scoped to the cockpit. It is the round 3 brief.
+
+## Round 3 — shape. Sequenced, not fanned out.
+
+Goal restated by the user: deliver the craft with the correct shape.
+
+Four shape defects are known. Two are being built now; two are deliberately queued behind
+them, because the wings and the landing gear both attach to a hull that is being reshaped
+underneath them this minute. Fanning all four out would repeat the coupled-artifact
+collision the method warns about, in a subtler form than a shared file — a shared
+*junction*.
+
+| defect | evidence | status |
+|---|---|---|
+| hull is a revolve: circular by construction, so no chine, no flat belly, no facet, one continuous mass instead of three blocks, no forked tail | `kit-assembled.png`, `mr-O4copy.jpg`, kit part list is a panelled assembly | **building** |
+| cockpit is not an enclosed volume; canopy has no inside face | blind critic, 2/10 | **building** |
+| wings are flat black slabs: no thickness, no sweep, no root mechanism | blind critic ("~70% of every silhouette... black pencil lines"); `sweepProfile` measured and still unconsumed; ball housings visible in `kit-assembled.png` | queued |
+| gear clusters under the mid/aft body with nothing under the heavy nose — it would tip onto its canopy; struts are a different value from the hull | blind critic | queued |
+
+The interface pin that lets the two current builders run at once: `buildHullGeometry()` must
+keep returning a single `BufferGeometry`, so `Ornithopter.ts` never changes hands.
+`hullHalfWidthAt`/`isOutsideHull` must keep agreeing with the mesh actually built, because
+the wing-clearance tests prove no blade passes through the fuselage through those functions
+rather than through the geometry.
