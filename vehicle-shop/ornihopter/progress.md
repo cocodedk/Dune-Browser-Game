@@ -526,3 +526,28 @@ containment is now fully hull-derived, so the hull builder may tuck the cabin be
 0.51 freely down to ~0.44; the reference's 0.42 specifically at seatZ would put the seat
 edge 2.4cm outside the safe floor and needs a compensating seat nudge. Recorded so a later
 hull-polish round starts from the measured threshold, not a guess.
+
+### Round 4b.2 — LANDED. Verified. The belly line is clean.
+
+Commit `c5a0f36`. The side-wall bases (old: constant 2.3m, measured 0.77-2.15m OUTSIDE the
+skin at all ten sampled base vertices) now derive from hullInteriorHalfWidthAt and end at
+the measured nose/boom crossovers instead of pinching to unverified points. Fail-first
+order preserved and reported with numbers. cabinShellWall.ts split out — a justified
+deviation from the four-file brief, forced by the 200-line cap and mirroring the
+hullSection.ts precedent. Lead reproduced: lint 0, tsc 0, **1402/1402**, lengths clean;
+own captures show the hull's belly line clean nose to boom, the only remaining hangers-on
+being the three old gear struts; pilot view unchanged (builder proved byte-identical via
+stash-compare). Meshes 150 -> 174 (multi-band wall), tris 5991 -> 5979 — mesh count is
+creeping toward Cockpit.test.ts's <200 budget; watch it.
+
+Accepted trade recorded: wall greeble ribs thinned 4 -> 1 per side (three sat in the
+no-hull-at-floor-height band; console-occluded, zero visible change). New pre-existing
+defect surfaced and PROVEN pre-existing by stash-compare: at extreme head-look yaw the
+pilot camera sees desert through the hull's back-face-culled exterior skin (canopy glazing
+has the documented fix; the opaque hull does not). Queued as polish, not blocking.
+
+**Round 4c dispatched** (workflow `wf_0422a0b0-368`, Opus, max effort): the stick-strut
+gear becomes the kit's segmented insect legs — hips inside the (now drooping) hull, one
+common foot plane, support polygon containing the pod, fail-first stance test, mirror
+re-winding per the wing precedent. After it lands and verifies: re-shoot, then fresh blind
+critics for Q1 and Q3.
