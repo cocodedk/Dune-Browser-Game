@@ -381,3 +381,31 @@ keep returning a single `BufferGeometry`, so `Ornithopter.ts` never changes hand
 `hullHalfWidthAt`/`isOutsideHull` must keep agreeing with the mesh actually built, because
 the wing-clearance tests prove no blade passes through the fuselage through those functions
 rather than through the geometry.
+
+### Round 3 — hull and cockpit landed. Q1's measurable sub-part now PASSES.
+
+Verified by the lead, at a defined pose with wings level:
+
+| | value | |
+|---|---|---|
+| length | 22.896 m | 0.00% error against target |
+| span | 51.757 m | 0.16% short of 51.84 |
+| span / length | **2.261** | reference 2.35, window 2.115–2.585 — **PASS** |
+| triangles / meshes | 4405 / 113 | whole craft including interior |
+
+**A number to reconcile before it becomes a phantom.** The hull builder reported 3209
+triangles; the manifest says 4405. Both are correct — the builder counted the exterior
+through `Ornithopter.test.ts`, while `debug.measure()` walks the whole craft root, which has
+the cockpit parented under it. Same class of mismatch as round 1's 51.32-vs-51.76 span:
+different measurement scopes, not a disagreement. Recorded because an unexplained gap between
+two numbers is exactly what wasted time in the previous loop.
+
+**Open, not yet diagnosed:** soft warm glows appear in the pilot frame. They are NOT the new
+cabin `PointLight`s directly — three.js does not render a light as geometry. Working
+hypothesis is point-light hotspots falling on the transparent canopy panes: intensity 9 with
+decay 2, positioned within inches of the glazing. To be confirmed by disabling the lights and
+re-shooting once the wing builder is out of the tree, not assumed.
+
+**Open:** the craft reads far too dark against the reference's pale bone/tan. The sand renders
+bright in the same frame, so this is material colour rather than scene lighting. The materials
+live in `Ornithopter.ts`, which the wing builder currently holds, so it waits.
