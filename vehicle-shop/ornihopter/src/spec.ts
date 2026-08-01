@@ -86,6 +86,25 @@ export const WING = {
     1.0, 0.46, 0.327, 0.696, 0.987, 0.987, 0.987, 0.987, 0.987, 0.987,
     0.987, 0.987, 0.987, 0.987, 0.987, 0.987, 0.987, 0.906, 0.767, 0.625,
   ],
+  /**
+   * Offset of the blade's centreline from the plate's mid-line, at the same 20
+   * stations, as a fraction of max chord. The blade BOWS: it sits well toward
+   * one edge at the root, crosses over across the constant-chord midspan, and
+   * returns near the tip.
+   *
+   * Measured off the same kit plate as chordProfile, at 88 stations, then
+   * resampled to 20 — see docs/profiles/wing-planform.json and
+   * tools/plate-to-outline.mjs. Corroborated by the assembled kit photograph
+   * (.shots/reference/kit-assembled.png), where the blades visibly curve.
+   *
+   * This was missing until now, and its absence is why the wings are built
+   * straight. chordProfile records only WIDTH, so a builder reading spec.ts
+   * had no way to know the centreline moves at all.
+   */
+  sweepProfile: [
+    0.233, 0.207, 0.242, 0.057, -0.064, -0.064, -0.064, -0.064, -0.064, -0.064,
+    -0.064, -0.064, -0.064, -0.064, -0.064, -0.064, -0.064, -0.022, 0.041, 0.12,
+  ],
   /** Fraction of reach taken up by the root arm before the blade proper starts. */
   rootArmFraction: 0.17,
   thickness: 0.08,
