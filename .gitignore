@@ -25,8 +25,12 @@ blob-report/
 !public/**/*.png
 !docs/**/*.png
 
-# Agent tooling (local, per-machine)
-.claude/
+# Agent tooling. Per-machine settings stay local; shared skills are committed,
+# so project knowledge travels with the repository instead of living in one
+# developer's home directory. Git cannot re-include a path inside an ignored
+# directory, so this ignores .claude's *contents* rather than the folder.
+.claude/*
+!.claude/skills/
 .codex/
 
 # Editor / OS
