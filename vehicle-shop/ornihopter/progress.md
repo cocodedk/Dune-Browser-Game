@@ -472,3 +472,35 @@ roughly and nothing else; MENG keeps absolute scale, the measured plates keep pl
 The three kit photographs were `git add -f`ed past the repo-wide `*.png` ignore: the bar's
 primary shape authority must travel with the branch, not live only on one machine. The user
 also directed mid-round: builders run at max effort, the lead at xhigh.
+
+### Round 4 — LANDED. Verified by the lead. The hull is a dragonfly.
+
+Commit `a619599`. Gates reproduced independently: lint 0, tsc 0, **1397/1397** tests, every
+file <= 200 lines. The slenderness claim reproduced by the lead's own interpolation of the
+new station table, not by trusting the builder's test: the >= 90%-beam run is 8.12m -> 11.40m
+= **3.28m** (bar <= ~3.5m), widthFrac(16m) = **0.27** (bar <= 0.30), widthFrac(18m) = 0.177.
+Fresh captures: span/length **2.188** (window 2.115-2.585 around 2.35), 5979 tris, meshes
+136 -> 134 (tail vanes deleted, the slotted paddle stays), no page errors.
+
+The plan is two-lobed — pod crest 0.90 at 2.7m, waist 0.79 at 6.2m, shoulder peak 1.00 at
+9.8m — which is not the brief's literal "single peak" but IS the reference's head-thorax-
+abdomen; the brief was the approximation, the kit is the authority. heightFrac is decoupled
+from widthFrac (deep pod, flattened boom, pod:boom half-height 7.1), and keelY droops the
+abdomen 0.6m. Lead's visual verdict from the fresh captures: the top view's ground shadow
+alone now reads as a dragonfly — the exact glance-test the old hull failed; rear34 shows
+chine, pale deck, dark keel, nose slots and flank grille all legible; pilot view unchanged
+and correct. Builder's flagged guard swaps in hullProfile.test.ts (three assertions that
+each mandated the slab, replaced by shoulder-floor, aspect-spread and true containment
+checks) reviewed and accepted — the deleted assertions were load-bearing for the defect.
+
+**Biggest remaining gap, confirmed by the lead's eyes, not just the builder's report:**
+interior/cabinShell.ts builds floor and bulkhead at COCKPIT.clearWidth (4.9m) flat boxes
+(lines ~89-95); corners reach |x| 2.45 vs hull 2.19-2.38 at the chine and far less at floor
+height. Renders as a black tray under the pod in side/hero/rear34. Dispatched as **Round
+4b** to a Sonnet builder at max effort (workflow `wf_cf67cbf8-f69`): floor and bulkhead
+rebuilt from the hull's own section functions, with a falsifiability-proven containment
+test. Landing gear (stick struts -> the kit's segmented insect legs) is **Round 4c, queued
+behind 4b on purpose**: both builders' visual verification reads the same live tree through
+the dev server, and one builder's half-written edit rendering as a phantom defect in the
+other's captures is precisely the mid-write trap this loop has already paid for. Blind Q1/Q3
+critics re-run only after 4b and 4c land, so their round is not spent naming known defects.
