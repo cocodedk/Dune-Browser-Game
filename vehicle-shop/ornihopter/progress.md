@@ -132,11 +132,21 @@ call site for beatAmplitude). Known limit kept: no lift term -> sustained low fl
 still drags gear (pre-existing class). At-rest capture verified by the lead's own eyes:
 all six legs ON the sand, wings dead flat, 0.00Hz.
 
+**Round 11 — LANDED (commit `3a54f0d`).** Real holes in the hull loft, 2.25-5.6m aft:
+side glance 0% -> 31.6% exterior, BOTH seats bit-identically; enclosure extended
+(7,680 new rays, zero escapes, reveal-overlap fencing); side view ZERO pixels changed
+outside the pane region (hero/top diffs = ground-shadow resampling, disclosed); roof
+rail thinned 0.09->0.065. 0-BUBBLE: lead's hypothesis REFUTED by closed form
+(exponential never arrives — 0.1487deg at 4s); fixed with a 1 deg/s terminal rate,
+arrival ~3s; a -0 subtlety caught. 1553/1553. One enclosure assertion adapted with
+stashed-rebuild numbers — every point structure lost went to GLASS, open stayed 0.
+Builder's note for critics: from distance the pane band reads as one dark stripe;
+if flagged, the fix is mullion CONTRAST, not more mullions.
+
 **Do next, in order (interior campaign):**
-1. **Round 11 — Apache side panes — IN FLIGHT** (workflow `wf_914953f9-ee6`, Opus, max):
-   the B6 user ruling — full flat side transparencies cut into both upper flanks (the
-   ONE freeze exception), thinner frames, both-seats side-glance raycast proof,
-   enclosure extended over the panes, plus the 0-bubble auto-level pin.
+1. **B3 bright-regions triage — IN FLIGHT** (Sonnet): identify all 8 luminance>215
+   regions by measurement, fix defects at cause or re-derive the bar line with
+   evidence; guard the outcome.
 2b. **Round 11 — Apache side panes (USER RULING, exterior-freeze exception): "full
    apache side panes and thiner frames. cause the two pilots share the same narrow
    front window and they don't sit center to it. so each pilot sees more to the other
