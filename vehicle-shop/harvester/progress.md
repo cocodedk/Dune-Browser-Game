@@ -247,6 +247,23 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round 14 — the belt is the medium between wheels and ground (user direction: "make the belt wider. the wheels are touching the ground through the belt. make perfect measurements first")
+
+The wheels sat at y=0 on the ground, alongside the belt bottom plate — the
+belt was not carrying them. Redesigned from first principles: the sprocket
+sits ON the belt's bottom plate. Its Y-centre (TRACK.sprocketY=4.1) is the
+master number — the bottom plate thickness (0.9) is derived from it, every
+wheel Y-centre falls out of it (road wheels 3.9, sprockets 4.1, rollers
+6.6), the wrap half-cylinders centre on it, and the belt height (7.8)
+encloses the wrap. The belt widened 3.6 -> 4.6m so it reads as the
+carrier, not a narrow strip the wheels overhang. OVERALL.width 29 -> 31.6.
+
+Gates: lint 0, shop tsc 0, 22/22 tests, lengths clean.
+
+**Open:** belt scrolling, dust, panel lines, first blind critic panel.
+
+_Status: complete._
+
 ### Round 13 — the belt is a BAND, not a block (user finding, round 12: "the belt became a block again")
 
 The thin-sheet loop still read as a block: the outer face was a full-height

@@ -25,10 +25,13 @@ export interface BeltPart {
  *  cutter extends past). */
 const POD_LENGTH = BODY.tailZ - BODY.noseZ
 const BELT = TRACK.belt
+/** The sprocket sits ON the belt's bottom plate, so the plate thickness is
+ *  exactly the sprocket's Y-centre minus its radius. The belt is now the
+ *  medium between the wheels and the ground. */
+const BOTTOM_THICK = TRACK.sprocketY - TRACK.sprocketRadius
 const SHOE_SPACING = POD_LENGTH / TRACK.grouserCount
 const SHOE_LENGTH = SHOE_SPACING * 0.85
 
-const BOTTOM_THICK = 0.7
 const TOP_THICK = 0.5
 
 /** The CURVED wrap around each sprocket: a half-cylinder the sprocket sits
@@ -79,7 +82,9 @@ export function buildBelt(
     geometries.push(wrap)
     const wrapMesh = new Mesh(wrap, beltMaterial)
     wrapMesh.rotation.z = Math.PI / 2 // axis from Y to X
-    wrapMesh.position.set(0, BELT.height / 2, sz)
+    // The sprocket wraps sit at the sprocket Y-centre — the belt curves
+    // around the wheel exactly where the wheel lives.
+    wrapMesh.position.set(0, TRACK.sprocketY, sz)
     wrapMesh.castShadow = true
     group.add(wrapMesh)
 

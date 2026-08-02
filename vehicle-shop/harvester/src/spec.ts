@@ -26,8 +26,9 @@ export const OVERALL = {
   /** Full footprint: cutter tip (-36) to the tail face (+24). The hull alone
    *  (measured from the 3MF) is 48m; the film's cutter reaches 12m past it. */
   length: 60,
-  /** Over the two treads: x = +-14.5. */
-  width: 29,
+  /** Over the two treads: widened with the belt so the belt reads as the
+   *  carrier, not a narrow band the wheels overhang. */
+  width: 31.6,
   /** Cab roof above the ground line; the deck sits at 12.0. */
   height: 15,
   /** Pod centre to pod centre. */
@@ -80,9 +81,14 @@ export const CAB = {
  *  ground line and runs the hull's full length at x = +-trackSpan/2. */
 export const TRACK = {
   centreX: OVERALL.trackSpan / 2,
-  /** The belt loop: the tall dark band wrapping the running gear. Thinned
-   *  in round 9 — it read as too thick against the housing. */
-  belt: { width: 3.6, height: 6.6, zLow: -24, zHigh: 24 },
+  /** The belt loop: the tall band wrapping the running gear. Widened in the
+   *  wheel-above-belt round — the belt is now the machine's ground contact
+   *  medium, the wheels ride ON it. */
+  belt: { width: 4.6, height: 7.8, zLow: -24, zHigh: 24 },
+  /** The Y-centre of both sprockets — they sit ON the belt's bottom plate,
+   *  so this is bottom-thickness + sprocketRadius. Every other wheel's
+   *  Y-centre falls out of this value. */
+  sprocketY: 4.1,
   /** Road wheels: the big lower-run wheels inside the belt. Spaced so NO
    *  wheel overlaps another or the end sprockets (they did — the front and
    *  rear clusters collided). */
@@ -95,8 +101,9 @@ export const TRACK = {
    *  the road wheels. */
   returnRollerRadius: 1.2,
   returnRollersZ: [-9.35, 0, 9.35],
-  /** Housing over the running gear, tucked under the deck. */
-  housing: { yLow: 6.8, yHigh: 10.8, width: 4.4 },
+  /** Housing over the running gear, tucked under the deck. Raised with the
+   *  belt and widened to match. */
+  housing: { yLow: 8.0, yHigh: 11.0, width: 4.6 },
   /** Grouser teeth across the belt's LOWER outer face — tread, not a fence. */
   grouserCount: 24,
 } as const

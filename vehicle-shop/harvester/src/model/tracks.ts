@@ -72,10 +72,13 @@ export function buildTracks(
     group.add(belt.group)
     belts.push(belt)
 
-    // Road wheels: the one wheel component, at each station.
+    // Road wheels: the one wheel component, at each station. The belt is
+    // the medium between wheel and ground, so the centre is the bottom
+    // plate plus the radius.
+    const roadY = TRACK.sprocketY - TRACK.sprocketRadius + TRACK.roadWheelRadius
     for (const wz of TRACK.roadWheelsZ) {
       const wheel = buildWheel(TRACK.roadWheelRadius, BELT.width + ROAD_WHEEL_OVER * 2, wheelMaterial, darkMaterial, accentMaterial)
-      wheel.group.position.set(x, TRACK.roadWheelRadius, wz)
+      wheel.group.position.set(x, roadY, wz)
       group.add(wheel.group)
       wheels.push(wheel)
       runners.push({ group: wheel.group, side, radius: TRACK.roadWheelRadius })
@@ -89,7 +92,7 @@ export function buildTracks(
     for (const sz of TRACK.sprocketZ) {
       const sprocketGroup = new Group()
       sprocketGroup.name = 'wheel'
-      sprocketGroup.position.set(x, TRACK.sprocketRadius, sz)
+      sprocketGroup.position.set(x, TRACK.sprocketY, sz)
       const sprocket = new CylinderGeometry(TRACK.sprocketRadius, TRACK.sprocketRadius, BELT.width + SPROCKET_OVER * 2, 18)
       geometries.push(sprocket)
       const mesh = new Mesh(sprocket, wheelMaterial)
