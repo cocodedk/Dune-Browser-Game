@@ -793,3 +793,19 @@ did — the bar's Q1 prompt should name blade handedness explicitly from now on.
 server): flip derived from kit-2/kit-3/sprue crops by measurement, falsifiability-proven
 handedness test (port blade tip-offset must trail AFT of its root chord line; sign-flip
 injection goes red), before/after captures.
+
+### USER FINDING #2 (2026-08-02): "the cockpit is very good, yet there is a
+### windows/windshield frame which blocks the view right in front of the pilot."
+
+Diagnosis from Round 6b's own derivation: the seat height was solved so a LEVEL ray
+clears the transverse mullion at the 1.2m canopy station — by 43mm. Geometrically clear,
+visually dead centre: a frame member 43mm off the sightline sits across the middle of the
+forward view (confirmed in pilot-yaw0.png — the horizontal beam crosses the glazed
+aperture at eye height, and the A-frame legs converge near centre). The mullion stations
+are OUR authoring, not kit measurement (the plate gives the lens outline and glazing
+strip, not bay boundaries), so they can move without an authority conflict. Queued as
+**Round 6f**, behind 6e: re-layout the canopy bays/frames so a central forward cone from
+PILOT_EYE (roughly +/-6 degrees vertical, +/-10 degrees horizontal about level-forward)
+contains ONLY glazing — merge or shift the forward bays, splay the A-frame legs outboard
+— with a fail-first cone test (red today), the enclosure zero-escape contract preserved,
+and the exterior lens outline unchanged.
