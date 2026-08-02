@@ -39,8 +39,9 @@ structure · high sills / armored-tub read · heavy framed flat-plate transparen
 - An unbroken exterior run ≥ **250 rows** somewhere in columns x = 700–900.
 - Exactly **2** MFD screens, each ≥ 140 px wide in frame, each inside a visible bezel
   carrying ≥ 8 distinct keys.
-- Luminance > 215 forms exactly **one** connected region (the cockpit light). No second
-  sun, no stray glow.
+- Luminance > 215 forms **at most one** connected region (the cockpit light, if it
+  clears threshold at the pose — post-triage it peaks at 196). No second sun, no stray
+  glow. (Amended from "exactly one" after the B3 triage: zero is stricter than one.)
 
 ### B3-LIVE — the view must work in REAL FLIGHT (user finding, 2026-08-02 evening)
 

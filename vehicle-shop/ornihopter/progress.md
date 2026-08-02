@@ -143,10 +143,13 @@ stashed-rebuild numbers — every point structure lost went to GLASS, open staye
 Builder's note for critics: from distance the pane band reads as one dark stripe;
 if flagged, the fix is mullion CONTRAST, not more mullions.
 
+**B3 triage — LANDED (commit `f59a06d`).** All stray bright regions were the standby
+dials (emissive 0.28 + bright MARK texels) — occlusion-proven, fixed at cause with two
+one-value edits; regions >=12px now ZERO at both poses; lamp and HUD ink untouched
+byte-identically; guard test red/green on a lighting-K proxy. Bar wording amended:
+"at most one" region (zero is stricter than one). 1556/1556.
+
 **Do next, in order (interior campaign):**
-1. **B3 bright-regions triage — IN FLIGHT** (Sonnet): identify all 8 luminance>215
-   regions by measurement, fix defects at cause or re-derive the bar line with
-   evidence; guard the outcome.
 2b. **Round 11 — Apache side panes (USER RULING, exterior-freeze exception): "full
    apache side panes and thiner frames. cause the two pilots share the same narrow
    front window and they don't sit center to it. so each pilot sees more to the other
