@@ -20,8 +20,8 @@
 // gap above the hull".
 
 import { SphereGeometry, CylinderGeometry, type BufferGeometry } from 'three'
-import { hullHalfWidthAt, hullHalfHeightAt, isOutsideHull } from '../hullProfile'
-import { WING_MAX_CHORD } from '../../../spec'
+import { hullHalfWidthAt, hullHalfHeightAt, hullKeelYAt, isOutsideHull } from '../hullProfile'
+import { WING_MAX_CHORD, type WingRootMount } from '../../../spec'
 
 /** How far outboard the pod sits, as a fraction of the hull's own half-width
  *  at its station. Chosen comfortably inside the y=0 cross-section's own
@@ -71,10 +71,49 @@ export function seatOnHull(z: number, xFraction: number = SEAT_X_FRACTION): Seat
   return { x, y: (inner + outer) / 2 }
 }
 
-/** The ball's centre — and the wing's actual mechanical pivot — raised off
+/**
+ * The mirror of seatOnHull for a FLANK arm: fix the height as a fraction of
+ * the station's own half-height off its keel line, then bisect X out to the
+ * skin. Round 6a needs both because the kit's transverse frames reach the hull
+ * two different ways — the deck arms come up through the deck, where the
+ * surface is a horizontal cap and only Y is unknown, and the flank arms come
+ * out through the side, where the surface is a steep face and only X is.
+ * Bisecting Y against a near-vertical flank (or X against a flat deck)
+ * converges onto a nearly tangential crossing and is worth avoiding.
+ */
+export function seatOnFlank(z: number, yFraction: number): Seat {
+  const y = hullKeelYAt(z) + yFraction * hullHalfHeightAt(z)
+  let inner = 0
+  let outer = hullHalfWidthAt(z)
+  for (let i = 0; i < 40; i++) {
+    const mid = (inner + outer) / 2
+    if (isOutsideHull(mid, y, z, 0)) outer = mid
+    else inner = mid
+  }
+  return { x: (inner + outer) / 2, y }
+}
+
+/** The hull-surface point for one spec.ts WING_ROOTS entry, whichever kind of
+ *  arm it is. The single place that decision is made. */
+export function seatForMount(mount: WingRootMount): Seat {
+  return mount.arm === 'flank'
+    ? seatOnFlank(mount.z, mount.seatFraction)
+    : seatOnHull(mount.z, mount.seatFraction)
+}
+
+/** The ball's centre — and the wing's actual mechanical pivot — standing off
  *  the hull skin by POST_HEIGHT. Ornithopter.ts uses this same point for
  *  createWingRig's attachment, so the rotating arm always reaches exactly
- *  into the static ball, at every station. */
+ *  into the static ball, at every station. A deck arm's post rises; a flank
+ *  arm's stands outboard, which is the direction its own skin faces. */
+export function pivotForMount(mount: WingRootMount): Seat {
+  const seat = seatForMount(mount)
+  return mount.arm === 'flank'
+    ? { x: seat.x + POST_HEIGHT, y: seat.y }
+    : { x: seat.x, y: seat.y + POST_HEIGHT }
+}
+
+/** Deck-arm pivot by station, retained for callers that only have a z. */
 export function wingPivotAt(z: number, xFraction: number = SEAT_X_FRACTION): Seat {
   const seat = seatOnHull(z, xFraction)
   return { x: seat.x, y: seat.y + POST_HEIGHT }

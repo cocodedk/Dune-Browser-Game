@@ -1,119 +1,66 @@
 // vehicle-shop/ornihopter/src/model/geometry/canopyGeometry.ts
-// The wraparound canopy shell: three cross-sections (nose / shoulder / rear),
-// each a left-sill -> ridge -> right-sill triangle, joined by pillar beams at
-// each station and rail beams between stations, infilled with glazing panes.
-// One shell, built once here and mounted once by Ornithopter.ts — seen
-// correctly from OUTSIDE (an angular, faceted, multi-pane greenhouse, per
-// .shots/reference/mr-O4copy.jpg and mr-O9copy.jpg) and from INSIDE (the
-// pilot's eye sits inside this same volume, per spec.ts PILOT_EYE, and sees
-// the same beams as mullions framing the glazing, per
-// .shots/reference/thopter-03.jpg).
+// The canopy as the kit builds it: a FLUSH GLAZED DECK. See canopyPlan.ts for
+// the measurement and the placement; this file is the mesh alone.
 //
-// Round-1's canopy was a single-sided SphereGeometry: plausible enough from
-// outside, but invisible from inside. A camera positioned inside a shell
-// looks at every triangle's back face — the vertex normal points away from
-// the shell's centre, the same general direction as the view ray from a
-// camera near that centre, so the shader reads it as the back of the
-// triangle — and the default FrontSide material culls exactly that face.
-// DoubleSide on the glazing here fixes it at the material, not by fighting
-// winding order.
+// WHAT REPLACED WHAT. Round 1 built a single-sided SphereGeometry, invisible
+// from inside. Rounds 2-5 built a tent — three cross-sections, each a
+// left-sill -> ridge -> right-sill triangle, pillared and railed and glazed.
+// It read from outside as "a short windshield box perched on the fore-deck
+// like a truck cab", and measured, it was: 1.14m of ridge standing above a
+// deck line at 2.7m aft. The kit's Canopy.stl is a 1.80mm plate. So the tent
+// is gone, and what stands here now is what a plate looks like when it is
+// installed: an outboard edge lying ON the deck, a chamfered rim rising 0.22m
+// off it, and a recessed strip of glazing between the rims.
+//
+// Six longitudinal stations (canopyPlan.ts), five bays, every surface a flat
+// quad, per-face vertices so nothing Gouraud-smooths across the chamfer — the
+// same discipline hullLoft.ts's loftRingsFlat keeps for the hull.
+//
+// GLAZING STAYS TRANSPARENT, and that is load-bearing beyond looks: main.ts
+// exempts see-through materials from the shadow map by testing
+// `transparent === true && opacity < 0.95`, and an opaque canopy sealed the
+// cabin in darkness the last time that check did not fire. The fore cap is
+// glazed too — it is the one pane directly in the pilot's forward sightline
+// (spec.ts PILOT_EYE looks down -Z toward it) and the round before this one
+// put a windshield triangle in exactly that place for exactly that reason.
 
 import {
   BoxGeometry, BufferGeometry, BufferAttribute, Group, Mesh, MeshStandardMaterial,
   DoubleSide, Vector3, type Material,
 } from 'three'
-import { COCKPIT, stationFromNose } from '../../spec'
-import { hullHalfHeightAt } from './hullProfile'
+import {
+  CANOPY_Z, CANOPY_RIM, CANOPY_RECESS, RIM_TOP_FRACTION, GLAZE_FRACTION,
+  canopyHalfWidthAt, deckYAt,
+} from './canopyPlan'
+
+export {
+  canopySectionAt, ridgeHeightAt, CANOPY_STATION_Z, CANOPY_SIDE_SILL_Y,
+  type CanopySection,
+} from './canopyPlan'
 
 const FRAME_COLOR = 0x47443b
 const GLASS_COLOR = 0x2c4550
-// Thick enough to read as roll-cage structure at the ~1m the SHOULDER
-// pillars sit from the pilot's eye (interior/layout.ts), not hairlines.
-const BEAM_THICKNESS = 0.12
-const RIDGE_THICKNESS = 0.17
+/** Cross-section of the transverse rim ribs that break the glazing strip into
+ *  panes — mullions, at the plate's own scribed panel lines. */
+const RIB_THICKNESS = 0.13
 
-/** Where the canopy's side glazing starts — shared with
- *  interior/cabinShell.ts's liner wall so the opaque cabin wall and the
- *  canopy glass meet with no gap and no step between them. */
-export const CANOPY_SIDE_SILL_Y = COCKPIT.floorY + COCKPIT.clearHeight * 0.42
-
-interface Station {
-  readonly z: number
-  readonly halfWidth: number
-  readonly baseY: number
-  readonly peakY: number
+/** Right-hand half of a station's section, outboard to inboard: the edge on
+ *  the deck, the top of the chamfer, and the outboard lip of the recessed
+ *  glazing. The left half is the same x negated. */
+interface Rail {
+  edge: Vector3
+  rim: Vector3
+  glaze: Vector3
 }
 
-// peakY is hullHalfHeightAt(z) times a proud-ness factor, NOT a COCKPIT
-// interior number. Measured miss, first pass: peakY was authored from
-// COCKPIT.clearHeight (interior headroom) and landed at 0.8 / 1.55 / 1.2 —
-// all BELOW hullHalfHeightAt at their own stations (1.72 / 2.15 / 2.15). The
-// whole ridge sat inside the hull's own opaque ellipse and vanished from
-// every outside view (hero.png, side.png). The interior clearance and the
-// hull's own exterior surface are different numbers; the ridge has to clear
-// the second one, or there is nothing to see from outside.
-const noseZ = stationFromNose(1.1)
-const shoulderZ = stationFromNose(2.7)
-const rearZ = stationFromNose(4.9)
-
-const NOSE: Station = { z: noseZ, halfWidth: 0.7, baseY: -0.95, peakY: hullHalfHeightAt(noseZ) * 1.05 }
-const SHOULDER: Station = {
-  z: shoulderZ, halfWidth: 2.5, baseY: CANOPY_SIDE_SILL_Y, peakY: hullHalfHeightAt(shoulderZ) * 1.55,
-}
-const REAR: Station = {
-  z: rearZ, halfWidth: 2.15, baseY: CANOPY_SIDE_SILL_Y, peakY: hullHalfHeightAt(rearZ) * 1.35,
-}
-const STATIONS: readonly Station[] = [NOSE, SHOULDER, REAR]
-
-/** The three station z's, so a liner can break its own taper at exactly the
- *  same kinks canopySectionAt does instead of sampling a curve blind. */
-export const CANOPY_STATION_Z = { nose: noseZ, shoulder: shoulderZ, rear: rearZ } as const
-
-/** Ridge height alone — interior/layout.ts mounts the overhead panel to the
- *  real frame with this rather than into open air. */
-export function ridgeHeightAt(z: number): number {
-  return canopySectionAt(z).peakY
-}
-
-/** halfWidth/baseY: the sill, where the opaque wall ends and glazing begins.
- *  peakY: the ridge, where both flanks meet at the centreline. */
-export interface CanopySection {
-  readonly halfWidth: number
-  readonly baseY: number
-  readonly peakY: number
-}
-
-/**
- * Interpolated cross-section at a craft-local z, clamped to NOSE..REAR.
- * Exported in full so interior/cabinShell.ts can build a liner GUARANTEED to
- * land on this shell's sill line rather than a separately-authored width
- * that might gap or clip it: round 2's critic found exactly that gap, a
- * wall at a constant half-width while this sill tapers 0.7 to 2.5m.
- */
-export function canopySectionAt(z: number): CanopySection {
-  const [a, b] = z <= SHOULDER.z ? [NOSE, SHOULDER] : [SHOULDER, REAR]
-  const t = Math.min(1, Math.max(0, (z - a.z) / (b.z - a.z)))
+function railAt(z: number, sign: 1 | -1): Rail {
+  const halfWidth = canopyHalfWidthAt(z)
+  const deck = deckYAt(z)
   return {
-    halfWidth: a.halfWidth + t * (b.halfWidth - a.halfWidth),
-    baseY: a.baseY + t * (b.baseY - a.baseY),
-    peakY: a.peakY + t * (b.peakY - a.peakY),
+    edge: new Vector3(sign * halfWidth, deck, z),
+    rim: new Vector3(sign * halfWidth * RIM_TOP_FRACTION, deck + CANOPY_RIM, z),
+    glaze: new Vector3(sign * halfWidth * GLAZE_FRACTION, deck + CANOPY_RIM - CANOPY_RECESS, z),
   }
-}
-
-const baseLeft = (s: Station): Vector3 => new Vector3(-s.halfWidth, s.baseY, s.z)
-const baseRight = (s: Station): Vector3 => new Vector3(s.halfWidth, s.baseY, s.z)
-const ridgePt = (s: Station): Vector3 => new Vector3(0, s.peakY, s.z)
-const UP = new Vector3(0, 1, 0)
-
-/** A structural beam between two points, sharing one unit box geometry that
- *  is scaled and oriented per instance — every mullion is the same stock. */
-function beam(a: Vector3, b: Vector3, geometry: BoxGeometry, material: Material): Mesh {
-  const mesh = new Mesh(geometry, material)
-  mesh.position.copy(a).add(b).multiplyScalar(0.5)
-  const dir = b.clone().sub(a)
-  mesh.scale.set(1, dir.length(), 1)
-  mesh.quaternion.setFromUnitVectors(UP, dir.normalize())
-  return mesh
 }
 
 function facet(points: readonly Vector3[]): BufferGeometry {
@@ -125,16 +72,24 @@ function facet(points: readonly Vector3[]): BufferGeometry {
   return geometry
 }
 
-/** Flat quad from four corners given in perimeter order; DoubleSide on the
- *  glazing material handles the pilot's inside view of the same triangles. */
+/** Flat quad from four corners in perimeter order. DoubleSide on the glazing
+ *  material handles the pilot's inside view of the same triangles; the frame
+ *  is DoubleSide too because a 0.22m rim is thin enough to be seen edge-on
+ *  from the pilot camera and a culled back face there is a hole. */
 function quad(a: Vector3, b: Vector3, c: Vector3, d: Vector3): BufferGeometry {
   return facet([a, b, c, a, c, d])
 }
 
-/** Flat triangle — the nose cap, the one pane the pilot looks straight
- *  through rather than to the side of. */
-function tri(a: Vector3, b: Vector3, c: Vector3): BufferGeometry {
-  return facet([a, b, c])
+/** The six-point closed section at one station, as a triangle fan about its
+ *  own centre — the fore windscreen and the aft closure. */
+function cap(z: number): BufferGeometry {
+  const right = railAt(z, 1)
+  const left = railAt(z, -1)
+  const loop = [left.edge, left.rim, left.glaze, right.glaze, right.rim, right.edge]
+  const centre = new Vector3(0, deckYAt(z) + CANOPY_RIM * 0.5, z)
+  const points: Vector3[] = []
+  for (let i = 0; i < loop.length - 1; i++) points.push(centre, loop[i], loop[i + 1])
+  return facet(points)
 }
 
 export interface CanopyBuild {
@@ -147,50 +102,64 @@ export function buildCanopy(): CanopyBuild {
   const group = new Group()
   group.name = 'canopy'
 
-  const frameMaterial = new MeshStandardMaterial({ color: FRAME_COLOR, roughness: 0.55, metalness: 0.6 })
-  // Round 3's critic: at opacity 0.38 with depthWrite off this "neither
-  // occludes anything nor catches a visible highlight" — no glazing at all,
-  // sky straight through, and the cabin lights' specular hotspots on it read
-  // as glowing patches with no visible surface to glint off. Opacity up to a
-  // real tinted-glass level, depthWrite back on (one shell layer, nothing to
-  // sort wrong), metalness up / roughness down for a tight highlight instead
-  // of a blob. See progress.md for this round's verification.
+  const frameMaterial = new MeshStandardMaterial({
+    color: FRAME_COLOR, roughness: 0.55, metalness: 0.6, side: DoubleSide,
+  })
+  // Round 3's critic read opacity 0.38 with depthWrite off as "neither
+  // occludes anything nor catches a visible highlight". These numbers are the
+  // ones that fixed it and they stay: a real tinted-glass level, depthWrite
+  // on, low roughness for a tight highlight instead of a blob. Opacity must
+  // stay under 0.95 or main.ts starts casting an opaque shadow through it.
   const glassMaterial = new MeshStandardMaterial({
     color: GLASS_COLOR, roughness: 0.22, metalness: 0.12,
     transparent: true, opacity: 0.6, side: DoubleSide, depthWrite: true,
   })
-  const beamGeometry = new BoxGeometry(BEAM_THICKNESS, 1, BEAM_THICKNESS)
-  const ridgeGeometry = new BoxGeometry(RIDGE_THICKNESS, 1, RIDGE_THICKNESS)
-  const geometries: BufferGeometry[] = [beamGeometry, ridgeGeometry]
+  const ribGeometry = new BoxGeometry(1, RIB_THICKNESS * 0.6, RIB_THICKNESS)
+  const geometries: BufferGeometry[] = [ribGeometry]
   const materials: Material[] = [frameMaterial, glassMaterial]
 
-  // Pillars: left-to-ridge and ridge-to-right at every station — the
-  // mullions rising from the sill and meeting overhead.
-  for (const s of STATIONS) {
-    group.add(beam(baseLeft(s), ridgePt(s), beamGeometry, frameMaterial))
-    group.add(beam(ridgePt(s), baseRight(s), beamGeometry, frameMaterial))
+  const add = (geometry: BufferGeometry, material: Material): void => {
+    geometries.push(geometry)
+    group.add(new Mesh(geometry, material))
   }
 
-  // Rails and glazing, one bay per pair of adjacent stations.
-  for (let i = 0; i < STATIONS.length - 1; i++) {
-    const a = STATIONS[i]
-    const b = STATIONS[i + 1]
-    group.add(beam(baseLeft(a), baseLeft(b), beamGeometry, frameMaterial))
-    group.add(beam(baseRight(a), baseRight(b), beamGeometry, frameMaterial))
-    group.add(beam(ridgePt(a), ridgePt(b), ridgeGeometry, frameMaterial))
+  for (let i = 0; i < CANOPY_Z.length - 1; i++) {
+    const zA = CANOPY_Z[i]
+    const zB = CANOPY_Z[i + 1]
+    // The forward-most bay is the WINDSCREEN: it lies on the nose chamfer,
+    // raked toward the pilot's own sightline, and it is the only part of the
+    // panel a seated pilot looks THROUGH rather than up at. Glazed edge to
+    // edge there, framed everywhere else. Without this the flush panel is all
+    // frame at the one place the pilot camera can see it, and the cockpit
+    // capture loses the tinted greenhouse read the tent canopy used to give.
+    const chamfer = i === 0 ? glassMaterial : frameMaterial
+    for (const sign of [1, -1] as const) {
+      const a = railAt(zA, sign)
+      const b = railAt(zB, sign)
+      // The chamfer, rising inboard from the deck to the rim's crown, and the
+      // rim's inner face dropping into the recess — the frame the glazing
+      // sits in.
+      add(quad(a.edge, b.edge, b.rim, a.rim), chamfer)
+      add(quad(a.rim, b.rim, b.glaze, a.glaze), chamfer)
+    }
+    // The recessed glazing strip itself, one pane per bay.
+    const aR = railAt(zA, 1)
+    const aL = railAt(zA, -1)
+    const bR = railAt(zB, 1)
+    const bL = railAt(zB, -1)
+    add(quad(aL.glaze, bL.glaze, bR.glaze, aR.glaze), glassMaterial)
 
-    const left = quad(baseLeft(a), baseLeft(b), ridgePt(b), ridgePt(a))
-    const right = quad(ridgePt(a), ridgePt(b), baseRight(b), baseRight(a))
-    geometries.push(left, right)
-    group.add(new Mesh(left, glassMaterial), new Mesh(right, glassMaterial))
+    // A mullion on every interior station, spanning the pane it closes.
+    if (i > 0) {
+      const rib = new Mesh(ribGeometry, frameMaterial)
+      rib.scale.set(canopyHalfWidthAt(zA) * GLAZE_FRACTION * 2, 1, 1)
+      rib.position.set(0, deckYAt(zA) + CANOPY_RIM - CANOPY_RECESS * 0.5, zA)
+      group.add(rib)
+    }
   }
 
-  // Windshield: the nose ring is otherwise an open hoop, and it is the one
-  // pane directly in the pilot's forward sightline (spec.ts PILOT_EYE sits
-  // aft of it, looking toward it down -Z) rather than off to a side.
-  const windshield = tri(baseLeft(NOSE), ridgePt(NOSE), baseRight(NOSE))
-  geometries.push(windshield)
-  group.add(new Mesh(windshield, glassMaterial))
+  add(cap(CANOPY_Z[0]), glassMaterial)
+  add(cap(CANOPY_Z[CANOPY_Z.length - 1]), frameMaterial)
 
   return { group, geometries, materials }
 }

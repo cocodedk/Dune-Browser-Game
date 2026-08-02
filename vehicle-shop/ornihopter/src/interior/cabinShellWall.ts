@@ -40,15 +40,28 @@
 
 import { Group } from 'three'
 import { COCKPIT } from '../spec'
-import { canopySectionAt, CANOPY_STATION_Z } from '../model/geometry/canopyGeometry'
+import { canopySectionAt, CANOPY_STATION_Z, CANOPY_SIDE_SILL_Y } from '../model/geometry/canopyGeometry'
 import { WALL, FLOOR_FRONT_Z, FLOOR_REAR_Z } from './layout'
 import { hullInteriorHalfWidthAt, hullZSamples } from './hullSection'
 import { box, flatQuad, type Placed } from './sceneUtils'
 import { hullLinerMaterial, gunmetalMaterial } from './materials'
 
-// Kept inboard of the canopy's own sill rail beam (canopyGeometry.ts's
-// BEAM_THICKNESS) so the liner's top edge never pokes past it into the glass.
+// Kept inboard of the canopy's own edge so the liner's top never pokes past it
+// into the glass.
 const SILL_MARGIN = 0.08
+
+/**
+ * FOUND, round 6a: canopySectionAt's baseY used to be a sill low on the flank
+ * (about -0.3 to -0.95m) because the canopy was a tent whose glazing started
+ * there. The canopy is now a FLUSH DECK PANEL, so its honest baseY is the deck
+ * line itself, metres higher — and a wall built straight to that would run
+ * floor-to-deck on both sides of the pilot and seal the cockpit into a
+ * corridor. The canopy's own module still exports the sill line the opaque
+ * liner is supposed to stop at; this clamps to it. The wall's top therefore
+ * sits exactly where it did before the canopy changed shape, which is the
+ * point: this round is the exterior's, and the interior gets its own next.
+ */
+const wallTopY = (baseY: number): number => Math.min(baseY, CANOPY_SIDE_SILL_Y)
 // Outer breakpoints for the wall's z-span. Not used to bound the base
 // directly (see buildSideWall) but still the exact z's the TOP edge
 // (canopySectionAt) is piecewise-linear over, so hullZSamples is called once
@@ -87,8 +100,8 @@ export function buildSideWall(sign: 1 | -1): Group {
       const tb = canopySectionAt(zb)
       const bottomA: Placed = { x: sign * wa, y: COCKPIT.floorY, z: za }
       const bottomB: Placed = { x: sign * wb, y: COCKPIT.floorY, z: zb }
-      const topB: Placed = { x: sign * (tb.halfWidth - SILL_MARGIN), y: tb.baseY, z: zb }
-      const topA: Placed = { x: sign * (ta.halfWidth - SILL_MARGIN), y: ta.baseY, z: za }
+      const topB: Placed = { x: sign * (tb.halfWidth - SILL_MARGIN), y: wallTopY(tb.baseY), z: zb }
+      const topA: Placed = { x: sign * (ta.halfWidth - SILL_MARGIN), y: wallTopY(ta.baseY), z: za }
       group.add(flatQuad(bottomA, bottomB, topB, topA, material))
     }
   }
@@ -108,10 +121,11 @@ export function buildSideWall(sign: 1 | -1): Group {
     const baseX = hullInteriorHalfWidthAt(COCKPIT.floorY, z)
     if (baseX <= 0) continue
     const top = canopySectionAt(z)
+    const topY = wallTopY(top.baseY)
     const bottomX = sign * baseX
     const topX = sign * (top.halfWidth - SILL_MARGIN)
     const ribX = bottomX + (topX - bottomX) * heightFrac - sign * 0.04
-    const ribY = COCKPIT.floorY + (top.baseY - COCKPIT.floorY) * heightFrac
+    const ribY = COCKPIT.floorY + (topY - COCKPIT.floorY) * heightFrac
     group.add(box(0.03, 0.3, span / barCount - 0.05, gunmetalMaterial(), { x: ribX, y: ribY, z }))
   }
   return group

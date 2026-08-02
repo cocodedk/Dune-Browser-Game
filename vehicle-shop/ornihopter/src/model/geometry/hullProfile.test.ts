@@ -27,7 +27,8 @@
 
 import { describe, it, expect } from 'vitest'
 import { hullHalfWidthAt, hullHalfHeightAt, hullKeelYAt, isOutsideHull } from './hullProfile'
-import { OVERALL, HALF_LENGTH, WING_ROOTS, WING_ROOT_X, COCKPIT, PILOT_EYE } from '../../spec'
+import { OVERALL, HALF_LENGTH, WING_ROOTS, COCKPIT, PILOT_EYE } from '../../spec'
+import { pivotForMount } from './wing/rootPod'
 
 const HALF_BEAM = OVERALL.bodyWidth / 2
 
@@ -76,8 +77,9 @@ describe('hullHalfHeightAt', () => {
 describe('isOutsideHull', () => {
   it('places every wing-root attachment at or outside the hull skin (bar item 3)', () => {
     for (const mount of WING_ROOTS) {
-      expect(isOutsideHull(WING_ROOT_X, mount.y, mount.z)).toBe(true)
-      expect(isOutsideHull(-WING_ROOT_X, mount.y, mount.z)).toBe(true)
+      const pivot = pivotForMount(mount)
+      expect(isOutsideHull(pivot.x, pivot.y, mount.z)).toBe(true)
+      expect(isOutsideHull(-pivot.x, pivot.y, mount.z)).toBe(true)
     }
   })
 

@@ -20,9 +20,19 @@ import { BufferGeometry, BufferAttribute } from 'three'
 import { buildHullLoft } from './hullLoft'
 import { buildTailFork } from './hullTailFork'
 import { buildHullGreebles } from './hullGreebles'
+import { buildWingMountPlates } from './wing/mountPlate'
 
 export function buildHullGeometry(): BufferGeometry {
-  const parts = [buildHullLoft(), ...buildTailFork(), ...buildHullGreebles()]
+  const parts = [
+    buildHullLoft(),
+    ...buildTailFork(),
+    ...buildHullGreebles(),
+    // The wing-mount frames' visible hardware. Merged here rather than added
+    // as their own meshes for the same reason the greebles are: one mesh, one
+    // material, so the shelves and clevis cheeks weather with the skin they
+    // are bolted to instead of reading as parts stuck on afterwards.
+    ...buildWingMountPlates(),
+  ]
   const positions: number[] = []
   const uvs: number[] = []
   for (const part of parts) {

@@ -1,38 +1,62 @@
 // vehicle-shop/ornihopter/src/model/geometry/hullStations.ts
-// The hull's longitudinal authoring table, rewritten against the assembled
-// print kit (docs/dune_ornihopter_kit-3.png, the nose-on close-up, plus
-// .shots/reference/kit-assembled.png for the boom and tail).
+// The hull's longitudinal authoring table.
 //
-// THE DEFECT THIS ROUND FIXES. The previous table held widthFrac >= 0.93 from
-// 2.1m aft to 12.2m aft — 10.1m of a 22.896m body at essentially full beam,
-// then a taper. Measured, that is a slab with a point on each end, and it is
-// exactly why the craft read as "a submarine with wings, not a dragonfly".
-// hullSlenderness.test.ts now guards against a plateau ever returning.
+// ROUND 6a — THE DEFECT THIS TABLE NOW FIXES. A blind critic: "the pod reads
+// as a lofted rounded bulb... a beetle thorax, not a wedge... at any angle the
+// render's front mass reads organic where the reference reads engineered."
+// That is true, and the cause was here, not in the cross-section:
+// hullCrossSection.ts has been an eight-point faceted ring for three rounds
+// and hullLoft.ts goes to real trouble to keep every panel's normal its own.
+// None of that survives a PLAN that changes slope at every single station.
+// Measured on the previous table: fourteen stations covered the 13.5m front
+// mass, the longest dead-straight flank run in it was 1.30m, and four of its
+// breaks turned by under 6 degrees (3.6m: 2.5, 4.9m: 1.2, 8.6m: 5.0, 11m:
+// 2.5). Facets that fine, that close together, ARE a curve — the loft was
+// doing exactly what it was told and the result was a French curve rendered
+// in triangles. machinedPlan.test.ts guards the piecewise structure now.
 //
-// WHAT THE KIT ACTUALLY SHOWS, and what each column encodes:
-//   widthFrac   rises to ONE peak at the wing shoulder (9.8m aft) and falls
-//               continuously either side. The four WING_ROOTS stations
-//               (7.4/9.0/10.6/12.2m) all ride that single crest, so the
-//               ball-joint pods still seat on a real shoulder, but the crest
-//               is a crest and not a plateau: the run at >= 0.9 is ~3.3m.
-//   heightFrac  is now INDEPENDENT of widthFrac (it used to be a fixed ratio
-//               of it). The kit's forward pod is DEEP and the boom is thin and
-//               FLATTENED; one shared aspect ratio cannot say both. The pod
-//               peaks at 0.98 while its width sits at 0.88; the boom runs
-//               height ~0.7x width.
-//   deckFrac    widens over the shoulder (0.75) into the raised dorsal shelf
-//               the wing mounts ride, and narrows over the pod where the
-//               canopy sits.
-//   bellyFrac   is now NARROWER than deckFrac everywhere forward of the boom:
-//               the close-up shows tucked lower flanks running to a narrow
-//               keel, not the flat-bottomed barge the old table described. It
-//               is held wider than the flanks alone would want over the cabin
-//               (0.45-5.7m aft), for two measured reasons: gearGeometry.ts's
-//               hip point at 4.2m has to stay inside the skin, and
-//               interior/cabinShell.ts builds its floor at COCKPIT.clearWidth
-//               (4.9m) regardless of what the hull does, so every metre of
-//               tuck there is another metre of black floor slab showing
-//               through the pod's underside in an exterior render.
+// The kit says slabs, unambiguously. The pod is a flat-pack box: a vertical
+// centre plate (Airframe_main.stl, 170.80 x 33.30 x 1.97mm) with two FLAT side
+// skins (Airframe_left/right.stl, 74.02 x 27.01 x 1.81mm — 74.02mm being
+// exactly the 170.80 - 96.78 the pod occupies on the centre plate) and a deck
+// plate over them. Flat plates cannot make a bulb. The assembled photographs
+// agree: docs/dune_ornihopter_kit-2.png and -3.png show one enormous flat
+// trapezoid per flank with a single hard crease, a separate flat deck, and a
+// chamfered bullnose — panels, not a body of revolution.
+//
+// SO THE TABLE IS NOW THE LIST OF HARD BREAKS AND NOTHING ELSE. Ten stations,
+// nine bays, every bay a genuine slab: the waist-to-shoulder run alone is one
+// unbroken 3.6m panel. Adding a station here is not free — it is another
+// chance to interpolate a curve — so every row below has to name the break it
+// exists to make.
+//
+// WHAT EACH COLUMN ENCODES:
+//   widthFrac   two lobes, as measured: a forward pod crest (0.92, held dead
+//               straight from 3.0 to 4.6m — the parallel mid-body), a waist
+//               (0.75 at 6.2m), and ONE peak at the wing shoulder (1.00 at
+//               9.8m) that falls away in two straight runs. The run at >= 0.9
+//               is 2.88m; hullSlenderness.test.ts still forbids a plateau.
+//   heightFrac  INDEPENDENT of widthFrac. The pod is deep where it is not
+//               especially wide, and the boom is thin and FLATTENED; one
+//               shared aspect ratio cannot say both. The nose tip's 0.20 is
+//               the kit's own number: Airframe_main's tip cap plateaus at
+//               6.27mm of a 29.36mm maximum, 21% (kit-dossier.md section g).
+//               The crown is held LONG and set AFT, because that is what the
+//               plate says: station-scanning it gives 45% of max depth at
+//               0.78m aft, 56% at 1.2m, 75% at 3.5m and its true maximum at
+//               5.4m. A crown that peaks early and then plunges to the nose is
+//               what makes a front mass read as a bulb, and the pre-round
+//               table peaked at 3.0m and fell away on both sides.
+//   deckFrac    widens over the shoulder into the raised dorsal shelf the wing
+//               mounts ride, and narrows over the nose where the flush canopy
+//               deck (canopyGeometry.ts) has to sit ON it rather than perch.
+//   bellyFrac   NARROWER than deckFrac everywhere forward of the boom: tucked
+//               lower flanks running to a narrow keel, not a flat-bottomed
+//               barge. Held at 0.50 across the cockpit because
+//               interior/hullSection.ts derives the cabin floor and walls live
+//               from this column — below about 0.436 at COCKPIT.seatZ,
+//               cabinShell.ts stops finding hull to stand its floor on and
+//               starts dropping segments (machinedPlan.test.ts asserts it).
 //   keelY       drops the section centre aft of the shoulder, so the boom
 //               sweeps down-and-back rather than running dead level — the
 //               drooping abdomen of the reference silhouette.
@@ -58,28 +82,41 @@ export interface StationRow {
 }
 
 export const STATIONS: readonly StationRow[] = [
-  // nose: a blunt vertical chisel, not a point (kit-3 shows two stacked slots
-  // across a flat tip face; hullGreebles.ts adds the slots themselves).
-  { metresAft: 0, widthFrac: 0.085, heightFrac: 0.19, deckFrac: 0.62, bellyFrac: 0.42, keelY: 0 },
-  { metresAft: 0.6, widthFrac: 0.36, heightFrac: 0.5, deckFrac: 0.6, bellyFrac: 0.42, keelY: 0 },
-  { metresAft: 1.4, widthFrac: 0.63, heightFrac: 0.82, deckFrac: 0.6, bellyFrac: 0.44, keelY: 0 },
-  { metresAft: 2.1, widthFrac: 0.81, heightFrac: 0.91, deckFrac: 0.61, bellyFrac: 0.47, keelY: 0 }, // consoleZ
-  { metresAft: 2.7, widthFrac: 0.9, heightFrac: 0.96, deckFrac: 0.62, bellyFrac: 0.49, keelY: 0 }, // canopy shoulder
-  { metresAft: 3.6, widthFrac: 0.88, heightFrac: 0.98, deckFrac: 0.63, bellyFrac: 0.51, keelY: 0 }, // seatZ, deepest
-  { metresAft: 4.9, widthFrac: 0.83, heightFrac: 0.94, deckFrac: 0.66, bellyFrac: 0.51, keelY: 0 }, // canopy rear
-  { metresAft: 6.2, widthFrac: 0.79, heightFrac: 0.78, deckFrac: 0.7, bellyFrac: 0.49, keelY: 0 }, // waist
-  { metresAft: 7.4, widthFrac: 0.84, heightFrac: 0.64, deckFrac: 0.74, bellyFrac: 0.46, keelY: 0 }, // wing root 1
-  { metresAft: 8.6, widthFrac: 0.94, heightFrac: 0.62, deckFrac: 0.75, bellyFrac: 0.45, keelY: 0 },
-  { metresAft: 9.8, widthFrac: 1, heightFrac: 0.61, deckFrac: 0.75, bellyFrac: 0.45, keelY: 0 }, // BEAM PEAK
-  { metresAft: 11, widthFrac: 0.93, heightFrac: 0.58, deckFrac: 0.75, bellyFrac: 0.45, keelY: 0 },
-  { metresAft: 12.2, widthFrac: 0.84, heightFrac: 0.53, deckFrac: 0.74, bellyFrac: 0.46, keelY: 0 }, // wing root 4
-  { metresAft: 13.4, widthFrac: 0.6, heightFrac: 0.41, deckFrac: 0.7, bellyFrac: 0.54, keelY: -0.06 },
-  { metresAft: 14.6, widthFrac: 0.42, heightFrac: 0.32, deckFrac: 0.68, bellyFrac: 0.58, keelY: -0.14 },
+  // BULLNOSE TIP. Not a point and not a wide face: Airframe_main's tip cap
+  // reaches a constant chord almost immediately and holds it, 21% of the
+  // plate's maximum depth. Taller than it is wide, which is why kit-3's nose
+  // end reads as vertical fluting. hullGreebles.ts caps it and paints the two
+  // slots; the slots stay (photo evidence the flat plates cannot contradict).
+  // deckFrac/bellyFrac run HIGH here on purpose, and they are the ONLY way to
+  // square the tip that does not cost a station: a section whose flats shrink
+  // in proportion with it tapers to a cone and reads rounded from astern
+  // however faceted it is. Adding an intermediate station instead was tried
+  // and machinedPlan.test.ts rejected it — 0.4 degrees of turn, a textbook
+  // soft micro-turn, which is the very thing that made the old table a curve.
+  { metresAft: 0, widthFrac: 0.085, heightFrac: 0.2, deckFrac: 0.78, bellyFrac: 0.62, keelY: 0 },
+  // BREAK 1 — the end of the nose chamfer. One straight 1.2m run does the
+  // whole bullnose; the old table spent three stations easing into it.
+  { metresAft: 1.2, widthFrac: 0.6, heightFrac: 0.62, deckFrac: 0.6, bellyFrac: 0.44, keelY: 0 },
+  // BREAK 2 — the forward pod crest, and the deepest station on the craft.
+  { metresAft: 3, widthFrac: 0.92, heightFrac: 0.98, deckFrac: 0.62, bellyFrac: 0.5, keelY: 0 },
+  // PARALLEL MID-BODY. widthFrac AND heightFrac are both deliberately
+  // IDENTICAL to the row above: 1.6m of dead-straight flank and dead-level
+  // deck, the one run on the craft with zero taper in either view. This is the
+  // slab the critique was missing, and it is also what lets the flush canopy
+  // deck lie on a genuinely flat surface over the cockpit rather than on a
+  // crown. Airframe_main.stl agrees that the depth peak is a plateau over this
+  // stretch and not a point: it holds 24.5-26.2mm from x=96 to x=121, which is
+  // 3.5m to 6.7m aft.
+  { metresAft: 4.6, widthFrac: 0.92, heightFrac: 0.98, deckFrac: 0.66, bellyFrac: 0.5, keelY: 0 },
+  // BREAK 3 — the waist, between the two measured lobes.
+  { metresAft: 6.2, widthFrac: 0.75, heightFrac: 0.84, deckFrac: 0.7, bellyFrac: 0.47, keelY: 0 },
+  // BREAK 4 — BEAM PEAK, the wing shoulder. The 3.6m run up to it and the
+  // 3.6m run away from it are the two largest panels on the hull.
+  { metresAft: 9.8, widthFrac: 1, heightFrac: 0.61, deckFrac: 0.76, bellyFrac: 0.45, keelY: 0 },
+  // BREAK 5 — where the shoulder ends and the boom's own taper begins.
+  { metresAft: 13.4, widthFrac: 0.75, heightFrac: 0.4, deckFrac: 0.72, bellyFrac: 0.52, keelY: -0.06 },
   { metresAft: 16, widthFrac: 0.27, heightFrac: 0.22, deckFrac: 0.66, bellyFrac: 0.62, keelY: -0.24 },
-  { metresAft: 17.6, widthFrac: 0.19, heightFrac: 0.15, deckFrac: 0.65, bellyFrac: 0.64, keelY: -0.34 },
   { metresAft: 19.4, widthFrac: 0.13, heightFrac: 0.1, deckFrac: 0.65, bellyFrac: 0.65, keelY: -0.44 },
-  { metresAft: 21, widthFrac: 0.085, heightFrac: 0.062, deckFrac: 0.65, bellyFrac: 0.65, keelY: -0.52 },
-  { metresAft: 22.3, widthFrac: 0.04, heightFrac: 0.028, deckFrac: 0.65, bellyFrac: 0.65, keelY: -0.57 },
   { metresAft: OVERALL.length, widthFrac: 0, heightFrac: 0, deckFrac: 0.65, bellyFrac: 0.65, keelY: -0.6 },
 ]
 

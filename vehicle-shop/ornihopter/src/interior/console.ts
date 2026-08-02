@@ -62,7 +62,18 @@ export function createConsole(): Console {
 
   // Pilot's side: the wide, fully-visible half of the dash gets most of the
   // readable structure — two rows, dials then switches.
-  const pilotXs = [-1.9, -1.6, -1.3, -1.0, -0.7, -0.45]
+  //
+  // FOUND, round 6a: this row was hard-coded out to x = -1.9 while the console
+  // body it is supposed to sit on is CONSOLE.halfWidth wide. The outermost two
+  // dials and switches were therefore not on the dash at all — they were
+  // outside the hull skin, and rendered as a small black rectangle with one
+  // green switch tile on the pod's port nose in every side, hero and rear-3/4
+  // capture. (It hid in plain sight for several rounds because it reads as a
+  // hull greeble.) Derived from the dash's own width now, so the row cannot
+  // outgrow the thing it is mounted to again.
+  const pilotInner = -0.45
+  const pilotOuter = -(CONSOLE.halfWidth - 0.15)
+  const pilotXs = [0, 1, 2, 3, 4, 5].map((i) => pilotOuter + ((pilotInner - pilotOuter) * i) / 5)
   dialRow(group, pilotXs, CONSOLE.topY + 0.015, CONSOLE.nearZ - 0.08)
   switchRow(group, pilotXs, CONSOLE.nearZ - 0.35)
 

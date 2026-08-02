@@ -19,7 +19,8 @@ import { describe, it, expect } from 'vitest'
 import { Vector3, MeshBasicMaterial, type Object3D } from 'three'
 import { createWingRig } from './WingRig'
 import { buildWingBladeGeometry } from './geometry/wingGeometry'
-import { WING, WING_ROOTS, WING_ROOT_X } from '../spec'
+import { WING, WING_ROOTS } from '../spec'
+import { pivotForMount } from './geometry/wing/rootPod'
 import type { WingSide } from './wingKinematics'
 
 const SIDES: readonly WingSide[] = ['left', 'right']
@@ -45,7 +46,12 @@ describe('wing root stays attached to the hull across the beat cycle (bar item 3
     for (const side of SIDES) {
       it(`pair ${pairIndex} ${side}`, () => {
         const mount = WING_ROOTS[pairIndex]
-        const attachment = { x: side === 'right' ? WING_ROOT_X : -WING_ROOT_X, y: mount.y, z: mount.z }
+        // The REAL pivot Ornithopter.ts mounts this rig at, not spec.ts's old
+        // flat WING_ROOT_X/mount.y stand-in — that pair was never where the
+        // wing attached, and round 6a deleted it from the spec for exactly
+        // that reason (see the WingRootMount doc comment).
+        const pivot = pivotForMount(mount)
+        const attachment = { x: (side === 'right' ? 1 : -1) * pivot.x, y: pivot.y, z: mount.z }
         const target = new Vector3(attachment.x, attachment.y, attachment.z)
         const localRing = rootRingLocal(side)
         const rig = createWingRig(side, pairIndex, attachment, blades[side], material)

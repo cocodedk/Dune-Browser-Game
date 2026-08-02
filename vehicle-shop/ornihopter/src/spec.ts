@@ -14,40 +14,7 @@
 // modelled nose-along -Z. Nothing here prevents that by itself — the guard is
 // the correctness test that asserts dot(noseWorld, velocityDirection) ~ +1.
 
-/** Where each number came from, so a later round can re-derive rather than guess. */
-export const PROVENANCE = {
-  overall:
-    "MENG's licensed 1:72 kit, 720mm span x 318mm long at 1:72 -> 51.84m x 22.896m. " +
-    'docs/info.md rates this High confidence.',
-  wingCount:
-    'MEASURED from the MakerWorld print kit in docs/: the standard kit lays out ' +
-    '8 x Wing_full_size.stl, and Wings_Fullscale_Kit.3mf lays out 4 x l1 + 4 x r1. ' +
-    'Eight wings, four per side. A top-down photograph reads as three per side ' +
-    'because blades overlap at that angle — the kit part count is the primary source.',
-  wingPlanform:
-    'MEASURED from docs/ Wing_Fullscale_left.stl (197.66 x 12.37 x 2.02mm plate): ' +
-    'length/maxChord = 20.69, chord near-constant over the middle 60% of span and ' +
-    'tapering only near the tip. This CONTRADICTS docs/info.md maxChord 2.5m / ' +
-    'tipChord 0.35m, which came from a University of Leicester actor-comparison ' +
-    'estimate, not from the licensed kit. The measured planform also matches the ' +
-    'Master Replicas reference photographs, which show very slender blades.',
-  interior:
-    'AUTHORED, not sourced. docs/info.md gives only "two pilots in front, larger ' +
-    'cabin behind". Seat and eye heights below are ordinary human seated ' +
-    'anthropometry fitted to the measured cabin volume. Concept art at ' +
-    '.shots/reference/thopter-03.jpg and thopter-04.jpg is the visual reference.',
-  landedHeight:
-    'RULING: landedHeight is the overall height of the craft parked on its gear, not ' +
-    'ground clearance to the hull underside — read either way, the old value (7.2) could ' +
-    'not be right: as clearance it implies an 11m leg, as overall height it implies ' +
-    '1.81m, under the headroom the gear stance requires. Derived from the landing gear ' +
-    'stance module (geometry/gear/stance.ts): the ground plane sits at GROUND_Y = -4.30, ' +
-    'chosen so the parked craft clears the deepest point of the belly by about 2.19m, ' +
-    'matched to the crew headroom shown on the production ingress/egress reference board ' +
-    '(.shots/reference/thopter-05.jpg), where crew walk upright under the fuselage to a ' +
-    'rear ramp. MEASURED at 7.582 via the debug measure() harness — the parked Box3 ' +
-    'height, wings at rest — which replaces the 7.2 estimate here.',
-} as const
+export { PROVENANCE } from './provenance'
 
 export const OVERALL = {
   length: 22.896,
@@ -130,15 +97,33 @@ export const WING = {
 export const WING_MAX_CHORD = WING.reach / WING.lengthOverMaxChord
 
 /**
- * Wing root pivots, on the hull flank. x is mirrored per side; z fans the four
- * blades along the shoulder so they are not stacked on one line.
+ * One wing root. See PROVENANCE.wingRoots: the kit's two transverse frames
+ * give two STATIONS, each carrying a deck-edge arm and a flank arm per side.
+ *
+ * There is deliberately no `y` here any more. The old table carried one, and
+ * it was never where the wing actually attached — geometry/wing/rootPod.ts's
+ * seatOnHull has found the real surface point by bisection since round 3, and
+ * Ornithopter.ts has used that. A second, stale height in the spec was a
+ * standing invitation for the two to disagree.
  */
-export const WING_ROOTS = [
-  { z: stationFromNose(7.4), y: 0.9 },
-  { z: stationFromNose(9.0), y: 0.9 },
-  { z: stationFromNose(10.6), y: 0.75 },
-  { z: stationFromNose(12.2), y: 0.75 },
-] as const
+export interface WingRootMount {
+  readonly z: number
+  /** `deck` arms seat by X fraction of the local half-width; `flank` arms seat
+   *  by Y fraction of the local half-height, off that station's keel line. */
+  readonly arm: 'deck' | 'flank'
+  readonly seatFraction: number
+}
+
+/** Frame stations, 5.30m apart, centred on the 9.8m beam peak. */
+const FRAME_FORWARD = stationFromNose(9.8 - 2.65)
+const FRAME_AFT = stationFromNose(9.8 + 2.65)
+
+export const WING_ROOTS: readonly WingRootMount[] = [
+  { z: FRAME_FORWARD, arm: 'deck', seatFraction: 0.72 },
+  { z: FRAME_FORWARD, arm: 'flank', seatFraction: -0.3 },
+  { z: FRAME_AFT, arm: 'deck', seatFraction: 0.72 },
+  { z: FRAME_AFT, arm: 'flank', seatFraction: -0.34 },
+]
 
 export const WING_ROOT_X = OVERALL.bodyWidth / 2
 

@@ -7,7 +7,7 @@
 //
 // SPARSE ON PURPOSE. The close-up's panel language is a few large trapezoids
 // with crisp trim, two authored grilles and a blunt slotted nose; it is not
-// dense random panelling. Four features, 116 triangles:
+// dense random panelling.
 //
 //   nose cap      the blunt vertical chisel tip. The station table stops the
 //                 loft at a small octagon rather than a point, which leaves a
@@ -16,13 +16,12 @@
 //                 SLOTS that are this craft's clearest identity feature.
 //                 Painted rather than modelled because they are recesses, and
 //                 additive geometry cannot cut a recess.
-//   mount plates  two raised plates per side on the deck edge, the dorsal
-//                 shelf the eight ball-joint pods ride. Forward pair sits
-//                 slightly higher, as the close-up shows. rootPod.ts's
-//                 seatOnHull puts the pods at 0.72 of the local half-width and
-//                 the shoulder's deck runs to 0.74-0.75, so the pods land on
-//                 the flat deck INSIDE these plates rather than on bare flank.
-//   deck louvre   three slats on the centreline between the plate pairs.
+//   deck louvre   three slats on the centreline between the two mount frames.
+//                 The wing-mount hardware itself moved out to
+//                 wing/mountPlate.ts in round 6a, when it stopped being two
+//                 long strips along the deck edge and became the kit's own two
+//                 transverse frames — measured, so it belongs beside the roots
+//                 it is measured against, not in a general greeble bag.
 //   flank grille  one per side on the upper flank aft of the canopy, its
 //                 outward face mapped to the fine-rib texture island.
 
@@ -31,13 +30,12 @@ import { hullHalfWidthAt, hullHalfHeightAt, hullShapeAt, hullKeelYAt } from './h
 import { buildRing } from './hullCrossSection'
 import { isOutsideHull } from './hullProfile'
 import { buildBox, type BoxMesh, type UvRect } from './hullBox'
-import { GRILLE_U, NOSE_U, MACHINERY_U, TRIM_U } from './hullUv'
+import { GRILLE_U, NOSE_U, MACHINERY_U } from './hullUv'
 
 const rect = (u: readonly [number, number], inset = 0.005): UvRect =>
   ({ u0: u[0] + inset, u1: u[1] - inset, v0: 0.06, v1: 0.94 })
 
 const MACHINERY = rect(MACHINERY_U)
-const TRIM = rect(TRIM_U)
 const GRILLE = rect(GRILLE_U, 0.004)
 
 /** Craft-local z for a distance aft of the nose. */
@@ -87,30 +85,7 @@ function buildNoseCap(): BoxMesh {
   return { positions, uvs }
 }
 
-/** (forward metresAft, aft metresAft, how far the plate stands proud). */
-const MOUNT_PLATES: ReadonlyArray<readonly [number, number, number]> = [
-  [7.0, 9.4, 0.09],
-  [10.2, 12.6, 0.05],
-]
-
-function buildMountPlates(): BoxMesh[] {
-  const out: BoxMesh[] = []
-  for (const [from, to, proud] of MOUNT_PLATES) {
-    const z = (at(from) + at(to)) / 2
-    const halfZ = (to - from) / 2
-    const x = 0.7 * hullHalfWidthAt(z)
-    const halfY = 0.16
-    const y = deckYAt(z) + proud - halfY
-    for (const mirror of [1, -1] as const) {
-      out.push(buildBox(
-        { x: mirror * x, y, z }, { x: 0.28, y: halfY, z: halfZ }, MACHINERY, 'py', TRIM,
-      ))
-    }
-  }
-  return out
-}
-
-/** Three slats on the centreline deck between the plate pairs. */
+/** Three slats on the centreline deck between the mount frames. */
 function buildDeckLouvre(): BoxMesh[] {
   return [9.6, 9.8, 10.0].map((metresAft) => {
     const z = at(metresAft)
@@ -139,5 +114,5 @@ function buildFlankGrilles(): BoxMesh[] {
 
 /** Every greeble, ready for hullGeometry.ts to concatenate. */
 export function buildHullGreebles(): BoxMesh[] {
-  return [buildNoseCap(), ...buildMountPlates(), ...buildDeckLouvre(), ...buildFlankGrilles()]
+  return [buildNoseCap(), ...buildDeckLouvre(), ...buildFlankGrilles()]
 }

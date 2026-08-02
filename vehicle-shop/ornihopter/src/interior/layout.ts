@@ -21,6 +21,7 @@
 
 import { COCKPIT, OVERALL, BODY, PILOT_EYE, stationFromNose } from '../spec'
 import { ridgeHeightAt } from '../model/geometry/canopyGeometry'
+import { hullInteriorHalfWidthAt } from './hullSection'
 
 export const EYE = PILOT_EYE
 
@@ -50,13 +51,38 @@ export const SEAT = {
  * it (see the measured constraint above: the near-top edge sits ~27 degrees
  * below level, comfortably inside the camera's 34-degree half-VFOV).
  */
+const CONSOLE_DEPTH = 0.55
+const CONSOLE_FAR_Z = COCKPIT.consoleZ - CONSOLE_DEPTH
+/**
+ * FOUND, round 6a: the console is a BOX, and its forward-lower corners hung
+ * outside the pod's tucked forward flank — rendering as a small black
+ * rectangle, complete with one green switch tile, on the nose in every side,
+ * hero and rear-3/4 capture. It had been there for rounds, reading as a hull
+ * greeble. Two separate causes: this half-width (2.1m, against a hull that is
+ * 1.03m at the console's forward-lower corner) and console.ts's dial row,
+ * which was hard-coded wider still at x = -1.9.
+ *
+ * Both are now derived rather than typed. The base rises to sit clear of the
+ * keel, and the width is read off the hull's own interior AT THAT CORNER via
+ * the same hullSection.ts helper cabinShell.ts's floor and walls use — so the
+ * console cannot outgrow the hull again, and it tracks any future change to
+ * the station table automatically.
+ *
+ * NOT the whole fix: a box in a tucked wedge can only ever be as wide as its
+ * narrowest corner, so the dash is narrower than it should be. The real answer
+ * is a console that tapers with the hull, which is console geometry and
+ * belongs to the interior round.
+ */
+const CONSOLE_BASE_Y = COCKPIT.floorY + 0.75
+const CONSOLE_HALF_WIDTH = Math.min(1.3, hullInteriorHalfWidthAt(CONSOLE_BASE_Y, CONSOLE_FAR_Z))
+
 export const CONSOLE = {
   nearZ: COCKPIT.consoleZ,
-  depth: 0.55,
-  farZ: COCKPIT.consoleZ - 0.55,
+  depth: CONSOLE_DEPTH,
+  farZ: CONSOLE_FAR_Z,
   topY: COCKPIT.floorY + COCKPIT.consoleHeightAboveFloor,
-  baseY: COCKPIT.floorY + 0.3,
-  halfWidth: 2.1,
+  baseY: CONSOLE_BASE_Y,
+  halfWidth: CONSOLE_HALF_WIDTH,
   /**
    * The copilot-side instrument cluster has to sit in the FAR (nose-ward)
    * strip of the console, not the near strip, or it falls outside the
@@ -65,8 +91,8 @@ export const CONSOLE = {
    * past 1.0. This is the one place on the copilot's side that is visible
    * at all in the fixed pilot-cam frame.
    */
-  copilotClusterXMin: 0.65,
-  copilotClusterXMax: 1.05,
+  copilotClusterXMin: Math.min(0.65, CONSOLE_HALF_WIDTH - 0.3),
+  copilotClusterXMax: Math.min(1.05, CONSOLE_HALF_WIDTH - 0.06),
   copilotClusterZMin: -9.88,
   copilotClusterZMax: -9.7,
 } as const

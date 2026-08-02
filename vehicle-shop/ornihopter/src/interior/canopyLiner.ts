@@ -16,9 +16,17 @@
 // opaque panel starting at topY sat in front of them, hiding the dash the
 // panel was meant to frame. LINER_BASE_Y starts above the hood instead.
 
+// FOUND, round 6a: this panel is bounded ABOVE by canopySectionAt(z).baseY,
+// which used to be a sill just above the dash and is now, with the canopy
+// rebuilt as a flush deck panel, the deck line itself — about 1.8m up, and
+// directly in the pilot's forward view. An opaque quad there would black out
+// the windscreen it exists to frame, which is the same class of mistake as the
+// original one recorded below. It is clamped to the canopy's own exported sill
+// line instead, so the band stays the band it always was.
+
 import { Group } from 'three'
 import { CONSOLE } from './layout'
-import { canopySectionAt } from '../model/geometry/canopyGeometry'
+import { canopySectionAt, CANOPY_SIDE_SILL_Y } from '../model/geometry/canopyGeometry'
 import { flatQuad, disposeGroup, type Placed } from './sceneUtils'
 import { consoleBodyMaterial } from './materials'
 
@@ -36,10 +44,11 @@ export function createCanopyLiner(): CanopyLiner {
   group.name = 'canopyLiner'
 
   const sill = canopySectionAt(CONSOLE.nearZ)
+  const topY = Math.min(sill.baseY, CANOPY_SIDE_SILL_Y)
   const bottomLeft: Placed = { x: -CONSOLE.halfWidth, y: LINER_BASE_Y, z: CONSOLE.nearZ }
   const bottomRight: Placed = { x: CONSOLE.halfWidth, y: LINER_BASE_Y, z: CONSOLE.nearZ }
-  const topRight: Placed = { x: sill.halfWidth, y: sill.baseY, z: CONSOLE.nearZ }
-  const topLeft: Placed = { x: -sill.halfWidth, y: sill.baseY, z: CONSOLE.nearZ }
+  const topRight: Placed = { x: sill.halfWidth, y: topY, z: CONSOLE.nearZ }
+  const topLeft: Placed = { x: -sill.halfWidth, y: topY, z: CONSOLE.nearZ }
   group.add(flatQuad(bottomLeft, bottomRight, topRight, topLeft, consoleBodyMaterial()))
 
   return {

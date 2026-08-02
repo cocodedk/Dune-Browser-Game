@@ -11,7 +11,8 @@ import { Vector3, MeshBasicMaterial, type Object3D } from 'three'
 import { createWingRig } from './WingRig'
 import { buildWingBladeGeometry } from './geometry/wingGeometry'
 import { isOutsideHull } from './geometry/hullProfile'
-import { WING, WING_ROOTS, WING_ROOT_X } from '../spec'
+import { WING, WING_ROOTS } from '../spec'
+import { pivotForMount } from './geometry/wing/rootPod'
 import type { WingSide } from './wingKinematics'
 
 const SIDES: readonly WingSide[] = ['left', 'right']
@@ -28,7 +29,12 @@ describe('wing blade never clips the fuselage across the beat cycle (bar item 3)
     for (const side of SIDES) {
       it(`pair ${pairIndex} ${side}`, () => {
         const mount = WING_ROOTS[pairIndex]
-        const attachment = { x: side === 'right' ? WING_ROOT_X : -WING_ROOT_X, y: mount.y, z: mount.z }
+        // Round 6a: the real hull-seated pivot (geometry/wing/rootPod.ts),
+        // which is what Ornithopter.ts builds. The old fixture hung the root
+        // at full beam and a spec-authored height, well outboard of where the
+        // blade actually starts — a strictly easier test than the craft.
+        const pivot = pivotForMount(mount)
+        const attachment = { x: (side === 'right' ? 1 : -1) * pivot.x, y: pivot.y, z: mount.z }
         const blade = blades[side]
         const rig = createWingRig(side, pairIndex, attachment, blade, material)
         const position = blade.attributes.position

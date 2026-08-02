@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest'
 import { seatOnHull, wingPivotAt, buildRootPodGeometries, SEAT_X_FRACTION, POST_HEIGHT } from './rootPod'
 import { isOutsideHull, hullHalfWidthAt } from '../hullProfile'
-import { WING_ROOTS } from '../../../spec'
+import { WING_ROOTS, WING_ROOT_X } from '../../../spec'
 
 describe('seatOnHull', () => {
   it('lands on the hull skin — outside at the surface, inside a hair below it', () => {
@@ -20,13 +20,16 @@ describe('seatOnHull', () => {
     }
   })
 
-  it('is not the old floating point: the same x at the old flat y=0.9/0.75 was outside by a real margin', () => {
-    // Regression check for the defect itself, not just the fix: confirms the
-    // bisection actually MOVED off a naive guess rather than landing near it
-    // by coincidence.
+  it('is not the old floating point: the naive full-beam attachment is still well outside', () => {
+    // Regression check for the defect itself, not just the fix. spec.ts used
+    // to carry a flat per-mount y that Ornithopter.ts never used; round 6a
+    // deleted it, so the naive point this bisection replaced is now named
+    // directly — full beam (WING_ROOT_X) at the section's own centre, which
+    // is off the skin at every station where the hull is not at full beam.
     for (const mount of WING_ROOTS) {
       const seat = seatOnHull(mount.z)
-      expect(Math.abs(seat.y - mount.y)).toBeGreaterThan(0.01)
+      expect(isOutsideHull(WING_ROOT_X, 0, mount.z)).toBe(true)
+      expect(WING_ROOT_X - seat.x).toBeGreaterThan(0.01)
     }
   })
 

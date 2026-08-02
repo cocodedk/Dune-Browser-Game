@@ -23,7 +23,7 @@ import { buildHullWeatheringMaps } from './geometry/hullWeathering'
 import { buildCanopy } from './geometry/canopyGeometry'
 import { buildLandingGearGeometry } from './geometry/gearGeometry'
 import { buildWingBladeGeometry } from './geometry/wingGeometry'
-import { seatOnHull, wingPivotAt, buildRootPodGeometries } from './geometry/wing/rootPod'
+import { seatForMount, pivotForMount, buildRootPodGeometries } from './geometry/wing/rootPod'
 import { createWingRig, type WingRig } from './WingRig'
 import type { WingSide } from './wingKinematics'
 
@@ -100,26 +100,32 @@ export function createOrnithopter(): CraftModel {
   gearMesh.name = 'landing-gear'
   root.add(gearMesh)
 
-  // Ball-joint root housings: static, faired into the hull deck at each
-  // WING_ROOTS station (geometry/wing/rootPod.ts) — a row along the dorsal
-  // deck, per .shots/reference/kit-assembled.png. Fixed to the hull, NOT
-  // part of the wing rig: mechanically the ball half of a ball joint mounts
-  // to the fuselage, not the part that swings. seatOnHull/wingPivotAt read
-  // the hull's real surface (geometry/hullProfile.ts) rather than the old
-  // guessed WING_ROOT_X/mount.y, which floated outside the hull's actual
-  // faceted skin — the "black mounting plate... a visible gap" defect.
+  // Ball-joint root housings: static, seated on the hull at each WING_ROOTS
+  // arm (geometry/wing/rootPod.ts). Fixed to the hull, NOT part of the wing
+  // rig: mechanically the ball half of a ball joint mounts to the fuselage,
+  // not the part that swings. seatForMount/pivotForMount read the hull's real
+  // surface (geometry/hullProfile.ts) rather than a guessed coordinate — the
+  // "black mounting plate... a visible gap" defect.
+  //
+  // Since round 6a there are two KINDS of arm, because the kit's mounting
+  // frames have two kinds: deck arms whose post rises out of the dorsal shelf,
+  // and flank arms whose post stands outboard from the side. The post is
+  // rotated to match, or a flank post would lie along the hull instead of
+  // reaching away from it.
   const pods = buildRootPodGeometries()
   geometries.push(pods.ball, pods.post)
   const stations = WING_ROOTS.map((mount) => ({
-    seat: seatOnHull(mount.z),
-    pivot: wingPivotAt(mount.z),
+    seat: seatForMount(mount),
+    pivot: pivotForMount(mount),
     z: mount.z,
+    flank: mount.arm === 'flank',
   }))
   for (const station of stations) {
     for (const mirror of [1, -1] as const) {
       const post = new Mesh(pods.post, metalMaterial)
       post.name = 'wing-root-post'
       post.position.set(mirror * station.seat.x, station.seat.y, station.z)
+      if (station.flank) post.rotation.z = mirror * -Math.PI / 2
       root.add(post)
       const ball = new Mesh(pods.ball, metalMaterial)
       ball.name = 'wing-root-ball'
