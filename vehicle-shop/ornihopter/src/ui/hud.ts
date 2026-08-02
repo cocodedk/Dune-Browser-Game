@@ -25,6 +25,7 @@ export function createHud(): Hud {
       'H + mouse / right-drag   look around',
       'C        cycle camera     R     reset',
       'Space    hold to auto-level (roll/pitch)',
+      'M        mute / unmute sound   (any key starts audio)',
     ].join('\n')
   }
 

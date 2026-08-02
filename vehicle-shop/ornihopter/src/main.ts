@@ -11,6 +11,7 @@ import { createCameraRig } from './camera/cameraRig'
 import { createHud } from './ui/hud'
 import { createHudSymbology } from './hud/symbology'
 import { createControls } from './input/keyboard'
+import { createThopterAudio } from './sound/audio'
 import { installDebugHandle } from './debug'
 
 const container = document.getElementById('app')
@@ -59,6 +60,9 @@ const hud = createHud()
 // why that rather than a DOM overlay or a second render pass.
 const symbology = createHudSymbology(rig.camera)
 const controls = createControls()
+// The craft's voice. Silent until the visitor's first keypress or click — see
+// sound/audio.ts on why the AudioContext cannot be created any earlier.
+const audio = createThopterAudio(rig.mode)
 
 const resize = () => {
   const width = window.innerWidth
@@ -87,6 +91,7 @@ function frame(now: number): void {
 
   if (controls.takeCameraCycle()) rig.cycle()
   if (controls.takeReset()) flight.reset()
+  if (controls.takeMuteToggle()) audio.toggleMute()
   // A head pose held by the capture harness (debug.look) wins until the pilot
   // actually reaches for the head-look control themselves, at which point the
   // live input takes it back. Without the hand-back a headless capture would
@@ -142,6 +147,12 @@ function frame(now: number): void {
   // cockpit. It still updates, so switching back is never a frame behind.
   symbology.setVisible(rig.mode === 'pilot')
   symbology.update(state)
+
+  // The mix reads the same beatPhase the wings do, so a stroke is heard on the
+  // frame it is seen. dt is passed even when the sim is frozen: the camera can
+  // still be cycled from the capture harness, and the cabin crossfade has to
+  // follow it.
+  audio.update(state, rig.mode, dt)
 
   hud.update(state, rig.mode, fps)
   stage.renderer.render(stage.scene, rig.camera)

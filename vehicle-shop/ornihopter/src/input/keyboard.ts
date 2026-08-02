@@ -9,6 +9,8 @@ export interface Controls {
   /** True on the frame a camera-cycle was requested. Consumed by the caller. */
   takeCameraCycle(): boolean
   takeReset(): boolean
+  /** True on the frame the sound mute was toggled. Consumed by the caller. */
+  takeMuteToggle(): boolean
   /** Where the pilot's head is turned, in degrees. Yaw positive to starboard. */
   head(): { yaw: number; pitch: number }
   dispose(): void
@@ -21,6 +23,7 @@ export function createControls(target: EventTarget = window): Controls {
   let throttle = 0.45
   let cameraCycle = false
   let reset = false
+  let muteToggle = false
   let last = performance.now()
 
   const onDown = (event: Event) => {
@@ -28,6 +31,7 @@ export function createControls(target: EventTarget = window): Controls {
     down.add(key)
     if (key === 'c') cameraCycle = true
     if (key === 'r') reset = true
+    if (key === 'm') muteToggle = true
     // Arrow keys and space scroll the page otherwise.
     if (key.startsWith('arrow') || key === ' ') event.preventDefault()
   }
@@ -95,6 +99,11 @@ export function createControls(target: EventTarget = window): Controls {
     takeReset() {
       const value = reset
       reset = false
+      return value
+    },
+    takeMuteToggle() {
+      const value = muteToggle
+      muteToggle = false
       return value
     },
     head() {
