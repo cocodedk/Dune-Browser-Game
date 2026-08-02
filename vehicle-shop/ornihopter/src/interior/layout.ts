@@ -80,33 +80,47 @@ export const CONSOLE = {
 } as const
 
 /**
- * The control column. thopter-03's most identifiable silhouette is not a post
- * on the floor — it is a multi-jointed arm coming DOWN from the overhead
- * structure with a coiled cable following it and a bulbous grip at the end,
- * and round 6's critic named its absence ("a bare untapered post with a flat
- * cap"). Mounted on the brow beam and reaching down and forward to the hand,
- * so most of its run is inside the forward frame rather than under it: at the
- * new eye height a stick rising off the floor between the knees sits about 48
- * degrees below level, well outside a 34-degree half-VFOV, and would be
- * invisible however well it were modelled.
+ * ROUND 9c. Replaces the round-6b brow-hung arm: round 7's critic named it
+ * "one smooth, unbroken cylinder... a ball on its FLANK, not its end", and
+ * the user's AH-64E ruling wants a stick between the knees, not one hanging
+ * from the roof. See cyclic.ts for why this is legible from the eye at all —
+ * a plain floor-mounted post was the round-6b problem, not solved by moving
+ * the mount, only by keeping the visible part inside the safe band below.
+ *
+ * MEASURED for THIS cockpit's eye height: three's projection puts a point's
+ * screen row at atan(dy/dz) from PILOT_EYE regardless of its x (only -z is in
+ * the denominator, so a lateral lean does not change how low something
+ * reads). Visibility needs dy/dz < tan(34deg); clearing forwardCone.test.ts's
+ * cone needs dy/dz > tan(6deg). At the ~0.7-0.85m gap between the console's
+ * near face and the seat front — the only place a floor-rising cyclic CAN
+ * stand — that is a band of roughly y in (0.6, 1.0). Every station's comment
+ * is its own elevation below level from PILOT_EYE, straight ahead (yaw 0,
+ * pitch 0), so a future mover can see how much margin they are spending.
  */
-export const STICK = {
-  // Grips sit OUTBOARD of their own seat, and that is a measured decision, not
-  // a stylistic one. Built first at the seat's own x and then 0.2m inboard of
-  // it: at both, the arm hangs 0.6-1.0m from the eye — arm's length, which in
-  // a 68-degree field is a 100-pixel-wide tube — straight across the window,
-  // and the capture showed two of them crossing the frame like pipework. At
-  // 0.34m outboard the arm runs down the frame's port edge between 19 and 40
-  // degrees off the nose, clear of a window that starts about 5 degrees to
-  // port, and the copilot's mirrors out past the frame's own 47-degree edge.
-  pilotGrip: { x: seatX(-1) - 0.34, y: 0.72, z: stationFromNose(2.9) },
-  copilotGrip: { x: seatX(1) + 0.34, y: 0.72, z: stationFromNose(2.9) },
-  mountY: roofYAt(stationFromNose(2.42)) - 0.2,
-  mountZ: stationFromNose(2.42),
-  // Slimmed from 0.045/0.085 for the same reason: at arm's length the old
-  // radii read as plumbing rather than as a control run.
-  shaftRadius: 0.03,
-  gripRadius: 0.075,
+export const CYCLIC = {
+  pivot: { x: seatX(-1) + 0.03, y: COCKPIT.floorY, z: stationFromNose(2.78) }, // 68deg: off the bottom of frame, with the seat pans
+  knuckle1: { x: seatX(-1) + 0.06, y: 0.5, z: stationFromNose(2.73) }, // 41deg: still below frame — the boot-covered lower shaft
+  knuckle2: { x: seatX(-1) + 0.1, y: 0.62, z: stationFromNose(2.69) }, // 33deg: right at the bottom edge
+  knuckle3: { x: seatX(-1) + 0.15, y: 0.71, z: stationFromNose(2.66) }, // 27deg
+  gripBase: { x: seatX(-1) + 0.21, y: 0.79, z: stationFromNose(2.63) }, // 22deg: top of the last tube, bottom of the grip
+  gripTop: { x: seatX(-1) + 0.23, y: 0.92, z: stationFromNose(2.62) }, // 14deg at its own top surface, clear of the 6deg cone
+  tubeRadius: 0.026,
+} as const
+
+/**
+ * The collective, at the pilot's own LEFT hand (x < seat x — see
+ * docs/apache-gauntlet.md B4.4; spec.ts's +X is the craft's, and the pilot's
+ * own, right). Pivots through the top of the side console (console.ts's
+ * sideConsole, x -0.73..-1.25) and rakes aft-down to it from a grip out at
+ * hand's reach — "aft-down" read from the grip, which is the end a critic
+ * looks at first. Kept well outboard on purpose: at yaw ~-42deg it clears
+ * forwardCone.test.ts's +/-10deg cone on BEARING alone, not only on the same
+ * elevation margin the cyclic spends.
+ */
+export const COLLECTIVE = {
+  pivot: { x: -0.92, y: 0.6, z: stationFromNose(3.1) }, // 56deg down, 57deg off-axis: inside the console's own shadow
+  grip: { x: -0.88, y: 0.95, z: stationFromNose(2.9) }, // 17deg down, 42deg off-axis
+  leverRadius: 0.024,
 } as const
 
 const OVERHEAD_Z = stationFromNose(2.45)
@@ -130,6 +144,27 @@ export const OVERHEAD = {
   // half-VFOV: present at the top of frame, where an overhead panel belongs,
   // rather than across the windscreen.
   panelBottomY: roofYAt(OVERHEAD_Z) - 0.26,
+} as const
+
+/**
+ * ROUND 9c. The coil conduit used to run beside the control arm; the
+ * reference boards hang it from the OVERHEAD console instead, and round 7's
+ * "helix wound around it" was partly this cable being read as the stick's own
+ * structure. Anchored at OVERHEAD's own underside — so the guard's "attaches
+ * to the overhead, not the cyclic" is one shared number — and drooping to
+ * just above the panel's flat deck. x sits right of centre, clear of the
+ * pilot's own cyclic: at x near the pilot's -0.38 the same droop would cross
+ * forwardCone.test.ts's cone at yaw ~10-11deg, exactly where its own midpoint
+ * passes through level on its way from above eye height to below it.
+ */
+export const CONDUIT = {
+  // x = 0.2, not the 0.1 first tried: OVERHEAD.z IS the brow station
+  // (canopyLayout's APERTURE_REAR_Z), so anything hung from directly under it
+  // sits right at the glazing's own aft edge — MEASURED in a capture, 0.1 let
+  // the coil's own zigzag swing across that edge into the bright wedge on
+  // alternating links. 0.2 sits it inboard on the brow/roof side.
+  top: { x: 0.2, y: OVERHEAD.panelBottomY, z: OVERHEAD.z },
+  bottom: { x: 0.2, y: CONSOLE.topY + 0.2, z: stationFromNose(2.35) },
 } as const
 
 export const WALL = {

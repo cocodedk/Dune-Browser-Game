@@ -4,7 +4,7 @@
 
 import {
   Group, Object3D, Mesh, BoxGeometry, BufferGeometry, BufferAttribute, CylinderGeometry,
-  SphereGeometry, MeshStandardMaterial,
+  SphereGeometry, MeshStandardMaterial, Vector3,
 } from 'three'
 
 interface Disposable {
@@ -75,6 +75,29 @@ export function cylinderY(
 export function ball(radius: number, material: MeshStandardMaterial, at: Placed): Mesh {
   const mesh = new Mesh(new SphereGeometry(radius, 10, 8), material)
   mesh.position.set(at.x, at.y, at.z)
+  return mesh
+}
+
+/**
+ * One straight run from a to b: a cylinder, oriented by quaternion. Shared by
+ * anything built as a chain of points — a control stick's tube sections, a
+ * coiled conduit's short steps — so there is one "a tube between two points"
+ * primitive rather than one per module that happens to need it.
+ */
+export function segment(
+  a: Placed,
+  b: Placed,
+  radiusTop: number,
+  radiusBottom: number,
+  material: MeshStandardMaterial
+): Mesh {
+  const from = new Vector3(a.x, a.y, a.z)
+  const to = new Vector3(b.x, b.y, b.z)
+  const direction = new Vector3().subVectors(to, from)
+  const length = Math.max(1e-4, direction.length())
+  const mesh = new Mesh(new CylinderGeometry(radiusTop, radiusBottom, length, 10), material)
+  mesh.position.copy(from).addScaledVector(direction, 0.5)
+  mesh.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), direction.normalize())
   return mesh
 }
 
