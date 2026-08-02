@@ -15,9 +15,10 @@
 // whole assembly visibly drives itself. Left and right come from one loop
 // with a mirrored X — they cannot disagree.
 
-import { BoxGeometry, CylinderGeometry, Group, Mesh, type MeshStandardMaterial } from 'three'
+import { BoxGeometry, CylinderGeometry, Group, Mesh, type BufferGeometry, type MeshStandardMaterial } from 'three'
 import { TRACK, BODY } from '../spec'
 import { wheelAngularSpeed } from '../crawler/kinematics'
+import { roundedBox } from './rounded'
 
 export interface Tracks {
   group: Group
@@ -49,7 +50,7 @@ interface Runner {
 export function buildTracks(darkMaterial: MeshStandardMaterial, wheelMaterial: MeshStandardMaterial): Tracks {
   const group = new Group()
   group.name = 'tracks'
-  const geometries: (BoxGeometry | CylinderGeometry)[] = []
+  const geometries: BufferGeometry[] = []
 
   const runners: Runner[] = []
 
@@ -58,8 +59,9 @@ export function buildTracks(darkMaterial: MeshStandardMaterial, wheelMaterial: M
 
     // The belt loop: one tall dark band. The running gear lives inside it;
     // the wheels and sprockets protrude past both faces so they read from
-    // the side, and the cleats segment the outer face.
-    const belt = new BoxGeometry(BELT.width, BELT.height, POD_LENGTH)
+    // the side, and the cleats segment the outer face. Edges rounded so the
+    // belt reads as a wrapped loop, not a slab.
+    const belt = roundedBox(BELT.width, BELT.height, POD_LENGTH, 0.6)
     geometries.push(belt)
     const beltMesh = new Mesh(belt, darkMaterial)
     beltMesh.position.set(x, BELT.height / 2, 0)
@@ -128,8 +130,8 @@ export function buildTracks(darkMaterial: MeshStandardMaterial, wheelMaterial: M
     }
 
     // Upper housing over the running gear, with a cap trim and two panel
-    // breaks so it is a machine, not a slab.
-    const housing = new BoxGeometry(TRACK.housing.width, TRACK.housing.yHigh - TRACK.housing.yLow, POD_LENGTH)
+    // breaks so it is a machine, not a slab. Rounded like the hull.
+    const housing = roundedBox(TRACK.housing.width, TRACK.housing.yHigh - TRACK.housing.yLow, POD_LENGTH, 0.9)
     geometries.push(housing)
     const housingMesh = new Mesh(housing, darkMaterial)
     housingMesh.position.set(x, (TRACK.housing.yLow + TRACK.housing.yHigh) / 2, 0)

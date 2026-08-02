@@ -224,3 +224,25 @@ Gates: lint 0, shop tsc 0, **21/21** tests, lengths clean.
 not visibly translate), dust, panel lines, first blind critic panel.
 
 _Status: complete._
+
+### Round 5 — soft edges, low cutter (user direction: "refine the edges make them rounder and lower the front loader/dozer")
+
+The big masses are now ROUNDED (three's RoundedBoxGeometry via one shared
+helper, `model/rounded.ts`): the deck slab, underframe, nose and tail
+housings, belt loop and track housings, cutter arm and head, cab body and
+roof, gantry and conveyor. Thin structural detail (cleats, teeth, rails,
+lips, grilles) stays sharp — the film's heavy-soft-forms-with-hard-detail
+contrast, not a blobby kit.
+
+The CUTTER came down: BOOM.y 6 -> 3. The arm now runs 1..5m, the grinder
+head 1.5..7.5m, and the seven teeth dip to within half a metre of the
+sand — a dozer blade that scrapes the spice bed, not a mid-air boom. The
+feed hopper stays on the nose housing; the pipe from it dropped to meet
+the lower head.
+
+Gates: lint 0, shop tsc 0, **21/21** tests (footprint bounds all
+unchanged — rounding preserves bounds), lengths clean, shop build OK.
+
+**Open:** cleat scrolling, dust, panel lines, first blind critic panel.
+
+_Status: complete._

@@ -53,11 +53,13 @@ export const BODY = {
   tailBlockForeZ: 19,
 } as const
 
-/** The forward cutter: a wide low grinder assembly ahead of the nose. */
+/** The forward cutter: a wide low grinder assembly ahead of the nose. It
+ *  sits LOW — the film's cutter dips into the sand, a dozer blade, not a
+ *  mid-air boom (user direction: "lower the front loader"). */
 export const BOOM = {
   tipZ: -36,
   /** Arm centre height above the ground line. */
-  y: 6,
+  y: 3.0,
   halfWidth: 7,
   cutterHalfWidth: 9,
 } as const

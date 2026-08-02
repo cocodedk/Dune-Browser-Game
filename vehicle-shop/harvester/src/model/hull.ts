@@ -4,8 +4,9 @@
 // nose housing with a dark intake grille, a low tail housing, and flank
 // slats. Reads spec.BODY only; no scene access, no crawler state.
 
-import { BoxGeometry, Mesh, MeshStandardMaterial, Group } from 'three'
+import { BoxGeometry, Mesh, MeshStandardMaterial, Group, type BufferGeometry } from 'three'
 import { BODY } from '../spec'
+import { roundedBox } from './rounded'
 
 const LENGTH = BODY.tailZ - BODY.noseZ
 
@@ -17,10 +18,20 @@ export interface HullParts {
 export function buildHull(bodyMaterial: MeshStandardMaterial, darkMaterial: MeshStandardMaterial): HullParts {
   const group = new Group()
   group.name = 'hull'
-  const geometries: BoxGeometry[] = []
+  const geometries: BufferGeometry[] = []
 
   const box = (w: number, h: number, d: number, mat: MeshStandardMaterial, x: number, y: number, z: number): void => {
     const g = new BoxGeometry(w, h, d)
+    geometries.push(g)
+    const m = new Mesh(g, mat)
+    m.position.set(x, y, z)
+    m.castShadow = true
+    m.receiveShadow = true
+    group.add(m)
+  }
+
+  const rbox = (w: number, h: number, d: number, radius: number, mat: MeshStandardMaterial, x: number, y: number, z: number): void => {
+    const g = roundedBox(w, h, d, radius)
     geometries.push(g)
     const m = new Mesh(g, mat)
     m.position.set(x, y, z)
@@ -33,8 +44,9 @@ export function buildHull(bodyMaterial: MeshStandardMaterial, darkMaterial: Mesh
   const deckY = BODY.deckTop - BODY.deckThickness / 2
 
   // Deck slab and underframe: the machine is a platform you can see under.
-  box(deckHalf * 2, BODY.deckThickness, LENGTH, bodyMaterial, 0, deckY, 0)
-  box(deckHalf * 2, BODY.underThickness, LENGTH, bodyMaterial, 0, BODY.underThickness / 2, 0)
+  // The big masses are ROUNDED — the film's heavy soft-edged forms.
+  rbox(deckHalf * 2, BODY.deckThickness, LENGTH, 1.0, bodyMaterial, 0, deckY, 0)
+  rbox(deckHalf * 2, BODY.underThickness, LENGTH, 0.8, bodyMaterial, 0, BODY.underThickness / 2, 0)
 
   // Raised trim lip around the deck edge — the film's deck reads as a
   // bordered platform, not a bare slab edge.
@@ -47,12 +59,12 @@ export function buildHull(bodyMaterial: MeshStandardMaterial, darkMaterial: Mesh
   // Forward housing: a solid block under the deck behind the cutter, with a
   // dark intake grille on its front face.
   const noseLen = BODY.noseBlockAftZ - BODY.noseZ
-  box(deckHalf * 2, 9.0, noseLen, bodyMaterial, 0, 6.5, (BODY.noseZ + BODY.noseBlockAftZ) / 2)
+  rbox(deckHalf * 2, 9.0, noseLen, 1.0, bodyMaterial, 0, 6.5, (BODY.noseZ + BODY.noseBlockAftZ) / 2)
   box(deckHalf * 2 - 2, 4.5, 0.5, darkMaterial, 0, 7.0, BODY.noseZ + 0.4)
 
   // Rear housing: a low processing tower at the tail, with vent slats.
   const tailLen = BODY.tailZ - BODY.tailBlockForeZ
-  box(16, 6.0, tailLen, bodyMaterial, 0, 9.0, (BODY.tailBlockForeZ + BODY.tailZ) / 2)
+  rbox(16, 6.0, tailLen, 0.9, bodyMaterial, 0, 9.0, (BODY.tailBlockForeZ + BODY.tailZ) / 2)
   box(12, 0.5, 0.4, darkMaterial, 0, 11.2, BODY.tailZ - 0.3)
 
   // Flank slats along the deck underside.
