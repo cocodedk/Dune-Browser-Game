@@ -26,5 +26,7 @@ export function createInitialState(): FlightState {
     altitude: CRUISE_ALTITUDE,
     beatPhase: beat.beatPhase,
     beatHz: beat.beatHz,
+    landed: false,
+    beatAmplitude: 1,
   }
 }

@@ -58,9 +58,14 @@ function fromEuler(headingRad: number, pitchRad: number, rollRad: number): Quat 
  * Decays roll and pitch toward zero over dt seconds; heading passes through
  * untouched. Pure function of (orientation, dt) -- no memory between calls,
  * so releasing the key never leaves a residual effect on the next tick.
+ *
+ * @param rate per-second decay rate. Defaults to the pilot's auto-level;
+ * flight/landing.ts passes its own faster one for a craft settling onto its
+ * gear, because that settle is the airframe sitting down on six legs, not the
+ * autopilot flying the aircraft level.
  */
-export function levelOrientation(orientation: Quat, dt: number): Quat {
-  const decay = Math.exp(-AUTO_LEVEL_RATE * Math.max(dt, 0))
+export function levelOrientation(orientation: Quat, dt: number, rate = AUTO_LEVEL_RATE): Quat {
+  const decay = Math.exp(-rate * Math.max(dt, 0))
   const heading = headingOf(orientation)
   const pitch = pitchOf(orientation) * decay
   const roll = rollOf(orientation) * decay

@@ -34,8 +34,18 @@ export interface WingAttachment {
 export interface WingRig {
   /** Outermost pivot (Fold), already translated to the attachment point. */
   root: Group
-  /** Drive Flap and Feather for this frame from the flight model's own beatPhase. */
-  update(beatPhase: number): void
+  /**
+   * Drive Flap and Feather for this frame from the flight model's own
+   * beatPhase.
+   *
+   * @param amplitude FlightState.beatAmplitude, the wing-drive spool: 1 in
+   * flight, winding to 0 while the craft is parked on its gear. It scales the
+   * STROKE, not the phase, which is what settles the wings: at 0 both pivots
+   * sit at zero — blades flat and untwisted, the parked pose — and every value
+   * between is the same stroke, smaller. Freezing the phase instead would stop
+   * the wings wherever the last tick left them, mid-flap.
+   */
+  update(beatPhase: number, amplitude?: number): void
 }
 
 /**
@@ -71,9 +81,9 @@ export function createWingRig(
 
   return {
     root: fold,
-    update(beatPhase: number): void {
-      flap.rotation.z = mirror * flapAngle(beatPhase, pairIndex)
-      feather.rotation.x = featherAngle(beatPhase, pairIndex)
+    update(beatPhase: number, amplitude = 1): void {
+      flap.rotation.z = mirror * flapAngle(beatPhase, pairIndex) * amplitude
+      feather.rotation.x = featherAngle(beatPhase, pairIndex) * amplitude
     },
   }
 }

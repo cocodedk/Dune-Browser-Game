@@ -7,7 +7,7 @@
 import type { FlightState, FlightInput } from '../contracts'
 import { nextOrientation } from './rotation'
 import { nextKinematics } from './kinematics'
-import { clampToGround } from './groundCollision'
+import { groundPhase } from './landing'
 import { nextBeat } from './wingBeat'
 import { clamp, clamp01, clampSigned } from './scalarMath'
 import { MAX_DT } from './constants'
@@ -28,18 +28,23 @@ export function advance(state: Readonly<FlightState>, rawInput: FlightInput, raw
 
   const orientation = nextOrientation(state.orientation, input, dt)
   const kinematics = nextKinematics(state.position, state.speed, input.throttle, orientation, dt)
-  const grounded = clampToGround(kinematics.position, kinematics.velocity, kinematics.speed)
-  const beat = nextBeat(state.beatPhase, input.throttle, dt)
+  // Ground contact owns the attitude as well as the position now: a craft
+  // resting on six legs settles onto them, so the landing phase may return an
+  // orientation the stick did not ask for. See flight/landing.ts.
+  const grounded = groundPhase(state, orientation, kinematics, input.throttle, dt)
+  const beat = nextBeat(state.beatPhase, input.throttle, dt, grounded.beatAmplitude)
 
   return {
     position: grounded.position,
     velocity: grounded.velocity,
-    orientation,
+    orientation: grounded.orientation,
     throttle: input.throttle,
     speed: grounded.speed,
     altitude: grounded.altitude,
     beatPhase: beat.beatPhase,
     beatHz: beat.beatHz,
     autoLevel: input.autoLevel,
+    landed: grounded.landed,
+    beatAmplitude: grounded.beatAmplitude,
   }
 }

@@ -57,6 +57,17 @@ export interface FlightState {
    *  the HUD can show a hint without reaching past the published contract.
    *  Optional for the same reason as FlightInput.autoLevel above. */
   autoLevel?: boolean
+  /** True while the craft is resting on its gear: the feet are on the sand,
+   *  the position is held rather than clamped, and the wing drive is winding
+   *  down or spooling back up. Absent means airborne. See flight/landing.ts. */
+  landed?: boolean
+  /** 0..1 wing-drive spool. 1 everywhere in flight — beatHz is exactly
+   *  beatHzFor(throttle) there, as it always was — and it winds to 0 while
+   *  parked. It multiplies beatHz AND the wing rig's flap/feather strokes
+   *  (model/WingRig.ts), which is what lets the wings ease flat to the parked
+   *  pose instead of freezing mid-stroke when the beat stops. Optional, so
+   *  every pre-existing FlightState literal keeps compiling; absent means 1. */
+  beatAmplitude?: number
 }
 
 export interface FlightModel {
