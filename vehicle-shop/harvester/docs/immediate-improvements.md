@@ -2,14 +2,14 @@ What needs work — by priority
 
  ### 1. The belt wrap (still the weakest visual)
 
- - [ ] More wrap links — 10 is too few for a smooth half-circle at radius 3.6m. The gaps between wrap links are visible. Increase to 14-16, with link length matching
+ - [x] More wrap links — (I1) 10 is too few for a smooth half-circle at radius 3.6m. The gaps between wrap links are visible. Increase to 14-16, with link length matching
        arc pitch (π × 3.6 / N).
- - [ ] Link-to-straight-run transition — there's a visible gap between the last straight link and the first wrap link (the straight run ends at the sprocket tangent,
+ - [x] Link-to-straight-run transition — (I1: gap closed by half-pitch overlap; successor finding — link-SIZE step at tangents, see progress.md I1) there's a visible gap between the last straight link and the first wrap link (the straight run ends at the sprocket tangent,
        the wrap starts at the same point, but the link centers don't meet). Overlap the first/last straight link slightly into the wrap arc, or add a transition
        link.
- - [ ] Belt scrolling — the links are static while the wheels roll. The tread should visibly translate. Drive the link groups' positions (bottom run shifts along z,
+ - [x] Belt scrolling — (I1, verified 3 ways) the links are static while the wheels roll. The tread should visibly translate. Drive the link groups' positions (bottom run shifts along z,
        wrap links rotate around the sprocket) from the crawler's track speed. This is the single highest-impact remaining animation.
- - [ ] Link density on straight runs — 22 links over 41m = 1.86m pitch, 1.53m link length, 0.33m gaps. Real tracks have tighter spacing. Increase to 28-30 links per
+ - [x] Link density on straight runs — (I1) 22 links over 41m = 1.86m pitch, 1.53m link length, 0.33m gaps. Real tracks have tighter spacing. Increase to 28-30 links per
        run (1.4m pitch, 1.1m length, 0.3m gap).
 
  ### 2. The hull (reads as a box from 3/4 angles)
@@ -74,7 +74,7 @@ What needs work — by priority
 
  ### 9. Motion
 
- - [ ] Belt scrolling — (listed above, restating as motion) the chain links translate along the bottom run and rotate around the sprockets, driven by
+ - [x] Belt scrolling — (I1) (listed above, restating as motion) the chain links translate along the bottom run and rotate around the sprockets, driven by
        trackLeft/trackRight. This makes the machine look alive when moving.
  - [ ] Cutter drum rotation — the grinder head's drum (if added) rotates at a speed proportional to throttle.
  - [ ] Cab antenna sway — a subtle rotation on the antenna, driven by speed. Cheap, alive.
@@ -82,8 +82,8 @@ What needs work — by priority
 
  ### 10. Tests and gates
 
- - [ ] Belt-wrap direction test — assert that the front wrap links are at z < sprocketZ (toward the nose) and the rear wrap at z > sprocketZ. The round-16 direction
+ - [x] Belt-wrap direction test — (I1) assert that the front wrap links are at z < sprocketZ (toward the nose) and the rear wrap at z > sprocketZ. The round-16 direction
        bug (wrap on the wrong side) had no test; pin it.
- - [ ] Link count test — assert the total link count per belt (currently 22 + 22 + 10 + 10 = 64). If someone changes the count, the test catches it.
- - [ ] Belt-on-ground test — assert that the bottom run links' bottoms are at y=0 and the road wheels' bottoms are at y=BOTTOM_THICK (the belt carries the wheels).
+ - [x] Link count test — (I1: 29+29+15+15 = 88 per belt, read from spec) assert the total link count per belt (currently 22 + 22 + 10 + 10 = 64). If someone changes the count, the test catches it.
+ - [x] Belt-on-ground test — (I1) assert that the bottom run links' bottoms are at y=0 and the road wheels' bottoms are at y=BOTTOM_THICK (the belt carries the wheels).
        The round-14 fix had no test; pin it.

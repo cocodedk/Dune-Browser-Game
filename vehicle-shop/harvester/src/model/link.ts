@@ -37,8 +37,10 @@ export function buildLink(
   bodyMesh.receiveShadow = true
   group.add(bodyMesh)
 
-  // Grouser ridge on the outer face — the tread bar.
-  const ridge = new BoxGeometry(0.35, thickness + 0.15, length * 0.7)
+  // Grouser ridge on the outer face — the tread bar. Flush with the plate's
+  // faces (it stands proud in X, not in Y) so a bottom-run link's underside
+  // is exactly the ground line and nothing dips below the sand.
+  const ridge = new BoxGeometry(0.35, thickness, length * 0.7)
   geometries.push(ridge)
   const ridgeMesh = new Mesh(ridge, material)
   ridgeMesh.position.set(outerX + side * 0.25, 0, 0)

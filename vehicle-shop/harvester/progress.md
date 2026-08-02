@@ -251,6 +251,45 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round I1 — the belt scrolls: density, transition, scroll. LANDED. Verified. Critic 6/10.
+
+Builder: Opus. The belt is rebuilt on a pure phase module
+(`model/beltPhase.ts`, 13 unit tests): 88 links per belt read from
+`TRACK.beltLinks` (29+29 straight at 1.4401m pitch / 1.1401m link / 0.30m
+gap, 15+15 wrap at arc pitch 0.7645m — touching, a continuous curve), the
+tangent gap closed by a half-wrap-pitch overlap tucked under the wrap
+ribbon, and the whole chain SCROLLS from the crawler's signed track speeds
+— bottom run +Z (rearward), top run −Z, wraps orbiting at speed/radius,
+phase-continuous handover. WRAP_RADIUS is now DERIVED (3.65 =
+sprocketY − bottomRunY = sprocketRadius + thickness/2) so the wrap meets
+the runs with no y-step and rides the sprocket rim — better than the
+authored 3.6, ruling recorded here. Sprockets roll at the wrap radius so
+teeth stay locked between lugs; port sprocket teeth flipped outward (they
+faced the hull); return rollers raised to meet the top run. Tests 22 → 39,
+including the three §10 pins (wrap direction, link count from spec,
+belt-on-ground) and scroll sign/magnitude.
+
+**The sign trap did not fire — verified three independent ways:** builder's
+SAD correlation (+17px bottom / −18px top at 0.6m/s·0.5s), the lead's own
+regions at own parameters (+41px / −42px at 1.0m/s·0.7s vs 40.8px
+predicted — within 1%), and the critic's blind cross-correlation (same
+signs, magnitude "right ballpark"). Nothing failed to reproduce.
+
+**Critic (fresh Sonnet, frames only): 6/10.** Confirmed: proportions on
+target (measured ~20% gap fraction vs 21% spec), wraps read continuous,
+motion confined to the track band, wheels turn in sync with the belt.
+**Single biggest gap: a visible link-SIZE step at every tangent** — wrap
+links (0.76m) are finer than straight links (1.44m). Root cause is the
+SPEC's two mandated densities, not the build; the builder flagged the same
+tension ("if the lead wants zero handover, spec must give both segments
+one pitch"). This is an ART DECISION — escalated to the user at the
+checkpoint. Secondary: bottom-run links read as separate cleats (no
+connector plates); top run reads as floating (roller contact not legible
+from the side view).
+
+_Status: complete. Checkpoint: awaiting the user's verdict — including the
+pitch-unification decision — before I2._
+
 ### Round I0 — motion harness (first round of the gauntlet loop). LANDED. Verified.
 
 First round of `docs/gauntlet-loop.md` (the loop implementing

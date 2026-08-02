@@ -20,6 +20,7 @@ import { wheelAngularSpeed } from '../crawler/kinematics'
 import { roundedBox } from './rounded'
 import { buildWheel, type WheelPart } from './wheel'
 import { buildBelt, type BeltPart } from './belt'
+import { WRAP_RADIUS, TOP_RUN_Y, BELT_THICKNESS } from './beltPhase'
 
 export interface Tracks {
   group: Group
@@ -33,9 +34,10 @@ export interface Tracks {
 const POD_LENGTH = BODY.tailZ - BODY.noseZ
 const BELT = TRACK.belt
 const TOOTH_COUNT = 5
-/** Teeth on the UPPER arc only: a real belt covers the lower run, and teeth
- *  pointing at the ground would poke through it. */
-const TOOTH_START = (18 * Math.PI) / 180
+/** Five teeth, 36 degrees apart — the belt puts a lug every 36 degrees too,
+ *  starting half a pitch away, so teeth fall between lugs. Both turn at the
+ *  same rate (see the sprocket runner below), so they stay meshed. */
+const TOOTH_START = 0
 const TOOTH_STEP = (36 * Math.PI) / 180
 const TOOTH_RADIUS = TRACK.sprocketRadius + 0.55
 
@@ -61,7 +63,7 @@ export function buildTracks(
   group.name = 'tracks'
   const geometries: BufferGeometry[] = []
   const wheels: WheelPart[] = []
-  const belts: BeltPart[] = []
+  const belts: Array<{ part: BeltPart; side: 1 | -1 }> = []
   const runners: Runner[] = []
 
   for (const side of [1, -1] as const) {
@@ -70,7 +72,7 @@ export function buildTracks(
     // The belt loop — its own component, one per side, RED.
     const belt = buildBelt(side, beltMaterial)
     group.add(belt.group)
-    belts.push(belt)
+    belts.push({ part: belt, side })
 
     // Road wheels: the one wheel component, at each station. The belt is
     // the medium between wheel and ground, so the centre is the bottom
@@ -100,8 +102,10 @@ export function buildTracks(
       mesh.castShadow = true
       sprocketGroup.add(mesh)
       // Teeth span from just inside the belt's outer face to past the
-      // sprocket face, so they pass THROUGH the belt and meet its lugs.
-      const toothLocalX = BELT.width / 2 + 0.55
+      // sprocket face, so they pass THROUGH the belt and meet its lugs. The
+      // X station follows the pod's side — built unsigned, the port pod's
+      // teeth faced the hull and were invisible from outside.
+      const toothLocalX = side * (BELT.width / 2 + 0.55)
       for (let t = 0; t < TOOTH_COUNT; t++) {
         const angle = TOOTH_START + t * TOOTH_STEP
         const tooth = new BoxGeometry(1.5, 0.9, 0.9)
@@ -113,14 +117,20 @@ export function buildTracks(
         sprocketGroup.add(toothMesh)
       }
       group.add(sprocketGroup)
-      runners.push({ group: sprocketGroup, side, radius: TRACK.sprocketRadius })
+      // The sprocket turns at the radius of the BELT it carries, not at its
+      // own rim: that is the radius the belt's centreline orbits, so teeth
+      // and lugs advance by the same angle every frame and never slip.
+      runners.push({ group: sprocketGroup, side, radius: WRAP_RADIUS })
     }
 
     // Return rollers in the gaps between road wheels, top run — same wheel
-    // component at the roller radius.
+    // component at the roller radius. They CARRY the top run: the roller's
+    // crown meets the belt's under-face, the mirror of the road wheels
+    // standing on the bottom run.
+    const topRunUnder = TOP_RUN_Y - BELT_THICKNESS / 2
     for (const rz of TRACK.returnRollersZ) {
       const roller = buildWheel(TRACK.returnRollerRadius, BELT.width + ROLLER_OVER * 2, wheelMaterial, darkMaterial, accentMaterial)
-      roller.group.position.set(x, BELT.height - TRACK.returnRollerRadius, rz)
+      roller.group.position.set(x, topRunUnder - TRACK.returnRollerRadius, rz)
       group.add(roller.group)
       wheels.push(roller)
       runners.push({ group: roller.group, side, radius: TRACK.returnRollerRadius })
@@ -158,11 +168,15 @@ export function buildTracks(
         const speed = side === 1 ? trackRight : trackLeft
         runner.rotation.x += wheelAngularSpeed(speed, radius) * dt
       }
+      // +X is starboard, so side 1 is the starboard band.
+      for (const { part, side } of belts) {
+        part.update(side === 1 ? trackRight : trackLeft, dt)
+      }
     },
     dispose() {
       for (const g of geometries) g.dispose()
       for (const wheel of wheels) wheel.dispose()
-      for (const belt of belts) belt.dispose()
+      for (const { part } of belts) part.dispose()
     },
   }
 }
