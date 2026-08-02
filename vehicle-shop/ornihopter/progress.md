@@ -149,11 +149,19 @@ one-value edits; regions >=12px now ZERO at both poses; lamp and HUD ink untouch
 byte-identically; guard test red/green on a lighting-K proxy. Bar wording amended:
 "at most one" region (zero is stricter than one). 1556/1556.
 
-**Do next, in order (interior campaign):**
-1. **Round 12 — engine + flapping sound — IN FLIGHT** (workflow `wf_066afd26-c83`,
-   Opus, max): beat-locked whoosh (audible spool-down/up per Round 10), turbine layer
-   on throttle, cockpit-muffled variant, pure params layer unit-tested without
-   AudioContext, M mute, gesture-gated autoplay.
+**Round 12 — LANDED (commit `577056c`). The machine has a voice.** Beat-locked stroke
+synthesis (pink-noise sweep + low triangle spar), throttle turbine locked 16-23x to
+its own fundamental, cabin lowpass 633Hz vs 16.7kHz outside, gesture-gated with a
+silently-advancing clock, M mute. 17 new pure-layer tests (1573/1573); live node
+readbacks proven at parked-idle vs full climb. THE TIMBRE VERDICT BELONGS TO THE
+USER'S EAR — no agent listened.
+
+**FINALE — IN FLIGHT:** full re-shoot done (8 exterior views + fresh level-gaze and
+side-glance pilot probes), gallery artifact refreshed
+(https://claude.ai/code/artifact/887f2ab2-70fe-4f50-b72f-6bf1ca8e481e), and the final
+scoring panel dispatched (workflow `wf_cfa5421f-449`): blind interior critic +
+Apache element-score critic against the full B1-B6 bar. The user's test flight is
+the real acceptance.
 2b. **Round 11 — Apache side panes (USER RULING, exterior-freeze exception): "full
    apache side panes and thiner frames. cause the two pilots share the same narrow
    front window and they don't sit center to it. so each pilot sees more to the other
