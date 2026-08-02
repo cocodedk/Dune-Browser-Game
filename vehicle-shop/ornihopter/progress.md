@@ -111,16 +111,22 @@ Carries: ladder rungs spray across the dash at big bank (combiner-aperture clipp
 wanted); PRE-EXISTING B3 violation surfaced — 8 bright regions >=12px in the tree
 today, NOT 9f's (A/B byte-identical) — triage before the panel scores B3.
 
+**Round 9g — LANDED (commit `9ec5a2a`).** Hold SPACE to auto-level: 60-deg bank ->
+level in 2.00s, zero overshoot, decay matches the closed form; opposing stick
+bit-identical (inputs unread while engaged); release answers next tick; amber AUTO
+glyph under the ink cap. Live: recovered from -85 roll skimming the ground to
+machine-epsilon level, heading untouched. 1528/1528. Disclosures: (c)/(d) guards not
+genuine discriminators; contract fields optional by necessity; bank->yaw coupling
+suppressed while engaged (coherence call). PROCESS NOTE for the lead: builders stage
+files mid-round for the length hook — lead docs commits must use pathspec form
+(git commit -- <file>) or they sweep the builder's index (caught and fixed once).
+
 **Do next, in order (interior campaign):**
-1. **Round 9g — auto-level — IN FLIGHT** (workflow `wf_0d976fdb-963`, Sonnet, max):
-   held-key recovery levelling roll+pitch (60-deg bank -> level in 1.5-2.5s, monotonic,
-   override-proof, release-instant), pure flight-model tests, HUD AUTO hint under the
-   ink cap, key legend updated.
-2. **Round 10 — the landing lifecycle — NEXT, user-ordered ("continue with the landing
-   round when auto-level is done")**: touchdown detection against heightAt(), a LANDED
-   state in the flight model (beat spools to zero, wings settle to the parked pose),
-   ground rest on the gear's proven foot plane (no sinking, no clamp-jitter), takeoff
-   spool-up. Pure-model fail-first tests; the parked pose exists from the gear rounds.
+1. **Round 10 — the landing lifecycle — IN FLIGHT** (workflow `wf_22eaebef-dec`, Opus,
+   max; user-ordered): touchdown -> LANDED state, beat spools to zero, wings settle to
+   parked, rest on the gear plane at landedHeight 6.706 (no sinking, no jitter),
+   takeoff spool-up; too-fast contact keeps the legacy clamp. Live Playwright
+   fly-land-sit-takeoff sequence as visual proof.
 3. **B3 bright-regions triage** (cheap): 8 bright regions >=12px where the bar demands
    one — pre-existing, surfaced by 9f's A/B proof. Suspects: 9d armor speculars,
    overhead strip edges. Fix or re-derive the bar line with evidence, before the panel.
