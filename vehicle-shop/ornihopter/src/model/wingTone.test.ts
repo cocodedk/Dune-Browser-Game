@@ -85,12 +85,14 @@ describe('wing blades read as the same airframe as the rest of the craft', () =>
     // luminance is, and only a GPU can settle that. Measured with the render
     // probe at four span stations on all eight blades: hero 78.7-91.6% of the
     // lit hull deck, top 74.4-99.9%, against the round 4c.2 target of 80-90%.
-    // Landing there took a lower albedo than the gear's, for the reason
-    // GEAR_COLOR's own comment gives in reverse: a blade's upper face is
-    // near-horizontal and meets a 57-degree sun almost square, where a gear
-    // femur meets it obliquely. So this bound exists only to catch a PALETTE
-    // change — the previous 0x5c5548 sat at 0.40 — not to pin a value that
-    // the render owns.
+    // Landing there took a lower albedo than the ROUND 6C gear's, because a
+    // blade's upper face is near-horizontal and meets a 57-degree sun almost
+    // square where a gear femur meets it obliquely. Round 6d then gave the leg
+    // a flat flank bracket and a flat skid, which meet the sun the same way a
+    // blade does, and re-measuring took the gear down onto this exact value —
+    // so the ratio is now 1.00 by convergence, not by copying. This bound
+    // exists only to catch a PALETTE change — the previous 0x5c5548 sat at
+    // 0.40 — not to pin a value that the render owns.
     const ratio = srgbLuminance(wingHex) / srgbLuminance(gearHex)
     expect(ratio).toBeGreaterThan(0.62)
     expect(ratio).toBeLessThan(1.15)

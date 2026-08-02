@@ -26,6 +26,7 @@
 import { GEAR, HALF_LENGTH, stationFromNose } from '../../../spec'
 import { hullHalfHeightAt, hullKeelYAt } from '../hullProfile'
 import { lowerFlankSeat, burySeat, type Point3 } from './hipSeat'
+import { braceNodeAt, braceSeatZ } from './braceAnchor'
 
 export type { Point3 }
 
@@ -36,7 +37,21 @@ export interface GearLeg {
   readonly hip: Point3
   /** Where the hip fairing breaks through the lower flank. */
   readonly hipSkin: Point3
+  /** SECOND buried anchor, for the brace strut: the kit's leg is a two-bar
+   *  linkage (docs/profiles/kit-dossier.md §a — main strut plus a brace strut
+   *  forming a scissor with it), and the assembled photographs
+   *  (docs/dune_ornihopter_kit-2.png, close-up ...kit-3.png) show the two bars
+   *  reaching the fuselage at two SEPARATE points and converging low. A leg
+   *  with two load paths into the hull is also what stops six legs reading as
+   *  an uncountable knot: the triangle between the bars is what says "one
+   *  leg, structured" instead of "two sticks". */
+  readonly braceHip: Point3
+  /** Where the brace breaks through the lower flank. */
+  readonly braceHipSkin: Point3
   readonly knee: Point3
+  /** Where the brace meets the main strut — the apex of that triangle, on the
+   *  TIBIA below the knee, so the void between the bars runs most of the leg. */
+  readonly braceNode: Point3
   /** Top of the foot pad, where the tibia ends. */
   readonly ankle: Point3
   /** Ground contact — the underside of the pad. */
@@ -56,17 +71,17 @@ export interface GearLeg {
  * UNDER the fuselage to a rear ramp. Scaled off the pod's own 4.21m depth in
  * that frame the belly sits ~2.5m up, and the figure standing beneath it
  * clears the skin by half its own height again. Headroom is the requirement,
- * not a look — a stance that makes the crew stoop contradicts the board the
- * whole shape comes from.
+ * not a look.
  *
  * spec.ts's OVERALL.landedHeight used to be an ambiguous 7.2 that could not
  * settle it: read literally as "clearance to the hull underside" it would put
  * this craft on 11m of leg, and read as overall parked height it implied
  * 1.81m — under headroom. GROUND_Y is derived from headroom instead, and the
- * parked craft lands at 7.582m tall overall (debug.measure()). That measured
- * number is now what OVERALL.landedHeight means, by ruling, rather than a
- * separate figure this stance had to approximate — see spec.ts's
- * PROVENANCE.landedHeight.
+ * parked craft's overall height is then whatever measure() reports: 7.582m
+ * when round 4c.2 asked, 6.747m now that round 6a has taken the tent canopy
+ * off the deck. That measured number is what OVERALL.landedHeight means, by
+ * ruling, rather than a separate figure this stance has to approximate — see
+ * spec.ts's PROVENANCE.landedHeight.
  */
 export const GROUND_Y = -4.3
 /** Pad thickness at the heel; the ankle sits this far above the ground. */
@@ -89,6 +104,7 @@ const HIP_X_FRACTION = 0.72
 const KNEE_OUT = 0.68
 const KNEE_DROP = 0.44
 const KNEE_RAKE = 0.72
+
 
 interface Station {
   readonly metresAft: number
@@ -120,22 +136,28 @@ const STANCE: readonly Station[] = [
 function buildLeg(station: Station, side: 1 | -1): GearLeg {
   const z = stationFromNose(station.metresAft)
   const seat = lowerFlankSeat(z, HIP_X_FRACTION)
+  const braceSeat = lowerFlankSeat(braceSeatZ(z, station.rakeZ), HIP_X_FRACTION)
   const footZ = z + station.rakeZ
   const ankleY = GROUND_Y + FOOT_TOP
   const runX = station.footX - seat.x
   const drop = seat.y - ankleY
   const mirror = (p: Point3): Point3 => ({ x: side * p.x, y: p.y, z: p.z })
+  const knee = {
+    x: seat.x + KNEE_OUT * runX,
+    y: seat.y - KNEE_DROP * drop,
+    z: z + KNEE_RAKE * station.rakeZ,
+  }
+  const ankle = { x: station.footX, y: ankleY, z: footZ }
   return {
     metresAft: station.metresAft,
     side,
     hip: mirror(burySeat(seat, HIP_ANCHOR_DEPTH)),
     hipSkin: mirror(seat),
-    knee: mirror({
-      x: seat.x + KNEE_OUT * runX,
-      y: seat.y - KNEE_DROP * drop,
-      z: z + KNEE_RAKE * station.rakeZ,
-    }),
-    ankle: mirror({ x: station.footX, y: ankleY, z: footZ }),
+    braceHip: mirror(burySeat(braceSeat, HIP_ANCHOR_DEPTH)),
+    braceHipSkin: mirror(braceSeat),
+    knee: mirror(knee),
+    braceNode: mirror(braceNodeAt(knee, ankle)),
+    ankle: mirror(ankle),
     foot: mirror({ x: station.footX, y: GROUND_Y, z: footZ }),
   }
 }

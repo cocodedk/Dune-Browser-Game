@@ -109,15 +109,13 @@ describe('landing gear stance', () => {
   })
 
   it('parks high enough for the crew to walk under the belly', () => {
-    // DOES NOT FAIL against the old gear, and is recorded here as a bar this
-    // round nearly broke rather than one it fixed. An earlier draft of this
-    // file asserted the opposite — a clearance UNDER 1.72m, "crouched, as the
-    // kit stands" — and the old gear failed it at 2.830m. That bar was read
-    // off two hand-held kit photographs shot from below, and it was wrong.
-    // .shots/reference/thopter-05.jpg, the production's own ingress/egress
-    // board, shows crew walking upright beneath the fuselage; scaled off the
-    // pod's 4.21m depth the belly stands ~2.5m up. Headroom is the real
-    // constraint, so the assertion is now a FLOOR.
+    // Recorded as a bar round 4c nearly broke rather than one it fixed. An
+    // earlier draft asserted the OPPOSITE — clearance under 1.72m, "crouched,
+    // as the kit stands" — read off two hand-held kit photographs shot from
+    // below, and it was wrong. .shots/reference/thopter-05.jpg, the
+    // production's own ingress/egress board, shows crew walking upright under
+    // the fuselage; scaled off the pod's 4.21m depth the belly stands ~2.5m
+    // up. Headroom is the real constraint, so this is a FLOOR.
     const clearance = lowestHullPoint().y - GROUND_Y
     expect(clearance).toBeGreaterThan(2)
     expect(clearance).toBeLessThan(OVERALL.bodyHeight * 0.75)
@@ -130,16 +128,22 @@ describe('landing gear stance', () => {
     // x was taken as a fraction of the CHINE half-width, which at that station
     // is already outboard of the keel plate, so the strut top all but grazed
     // the lower flank.
+    // Round 6d holds the brace strut's anchor to the SAME bar: it is a real
+    // load path, not a cosmetic second stick.
     for (const leg of GEAR_LEGS) {
       expect(skinDistance(leg.hip)).toBeLessThanOrEqual(-HIP_EMBED + 1e-6)
+      expect(skinDistance(leg.braceHip)).toBeLessThanOrEqual(-HIP_EMBED + 1e-6)
     }
   })
 
   it('keeps the whole leg below the chine, out of the wings\' arc', () => {
+    // Every named point, INCLUDING the brace's own anchor, against the chine
+    // at that point's OWN station rather than the hip's — the brace anchors
+    // 0.9m away, where the section is a different size.
     for (const leg of GEAR_LEGS) {
-      const chineY = chineYAt(leg.hip.z)
-      for (const p of [leg.hip, leg.hipSkin, leg.knee, leg.ankle, leg.foot]) {
-        expect(p.y).toBeLessThan(chineY)
+      for (const p of [leg.hip, leg.hipSkin, leg.knee, leg.ankle, leg.foot,
+        leg.braceHip, leg.braceHipSkin, leg.braceNode]) {
+        expect(p.y).toBeLessThan(chineYAt(p.z))
       }
     }
   })

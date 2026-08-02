@@ -773,3 +773,23 @@ kept (ground plane, hips, splay untouched and guarded), kit anatomy applied per 
 dossier — castellated hip locking loops, scissor brace struts, hollow skid-bar feet —
 plus gear tone re-verified against the post-6c hull and landedHeight re-measured (stale
 at 7.582 vs measured ~6.66 since the flush canopy).
+
+### USER FINDING (2026-08-02, from the published render gallery): wings are side-swapped.
+
+"The wings of the left side are mounted on the right side and vice versa." Lead
+verification against the sprue photograph agrees: each kit blade has a straight spine
+edge (the tip dogleg angles toward it) and a flared side, and left/right are DISTINCT
+mirrored parts (4x l1 + 4x r1) — while in the current top view the port fore blades wear
+the straight edge aft and the tip dogleg curling toward the NOSE. A tip that leads is
+wrong on every reference. Mechanism hypothesis (to be measured, not assumed, by the fix
+round): a single global sign flip in the chord-axis mapping of the plate's offset table —
+one flipped sign mirrors every blade across its own span, which presents exactly as
+"each side wears the other side's shape". Why it surfaced only now: Round 6c restored
+the plate's fine offset resolution (the old 20-station resample had smeared the dogleg
+flat), making the real curvature visible for the first time — with the wrong sign. This
+is also a bar note: no critic caught it; the user, who has assembled the physical kit,
+did — the bar's Q1 prompt should name blade handedness explicitly from now on. Queued as
+**Round 6e** immediately behind the in-flight gear round (sequence rule; same tree, same
+server): flip derived from kit-2/kit-3/sprue crops by measurement, falsifiability-proven
+handedness test (port blade tip-offset must trail AFT of its root chord line; sign-flip
+injection goes red), before/after captures.

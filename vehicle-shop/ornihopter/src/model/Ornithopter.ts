@@ -46,16 +46,25 @@ const METAL_COLOR = 0x8f887a
 const WING_COLOR = 0xada89a
 /** Same bone/tan family as the hull's own palette (hullTexel.ts's BONE and
  *  DECK_PANEL tones), not the wing-root pods' bare metalMaterial: metalness
- *  0.7 there crushes the diffuse response that makes the hull read bright,
- *  so the legs measured near-black (~44% of the lit hull's luminance)
- *  against reference photographs that show the legs in the body's own
- *  colour. Chosen by render-and-measure, not computed: the femur's lit face
- *  meets the scene light at a shallower angle than the hull panel it is
- *  measured against, so matching brightness took a colour close to
- *  DECK_PANEL rather than literally darker than BONE. Roughness 0.78,
- *  above the hull's own ~0.6 typical value, is what keeps the legs reading
- *  as mechanism rather than fairing. */
-const GEAR_COLOR = 0xddd6c4
+ *  0.7 there crushes the diffuse response that makes the hull read bright, so
+ *  the legs once measured near-black (~44% of lit-hull luminance) against
+ *  reference photographs that show the legs in the body's own colour.
+ *  DOWN from 0xddd6c4 in round 6d, and what moved is the RENDERED number, not
+ *  the albedo. 4c.2 set 0xddd6c4 against legs of steep femur plate, which meet
+ *  the 57-degree sun obliquely; round 6d's leg also carries a bracket flat on
+ *  the flank and a skid flat on the ground, and both meet that sun nearly
+ *  square. At the SAME albedo the gear measured 107 / 98 / 101% of the lit
+ *  hull in side / hero / rear34, over the 80-90% band in all three. At
+ *  0xada89a: 87.7 / 78.4 / 83.1 / 83.0 in side / hero / rear34 / top — hero
+ *  1.6 under, where the wings' accepted 78.7-91.6% also sits. Method: two
+ *  renders per frame, one with this constant forced to black, so the gear's
+ *  pixels come out by DIFFERENCE, not by eye; the reference is the median of
+ *  the brightest fifth of hull pixels, found the
+ *  same way. Legs in the pod's own shadow measure 38-61% and should. It landed
+ *  exactly on WING_COLOR, which is convergence, not a shortcut: the kit prints
+ *  hull, wings and gear in ONE filament, and two parts tuned independently
+ *  against one bar met. Roughness 0.78 keeps the legs reading as mechanism. */
+const GEAR_COLOR = 0xada89a
 
 export function createOrnithopter(): CraftModel {
   const root = new Group()

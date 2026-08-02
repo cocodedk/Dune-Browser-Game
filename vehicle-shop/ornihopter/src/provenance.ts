@@ -84,6 +84,15 @@ export const PROVENANCE = {
     'chosen so the parked craft clears the deepest point of the belly by about 2.19m, ' +
     'matched to the crew headroom shown on the production ingress/egress reference board ' +
     '(.shots/reference/thopter-05.jpg), where crew walk upright under the fuselage to a ' +
-    'rear ramp. MEASURED at 7.582 via the debug measure() harness — the parked Box3 ' +
-    'height, wings at rest — which replaces the 7.2 estimate here.',
+    'rear ramp. MEASURED via the debug measure() harness — the parked Box3 height at ' +
+    'pose(140, 0, 0) with the beat at 0, i.e. wings at rest — which replaces the 7.2 ' +
+    'estimate. RE-MEASURED at 6.747 in round 6d, down from round 4c.2\'s 7.582: the ' +
+    'number was stale, not wrong at the time. Round 6a deleted the tent canopy for a ' +
+    'flush chamfered lens (proudness above the deck 1.14m -> 0.22m) and the crown of ' +
+    'the craft came down with it, while the ground plane did not move. The gear round ' +
+    'owns this figure because GROUND_Y is its input; the 6d restyle itself moved the ' +
+    'height by 8e-5m — the new skid rails land on the plane exactly where the old ' +
+    'spade\'s tapered sole sat 0.08mm above it. A single number that no test consumed ' +
+    'went two whole rounds without anyone noticing it had drifted 0.84m; anything ' +
+    'derived from landedHeight should read it from a measurement, not from here.',
 } as const

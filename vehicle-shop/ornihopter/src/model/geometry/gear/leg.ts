@@ -1,99 +1,69 @@
 // vehicle-shop/ornihopter/src/model/geometry/gear/leg.ts
-// One leg, as the kit builds one (docs/dune_ornihopter_kit-3.png, the
-// close-up): a hip boss faired out of the lower flank, an angled femur made
-// of PAIRED PLATES with a slot down the middle, a knee knuckle, a steeper
-// tibia, and a small spade foot.
+// One leg, as the kit MEASURES one: a castellated locking loop on the flank
+// (./hipBracket.ts) -> a long main strut -> a shorter brace strut triangulating
+// with it -> a knuckle -> a tibia -> a slotted skid bar (./skid.ts).
 //
-// Six swept plates, 72 triangles. The two femur rails are one segment each,
-// swept with equal and opposite Section.offset: they overlap into a solid
-// plate at the hip and open into a real cutout toward the knee, which is what
-// the close-up shows — a slot that is widest near the boss and closes at the
-// knuckle. Modelling it as one plate with a hole would cost four times the
-// triangles for the same silhouette.
+// WHAT THIS REPLACES, and why. Round 4c built a good silhouette out of the
+// wrong parts: a plain boss, two parallel femur rails with a slot between them,
+// a knuckle, a tibia and a spade. docs/profiles/kit-dossier.md §a, measured off
+// `Gear_left.stl` rather than off a photograph, describes a two-BAR linkage —
+// "a hip bracket (a hollow rectangular loop with a castellated/notched edge)
+// -> a long main strut -> a shorter brace strut crossing it (a scissor/four-bar
+// mechanism) -> a foot that is itself a hollow elongated rectangular loop".
+// None of that mechanism language was in the mesh.
 //
-// Everything is emitted in CRAFT-LOCAL space for the RIGHT side only.
+// The two parallel rails are what the brace replaces. They cost the same two
+// segments and read as one bar with a hairline down it; a main strut and a
+// brace converging low read as a TRIANGLE, which is also the answer to the
+// blind critic's "the legs read as an uncountable knot": triangulation is what
+// says "one leg, with structure" instead of "two sticks that happen to meet".
+//
+// The main strut starts at stance.ts's BURIED anchor, not at the skin, so the
+// old separate hip-boss segment is gone: one bar now runs from inside the hull,
+// out through the bracket's window, to the knee. Same for the brace and its own
+// anchor. That is why there is no boss in this file any more.
+//
+// Sixteen segments, 192 triangles, all in craft-local space for the RIGHT side.
 // gearGeometry.ts mirrors the finished buffer; see its header for why the
 // mirrored copy cannot reuse the same index order.
 
-import { pushSegment, PAD_AXIS, type MeshBuffers, type Section, type Vec3 } from './plate'
-import { FOOT_TOP, GROUND_Y, type GearLeg, type Point3 } from './stance'
+import { pushSegment, type MeshBuffers, type Section } from './plate'
+import { towards, vec, walk } from './vec'
+import { pushHipBracket } from './hipBracket'
+import { pushSkid } from './skid'
+import type { GearLeg } from './stance'
 
-// Thicknesses are set for the SIDE view, where a leg plate is seen edge-on
-// and its thickness is the only width it has. At the shot tool's framing the
-// craft renders about 25 px per metre, so 0.22m of plate is five pixels —
-// the same apparent bar the old cylinder strut had. Anything thinner and the
-// legs go back to reading as wire whatever their silhouette does.
-const HIP_ROOT: Section = { halfBreadth: 0.5, halfThick: 0.34 }
-const HIP_TIP: Section = { halfBreadth: 0.38, halfThick: 0.22 }
-/** How far proud of the skin the hip boss stands before the femur starts. */
-const HIP_PROUD = 0.16
-const FEMUR_START = 0.05
-
-const RAIL_ROOT_OFFSET = 0.22
-const RAIL_KNEE_OFFSET = 0.1
-const RAIL_ROOT: Section = { halfBreadth: 0.145, halfThick: 0.11 }
-const RAIL_KNEE: Section = { halfBreadth: 0.12, halfThick: 0.082 }
+// Thicknesses are set for the SIDE view, where a leg plate is seen edge-on and
+// its thickness is the only width it has. At the shot tool's framing the craft
+// renders about 22 px per metre, so 0.27m of plate is six pixels. The main
+// strut is thicker than the pair of rails it replaces because it is now doing
+// their job alone; the brace is deliberately one step under it, so the eye can
+// tell which bar is the leg and which is bracing it.
+const MAIN_ROOT: Section = { halfBreadth: 0.26, halfThick: 0.135 }
+const MAIN_KNEE: Section = { halfBreadth: 0.19, halfThick: 0.105 }
+const BRACE_ROOT: Section = { halfBreadth: 0.18, halfThick: 0.105 }
+const BRACE_TIP: Section = { halfBreadth: 0.13, halfThick: 0.085 }
 
 const KNUCKLE: Section = { halfBreadth: 0.25, halfThick: 0.135 }
 const KNUCKLE_REACH = 0.15
 
 const TIBIA_ROOT: Section = { halfBreadth: 0.23, halfThick: 0.115 }
-const TIBIA_TIP: Section = { halfBreadth: 0.135, halfThick: 0.072 }
+/** Wider at the tip than the spade era's 0.135: the tibia now lands on the
+ *  skid's ankle tie, and a tip narrower than the slot between the rails would
+ *  read as a bar stopping short of the foot it stands on. */
+const TIBIA_TIP: Section = { halfBreadth: 0.17, halfThick: 0.09 }
 
-const FOOT_HEEL: Section = { halfBreadth: 0.19, halfThick: FOOT_TOP / 2 }
-const FOOT_TOE: Section = { halfBreadth: 0.085, halfThick: 0.055 }
-const HEEL_BEHIND = 0.3
-const TOE_AHEAD = 0.52
-
-function vec(p: Point3): Vec3 {
-  return [p.x, p.y, p.z]
-}
-
-function towards(from: Vec3, to: Vec3): Vec3 {
-  const d: Vec3 = [to[0] - from[0], to[1] - from[1], to[2] - from[2]]
-  const length = Math.hypot(d[0], d[1], d[2]) || 1
-  return [d[0] / length, d[1] / length, d[2] / length]
-}
-
-function walk(from: Vec3, direction: Vec3, distance: number): Vec3 {
-  return [
-    from[0] + direction[0] * distance,
-    from[1] + direction[1] * distance,
-    from[2] + direction[2] * distance,
-  ]
-}
-
-/** Horizontal part of a direction — the foot pad lies flat, so it follows
- *  where the tibia is REACHING, not the angle it comes down at. */
-function flatten(direction: Vec3): Vec3 {
-  const length = Math.hypot(direction[0], direction[2]) || 1
-  return [direction[0] / length, 0, direction[2] / length]
-}
-
-function withOffset(section: Section, offset: number): Section {
-  return { ...section, offset }
-}
-
-/** Six segments, 72 triangles, all in craft-local space. */
 export function pushLeg(out: MeshBuffers, leg: GearLeg): void {
-  const hip = vec(leg.hip)
-  const skin = vec(leg.hipSkin)
+  pushHipBracket(out, leg)
+
   const knee = vec(leg.knee)
   const ankle = vec(leg.ankle)
-  const outward = towards(hip, skin)
-  const boss = walk(skin, outward, HIP_PROUD)
-  pushSegment(out, hip, boss, HIP_ROOT, HIP_TIP)
+  pushSegment(out, vec(leg.hip), knee, MAIN_ROOT, MAIN_KNEE)
+  pushSegment(out, vec(leg.braceHip), vec(leg.braceNode), BRACE_ROOT, BRACE_TIP)
 
-  const femurRoot = walk(skin, outward, FEMUR_START)
-  for (const sign of [1, -1]) {
-    pushSegment(
-      out, femurRoot, knee,
-      withOffset(RAIL_ROOT, sign * RAIL_ROOT_OFFSET),
-      withOffset(RAIL_KNEE, sign * RAIL_KNEE_OFFSET),
-    )
-  }
-
-  const femurAxis = towards(femurRoot, knee)
+  // The knuckle straddles the break rather than sitting on it, so the joint
+  // reads as a fitting between two bars instead of a bend in one.
+  const femurAxis = towards(vec(leg.hipSkin), knee)
   const tibiaAxis = towards(knee, ankle)
   pushSegment(
     out,
@@ -103,14 +73,5 @@ export function pushLeg(out: MeshBuffers, leg: GearLeg): void {
   )
   pushSegment(out, knee, ankle, TIBIA_ROOT, TIBIA_TIP)
 
-  // The pad's underside sits ON the ground plane at both ends: each ring's
-  // centre is exactly its own halfThick above GROUND_Y, so tapering the toe
-  // thinner slopes the TOP of the foot down without lifting the sole. (The
-  // sole rises by 0.2mm across the taper, from the section staying square to
-  // a very slightly inclined sweep — four orders under the 0.01m the stance
-  // test allows.)
-  const reach = flatten(tibiaAxis)
-  const heel = walk([leg.foot.x, GROUND_Y + FOOT_HEEL.halfThick, leg.foot.z], reach, -HEEL_BEHIND)
-  const toe = walk([leg.foot.x, GROUND_Y + FOOT_TOE.halfThick, leg.foot.z], reach, TOE_AHEAD)
-  pushSegment(out, heel, toe, FOOT_HEEL, FOOT_TOE, PAD_AXIS)
+  pushSkid(out, leg)
 }

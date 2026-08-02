@@ -63,10 +63,15 @@ describe('pushSegment', () => {
 
 describe('landing gear mesh', () => {
   it('stays inside the round\'s triangle budget', () => {
+    // 6 segments per leg became 16 in round 6d, and the ceiling moved with it,
+    // from 600 to the 1200 that round was given. The exact-count assertion is
+    // kept — it is what catches a segment added or lost by accident — and 16
+    // is the whole leg: 4 bars and 4 crenels of hip bracket, main strut, brace
+    // strut, knuckle, tibia, 2 skid rails, ankle tie, toe blade.
     const geometry = buildLandingGearGeometry()
     const triangles = (geometry.getIndex()?.count ?? 0) / 3
-    expect(triangles).toBe(GEAR_LEGS.length * 6 * 12)
-    expect(triangles).toBeLessThanOrEqual(600)
+    expect(triangles).toBe(GEAR_LEGS.length * 16 * 12)
+    expect(triangles).toBeLessThanOrEqual(1200)
     geometry.dispose()
   })
 
@@ -93,7 +98,12 @@ describe('landing gear mesh', () => {
     // only reads gear/stance.ts's numbers, never the mesh. Faces, not
     // vertices: every corner is emitted once PER FACE (plate.ts), so the
     // lowest vertices belong to the sole, the pad sides and the toe cap
-    // alike, and only the sole's own two triangles lie wholly on the plane.
+    // alike, and only the sole's own triangles lie wholly on the plane.
+    //
+    // FOUR per leg since round 6d, not two: the spade's one pad became the
+    // skid's two rails, and the slot between them is the point (gear/skid.ts).
+    // The tie and the toe blade are deliberately lifted clear of the plane, so
+    // this count is also what would catch either of them sagging onto it.
     const geometry = buildLandingGearGeometry()
     const positions = Array.from(geometry.attributes.position.array as Float32Array)
     const indices = Array.from(geometry.getIndex()?.array as ArrayLike<number>)
@@ -108,7 +118,7 @@ describe('landing gear mesh', () => {
       const length = Math.hypot(face.normal.x, face.normal.y, face.normal.z)
       expect(face.normal.y / length).toBeLessThan(-0.9)
     }
-    expect(soles).toBe(GEAR_LEGS.length * 2)
+    expect(soles).toBe(GEAR_LEGS.length * 4)
     geometry.dispose()
   })
 })
