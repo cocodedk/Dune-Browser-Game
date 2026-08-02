@@ -743,3 +743,33 @@ spec's 0.17 arm fraction was right all along — the geometry never honoured it)
 blades into ONE airframe tonal family (kill the deterministic fore/aft tan-vs-black split,
 cause to be measured, not guessed), bevelled leading edge and scribed centre groove for
 internal form; measured planform untouchable.
+
+### Round 6c — LANDED. Verified. One craft, one family.
+
+Commit `eb8fc86`. The tan/black split was never geometry: wingMaterial carried metalness
+0.65 in a scene with NO environment map — in three.js a metal's reflection IS the
+environment, so 65% of the light fed a specular lobe of nothing, and the +/-22 degree
+pair-parity feather (pairs 0,2 vs 1,3 — parity, not fore/aft as every eye had read it)
+moved half the blades in and out of the sun's narrow lobe. Proven by ablation with
+geometry byte-identical: station spread 7.2:1 -> 1.20:1. Root arms rebuilt to the
+dossier's plate numbers and they agree to within ~1%: waist 27.6% of blade chord at
+13.57% span vs the plate's 26.3% at 13.6%; the arm reads the plate's own fine table
+(spec.ts untouched, agreeing at the join — its 20-station resample had smeared the waist,
+which is WHY the strap existed). Squared tip: already honoured; the builder checked the
+data before changing anything and changed nothing. Nine fail-first reds; two threshold
+revisions disclosed with reasons (albedo is the wrong proxy for rendered tone — the bar
+is luminance); one fixture corrected because it would have passed by accident; root
+balls/posts pulled out of the same no-envMap hole (accepted scope call — they were the
+last near-black objects, at the exact joint the round owned). 172,032 clearance samples
+outside the strided bar test, zero inside hull. Lead reproduced: lint 0, tsc 0,
+**1463/1463**, lengths clean; top and hero read as one bone-family craft, rod-and-sleeve
+roots legible exactly as kit-3. Carried forward: undersides dark at low sun-angles
+(physically consistent — hull belly measures darker still); scribed line needs UVs to be
+crisp at distance; five sleeve rings vs the plate's ~17 (resolution-bound).
+
+**Round 6d dispatched** (workflow `wf_b9837e5d-d31`, Opus, max effort) — the LAST build
+round before the Round 7 critic panel, implementing the user's gear ruling: film stance
+kept (ground plane, hips, splay untouched and guarded), kit anatomy applied per the
+dossier — castellated hip locking loops, scissor brace struts, hollow skid-bar feet —
+plus gear tone re-verified against the post-6c hull and landedHeight re-measured (stale
+at 7.582 vs measured ~6.66 since the flush canopy).
