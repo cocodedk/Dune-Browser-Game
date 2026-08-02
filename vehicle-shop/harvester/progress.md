@@ -1,0 +1,137 @@
+# Harvester Gauntlet Loop — the bar, and the live log
+
+Standalone rig at `vehicle-shop/harvester/`, on branch
+`feat/harvester-vehicle-shop`, in its own worktree at
+`../Dune-Browser-Game-harvester` (sibling of the main checkout, node_modules
+symlinked). Run it with `npm run shop:harvester`.
+
+## STATUS — first handoff. Read this first in a fresh session.
+
+Round 1 landed and verified: the crawler core (pure, 15 unit tests), the
+blockout model measured off `docs/harvester.3mf`, the seam guard, and the
+stage/camera/debug/capture harness. Gates at handoff: shop tsc 0, harvester
+unit tests **15/15**, file lengths clean. NOT yet run against the full repo
+hook — WIP commits use `--no-verify` by the standing ornithopter instruction;
+the REAL gate must pass once before any merge to main.
+
+**What the machine is.** A 60m spice harvester: 48m hull measured from the
+3MF's ratios at authored scale, plus a 12m film-derived cutter. Two track
+pods (6.2m wide, full height) at ±14m, an open-framed deck between them
+(deck band + underframe + solid nose/tail blocks — the 3MF's block layout),
+a raised cab and deck machinery. Crawl: 8 m/s max, 1.5 m/s² accel, turns by
+track-speed differential.
+
+**Do next, in rough order:**
+1. **Look at it.** `npm run shop:harvester`, then `shop:harvester:shoot`,
+   then judge the blockout against film stills. The proportions are
+   measured; whether they READ harvester is a critic's call, and this is the
+   first round that needs one.
+2. Track treads and dust — the two things that make it "act" like the film.
+3. Reference frames from the user (film stills / a better model) belong in
+   `.shots/reference/`; any number they change gets a MEASURED provenance
+   entry.
+4. Panel lines and weathering once the silhouette is accepted.
+
+## The bar
+
+Four questions, mirroring the ornithopter bar minus the interior (no
+interior by design).
+
+### Q1 — Reads as a Dune harvester, against a reference, side by side
+A fresh critic scores our renders 0–10 against film stills (once supplied)
+and names the single largest difference. Until references exist, the
+mechanical checklist stands in: two full-length track pods; a deck you can
+see under between them; a forward cutter; a raised cab; sand/rust palette.
+**Target: ≥7/10.**
+
+### Q2 — Blind identification
+A fresh critic, told nothing, sees a 3/4 render. It must name it a Dune
+spice harvester, or failing that "a huge tracked industrial processing
+machine". Anything vaguer is a fail.
+
+### Q3 — Acts like one (the crawler bar, all mechanical)
+1. **Nose leads**: full throttle moves the machine toward its own cutter
+   (`-Z`), asserted off the real geometry + the crawler in `seam.test.ts`.
+2. **Reverse works**: `-Z`-facing machine backs toward `+Z`, slower than
+   forward.
+3. **Differential steering**: steer right turns the heading clockwise seen
+   from above; steer splits the two track speeds opposite ways and never the
+   body speed; it spins in place at zero throttle.
+4. **It rides the terrain**: `position.y` is the mean of the four track
+   corners' terrain heights, no corner can sink below its own terrain, and
+   pitch/roll follow the dunes.
+5. **The wheels roll**: forward motion rolls the wheels the sign that keeps
+   the ground contact point still (pinned by test).
+6. **Scale**: hull ≈ 48m, full footprint ≈ 60m, width ≈ 34m, measured off
+   the real geometry.
+
+### Q4 — Correctness of the numbers
+Every spec value carries provenance; nothing in `spec.ts` is unaccounted
+for. The 3MF is the shape authority for ratios and block layout; the cutter
+and cab are marked film-derived.
+
+---
+
+## Measured inputs — what the build targets and where each number came from
+
+| quantity | value | source |
+|---|---|---|
+| hull length | 48 m | MEASURED ratio from `harvester.3mf` (73.498mm) at authored scale |
+| width (over pods) | 34.2 m | same (52.388mm) |
+| height | 17.2 m (deck 14.2) | same (22.321mm) |
+| full length with cutter | 60 m | hull + 12m film-derived boom |
+| pod width | 6.2 m (18% of width) | MEASURED from the 3MF cross-sections |
+| block layout | pods + deck band + underframe + solid nose/tail | MEASURED from the 3MF |
+
+The 3MF is a fan AI model, not a licensed kit — treat its SHAPE as authority
+and its absolute scale as nothing (it is a 73mm print). Orientation: the
+slicer lay the model on its side; length=X, width=Y, height=Z in the file.
+
+---
+
+## Rounds
+
+### Round 0 — scaffold (lead, no builders)
+
+- `spec.ts` / `provenance.ts` / `contracts.ts`, crawler core, stage,
+  camera, input, hud, debug handle, `shoot.mjs` — the ornithopter harness,
+  adapted for a ground machine.
+- Shop scripts `shop:harvester`, `:check`, `:shoot`, `:build` added to
+  `package.json` (worktree branch).
+- The axis convention, the seam guard idea, and the 200-line discipline
+  carried over from the ornithopter shop.
+
+_Status: complete._
+
+### Round 1 — crawler + measured blockout. LANDED. Verified.
+
+The pure crawler (forward/reverse, differential steer, terrain-riding
+pitch/roll, wheel sign) with 13 tests, plus the seam guard (frontmost
+geometry is the cutter; the machine travels toward it) with 2 tests.
+**15/15 green**, shop tsc 0, file lengths clean.
+
+**The user supplied `docs/harvester.3mf` mid-round** — a fan "Dune Spice
+Harvester" (MakerLab image-to-3D, BY-NC-SA). Extracted and measured with the
+plate method: 499,978 triangles, one mesh, no named parts. The initial
+orientation guess (as-printed) read as a tall tower (3.29 : 2.35 : 1 was
+length:width:height only after re-orienting the model onto its side), and
+cross-sections then showed the real layout: two full-length track pods at
+~18% of width each, a deck band across the top, an underframe, solid nose
+and tail blocks. Those measurements replaced the authored proportions in
+`spec.ts`.
+
+**A defect the seam test caught that no review would have:** the first
+blockout authored every "length runs along Z" box as (length, height,
+width), so the machine was 48m WIDE and the frontmost geometry was a wheel
+at −20.2m, not the cutter at −36. The frontmost-geometry assertion failed
+with exactly the number that showed the bug; the boxes were re-ordered and
+the guard stayed. Logged because it is the same class of axis confusion as
+the ornithopter's backwards flight — caught here on day one by a mechanical
+assertion rather than by a critic.
+
+**Honest gaps taken forward:** the pods roll wheels, not a scrolling tread;
+no dust or terrain deformation; the blockout is flat-shaded boxes; the
+absolute scale (48m hull) is authored, not sourced; the cutter and cab are
+film-derived additions the 3MF lacks.
+
+_Status: complete._
