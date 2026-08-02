@@ -162,7 +162,16 @@ USER'S EAR — no agent listened.
    takeoff and cruise; PLUS: pilot-facing altitude reads gear-relative (0 on ground —
    the user diagnosed the 4.3m readout as the gear-leg height themselves); PLUS the
    landed-with-throttle truth table (no frozen state, hot-touchdown behaviour defined).
-2. **Round 13b — engine whine tune (USER: "the pitch of the engine sound gets eerie",
+2. **Round 14 — wing fold (USER: "it doesn't fold its wings when landed. that could
+   be awesome... like an off/on switch which folds and unfolds the wings")**: a toggle
+   key folds the eight blades aft about their root pivots to lie along the boom (film
+   parked look) and unfolds them back to the spread pose; smooth animated transition;
+   only available when LANDED with the beat at zero (guard: folding mid-flight refused);
+   per-blade folded angles authored so no blade intersects hull/gear/another blade
+   (clearance test); takeoff refused while folded (or auto-unfolds — builder picks,
+   justifies, tests); HUD hint + key legend. Touches WingRig/contracts/flight state +
+   a wing-fold module; fail-first throughout.
+3. **Round 13b — engine whine tune (USER: "the pitch of the engine sound gets eerie",
    ruled HIGH THROTTLE)**: cap whineHz ceiling, soften top-end whine gain, roll off so
    full power reads as strain not siren. Pure params change + bounds test; user's ear
    is the acceptance.
