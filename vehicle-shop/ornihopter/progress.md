@@ -2,6 +2,61 @@
 
 Standalone rig at `vehicle-shop/ornihopter/`. Run it with `npm run shop:thopter`.
 
+## STATUS — session handoff, 2026-08-02. Read this first in a fresh session.
+
+Branch `feat/ornithopter-vehicle-shop`, everything committed, tree clean, all gates green
+at last lead verification: lint 0, `npm run shop:thopter:check` 0, `npm run test:unit`
+**1476/1476**, `bash scripts/check-file-length.sh` clean. WIP commits use `--no-verify`
+by standing user instruction (snapshots against loss); the REAL hook gate must pass once
+before any merge to main. Render gallery artifact (republish same conversation or pass
+`url`): https://claude.ai/code/artifact/887f2ab2-70fe-4f50-b72f-6bf1ca8e481e
+
+**Where the craft stands.** Rounds 4 through 6d are landed and lead-verified: dragonfly
+hull (slab-flank machined plan, hard chine, drooping boom, two-tine slotted fork), flush
+mullioned canopy lens, 2x2 wing-mount clusters, rod-and-sleeve wing arms in one bone
+tonal family, enclosed military cockpit (17,920-ray zero-escape proof, one sun), gear in
+film stance with kit anatomy (castellated hip brackets, brace A-frames, slotted skids).
+Last critic scores — Q1 4/10, Q3 3/10, blind-ID PASS — predate ALL of rounds 6a-6d;
+a re-panel is pending behind the two user findings below.
+
+**Do next, in order:**
+1. **Round 6e — wing handedness flip (USER finding #1, highest priority).** Every blade
+   is mirrored across its own span: port wears starboard's shape and vice versa (tip
+   doglegs curl toward the nose; must trail aft). One flip of the master blade in
+   `src/model/geometry/wingGeometry.ts` / `wing/section.ts` (negate chord axis, re-wind
+   indices) fixes all eight. A tight 15-20min brief exists and is proven dispatchable:
+   workflow script `thopter-wing-flip-wf_db66aa0a-66b.js` under this session dir's
+   `workflows/scripts/` — or re-write it from the Round 6e log entry below. It was
+   in flight when the session ended and was STOPPED CLEANLY (tree untouched). Lesson
+   already logged: the user's binary diagnosis IS the brief — apply and show, don't
+   derive.
+2. **Round 6f — clear the pilot's forward sightline (USER finding #2).** A transverse
+   canopy mullion sits 43mm off the level sightline, dead centre in the forward view.
+   Re-layout bays so a central cone from PILOT_EYE (~+/-6 deg vertical, +/-10 deg
+   horizontal) contains only glazing; fail-first cone test; keep the zero-escape
+   enclosure contract and the kit-measured lens outline. Brief in the Round 6f log entry.
+3. **Re-shoot, refresh the gallery artifact, then the Round 7 critic panel** — fresh
+   blind critics (pattern: workflow `wf_434807e4-c85` in the Round 5 entry); their
+   prompts MUST now include blade handedness and forward-sightline questions (both were
+   user-caught, critic-missed).
+4. Open named gaps after that, in rough priority: rear34 bullnose read; fork tines thin;
+   gauge labels; port cockpit wall dull; forward roof liner dark; panel-line density
+   (drawn vs cut); cockpit draw-call merge before game integration; the deferred
+   deliverables (artifact showcase page + SVG blueprint — seeds in `docs/profiles/`).
+
+**Working knowledge that saves an hour:** dev server for captures runs UNSANDBOXED on
+:5219 (`npx vite vehicle-shop/ornihopter --port 5219 --strictPort`; the sandbox kills
+vite silently, exit 144) and `tools/shoot.mjs` attaches to it. The print-kit PLATES
+out-rank photographs for shape (docs/profiles/kit-dossier.md, including its correction
+block — the 3MF transforms are bed layouts, NOT assembly). Builders: Opus for shape
+rounds, Sonnet for surgical ones, both at max effort via Workflow agent() (the plain
+Agent tool has no effort knob); the lead verifies every landing independently — gates,
+own captures, own arithmetic. User rulings on record: kit is shape authority; gear =
+film stance + kit anatomy; landedHeight = overall parked height (currently 6.747
+measured); Fable plans and verifies, never codes.
+
+---
+
 Strategy chosen by the user: **flyable first, pretty later.** Round 1 optimises for a
 correct, steerable, pilot-POV craft with placeholder-quality geometry. Exterior fidelity
 rounds only start once flight and cockpit are right. The reason is that half this bar is
