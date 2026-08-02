@@ -20,29 +20,31 @@ Last critic scores — Q1 4/10, Q3 3/10, blind-ID PASS — predate ALL of rounds
 a re-panel is pending behind the two user findings below.
 
 **Do next, in order:**
-1. **Round 6e — wing handedness flip (USER finding #1, highest priority).** Every blade
-   is mirrored across its own span: port wears starboard's shape and vice versa (tip
-   doglegs curl toward the nose; must trail aft). One flip of the master blade in
-   `src/model/geometry/wingGeometry.ts` / `wing/section.ts` (negate chord axis, re-wind
-   indices) fixes all eight. A tight 15-20min brief exists and is proven dispatchable:
-   workflow script `thopter-wing-flip-wf_db66aa0a-66b.js` under this session dir's
-   `workflows/scripts/` — or re-write it from the Round 6e log entry below. It was
-   in flight when the session ended and was STOPPED CLEANLY (tree untouched). Lesson
-   already logged: the user's binary diagnosis IS the brief — apply and show, don't
-   derive.
-2. **Round 6f — clear the pilot's forward sightline (USER finding #2).** A transverse
-   canopy mullion sits 43mm off the level sightline, dead centre in the forward view.
-   Re-layout bays so a central cone from PILOT_EYE (~+/-6 deg vertical, +/-10 deg
-   horizontal) contains only glazing; fail-first cone test; keep the zero-escape
-   enclosure contract and the kit-measured lens outline. Brief in the Round 6f log entry.
-3. **Re-shoot, refresh the gallery artifact, then the Round 7 critic panel** — fresh
+1. **Round 6f — pilot sightline — IN FLIGHT** (workflow `wf_795145b9-213`, Sonnet, max):
+   clear the central forward cone from PILOT_EYE (+/-6 deg V, +/-10 deg H) of every
+   opaque frame member; the 1.2m-aft station stays in the LOFT (hull deck kink) but
+   stops emitting a mullion in BOTH canopy layers, from one shared definition. Verify
+   on landing: fail-first cone red list must name the 1.2m members; enclosure
+   zero-escape test green UNTOUCHED; own eyes on pilot-yaw0.
+2. **Re-shoot, refresh the gallery artifact, then the Round 7 critic panel** — fresh
    blind critics (pattern: workflow `wf_434807e4-c85` in the Round 5 entry); their
-   prompts MUST now include blade handedness and forward-sightline questions (both were
-   user-caught, critic-missed).
-4. Open named gaps after that, in rough priority: rear34 bullnose read; fork tines thin;
+   prompts MUST now include blade handedness (knife rule below) and forward-sightline
+   questions (both were user-caught, critic-missed).
+3. **Axis-contract guard round** (adopted from an external review, lead-endorsed): one
+   cheap Sonnet round that inventories every sign convention (nose=-Z, LE/TE, sweep
+   sign, mirror winding, fan parity) and pins each in one absolute test file — the
+   backwards-flight / mirrored-normals / blade-handedness class dies as a class.
+4. **Tooling round** (bundle): `npm run shop:quick` (lint+shop tsc+shop vitest+lengths);
+   `shoot.mjs --view/--width` flags and a pixel-diff mode vs the previous capture set
+   (mechanises phantom-change detection); the missing belly view. Also add a warning
+   note where builders can see it: the game's `npx tsc --noEmit` does NOT cover the
+   shop — `shop:thopter:check` does.
+5. Open named gaps after that, in rough priority: rear34 bullnose read; fork tines thin;
    gauge labels; port cockpit wall dull; forward roof liner dark; panel-line density
    (drawn vs cut); cockpit draw-call merge before game integration; the deferred
    deliverables (artifact showcase page + SVG blueprint — seeds in `docs/profiles/`).
+   Process note: two disjoint substantial rounds may run in parallel via git worktrees
+   on separate ports (5219/5220) — the sequence rule's reason is the shared live tree.
 
 **Working knowledge that saves an hour:** dev server for captures runs UNSANDBOXED on
 :5219 (`npx vite vehicle-shop/ornihopter --port 5219 --strictPort`; the sandbox kills
@@ -848,6 +850,54 @@ did — the bar's Q1 prompt should name blade handedness explicitly from now on.
 server): flip derived from kit-2/kit-3/sprue crops by measurement, falsifiability-proven
 handedness test (port blade tip-offset must trail AFT of its root chord line; sign-flip
 injection goes red), before/after captures.
+
+### Round 6e + 6e.2 — LANDED (commits `ea4d2b5`, `a6c4bfe`). The knife rule, and a
+### wrong-feature first attempt worth reading before trusting any handedness prose.
+
+**The ruling that ended it, user's words:** a wing is a knife — the dull thick spine
+points FORWARD into the wind, the sharp curved cutting edge points REARWARD. Decided by
+measurement off the plate extraction (wing-planform.json): upper edge stdev **0.0099**
+(dead straight — the spine), lower edge stdev **0.1912** (the curved knife). Our sweep
+mapping had the curve leading on all eight blades since 6c restored the fine offsets.
+
+**Round 6e (first attempt) flipped the wrong feature.** The brief said "negate the
+chord axis at one place"; the builder, fenced in by the untouchable-suite instruction
+(wingGeometry.test.ts's envelope assertion trips on a full-z negation because it
+measures against +sweepOffsetAt), negated the SECTION distribution in section.ts —
+which swaps rail/knife sides but, as the builder itself measured honestly, leaves the
+planform silhouette pixel-identical. Green gates, red purpose. Worth recording: the
+builder's pixel-scan honesty is what caught it — and the user, shown before/after,
+said "exactly the same", which was CORRECT and diagnostic.
+
+**Why every earlier read contradicted every other:** three observers keyed on three
+different blade features (planform curve, rail face, feather-projected shading), and
+the resting feather (+/-22 deg by pair parity) plus per-pair fan angles make eyeball
+edge reads flip between adjacent blades. The kit-assembled.png root read even suggests
+that photo's wings may not match the user's final assembly intent — treat wing
+orientation in the PHOTOS as unreliable; the knife rule + plate stdev is the authority.
+
+**Round 6e.2 (the real fix), Sonnet, staged red/green with stash reproduction:**
+1. Section flip REVERTED — section.ts's original mapping (rail crest at local -z/nose,
+   trailing knife at +z/aft) was correct all along.
+2. `sweepOffsetAt` negates the measured bow ONCE at its single consumption point, with
+   a `-0` guard (bare negation flips +0's sign bit and breaks the hinge-ring
+   Object.is(+0) invariants). `sweepFractionAt` and spec.ts stay pure plate readings.
+   The envelope test stays green untouched because it measures relative to the same
+   function — the negate-at-source trick a downstream negation cannot use.
+3. sweepProfile.test.ts's sign assertion guard-swapped (it encoded the defect's sign),
+   reasoning inline — the Round 4 hullProfile precedent, disclosed unprompted.
+4. wingChordHandedness.test.ts rewritten to pin the REAL contract absolutely, both
+   flanks: knife vertex AFT of rail vertex (section), leading edge straighter than
+   trailing (planform, stdev over mid-80% span). Red 4/4 before, staged greens per
+   move, stash-reproduced bit-identical.
+
+Lead reproduced: lint 0, shop tsc 0, **1480/1480**, lengths clean; own read of the new
+top.png confirms straight edges lead / curves trail on both flanks. Builder's per-blade
+pixel scan: 7/8 blades unambiguous (4x-to-infinite straightness ratio), the 8th
+(starboard-front-inner) noise-level — a gear leg intrudes on its scan window; the
+mechanical assertion covers it. Carried forward: wing-check comparison artifact
+(https://claude.ai/code/artifact/23afb25a-c366-41c1-a51d-2d35ff843060) refreshed for
+the user's final eyeball; full gallery refresh queued behind 6f.
 
 ### USER FINDING #2 (2026-08-02): "the cockpit is very good, yet there is a
 ### windows/windshield frame which blocks the view right in front of the pilot."
