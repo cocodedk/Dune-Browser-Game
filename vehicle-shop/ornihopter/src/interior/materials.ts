@@ -41,8 +41,12 @@ const COLOR = {
   frame: 0x414a3f,
   seatKhaki: 0x8a7f66,
   seatKhakiDark: 0x5c5545,
-  consoleBody: 0x616d5f,
-  consoleFace: 0x454e44,
+  /** ROUND 9d. Retinted off olive-grey (was 0x616d5f/0x454e44) toward the
+   *  dark equipment family below: a critic named the cabin "uniformly warm
+   *  sage-olive... no separation between inside and out". crewPalette.test.ts
+   *  holds the ratio against the olive structure tones. */
+  consoleBody: 0x5a5e60,
+  consoleFace: 0x373a3c,
   figureSuit: 0x6b7566,
   figureSkin: 0xc79a72,
   figureHelmet: 0x2a2e2b,
@@ -56,12 +60,16 @@ const COLOR = {
   /** ROUND 9b. The glass cockpit's own carrier tone. The AH-64E crew station
    *  is a DARK panel hung inside a lighter airframe, and that contrast is
    *  half of what reads as "modern glass cockpit" before a single screen
-   *  lights up — so this is charcoal against COLOR.consoleBody's olive, but
-   *  charcoal with tone left in it (round 6b's crush lesson: a surface below
-   *  ~40/255 before any light reaches it can only render as black). */
+   *  lights up — charcoal with tone left in it (round 6b's crush lesson: a
+   *  surface below ~40/255 before any light reaches it renders as black). */
   panelCarrier: 0x33383b,
   bezel: 0x3d4347,
   key: 0x565c60,
+  /** ROUND 9d. The armored-tub family: coaming, side sills, seat frames —
+   *  the surfaces a body sits down inside of. Near-black and desaturated,
+   *  per the AH-64E reference's "dark grey/black equipment... against olive
+   *  structure"; crewPalette.test.ts measures the ratio. */
+  armor: 0x252729,
 } as const
 
 function standard(
@@ -89,6 +97,8 @@ export const seatMaterial = () => standard(COLOR.seatKhaki, 0.92, 0)
 export const seatDarkMaterial = () => standard(COLOR.seatKhakiDark, 0.92, 0)
 export const consoleBodyMaterial = () => standard(COLOR.consoleBody, 0.68, 0.35)
 export const consoleFaceMaterial = () => standard(COLOR.consoleFace, 0.55, 0.4)
+/** The tub/armor tone: coaming, side sills, seat frames. See COLOR.armor. */
+export const armorMaterial = () => standard(COLOR.armor, 0.6, 0.3)
 export const figureSuitMaterial = () => standard(COLOR.figureSuit, 0.88, 0)
 export const figureSkinMaterial = () => standard(COLOR.figureSkin, 0.8, 0)
 export const figureHelmetMaterial = () => standard(COLOR.figureHelmet, 0.45, 0.5)

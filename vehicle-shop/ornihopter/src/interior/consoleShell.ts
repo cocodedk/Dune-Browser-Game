@@ -21,7 +21,7 @@
 import { Group } from 'three'
 import { CONSOLE } from './layout'
 import { box, flatQuad, disposeGroup, type Placed } from './sceneUtils'
-import { consoleBodyMaterial, consoleFaceMaterial, machinedMaterial } from './materials'
+import { consoleBodyMaterial, consoleFaceMaterial, armorMaterial } from './materials'
 
 const STATIONS = 8
 /** Where the flat switch deck ends and the raked instrument panel begins. */
@@ -117,26 +117,30 @@ function sidesAndEnds(group: Group, zs: readonly number[]): void {
  * The coaming: a lip standing along the dash's near edge. It is the thing the
  * critic could not find — "no see-through gaps between panel, coaming, sills"
  * presupposes a coaming — and it is also what reads, at the bottom of frame,
- * as the edge of a tub a body is sitting down inside.
+ * as the edge of a tub a body is sitting down inside. ROUND 9d: onto the dark
+ * armor tone (was machinedMaterial's olive) so that edge reads as a distinct
+ * band rather than the same metal as the structure around it; named so
+ * crewPalette.test.ts can hold the tone mechanically.
  */
 function coaming(group: Group): void {
   const w = CONSOLE.halfWidthAt(CONSOLE.nearZ)
   if (w <= 0) return
-  group.add(
-    box(w * 2, CONSOLE.coamingRise, 0.13, machinedMaterial(), {
-      x: 0,
-      y: CONSOLE.topY + CONSOLE.coamingRise / 2,
-      z: CONSOLE.nearZ - 0.06,
-    })
-  )
+  const mesh = box(w * 2, CONSOLE.coamingRise, 0.13, armorMaterial(), {
+    x: 0,
+    y: CONSOLE.topY + CONSOLE.coamingRise / 2,
+    z: CONSOLE.nearZ - 0.06,
+  })
+  mesh.name = 'coaming'
+  group.add(mesh)
 }
 
-/** The glareshield hood over the top of the raked panel. */
+/** The glareshield hood over the top of the raked panel. ROUND 9d: same dark
+ *  armor tone as the coaming — it is the same dash, not a second material. */
 function glareshield(group: Group): void {
   const w = CONSOLE.halfWidthAt(CONSOLE.farZ + 0.12)
   if (w <= 0) return
   group.add(
-    box(w * 1.75, 0.07, 0.26, machinedMaterial(), {
+    box(w * 1.75, 0.07, 0.26, armorMaterial(), {
       x: 0,
       y: surfaceYAt(CONSOLE.farZ) + 0.06,
       z: CONSOLE.farZ + 0.14,

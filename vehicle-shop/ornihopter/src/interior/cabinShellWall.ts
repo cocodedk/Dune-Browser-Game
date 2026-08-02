@@ -29,7 +29,7 @@ import { RAIL_Y, roofHalfWidthAt, roofYAt } from './canopyLayout'
 import { deckYAt } from '../model/geometry/canopyPlan'
 import { hullInteriorHalfWidthAt, hullSectionBreakpoints, hullZSamples } from './hullSection'
 import { box, flatQuad, type Placed } from './sceneUtils'
-import { hullLinerMaterial, machinedMaterial, gunmetalMaterial } from './materials'
+import { hullLinerMaterial, armorMaterial, gunmetalMaterial } from './materials'
 
 /** Vertical band count in the liner: floor, chine, upper-flank break, roof. */
 const PROFILE_POINTS = 4
@@ -98,7 +98,10 @@ function railHalfWidthAt(z: number): number {
  * The shoulder rail: a longitudinal beam down each side at the pilot's own
  * shoulder line. This is what puts a hard edge at the outboard limit of the
  * view — "nothing anchors a seated body" was the ergonomic half of the
- * critique, and a tub whose edge you can see is most of the answer.
+ * critique, and a tub whose edge you can see is most of the answer. ROUND
+ * 9d: this IS the "high sill" a critic read as "the same olive as
+ * everything" — onto the dark armor tone, named so crewPalette.test.ts can
+ * hold it there.
  */
 function shoulderRail(group: Group, sign: 1 | -1): void {
   const samples = hullZSamples(FLOOR_FRONT_Z, FLOOR_REAR_Z, 0.5)
@@ -108,13 +111,13 @@ function shoulderRail(group: Group, sign: 1 | -1): void {
     const wa = railHalfWidthAt(za)
     const wb = railHalfWidthAt(zb)
     if (wa <= 0 || wb <= 0) continue
-    group.add(
-      box(0.1, 0.14, zb - za, machinedMaterial(), {
-        x: (sign * (wa + wb)) / 2 - sign * 0.05,
-        y: RAIL_Y,
-        z: (za + zb) / 2,
-      })
-    )
+    const mesh = box(0.1, 0.14, zb - za, armorMaterial(), {
+      x: (sign * (wa + wb)) / 2 - sign * 0.05,
+      y: RAIL_Y,
+      z: (za + zb) / 2,
+    })
+    mesh.name = 'sill-rail'
+    group.add(mesh)
   }
 }
 
