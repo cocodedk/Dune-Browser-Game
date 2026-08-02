@@ -121,12 +121,22 @@ suppressed while engaged (coherence call). PROCESS NOTE for the lead: builders s
 files mid-round for the length hook — lead docs commits must use pathspec form
 (git commit -- <file>) or they sweep the builder's index (caught and fixed once).
 
+**Round 10 — LANDED (commit `f8dff2b`). It lands.** RED convicted the old behaviour:
+origin buried 4.3m, 20m skid drift, wings at 1.5Hz forever. Now: touchdown gate ->
+LANDED, origin at gear-plane height to 0.0mm, zero drift over 10s, beat ramps to 0 in
+2.5s and beatAmplitude parks the wings flat, takeoff spools back in 1.5s; hard contact
+keeps the round-1 clamp. ZERO existing assertions adapted; 1537/1537. The builder
+corrected the lead's brief (landedHeight is sand-to-crown, NOT origin height — now
+pinned live against gear/stance.ts). Disclosed one-line Ornithopter.ts crossing (sole
+call site for beatAmplitude). Known limit kept: no lift term -> sustained low flight
+still drags gear (pre-existing class). At-rest capture verified by the lead's own eyes:
+all six legs ON the sand, wings dead flat, 0.00Hz.
+
 **Do next, in order (interior campaign):**
-1. **Round 10 — the landing lifecycle — IN FLIGHT** (workflow `wf_22eaebef-dec`, Opus,
-   max; user-ordered): touchdown -> LANDED state, beat spools to zero, wings settle to
-   parked, rest on the gear plane at landedHeight 6.706 (no sinking, no jitter),
-   takeoff spool-up; too-fast contact keeps the legacy clamp. Live Playwright
-   fly-land-sit-takeoff sequence as visual proof.
+1. **Round 11 — Apache side panes — IN FLIGHT** (workflow `wf_914953f9-ee6`, Opus, max):
+   the B6 user ruling — full flat side transparencies cut into both upper flanks (the
+   ONE freeze exception), thinner frames, both-seats side-glance raycast proof,
+   enclosure extended over the panes, plus the 0-bubble auto-level pin.
 2b. **Round 11 — Apache side panes (USER RULING, exterior-freeze exception): "full
    apache side panes and thiner frames. cause the two pilots share the same narrow
    front window and they don't sit center to it. so each pilot sees more to the other
