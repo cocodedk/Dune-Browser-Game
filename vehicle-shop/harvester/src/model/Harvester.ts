@@ -33,7 +33,7 @@ export function createHarvester(): HarvesterModel {
   const accentMaterial = new MeshStandardMaterial({ color: ACCENT_COLOR, roughness: 0.7, metalness: 0.25, flatShading: true })
 
   const hull = buildHull(bodyMaterial, darkMaterial)
-  const tracks = buildTracks(darkMaterial, wheelMaterial)
+  const tracks = buildTracks(darkMaterial, wheelMaterial, accentMaterial)
   const cutter = buildCutter(darkMaterial, accentMaterial)
   const cab = buildCab(bodyMaterial, darkMaterial, accentMaterial)
   const machinery = buildMachinery(darkMaterial, accentMaterial)

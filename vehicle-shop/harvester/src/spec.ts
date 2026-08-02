@@ -82,15 +82,18 @@ export const TRACK = {
   centreX: OVERALL.trackSpan / 2,
   /** The belt loop: the tall dark band wrapping the running gear. */
   belt: { width: 3.8, height: 7.0, zLow: -24, zHigh: 24 },
-  /** Road wheels: the big lower-run wheels inside the belt. */
+  /** Road wheels: the big lower-run wheels inside the belt. Spaced so NO
+   *  wheel overlaps another or the end sprockets (they did — the front and
+   *  rear clusters collided). */
   roadWheelRadius: 3.0,
-  roadWheelsZ: [-17.5, -10.5, -3.5, 3.5, 10.5, 17.5],
+  roadWheelsZ: [-14, -4.7, 4.7, 14],
   /** End sprockets: large, toothed, at the belt's fore and aft ends. */
   sprocketRadius: 3.2,
-  sprocketZ: [-21, 21],
-  /** Small return rollers carrying the belt's top run. */
+  sprocketZ: [-20.5, 20.5],
+  /** Small return rollers carrying the belt's top run, IN the gaps between
+   *  the road wheels. */
   returnRollerRadius: 1.2,
-  returnRollersZ: [-18, -9, 0, 9, 18],
+  returnRollersZ: [-9.35, 0, 9.35],
   /** Housing over the running gear, tucked under the deck. */
   housing: { yLow: 7.2, yHigh: 11.0, width: 4.4 },
   /** Grouser teeth across the belt's LOWER outer face — tread, not a fence. */

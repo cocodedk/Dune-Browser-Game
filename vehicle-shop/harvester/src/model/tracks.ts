@@ -1,24 +1,24 @@
 // vehicle-shop/harvester/src/model/tracks.ts
 // COMPONENT 2 — the track assemblies, the machine's face. Each side is a
-// real crawler running-gear unit:
+// real crawler running-gear unit, with NO overlapping wheels (user finding:
+// the front and rear clusters collided):
 //
-//   - a TALL belt loop (7m) with SHORT GROUSER teeth on its lower outer
-//     face — tread at the ground-contact line, NOT full-height cleats:
-//     those read as a vertical fence and hid the wheels (user finding)
-//   - two big TOOTHED end sprockets the belt wraps around
-//   - six road wheels in the lower run, protruding WELL past the belt face
-//     so the running gear is what the side view shows
-//   - five small return rollers carrying the top run
+//   - a TALL belt loop (7m) with short grouser teeth on its lower face
+//   - two big TOOTHED end sprockets at z = +-20.5
+//   - four road wheels evenly spaced z = -14..+14, radius 3.0 — the wheel
+//     component (model/wheel.ts), one wheel built once and reused
+//   - three return rollers IN the gaps between road wheels, top run
 //   - an upper housing over it all, tucked under the deck
 //
-// Every rotating part rolls from the crawler's signed track speeds
-// (crawler/kinematics.ts wheelAngularSpeed, sign pinned by test). Left and
-// right come from one loop with a mirrored X — they cannot disagree.
+// Spacing is the point: sprocket edge (-17.3) clears the first road wheel
+// edge (-17.0), and every gap between road wheels holds one roller. Every
+// runner rolls from the crawler's signed track speeds at its own radius.
 
-import { BoxGeometry, CylinderGeometry, Group, Mesh, type BufferGeometry, type MeshStandardMaterial } from 'three'
+import { BoxGeometry, CylinderGeometry, Group, Mesh, type Object3D, type BufferGeometry, type MeshStandardMaterial } from 'three'
 import { TRACK, BODY } from '../spec'
 import { wheelAngularSpeed } from '../crawler/kinematics'
 import { roundedBox } from './rounded'
+import { buildWheel, type WheelPart } from './wheel'
 
 export interface Tracks {
   group: Group
@@ -47,24 +47,27 @@ const SPROCKET_OVER = 1.0
 const ROLLER_OVER = 0.4
 
 interface Runner {
-  mesh: Mesh
+  group: Object3D
   side: 1 | -1
   radius: number
 }
 
-export function buildTracks(darkMaterial: MeshStandardMaterial, wheelMaterial: MeshStandardMaterial): Tracks {
+export function buildTracks(
+  darkMaterial: MeshStandardMaterial,
+  wheelMaterial: MeshStandardMaterial,
+  accentMaterial: MeshStandardMaterial,
+): Tracks {
   const group = new Group()
   group.name = 'tracks'
   const geometries: BufferGeometry[] = []
-
+  const wheels: WheelPart[] = []
   const runners: Runner[] = []
 
   for (const side of [1, -1] as const) {
     const x = side * TRACK.centreX
 
-    // The belt loop: one tall dark band. The running gear lives inside it;
-    // the wheels and sprockets protrude past both faces so they read from
-    // the side. Edges rounded so the belt reads as a wrapped loop.
+    // The belt loop: one tall dark band. Edges rounded so the belt reads as
+    // a wrapped loop rather than a slab.
     const belt = roundedBox(BELT.width, BELT.height, POD_LENGTH, 0.6)
     geometries.push(belt)
     const beltMesh = new Mesh(belt, darkMaterial)
@@ -87,24 +90,20 @@ export function buildTracks(darkMaterial: MeshStandardMaterial, wheelMaterial: M
       group.add(grouserMesh)
     }
 
-    // Road wheels in the lower run, standing on the ground line inside the
-    // belt, protruding past the belt face.
+    // Road wheels: the one wheel component, at each station.
     for (const wz of TRACK.roadWheelsZ) {
-      const wheel = new CylinderGeometry(TRACK.roadWheelRadius, TRACK.roadWheelRadius, BELT.width + ROAD_WHEEL_OVER * 2, 16)
-      geometries.push(wheel)
-      const mesh = new Mesh(wheel, wheelMaterial)
-      mesh.name = 'wheel'
-      mesh.rotation.z = Math.PI / 2
-      mesh.position.set(x, TRACK.roadWheelRadius, wz)
-      mesh.castShadow = true
-      group.add(mesh)
-      runners.push({ mesh, side, radius: TRACK.roadWheelRadius })
+      const wheel = buildWheel(TRACK.roadWheelRadius, BELT.width + ROAD_WHEEL_OVER * 2, wheelMaterial, accentMaterial, darkMaterial)
+      wheel.group.position.set(x, TRACK.roadWheelRadius, wz)
+      group.add(wheel.group)
+      wheels.push(wheel)
+      runners.push({ group: wheel.group, side, radius: TRACK.roadWheelRadius })
     }
 
     // End sprockets, bigger than the road wheels, with a ring of teeth — the
-    // belt visibly wraps these.
+    // belt visibly wraps these. Bespoke: they are the toothed ends, not the
+    // plain wheel component.
     for (const sz of TRACK.sprocketZ) {
-      const sprocket = new CylinderGeometry(TRACK.sprocketRadius, TRACK.sprocketRadius, BELT.width + SPROCKET_OVER * 2, 16)
+      const sprocket = new CylinderGeometry(TRACK.sprocketRadius, TRACK.sprocketRadius, BELT.width + SPROCKET_OVER * 2, 18)
       geometries.push(sprocket)
       const mesh = new Mesh(sprocket, wheelMaterial)
       mesh.name = 'wheel'
@@ -112,8 +111,7 @@ export function buildTracks(darkMaterial: MeshStandardMaterial, wheelMaterial: M
       mesh.position.set(x, TRACK.sprocketRadius, sz)
       mesh.castShadow = true
       group.add(mesh)
-      runners.push({ mesh, side, radius: TRACK.sprocketRadius })
-      const faceX = x + side * (BELT.width + SPROCKET_OVER * 2) / 2
+      const faceX = x + (side * (BELT.width + SPROCKET_OVER * 2)) / 2
       for (let t = 0; t < TOOTH_COUNT; t++) {
         const angle = TOOTH_START + t * TOOTH_STEP
         const tooth = new BoxGeometry(0.5, 0.9, 0.9)
@@ -124,19 +122,18 @@ export function buildTracks(darkMaterial: MeshStandardMaterial, wheelMaterial: M
         toothMesh.castShadow = true
         group.add(toothMesh)
       }
+      const sprocketRunner = { group: mesh, side, radius: TRACK.sprocketRadius }
+      runners.push(sprocketRunner)
     }
 
-    // Return rollers carrying the belt's top run.
+    // Return rollers in the gaps between road wheels, top run — same wheel
+    // component at the roller radius.
     for (const rz of TRACK.returnRollersZ) {
-      const roller = new CylinderGeometry(TRACK.returnRollerRadius, TRACK.returnRollerRadius, BELT.width + ROLLER_OVER * 2, 10)
-      geometries.push(roller)
-      const mesh = new Mesh(roller, wheelMaterial)
-      mesh.name = 'wheel'
-      mesh.rotation.z = Math.PI / 2
-      mesh.position.set(x, BELT.height - TRACK.returnRollerRadius, rz)
-      mesh.castShadow = true
-      group.add(mesh)
-      runners.push({ mesh, side, radius: TRACK.returnRollerRadius })
+      const roller = buildWheel(TRACK.returnRollerRadius, BELT.width + ROLLER_OVER * 2, wheelMaterial, accentMaterial, darkMaterial)
+      roller.group.position.set(x, BELT.height - TRACK.returnRollerRadius, rz)
+      group.add(roller.group)
+      wheels.push(roller)
+      runners.push({ group: roller.group, side, radius: TRACK.returnRollerRadius })
     }
 
     // Upper housing over the running gear, with a cap trim and two panel
@@ -167,13 +164,14 @@ export function buildTracks(darkMaterial: MeshStandardMaterial, wheelMaterial: M
   return {
     group,
     update(trackLeft, trackRight, dt) {
-      for (const { mesh, side, radius } of runners) {
+      for (const { group: runner, side, radius } of runners) {
         const speed = side === 1 ? trackRight : trackLeft
-        mesh.rotation.x += wheelAngularSpeed(speed, radius) * dt
+        runner.rotation.x += wheelAngularSpeed(speed, radius) * dt
       }
     },
     dispose() {
       for (const g of geometries) g.dispose()
+      for (const wheel of wheels) wheel.dispose()
     },
   }
 }

@@ -15,7 +15,7 @@ import { buildTracks } from './model/tracks'
 import { buildCutter } from './model/cutter'
 import { buildCab } from './model/cab'
 import { buildMachinery } from './model/machinery'
-import { BOOM, BODY, CAB, OVERALL } from './spec'
+import { BOOM, BODY, CAB, OVERALL, TRACK } from './spec'
 
 function mats() {
   return {
@@ -47,14 +47,14 @@ describe('hull component', () => {
 })
 
 describe('tracks component', () => {
-  it('has twenty-six runners (6 road wheels + 2 sprockets + 5 rollers per side) and a symmetric footprint', () => {
+  it('has eighteen runners (4 road wheels + 2 sprockets + 3 rollers per side) and a symmetric footprint', () => {
     const m = mats()
-    const { group } = buildTracks(m.dark, m.wheel)
+    const { group } = buildTracks(m.dark, m.wheel, m.accent)
     let wheels = 0
     group.traverse((child) => {
       if (child.name === 'wheel') wheels++
     })
-    expect(wheels).toBe(26)
+    expect(wheels).toBe(18)
     const b = bounds(group)
     // Both pods reach the same distance from the centreline.
     expect(Math.abs(b.min.x)).toBeCloseTo(Math.abs(b.max.x), 1)
@@ -64,6 +64,18 @@ describe('tracks component', () => {
     expect(b.max.y).toBeGreaterThan(10)
     group.clear()
     for (const mat of Object.values(m)) mat.dispose()
+  })
+
+  it('no runner overlaps another along the belt — the user\'s front/rear collision, pinned', () => {
+    const spans: Array<[number, number]> = [
+      ...TRACK.roadWheelsZ.map((z): [number, number] => [z - TRACK.roadWheelRadius, z + TRACK.roadWheelRadius]),
+      ...TRACK.sprocketZ.map((z): [number, number] => [z - TRACK.sprocketRadius, z + TRACK.sprocketRadius]),
+      ...TRACK.returnRollersZ.map((z): [number, number] => [z - TRACK.returnRollerRadius, z + TRACK.returnRollerRadius]),
+    ]
+    spans.sort((a, b) => a[0] - b[0])
+    for (let i = 1; i < spans.length; i++) {
+      expect(spans[i][0]).toBeGreaterThanOrEqual(spans[i - 1][1])
+    }
   })
 })
 
@@ -114,7 +126,7 @@ describe('whole machine still meets its footprint', () => {
     const m = mats()
     const root = new Group()
     root.add(buildHull(m.body, m.dark).group)
-    root.add(buildTracks(m.dark, m.wheel).group)
+    root.add(buildTracks(m.dark, m.wheel, m.accent).group)
     root.add(buildCutter(m.dark, m.accent).group)
     root.add(buildCab(m.body, m.dark, m.accent).group)
     root.add(buildMachinery(m.dark, m.accent).group)

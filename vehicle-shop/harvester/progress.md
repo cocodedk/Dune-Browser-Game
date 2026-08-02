@@ -247,6 +247,28 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round 8 — one perfect wheel, reused; no overlapping runners (user direction: "concentrate on one wheel component and make it perfect and then use it. some wheels are overlapping")
+
+The overlap was real: sprockets at z=+-21 (r 3.2) collided with the end
+road wheels at +-17.5 (r 3.0) by ~2.7m, and the front/rear return rollers
+sat in the same clusters. New layout: sprockets at +-20.5, four road
+wheels evenly spaced -14..+14, three return rollers IN the gaps. A
+spec-level no-overlap test now pins every runner's z-span so the collision
+cannot regress.
+
+The wheel is now its own component (model/wheel.ts): a smooth 24-segment
+tire, a hub proud of each face, and six bolts per hub — built once,
+instantiated for every road wheel and return roller at its own radius
+(9 runners per side; only the toothed sprockets stay bespoke). The wheel
+group's origin is the axle, so the whole assembly still rolls from the
+crawler's signed track speeds.
+
+Gates: lint 0, shop tsc 0, **22/22** tests, lengths clean.
+
+**Open:** belt scrolling, dust, panel lines, first blind critic panel.
+
+_Status: complete._
+
 ### Round 7 — the fence is gone; the wheels show (user finding: "vertical fence like plates seen from the sides, they kind of cover the wheels")
 
 The fence was the CLEATS: I had made them full belt-height (7.1m) bars,
