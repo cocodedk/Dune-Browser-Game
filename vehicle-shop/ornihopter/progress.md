@@ -22,25 +22,74 @@ four poses = 5,760 rays for the zero-escape checks), one sun, a clear forward si
 blind-ID PASS — predate ALL of rounds 6a-6f; the Round 7 re-panel is next.
 
 **Do next, in order:**
-1. **Round 7 critic panel** (captures are fresh from the 6f landing) — fresh
-   blind critics (pattern: workflow `wf_434807e4-c85` in the Round 5 entry); their
-   prompts MUST now include blade handedness (knife rule below) and forward-sightline
-   questions (both were user-caught, critic-missed).
-2. **Axis-contract guard round** (adopted from an external review, lead-endorsed): one
-   cheap Sonnet round that inventories every sign convention (nose=-Z, LE/TE, sweep
-   sign, mirror winding, fan parity) and pins each in one absolute test file — the
-   backwards-flight / mirrored-normals / blade-handedness class dies as a class.
-3. **Tooling round** (bundle): `npm run shop:quick` (lint+shop tsc+shop vitest+lengths);
-   `shoot.mjs --view/--width` flags and a pixel-diff mode vs the previous capture set
-   (mechanises phantom-change detection); the missing belly view. Also add a warning
-   note where builders can see it: the game's `npx tsc --noEmit` does NOT cover the
-   shop — `shop:thopter:check` does.
-4. Open named gaps after that, in rough priority: rear34 bullnose read; fork tines thin;
-   gauge labels; port cockpit wall dull; forward roof liner dark; panel-line density
-   (drawn vs cut); cockpit draw-call merge before game integration; the deferred
-   deliverables (artifact showcase page + SVG blueprint — seeds in `docs/profiles/`).
-   Process note: two disjoint substantial rounds may run in parallel via git worktrees
-   on separate ports (5219/5220) — the sequence rule's reason is the shared live tree.
+1. **CANOPY RULING — BLOCKED ON USER.** Round 7 named the kit-vs-film tension (Q3 3/10:
+   "the pilot cannot see out"; Q1 praises the flush kit lens). Evidence page published:
+   https://claude.ai/code/artifact/04a595d9-0fa8-41ed-8fc4-c85b99b85ebc — user asked to
+   see before deciding. Options on the table: hybrid (kit outline + true see-through
+   glass + eye raise + side glazing bands), kit-absolute, film-bubble. The interior
+   round (glazing clarity, stick anatomy, second seat, cold-graphite palette, eye
+   placement — critic's concrete acceptance test: pixel (800,500) is sky, >=20% of
+   pilot-frame pixels exterior) is written after the ruling.
+2. **Round 8b — gear splay** (uncontested, cheap): legs splay ~10 deg today vs the kit's
+   ~33 deg; skids too short. Film stance (ground plane, walk-under height) preserved.
+3. **Round 8c — aft end**: scribe the blank aft flanks; pod-to-boom contrast. NOTE the
+   Round 7 critic's "single spoon vane" claim CONTRADICTS the dossier's plate-verified
+   two-tine fork — dossier wins; do not delete the fork on a critic's photo-read.
+4. **Round 8d — hull section read** (big, Opus): critic measured section aspect 1.20,
+   "rounded capsule, ogive prow" vs the kit's hard-chined wedge with flat hexagonal
+   nose plate + vertical mullion comb. Conflicts partially with 6a's landing; a
+   measurement pass against kit-3 comes FIRST, then the reshape brief.
+5. Then: axis-contract guard round; tooling round (shop:quick, shoot flags + pixel-diff,
+   belly view, TRUE REAR view — Round 7 found rear34.png is actually a front-quarter);
+   blade chord trim (L/c 18.2-20.6 vs 20.69 measured, three of four ~12% fat); beat
+   arc bias (blades never carry below the root plane — reads as a shiver, not a beat);
+   dead-end bracket stubs between mount clusters (blind critic).
+Longer tail (older queue, still valid): gauge labels; port cockpit wall dull; forward
+roof liner dark; cockpit draw-call merge before game integration; deferred deliverables
+(showcase page + SVG blueprint). Process note: two disjoint substantial rounds may run
+in parallel via git worktrees on separate ports (5219/5220) — the sequence rule's
+reason is the shared live tree. Tooling reminder for builders: the game's `npx tsc
+--noEmit` does NOT cover the shop — `shop:thopter:check` does.
+
+### Round 7 — the panel's verdicts (all three critics, fresh context, max effort)
+
+**Q2 blind ID: PASS** — "insectoid flapping-wing VTOL, ~80% Dune thopter"; 8 blades
+counted by pixel scan, 4 per side, hubs correctly read as 2x2 clusters; nose derived
+correctly from geometry. Its "rear wing pair edges reversed" claim was ADJUDICATED AND
+OVERRULED by the lead: the exterior critic's per-blade numeric edge-trace (all eight
+blades, both flanks, forward edge dead on the root-tip line, aft edge tapering) and the
+6e.2 builder's detrended-stdev scan independently agree handedness is correct; the
+blind critic's hub-grouped read matches a feather/beat-phase projection artifact in an
+in-flight capture. Recorded so the next session does not re-litigate it.
+
+**Q1 exterior: 6.5/10** (bar 7 — near miss; was 4/10 before rounds 6a-6f). KNIFE-RULE
+HANDEDNESS: PASS, verified numerically per blade. Canopy rib removal: "correct — still
+busier than the kit" (kit's longest unbroken pane ~64% of glazed length vs our ~40%);
+real canopy gaps are cadence (metronomic vs irregular) and the missing nose mullion
+comb. Headline gap: hull section reads rounded capsule (aspect 1.20) vs hard-chined
+wedge + flat nose plate. Also: insets not dark enough (addressed in 8a below), gear
+splay ~10 vs ~33 deg, aft flanks blank, no true rear view in the shot list, beat arc
+biased upward.
+
+**Q3 interior: 3/10 — FAIL.** "The pilot cannot see out": frame centre is opaque-reading
+structure; exterior is 0.9% of frame. The glazing PASSES rays (forwardCone test) but
+RENDERS opaque (0.34 opacity + tint ≈ wall tone) — geometry fixed in 6f, perception not.
+Plus: no second seat, stick reads as a smooth cylinder not an articulated yoke, palette
+uniformly warm-olive vs the boards' cold graphite + ochre-outside-only. This activates
+the 6b-deferred kit-vs-film canopy tension — now a USER RULING (item 1 above).
+
+### Round 8a — LANDED (commit `59613f4`). The recesses are finally dark.
+
+Materials-only, one file (hullTexel.ts): INSET/FLANK/KEEL/OLIVE/SLOT/DIRT scaled to
+~quarter value with hue preserved; BONE/TRIM untouched; crevice width 0.03->0.05 so
+scribes survive mipmaps. Builder measured with a lighting-independent magenta-emissive
+silhouette mask (a naive colour threshold misclassified shadowed wings — method note
+worth keeping). side.png: below-L90 33->40%, craft-sand gap 41->66; rear34: 25->34%,
+23->40 — both meet the critic's bar. top/hero aggregates capped architecturally by the
+untouched broadside wings (proven: a 2x more aggressive pass moved them <1pp). Spot
+checks: flank inset 162->55, louvres 111->47. Lead reproduced gates (1482/1482) and
+confirmed by eye: side view now shows a full-length dark keel line, hard-chined read,
+no mask leakage, no rogue hues.
 
 **Working knowledge that saves an hour:** dev server for captures runs UNSANDBOXED on
 :5219 (`npx vite vehicle-shop/ornihopter --port 5219 --strictPort`; the sandbox kills
