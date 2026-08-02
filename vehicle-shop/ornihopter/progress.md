@@ -39,8 +39,17 @@ craft's side-by-side unless the user says otherwise).
 **The interior campaign's full gauntlet spec — bar (B1-B4), builder/critic prompt
 templates, loop mechanics — lives in `docs/apache-gauntlet.md`. Rounds below follow it.**
 
+**Round 8b — LANDED (commit `ae9bfea`), the LAST exterior round.** Per-leg rake was
+15.1-28.2 deg (the mid leg the worst "post"); now 30.2-30.5 at all stations via
+KNEE_RAKE 0.72->0.42 + wider rakeZ; skids 1.58->2.5m. Fail-first proven and
+stash-reproduced; zero existing assertions adapted (they read live values);
+landedHeight 6.747->6.706 re-measured with provenance — the drift predates the round,
+proven by stashed rebuild. Lead gate-reproduced 1483/1483 and verified stance in FRESH
+captures after catching the repo capture set stale by mtime (the gauntlet doc's
+never-judge-stale rule, working as written). Baseline captures refreshed.
+
 **Do next, in order (interior campaign):**
-1. **Round 9a — SEE OUT** (prereq for everything; interior critic's #1 with concrete
+1. **Round 9a — SEE OUT — IN FLIGHT** (workflow `wf_1429aeed-7e2`) (prereq for everything; interior critic's #1 with concrete
    acceptance): glazing must read as glass — bright desert through it, edge highlights,
    Apache-style heavy frames legible as frames; eye/camera placement verified.
    Acceptance on pilot.png: >=20% of frame pixels exterior (currently 0.9%), a real
