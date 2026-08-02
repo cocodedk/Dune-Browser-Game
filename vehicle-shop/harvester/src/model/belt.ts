@@ -1,17 +1,18 @@
 // vehicle-shop/harvester/src/model/belt.ts
-// COMPONENT 7 — one belt BAND, heavy and mechanical (user direction: "can
-// you do it better?"). A real track belt is not wire — the runs are thick
-// plates, the ends CURVE around the sprockets, and the tread shoes and
-// engagement lugs hold their detail at close range.
+// COMPONENT 7 — one belt BAND, with CURVED wraps around the sprockets
+// (user finding: "the belt is not wrapped around the wheels. the belt
+// itself looks square and angled"). A real track belt wraps its end
+// sprockets — it is not a rectangle with a wheel behind it. Each sprocket
+// now sits inside a half-cylinder of belt material whose outer surface
+// carries the engagement lugs, and the sprocket teeth poke through it so
+// the belt visibly loops around the wheel.
 //
-//   - thick bottom plate (ground run) with tread shoes on its outer edge
-//   - thick top plate (return run)
-//   - CURVED end wraps at the sprockets — thick rounded blocks that read
-//     as the belt looping over the sprocket, with engagement lugs the
-//     teeth pass between
-//   - the middle stays open — the wheels fully visible against the hull
+//   - thick bottom and top plates (the straight runs)
+//   - a HALF-CYLINDER WRAP at each sprocket — the belt curving around it
+//   - lugs on the wrap's outer face, sprocket teeth emerging through
+//   - tread shoes on the bottom plate's outer edge
 
-import { BoxGeometry, Group, Mesh, type BufferGeometry, type MeshStandardMaterial } from 'three'
+import { BoxGeometry, CylinderGeometry, Group, Mesh, type BufferGeometry, type MeshStandardMaterial } from 'three'
 import { TRACK, BODY } from '../spec'
 import { roundedBox } from './rounded'
 
@@ -27,17 +28,17 @@ const BELT = TRACK.belt
 const SHOE_SPACING = POD_LENGTH / TRACK.grouserCount
 const SHOE_LENGTH = SHOE_SPACING * 0.85
 
-/** The runs are PLATES, not wire — heavier, more mechanical. */
 const BOTTOM_THICK = 0.7
 const TOP_THICK = 0.5
-const END_THICK = 1.2
-const END_RADIUS = 1.0
-const WRAP_HALF = 4.5
-const WRAP_THICK = 0.7
-const WRAP_RADIUS = 0.8
 
-/** Engagement lugs: at the sprocket arc, offset from the teeth so the teeth
- *  pass between them. */
+/** The CURVED wrap around each sprocket: a half-cylinder the sprocket sits
+ *  inside, at a radius just larger than the sprocket itself so the teeth
+ *  (at a slightly larger radius) emerge through the belt surface. */
+const WRAP_RADIUS = 3.6
+const WRAP_SEGMENTS = 24
+
+/** Engagement lugs: on the wrap's outer face, at the same arc as the
+ *  sprocket teeth so the teeth pass between them. */
 const LUG_RADIUS = TRACK.sprocketRadius + 0.55
 const LUG_START = (36 * Math.PI) / 180
 const LUG_STEP = (36 * Math.PI) / 180
@@ -63,20 +64,26 @@ export function buildBelt(
     group.add(mesh)
   }
 
-  // The band's open frame — now heavy plates.
+  // The straight runs: thick plates.
   add(roundedBox(BELT.width, BOTTOM_THICK, POD_LENGTH, 0.3), 0, BOTTOM_THICK / 2, 0)
   add(roundedBox(BELT.width, TOP_THICK, POD_LENGTH, 0.25), 0, BELT.height - TOP_THICK / 2, 0)
-  // Thick rounded end wraps closing the loop at the very ends.
-  add(roundedBox(BELT.width, BELT.height, END_THICK, END_RADIUS), 0, BELT.height / 2, -POD_LENGTH / 2)
-  add(roundedBox(BELT.width, BELT.height, END_THICK, END_RADIUS), 0, BELT.height / 2, POD_LENGTH / 2)
 
-  // Curved end wraps — two thick rounded blocks closing the loop, and one
-  // short sprocket-wrap segment per sprocket carrying the lugs.
   const outerX = side * (BELT.width / 2)
+
+  // A half-cylinder wrap at each sprocket: the belt curving around the wheel.
+  // The half opens toward the machine centre (away from the hull end) so the
+  // curved back faces outward — the belt wrapping the sprocket from the side.
   for (const sz of TRACK.sprocketZ) {
-    // the sprocket wrap: thicker, larger radius so it reads curved.
-    add(roundedBox(WRAP_THICK, BELT.height, WRAP_HALF * 2, WRAP_RADIUS), outerX, BELT.height / 2, sz)
-    // lugs bigger — detail that holds at close range.
+    const openToward = sz < 0 ? Math.PI : 0 // front opens +Z, rear opens -Z
+    const wrap = new CylinderGeometry(WRAP_RADIUS, WRAP_RADIUS, BELT.width, WRAP_SEGMENTS, 1, true, openToward, Math.PI)
+    geometries.push(wrap)
+    const wrapMesh = new Mesh(wrap, beltMaterial)
+    wrapMesh.rotation.z = Math.PI / 2 // axis from Y to X
+    wrapMesh.position.set(0, BELT.height / 2, sz)
+    wrapMesh.castShadow = true
+    group.add(wrapMesh)
+
+    // Lugs on the wrap's outer face — interleaved with the sprocket teeth.
     for (let t = 0; t < LUG_COUNT; t++) {
       const angle = LUG_START + t * LUG_STEP
       const lug = new BoxGeometry(0.6, 1.0, 0.8)
