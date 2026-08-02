@@ -26,6 +26,12 @@ export interface HudReading {
   speed: number
   /** 0..1. */
   throttle: number
+  /** True while auto-level is holding roll/pitch toward level. Optional so
+   *  interior/mfdLive.ts's own hand-built HudReading literal (it does not
+   *  carry a live FlightState at construction time) keeps compiling unchanged
+   *  — see contracts.ts's FlightInput/FlightState.autoLevel for the same
+   *  reasoning. */
+  autoLevel?: boolean
 }
 
 const DEG = 180 / Math.PI
@@ -46,6 +52,7 @@ export function readFlight(state: Readonly<FlightState>): HudReading {
     altitude: state.altitude,
     speed: state.speed,
     throttle: state.throttle,
+    autoLevel: state.autoLevel === true,
   }
 }
 

@@ -1,5 +1,6 @@
 // vehicle-shop/ornihopter/src/hud/tapeFaces.ts
-// The three repainted faces: heading tape, altitude box, speed box.
+// The repainted faces: heading tape, altitude box, speed box, and the small
+// AUTO hint (B5's auto-level finding) that joins them below.
 //
 // THESE are what repaint, and only these. Each is a small surface — the three
 // together are 42k texels against the ladder's 590k — because a scrolling tape
@@ -23,6 +24,7 @@ import { angleDelta, type HudReading } from './reading'
 
 export const HEADING_FACE = { w: 512, h: 88 } as const
 export const SIDE_FACE = { w: 144, h: 208 } as const
+export const AUTO_FACE = { w: 128, h: 32 } as const
 
 const HDG_PX_PER_DEG = 5.2
 const CARDINALS: Record<number, string> = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' }
@@ -97,4 +99,15 @@ export function paintAltitude(surface: Surface, r: HudReading): void {
 export function paintSpeed(surface: Surface, r: HudReading): void {
   const shown = Math.max(0, Math.round(r.speed))
   sideFace(surface, 'SPD', shown.toString(), 3.6, 2, 10, r.speed, true)
+}
+
+/** The auto-level hint: nothing at all when it is off (a cleared surface is
+ *  fully transparent — invisible on the glass with no mesh-visibility flag
+ *  needed), the word AUTO in amber when it is on. Amber, not a third colour:
+ *  palette.ts already uses it for the three things the eye should land on
+ *  first, and an active override belongs on that list. */
+export function paintAutoLevel(surface: Surface, r: HudReading): void {
+  surface.clear()
+  if (!r.autoLevel) return
+  drawCentred(surface, 'AUTO', surface.w / 2, 6, HUD_INK.amber, 4)
 }

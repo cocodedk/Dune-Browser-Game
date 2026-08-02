@@ -40,3 +40,12 @@ export const CRUISE_SPEED = 50
 
 /** Hard ceiling on the integration step, matching main.ts's own frame-time clamp. */
 export const MAX_DT = 0.1
+
+/**
+ * Auto-level's per-second exponential decay rate on roll/pitch error:
+ * error(t) = error(0) * exp(-AUTO_LEVEL_RATE * t), so it can never overshoot
+ * by construction (the magnitude only ever shrinks). At 1.5, a 60-degree bank
+ * clears to under 3 degrees in ~2.0s of held sim time -- see autoLevel.ts and
+ * its test for the measured numbers.
+ */
+export const AUTO_LEVEL_RATE = 1.5

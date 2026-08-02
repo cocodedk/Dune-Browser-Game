@@ -77,6 +77,14 @@ export function createControls(target: EventTarget = window): Controls {
         roll: axis(['a', 'arrowleft'], ['d', 'arrowright']),
         yaw: axis(['q'], ['e']),
         throttle,
+        // Held, not toggled — the user asked to auto-level "when it gets out
+        // of control", which means letting go must hand control back
+        // instantly. Space was free (already preventDefault-ed below, never
+        // bound to a control) and, unlike every other binding here, it is a
+        // thumb key: reachable without leaving WASD or the mouse, which
+        // matters for a control you reach for BECAUSE the other hand already
+        // has its own hands full.
+        autoLevel: down.has(' '),
       }
     },
     takeCameraCycle() {

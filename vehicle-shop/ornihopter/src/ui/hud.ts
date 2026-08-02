@@ -24,6 +24,7 @@ export function createHud(): Hud {
       'Shift    throttle up      Ctrl  throttle down',
       'H + mouse / right-drag   look around',
       'C        cycle camera     R     reset',
+      'Space    hold to auto-level (roll/pitch)',
     ].join('\n')
   }
 

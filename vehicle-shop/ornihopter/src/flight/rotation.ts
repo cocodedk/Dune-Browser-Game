@@ -20,6 +20,7 @@ import type { FlightInput, Quat, Vec3 } from '../contracts'
 import { starboardDirection } from '../contracts'
 import { quatFromAxisAngle, quatMultiply, quatNormalise } from './quatMath'
 import { PITCH_RATE_MAX, YAW_RATE_MAX, ROLL_RATE_MAX, BANK_TURN_GAIN } from './constants'
+import { levelOrientation } from './autoLevel'
 
 /** Body-frame angular velocity, rad/s, for the given demand and current bank. */
 export function bodyAngularVelocity(orientation: Quat, input: FlightInput): Vec3 {
@@ -37,13 +38,31 @@ export function bodyAngularVelocity(orientation: Quat, input: FlightInput): Vec3
   }
 }
 
-/** Advance orientation by dt seconds under the given demand. Pure, stable for any dt >= 0. */
-export function nextOrientation(orientation: Quat, input: FlightInput, dt: number): Quat {
-  const omega = bodyAngularVelocity(orientation, input)
+/** Yaw only, and NO coordinated-turn coupling: while AUTO-LEVEL owns roll, a
+ *  bank the system is actively erasing must not also be steering the nose —
+ *  that term exists to curve the flight path of a bank the PILOT chose, not
+ *  one auto-level is in the middle of removing. See autoLevel.ts. */
+function autoLevelAngularVelocity(input: FlightInput): Vec3 {
+  return { x: 0, y: -input.yaw * YAW_RATE_MAX, z: 0 }
+}
+
+function integrate(orientation: Quat, omega: Vec3, dt: number): Quat {
   const magnitude = Math.hypot(omega.x, omega.y, omega.z)
   if (magnitude < 1e-9) return orientation
 
   const angle = magnitude * dt
   const delta = quatFromAxisAngle(omega, angle)
   return quatNormalise(quatMultiply(orientation, delta))
+}
+
+/** Advance orientation by dt seconds under the given demand. Pure, stable for
+ *  any dt >= 0. When input.autoLevel is held, pitch/roll stick demand is
+ *  ignored entirely (an override, not a blend) and levelOrientation() decays
+ *  them toward zero instead; yaw stays live either way. */
+export function nextOrientation(orientation: Quat, input: FlightInput, dt: number): Quat {
+  if (input.autoLevel) {
+    const afterYaw = integrate(orientation, autoLevelAngularVelocity(input), dt)
+    return levelOrientation(afterYaw, dt)
+  }
+  return integrate(orientation, bodyAngularVelocity(orientation, input), dt)
 }

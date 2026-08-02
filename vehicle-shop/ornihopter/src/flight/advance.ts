@@ -18,6 +18,7 @@ function sanitiseInput(input: FlightInput): FlightInput {
     roll: clampSigned(input.roll),
     yaw: clampSigned(input.yaw),
     throttle: clamp01(input.throttle),
+    autoLevel: input.autoLevel === true,
   }
 }
 
@@ -39,5 +40,6 @@ export function advance(state: Readonly<FlightState>, rawInput: FlightInput, raw
     altitude: grounded.altitude,
     beatPhase: beat.beatPhase,
     beatHz: beat.beatHz,
+    autoLevel: input.autoLevel,
   }
 }

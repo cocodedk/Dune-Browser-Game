@@ -31,7 +31,8 @@ import { readFlight } from './reading'
 import { createSurface, surfaceTexture, type Surface } from './surface'
 import { ladderTexture, boresightTexture, LADDER_RANGE_DEG } from './ladderFace'
 import {
-  paintHeading, paintAltitude, paintSpeed, HEADING_FACE, SIDE_FACE,
+  paintHeading, paintAltitude, paintSpeed, paintAutoLevel,
+  HEADING_FACE, SIDE_FACE, AUTO_FACE,
 } from './tapeFaces'
 
 const DIST = 0.62
@@ -39,7 +40,7 @@ const DIST = 0.62
  *  pass, so nothing in the panel can occlude an instrument. */
 const RENDER_ORDER = 4000
 
-export type HudFace = 'hud-heading' | 'hud-altitude' | 'hud-speed'
+export type HudFace = 'hud-heading' | 'hud-altitude' | 'hud-speed' | 'hud-autolevel'
 
 export interface HudSymbology {
   group: Group
@@ -112,11 +113,19 @@ export function createHudSymbology(camera: PerspectiveCamera): HudSymbology {
       paintAltitude, (r) => Math.round(r.altitude * 2)),
     build('hud-speed', SIDE_FACE.w, SIDE_FACE.h, 0.381, 0.55,
       paintSpeed, (r) => Math.round(r.speed * 2)),
+    // Sits in the ladder's own dead centre column (ladderFace.ts's rungs and
+    // horizon both start 58 texels clear of the middle, on purpose, so the
+    // boresight is never crossed) — the one spot guaranteed clear at every
+    // bank and pitch, exactly where a pilot glancing at the boresight will
+    // also catch it.
+    build('hud-autolevel', AUTO_FACE.w, AUTO_FACE.h, 0.3, 0.075,
+      paintAutoLevel, (r) => (r.autoLevel ? 1 : 0)),
   ]
   const byName = new Map(faces.map((f) => [f.mesh.name as HudFace, f]))
 
   // The compass rides the top of the field, above the ladder's highest rung.
   faces[0].mesh.position.set(0, 0.85, 0)
+  faces[3].mesh.position.set(0, -0.16, 0)
   group.add(attitude, boresight, ...faces.map((f) => f.mesh))
 
   const setAspect = (aspect: number): void => {

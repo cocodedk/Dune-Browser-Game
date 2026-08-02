@@ -29,6 +29,11 @@ export interface FlightInput {
   yaw: number
   /** 0 idle .. 1 full. */
   throttle: number
+  /** True while the auto-level key is held: pitch and roll are overridden
+   *  toward level, heading and throttle stay under manual control. Optional
+   *  so every pre-existing FlightInput literal keeps compiling unchanged;
+   *  absent means false. See flight/autoLevel.ts. */
+  autoLevel?: boolean
 }
 
 export interface FlightState {
@@ -48,6 +53,10 @@ export interface FlightState {
   /** Beats per second at the current throttle — the HUD and the wing rig both
    *  read this rather than recomputing it. */
   beatHz: number
+  /** Mirrors FlightInput.autoLevel from the step that produced this state, so
+   *  the HUD can show a hint without reaching past the published contract.
+   *  Optional for the same reason as FlightInput.autoLevel above. */
+  autoLevel?: boolean
 }
 
 export interface FlightModel {
