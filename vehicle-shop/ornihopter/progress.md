@@ -6,40 +6,36 @@ Standalone rig at `vehicle-shop/ornihopter/`. Run it with `npm run shop:thopter`
 
 Branch `feat/ornithopter-vehicle-shop`, everything committed, tree clean, all gates green
 at last lead verification: lint 0, `npm run shop:thopter:check` 0, `npm run test:unit`
-**1476/1476**, `bash scripts/check-file-length.sh` clean. WIP commits use `--no-verify`
+**1482/1482**, `bash scripts/check-file-length.sh` clean. WIP commits use `--no-verify`
 by standing user instruction (snapshots against loss); the REAL hook gate must pass once
 before any merge to main. Render gallery artifact (republish same conversation or pass
 `url`): https://claude.ai/code/artifact/887f2ab2-70fe-4f50-b72f-6bf1ca8e481e
 
-**Where the craft stands.** Rounds 4 through 6d are landed and lead-verified: dragonfly
+**Where the craft stands.** Rounds 4 through 6f are landed and lead-verified: dragonfly
 hull (slab-flank machined plan, hard chine, drooping boom, two-tine slotted fork), flush
 mullioned canopy lens, 2x2 wing-mount clusters, rod-and-sleeve wing arms in one bone
-tonal family, enclosed military cockpit (17,920-ray zero-escape proof, one sun), gear in
-film stance with kit anatomy (castellated hip brackets, brace A-frames, slotted skids).
-Last critic scores — Q1 4/10, Q3 3/10, blind-ID PASS — predate ALL of rounds 6a-6d;
-a re-panel is pending behind the two user findings below.
+tonal family with the KNIFE RULE handedness (dull spine leads, sharp curve trails —
+Rounds 6e/6e.2), enclosed military cockpit (zero-escape enclosure proof — NOTE: the
+oft-quoted 17,920-ray figure is a stale comment; enclosure.test.ts's POSES table holds
+four poses = 5,760 rays for the zero-escape checks), one sun, a clear forward sightline
+(Round 6f), gear in film stance with kit anatomy. Last critic scores — Q1 4/10, Q3 3/10,
+blind-ID PASS — predate ALL of rounds 6a-6f; the Round 7 re-panel is next.
 
 **Do next, in order:**
-1. **Round 6f — pilot sightline — IN FLIGHT** (workflow `wf_795145b9-213`, Sonnet, max):
-   clear the central forward cone from PILOT_EYE (+/-6 deg V, +/-10 deg H) of every
-   opaque frame member; the 1.2m-aft station stays in the LOFT (hull deck kink) but
-   stops emitting a mullion in BOTH canopy layers, from one shared definition. Verify
-   on landing: fail-first cone red list must name the 1.2m members; enclosure
-   zero-escape test green UNTOUCHED; own eyes on pilot-yaw0.
-2. **Re-shoot, refresh the gallery artifact, then the Round 7 critic panel** — fresh
+1. **Round 7 critic panel** (captures are fresh from the 6f landing) — fresh
    blind critics (pattern: workflow `wf_434807e4-c85` in the Round 5 entry); their
    prompts MUST now include blade handedness (knife rule below) and forward-sightline
    questions (both were user-caught, critic-missed).
-3. **Axis-contract guard round** (adopted from an external review, lead-endorsed): one
+2. **Axis-contract guard round** (adopted from an external review, lead-endorsed): one
    cheap Sonnet round that inventories every sign convention (nose=-Z, LE/TE, sweep
    sign, mirror winding, fan parity) and pins each in one absolute test file — the
    backwards-flight / mirrored-normals / blade-handedness class dies as a class.
-4. **Tooling round** (bundle): `npm run shop:quick` (lint+shop tsc+shop vitest+lengths);
+3. **Tooling round** (bundle): `npm run shop:quick` (lint+shop tsc+shop vitest+lengths);
    `shoot.mjs --view/--width` flags and a pixel-diff mode vs the previous capture set
    (mechanises phantom-change detection); the missing belly view. Also add a warning
    note where builders can see it: the game's `npx tsc --noEmit` does NOT cover the
    shop — `shop:thopter:check` does.
-5. Open named gaps after that, in rough priority: rear34 bullnose read; fork tines thin;
+4. Open named gaps after that, in rough priority: rear34 bullnose read; fork tines thin;
    gauge labels; port cockpit wall dull; forward roof liner dark; panel-line density
    (drawn vs cut); cockpit draw-call merge before game integration; the deferred
    deliverables (artifact showcase page + SVG blueprint — seeds in `docs/profiles/`).
@@ -898,6 +894,28 @@ pixel scan: 7/8 blades unambiguous (4x-to-infinite straightness ratio), the 8th
 mechanical assertion covers it. Carried forward: wing-check comparison artifact
 (https://claude.ai/code/artifact/23afb25a-c366-41c1-a51d-2d35ff843060) refreshed for
 the user's final eyeball; full gallery refresh queued behind 6f.
+
+### Round 6f — LANDED (commit `0407067`). The pilot sees desert.
+
+The 1.2m-aft canopy break stops emitting a frame member in BOTH layers while staying
+in the loft (the hull deck-kink constraint): `FRAMED_CANOPY_Z` in canopyPlan.ts is the
+one shared list; `mullionStations()` (interior) and the exterior rib loop both consume
+it, so inside and outside cannot disagree. Exterior ribs 4 -> 3, verified against the
+built mesh graph, not inferred. Fail-first cone instrument (forwardCone.test.ts, 273
+rays, +/-6V +/-10H from PILOT_EYE): **126 misses before**, the centre-symmetric cluster
+all naming the 1.2m members; **zero misses after** across yaw 0..10 / pitch -5..+6.
+Enclosure suite untouched, 11/11; all seven pre-existing interior/canopy test files
+passed unmodified. Lead reproduced gates (lint 0, tsc 0, **1482/1482**, lengths) and
+confirmed by eye: pilot.png shows a clean glazed wedge dead centre, desert visible, no
+beam at eye height; the exterior lens still reads panelled (rim, recess, 3 ribs).
+
+Two honest carries: (1) a pre-existing 80-ray cluster at down-left angles (pilot-side
+wall + nose bulkhead; driven by the kit-measured aperture narrowing toward the nose
+plus the seat's offset) is fenced as a KNOWN LIMITATION regression guard (<=80) in the
+cone test — real cockpits have structure down-left; revisit only if a critic names it.
+(2) The forward 2.5m of glazing (0.5-3.0m aft) is now one unbroken run where the 1.2m
+rib used to split it — whether that reads wrong against kit-3's panel rhythm is
+explicitly a Round 7 critic question; no cosmetic break was added pre-emptively.
 
 ### USER FINDING #2 (2026-08-02): "the cockpit is very good, yet there is a
 ### windows/windshield frame which blocks the view right in front of the pilot."
