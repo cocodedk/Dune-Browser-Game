@@ -101,12 +101,21 @@ upper half of frame is sky under framed canopy at level gaze. COSTED CARRY pinne
 liveView.test.ts: PILOT_EYE +0.25m -> 26.6% exterior, but it moves the 6b eye
 derivation and 9b/9c subtense numbers — a deliberate lead/user decision, not a default.
 
+**Round 9f — LANDED (commit `560e69c`).** Camera-parented Apache-monocle HUD:
+conformal rolling pitch ladder (roll sign MEASURED: right.y=-0.499 under held D ->
+ladder CCW), heading tape+box, ALT/SPD boxes with tapes; MFDs live via value-quantised
+repaint keys (pages stop repainting in cruise). Two-state proof with real A/D/W/S keys.
+Symbology adds ZERO L215 bright regions (ink capped, alpha-blended, asserted).
+1522/1522, lead-reproduced; lead's own eyes on the banked frame confirm every element.
+Carries: ladder rungs spray across the dash at big bank (combiner-aperture clipping
+wanted); PRE-EXISTING B3 violation surfaced — 8 bright regions >=12px in the tree
+today, NOT 9f's (A/B byte-identical) — triage before the panel scores B3.
+
 **Do next, in order (interior campaign):**
-1. **Round 9f — flight symbology + live MFDs — IN FLIGHT** (workflow `wf_3d3cad93-364`,
-   Opus, max): HUD pitch ladder/horizon bar, heading tape/compass, ALTITUDE and SPEED
-   readouts, Apache flavour; MFD nav page gets live heading, systems page live
-   altitude/throttle (DataTexture, no DOM). The tan-on-tan horizon makes symbology
-   the true attitude reference.
+1. **Round 9g — auto-level — IN FLIGHT** (workflow `wf_0d976fdb-963`, Sonnet, max):
+   held-key recovery levelling roll+pitch (60-deg bank -> level in 1.5-2.5s, monotonic,
+   override-proof, release-instant), pure flight-model tests, HUD AUTO hint under the
+   ink cap, key legend updated.
 4. **Round 9g — auto-level** (B5): held-key recovery levelling roll+pitch, fail-first
    unit tests in the flight model, HUD active-hint.
 5. **Q3 re-panel** against the amended bar (B1-B5), then close out. (prereq for everything; interior critic's #1 with concrete
