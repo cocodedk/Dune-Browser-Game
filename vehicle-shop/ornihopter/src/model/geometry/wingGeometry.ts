@@ -106,7 +106,18 @@ export function buildWingBladeGeometry(side: WingSide, reach: number): BufferGeo
   // asserts the normals themselves, and is the oracle for which side gets the
   // swap — the index list above is authored for one orientation and measurement,
   // not reading, decides which.
-  if (sign > 0) {
+  //
+  // The master blade's chord (z) axis was ALSO mirrored the wrong way — the
+  // user's finding: every blade wore its own mirror twin's chordwise shape,
+  // tip doglegs curling toward the nose instead of trailing aft. section.ts's
+  // rodPoints/bladePoints now negate z once, for both sides alike, which fixes
+  // that — see this build's wingChordHandedness.test.ts. But a second axis
+  // negation inverts winding a SECOND time, on top of the X-mirror above: the
+  // swap that used to restore the right wing's winding now over-corrects it
+  // back to inside-out, while the left wing — fine with no swap when only X
+  // was mirrored — now needs exactly the swap the right wing used to need.
+  // Same mechanism, opposite side; wingNormals.test.ts is still the oracle.
+  if (sign < 0) {
     for (let i = 0; i < indices.length; i += 3) {
       const swap = indices[i + 1]
       indices[i + 1] = indices[i + 2]

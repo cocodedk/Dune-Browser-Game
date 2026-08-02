@@ -80,7 +80,19 @@ function lineAt(u: number, u0: number, y0: number, u1: number, y1: number): numb
   return y0 + ((y1 - y0) * (u - u0)) / (u1 - u0)
 }
 
-/** The blade's eight points, in cycle order, for a section of this chord. */
+/**
+ * The blade's eight points, in cycle order, for a section of this chord.
+ *
+ * z is NEGATED relative to BLADE_U's own 0=leading/1=trailing labelling —
+ * the user's finding: every wing blade was mirrored across its own span
+ * axis, tip doglegs curling toward the nose instead of trailing aft, with
+ * the straight edge that should lead sitting aft instead. This is the
+ * master blade, authored once and shared by all eight wings (rodPoints
+ * below gets the same flip, so the rod-to-blade flare stays one continuous
+ * surface), so the one negation here fixes every wing at once. Negating an
+ * axis inverts triangle winding — see wingGeometry.ts's re-wind of the
+ * index list for the other half of this fix.
+ */
 function bladePoints(chord: number, camber: number): SectionPoint[] {
   const crest = camber + RAIL_RISE
   const keel = camber - RAIL_RISE
@@ -97,13 +109,14 @@ function bladePoints(chord: number, camber: number): SectionPoint[] {
     bottomAt(BLADE_U[6]),
     keel,
   ]
-  return ys.map((y, i) => ({ y, z: (BLADE_U[i] - 0.5) * chord }))
+  return ys.map((y, i) => ({ y, z: -(BLADE_U[i] - 0.5) * chord }))
 }
 
-/** The rod's eight points, in cycle order, for a section of this diameter. */
+/** The rod's eight points, in cycle order, for a section of this diameter.
+ *  z negated to match bladePoints' flip above — same master, same handedness. */
 function rodPoints(width: number): SectionPoint[] {
   const r = width / 2
-  return ROD_ANGLE.map((angle) => ({ y: r * Math.sin(angle), z: r * Math.cos(angle) }))
+  return ROD_ANGLE.map((angle) => ({ y: r * Math.sin(angle), z: -r * Math.cos(angle) }))
 }
 
 /**
