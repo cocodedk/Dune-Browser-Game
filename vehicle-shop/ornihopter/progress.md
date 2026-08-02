@@ -58,8 +58,17 @@ fixing: shoot.mjs's pilot.png at the end of the 6-view sequence does NOT reflect
 material/look changes — judge pilot views only from isolated captures (probe preserved
 at the session scratchpad as pilot-pitch-probe.mjs) until the tooling round fixes it.
 
+**Round 9b — LANDED (commit `1986cae`).** Two 0.36x0.27m MFDs in 15-key bezels with
+authored DataTexture pages (nav map / engine bars — visibly different), 16-key UFD
+keypad, 6b dials consolidated to a standby cluster, charcoal carrier. Guard 9/9
+red->green; screens measured by projecting meshes through the pilot camera and
+cross-checked on pixels; builder self-caught a one-light regression and capped the
+page palette at L155. Lead re-ran all gates WITH files staged (the length hook only
+checks staged files — a builder disclosure now closed): 1495/1495. Carry: cyclic arm
+crosses the standby cluster -> 9c.
+
 **Do next, in order (interior campaign):**
-1. **Round 9b — the Apache panel — IN FLIGHT** (prereq for everything; interior critic's #1 with concrete
+1. **Round 9c — controls — IN FLIGHT** (prereq for everything; interior critic's #1 with concrete
    acceptance): glazing must read as glass — bright desert through it, edge highlights,
    Apache-style heavy frames legible as frames; eye/camera placement verified.
    Acceptance on pilot.png: >=20% of frame pixels exterior (currently 0.9%), a real
