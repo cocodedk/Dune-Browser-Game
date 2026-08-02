@@ -28,6 +28,16 @@ export interface DebugHandle {
   viewpoint(azimuthDeg: number, elevationDeg: number, distance: number): void
   /** Park the machine at a ground position and heading, riding the terrain. */
   pose(x: number, z: number, yawDeg: number): void
+  /** While paused, set BOTH tracks' signed speeds (m/s) to trackSpeed, so
+   *  everything the animation reads (wheel spin today, belt scroll later)
+   *  sees that speed. Forces paused so nothing else races the model. */
+  drive(trackSpeed: number): void
+  /** Advance the MODEL's animation by exactly dt seconds while paused and
+   *  parked. The machine does not translate or change pose — only its
+   *  animated parts (wheels, later the belt) move. Deterministic: dt is the
+   *  only time input, never the wall clock, so identical (pose, drive, tick)
+   *  sequences from a fresh page produce identical scene states. */
+  tick(dt: number): void
   measure(): MachineMeasurement
   state(): unknown
 }
@@ -73,6 +83,15 @@ export function installDebugHandle({ crawler, rig, machine }: Deps): DebugHandle
       root.rotation.y = yaw
       root.rotation.x = ride.pitch
       root.rotation.z = ride.roll
+      root.updateMatrixWorld(true)
+    },
+    drive(trackSpeed) {
+      paused = true
+      crawler.setTrackSpeeds(trackSpeed, trackSpeed)
+    },
+    tick(dt) {
+      paused = true
+      machine.update(crawler.state, dt)
       root.updateMatrixWorld(true)
     },
     measure() {

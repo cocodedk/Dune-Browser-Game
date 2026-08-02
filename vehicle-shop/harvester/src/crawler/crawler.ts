@@ -35,5 +35,8 @@ export function createCrawler(): CrawlerModel {
         trackRight: 0,
       }
     },
+    setTrackSpeeds(left: number, right: number) {
+      current = { ...current, trackLeft: left, trackRight: right }
+    },
   }
 }

@@ -7,6 +7,10 @@ symlinked). Run it with `npm run shop:harvester`.
 
 ## STATUS — first handoff. Read this first in a fresh session.
 
+**Live loop (2026-08-02):** `docs/gauntlet-loop.md` drives
+`docs/immediate-improvements.md` — rounds I0–I7, logged below alongside the
+old rounds. The loop pauses at a user checkpoint after every round.
+
 Round 1 landed and verified: the crawler core (pure, 15 unit tests), the
 blockout model measured off `docs/harvester.3mf`, the seam guard, and the
 stage/camera/debug/capture harness. Gates at handoff: shop tsc 0, harvester
@@ -246,6 +250,37 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 **Open:** cleat scrolling, dust, panel lines, first blind critic panel.
 
 _Status: complete._
+
+### Round I0 — motion harness (first round of the gauntlet loop). LANDED. Verified.
+
+First round of `docs/gauntlet-loop.md` (the loop implementing
+`docs/immediate-improvements.md`). Builder: Sonnet. Lead-verified.
+
+- The debug handle gains `drive(trackSpeed)` + `tick(dt)` — deterministic,
+  model-only animation stepping while parked (`crawler.setTrackSpeeds()`
+  added to the contract; `tick` calls `machine.update()` directly and never
+  touches the pose).
+- `shoot.mjs` gains `--motion view,trackSpeed,dt` frame pairs (`-a`/`-b`
+  PNGs + `manifest.motion`); the view table and dev-server logic moved to
+  `tools/views.mjs` / `tools/devServer.mjs` to stay under 200 lines.
+- `components.test.ts` split into six per-part test files +
+  `model/testSupport.ts`; every assertion kept — 22/22, now across 8 files.
+- **A pre-existing capture nondeterminism found and fixed:** the HUD's live
+  FPS readout leaked wall-clock into every screenshot (~100px drift
+  run-to-run, top-right). `shoot.mjs` now hides `#hud` before any capture.
+  STILL captures were affected too — all past pixel-level comparisons
+  carried that noise.
+
+Lead reproduction with own parameters (`--motion side,1.2,0.8` twice,
+`side,0,0.8` control): A/B md5s identical across runs; A≠B at speed 1.2;
+A=B at speed 0. Gates reproduced: lint 0, shop tsc 0, **22/22**, lengths
+clean. Nothing failed to reproduce.
+
+Open: numeric per-mesh rotation readback (deferred to I1's lead
+verification); `drive`/`tick` exercised parked-at-origin only, per I0's
+contract.
+
+_Status: complete. Checkpoint: awaiting the user's verdict before I1._
 
 ### Round 14 — the belt is the medium between wheels and ground (user direction: "make the belt wider. the wheels are touching the ground through the belt. make perfect measurements first")
 

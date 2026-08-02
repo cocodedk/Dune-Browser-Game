@@ -26,7 +26,19 @@ Thirty views by default (the original ten plus a 30-degree turntable
 sweep, plan views, high/low angles and close-ups); take a subset with
 `npm run shop:harvester:shoot -- --views hero,tracks,boom` (comma-separated,
 in the order given). Distances are in machine lengths — `dist` under 1 is a
-close-up. `--views` lists names exactly as in `tools/shoot.mjs`.
+close-up. `--views` lists names exactly as in `tools/views.mjs`.
+
+For motion judging, `--motion view,trackSpeed,dt` captures a frame PAIR at a
+named view instead of the still set — the machine parked, paused, its
+tracks driven at `trackSpeed` (signed m/s, both tracks) via
+`window.__HARVESTER__.drive()`, one frame at `t=0` and one after
+`window.__HARVESTER__.tick(dt)`:
+`npm run shop:harvester:shoot -- --motion tracks,0.6,0.5` writes
+`tracks-motion-a.png` (t=0) and `tracks-motion-b.png` (t=0.5s) — named so
+the pair sorts together — plus a `motion` entry in `manifest.json`
+recording the view, `trackSpeed` and `dt`. Deterministic: `dt` is a
+sim-time step advanced through `tick()`, never the wall clock, so two runs
+of the same `--motion` arguments produce byte-identical pairs.
 
 Controls: `W`/`S` forward/reverse, `A`/`D` steer, `C` cycles camera, `R`
 resets. The machine is heavy: it takes seconds to reach its crawl, and it

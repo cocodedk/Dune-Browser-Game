@@ -39,6 +39,11 @@ export interface CrawlerModel {
   /** Advance by dt seconds. Must be stable for dt up to 0.1s. */
   step(input: CrawlerInput, dt: number): void
   reset(): void
+  /** Debug-only: directly set the signed track speeds, bypassing the
+   *  physics step. The debug handle's drive() uses this so everything the
+   *  animation reads (wheel spin today, belt scroll later) sees the driven
+   *  speed while the machine stays paused and parked. */
+  setTrackSpeeds(left: number, right: number): void
 }
 
 /** Structural stand-in for THREE.Object3D — no three.js import here. */
