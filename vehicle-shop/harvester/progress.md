@@ -200,3 +200,27 @@ panel. Re-shoot (`npm run shop:harvester:shoot`) still needs to run in a
 non-sandboxed shell.
 
 _Status: complete._
+
+### Round 4 — the tractors (user direction: "concentrate around the tractors and the track around them")
+
+Each side is now a real crawler running-gear unit instead of a slab with
+wheels: a TALL belt loop (7m) with 18 full-height transverse cleats on the
+outer face, two big TOOTHED end sprockets (5 teeth on the upper arc — the
+belt covers the lower run), six road wheels in the lower run, five return
+rollers carrying the top run, and the housing with cap trim and panel
+breaks. All 26 rotating parts per... per machine (13 per side) roll from the
+crawler's signed track speeds, each at its own radius, so the assembly
+drives itself.
+
+**The component test caught the teeth through the ground:** the first pass
+toothed the sprockets all the way around, and the lower teeth poked 4.2m
+below the belt — the track footprint dipped to y = -4.2 and the assembled
+height read 20.6m. Teeth restricted to the upper arc; the footprint test
+now proves the running gear never leaves the ground line.
+
+Gates: lint 0, shop tsc 0, **21/21** tests, lengths clean.
+
+**Open:** cleat scrolling (the cleats are static bars — the belt still does
+not visibly translate), dust, panel lines, first blind critic panel.
+
+_Status: complete._

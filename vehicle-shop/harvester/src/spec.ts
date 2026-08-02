@@ -32,10 +32,6 @@ export const OVERALL = {
   height: 15,
   /** Pod centre to pod centre. */
   trackSpan: 24,
-  /** One pod's thickness across the machine. */
-  trackWidth: 5,
-  /** Sprocket/idler radius — big, so the running gear reads. */
-  wheelRadius: 2.8,
   /** Terrain-sampling front-rear distance. */
   wheelbase: 38,
 } as const
@@ -74,13 +70,25 @@ export const CAB = {
   halfDepth: 3.5,
 } as const
 
-/** One track assembly, centred on the same z-range as the hull. */
+/** One track assembly — the "tractor". A tall belt loop with full-height
+ *  cleats, big toothed end sprockets, road wheels in the lower run and
+ *  return rollers up top. All of it sits on the ground line and runs the
+ *  hull's full length at x = +-trackSpan/2. */
 export const TRACK = {
   centreX: OVERALL.trackSpan / 2,
-  /** Wheel stations along the band, 7 per side. */
-  wheelsZ: [-20, -13.3, -6.7, 0, 6.7, 13.3, 20],
-  /** Tread band: the continuous dark belt under the wheels. */
-  band: { zLow: -24, zHigh: 24, yLow: 0, yHigh: 3.2 },
-  /** Upper housing over the running gear, tucking under the deck. */
-  housing: { yLow: 6.0, yHigh: 11.0, width: 4.2 },
+  /** The belt loop: the tall dark band wrapping the running gear. */
+  belt: { width: 4.6, height: 7.0, zLow: -24, zHigh: 24 },
+  /** Road wheels: the big lower-run wheels inside the belt. */
+  roadWheelRadius: 3.0,
+  roadWheelsZ: [-17.5, -10.5, -3.5, 3.5, 10.5, 17.5],
+  /** End sprockets: large, toothed, at the belt's fore and aft ends. */
+  sprocketRadius: 3.2,
+  sprocketZ: [-21, 21],
+  /** Small return rollers carrying the belt's top run. */
+  returnRollerRadius: 1.2,
+  returnRollersZ: [-18, -9, 0, 9, 18],
+  /** Housing over the running gear, tucked under the deck. */
+  housing: { yLow: 7.2, yHigh: 11.0, width: 4.4 },
+  /** Transverse cleats across the belt's outer face — the segmented belt read. */
+  cleatCount: 18,
 } as const

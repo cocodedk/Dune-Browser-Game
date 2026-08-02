@@ -106,7 +106,7 @@ describe('terrain ride', () => {
 describe('track wheels', () => {
   it('forward track speed rolls the wheel the sign that keeps the ground contact still', () => {
     // omega = -v / r: positive forward speed -> negative rotation about +X.
-    expect(wheelAngularSpeed(5, OVERALL.wheelRadius)).toBeCloseTo(-5 / OVERALL.wheelRadius, 10)
-    expect(wheelAngularSpeed(-5, OVERALL.wheelRadius)).toBeCloseTo(5 / OVERALL.wheelRadius, 10)
+    expect(wheelAngularSpeed(5, 3)).toBeCloseTo(-5 / 3, 10)
+    expect(wheelAngularSpeed(-5, 3)).toBeCloseTo(5 / 3, 10)
   })
 })

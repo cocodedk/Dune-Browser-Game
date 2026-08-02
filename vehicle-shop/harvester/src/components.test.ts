@@ -47,14 +47,14 @@ describe('hull component', () => {
 })
 
 describe('tracks component', () => {
-  it('has fourteen wheels (seven per side) and a symmetric footprint', () => {
+  it('has twenty-six runners (6 road wheels + 2 sprockets + 5 rollers per side) and a symmetric footprint', () => {
     const m = mats()
     const { group } = buildTracks(m.dark, m.wheel)
     let wheels = 0
     group.traverse((child) => {
       if (child.name === 'wheel') wheels++
     })
-    expect(wheels).toBe(14)
+    expect(wheels).toBe(26)
     const b = bounds(group)
     // Both pods reach the same distance from the centreline.
     expect(Math.abs(b.min.x)).toBeCloseTo(Math.abs(b.max.x), 1)
