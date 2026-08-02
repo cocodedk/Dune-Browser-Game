@@ -247,6 +247,25 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round 9 — a perfect wheel, and a thinner belt (user direction: "perfect the wheel even more. the belt is very thick and angled too. but the wheel first")
+
+WHEEL: the plain cylinder became a lathe-turned tire — rounded shoulders
+and a slight crown, 28 segments — with a dark rubber tread band around the
+crown, a rusted steel face disc, a hub proud of each face, and six bolts
+per hub. Every road wheel and roller is the same component at its own
+radius; the detail now survives the close-up `tracks` view.
+
+BELT (after the wheel): thinned and softened — height 7.0 -> 6.6, width
+3.8 -> 3.6, edge radius 0.6 -> 0.9, grousers 1.4 -> 1.1, housing lowered
+to match (7.2..11.0 -> 6.8..10.8). Wheel radii untouched — the belt now
+wraps them instead of towering over them.
+
+Gates: lint 0, shop tsc 0, **22/22** tests, lengths clean.
+
+**Open:** belt scrolling, dust, panel lines, first blind critic panel.
+
+_Status: complete._
+
 ### Round 8 — one perfect wheel, reused; no overlapping runners (user direction: "concentrate on one wheel component and make it perfect and then use it. some wheels are overlapping")
 
 The overlap was real: sprockets at z=+-21 (r 3.2) collided with the end

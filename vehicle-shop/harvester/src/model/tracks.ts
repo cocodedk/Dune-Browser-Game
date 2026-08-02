@@ -68,7 +68,7 @@ export function buildTracks(
 
     // The belt loop: one tall dark band. Edges rounded so the belt reads as
     // a wrapped loop rather than a slab.
-    const belt = roundedBox(BELT.width, BELT.height, POD_LENGTH, 0.6)
+    const belt = roundedBox(BELT.width, BELT.height, POD_LENGTH, 0.9)
     geometries.push(belt)
     const beltMesh = new Mesh(belt, darkMaterial)
     beltMesh.position.set(x, BELT.height / 2, 0)
@@ -78,12 +78,12 @@ export function buildTracks(
 
     // Grousers: short tread teeth on the belt's LOWER outer face only.
     for (let i = 0; i < TRACK.grouserCount; i++) {
-      const grouser = new BoxGeometry(0.45, 1.4, GROUSER_LENGTH)
+      const grouser = new BoxGeometry(0.45, 1.1, GROUSER_LENGTH)
       geometries.push(grouser)
       const grouserMesh = new Mesh(grouser, wheelMaterial)
       grouserMesh.position.set(
         x + side * (BELT.width / 2 + 0.25),
-        0.7,
+        0.55,
         -POD_LENGTH / 2 + GROUSER_SPACING * (i + 0.5)
       )
       grouserMesh.castShadow = true
@@ -92,7 +92,7 @@ export function buildTracks(
 
     // Road wheels: the one wheel component, at each station.
     for (const wz of TRACK.roadWheelsZ) {
-      const wheel = buildWheel(TRACK.roadWheelRadius, BELT.width + ROAD_WHEEL_OVER * 2, wheelMaterial, accentMaterial, darkMaterial)
+      const wheel = buildWheel(TRACK.roadWheelRadius, BELT.width + ROAD_WHEEL_OVER * 2, wheelMaterial, darkMaterial, accentMaterial)
       wheel.group.position.set(x, TRACK.roadWheelRadius, wz)
       group.add(wheel.group)
       wheels.push(wheel)
@@ -129,7 +129,7 @@ export function buildTracks(
     // Return rollers in the gaps between road wheels, top run — same wheel
     // component at the roller radius.
     for (const rz of TRACK.returnRollersZ) {
-      const roller = buildWheel(TRACK.returnRollerRadius, BELT.width + ROLLER_OVER * 2, wheelMaterial, accentMaterial, darkMaterial)
+      const roller = buildWheel(TRACK.returnRollerRadius, BELT.width + ROLLER_OVER * 2, wheelMaterial, darkMaterial, accentMaterial)
       roller.group.position.set(x, BELT.height - TRACK.returnRollerRadius, rz)
       group.add(roller.group)
       wheels.push(roller)

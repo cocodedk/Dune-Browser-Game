@@ -80,8 +80,9 @@ export const CAB = {
  *  ground line and runs the hull's full length at x = +-trackSpan/2. */
 export const TRACK = {
   centreX: OVERALL.trackSpan / 2,
-  /** The belt loop: the tall dark band wrapping the running gear. */
-  belt: { width: 3.8, height: 7.0, zLow: -24, zHigh: 24 },
+  /** The belt loop: the tall dark band wrapping the running gear. Thinned
+   *  in round 9 — it read as too thick against the housing. */
+  belt: { width: 3.6, height: 6.6, zLow: -24, zHigh: 24 },
   /** Road wheels: the big lower-run wheels inside the belt. Spaced so NO
    *  wheel overlaps another or the end sprockets (they did — the front and
    *  rear clusters collided). */
@@ -95,7 +96,7 @@ export const TRACK = {
   returnRollerRadius: 1.2,
   returnRollersZ: [-9.35, 0, 9.35],
   /** Housing over the running gear, tucked under the deck. */
-  housing: { yLow: 7.2, yHigh: 11.0, width: 4.4 },
+  housing: { yLow: 6.8, yHigh: 10.8, width: 4.4 },
   /** Grouser teeth across the belt's LOWER outer face — tread, not a fence. */
   grouserCount: 18,
 } as const
