@@ -53,6 +53,15 @@ const COLOR = {
   olive: 0x77733f,
   ivory: 0xcfc8b2,
   dialFace: 0x2b2e29,
+  /** ROUND 9b. The glass cockpit's own carrier tone. The AH-64E crew station
+   *  is a DARK panel hung inside a lighter airframe, and that contrast is
+   *  half of what reads as "modern glass cockpit" before a single screen
+   *  lights up — so this is charcoal against COLOR.consoleBody's olive, but
+   *  charcoal with tone left in it (round 6b's crush lesson: a surface below
+   *  ~40/255 before any light reaches it can only render as black). */
+  panelCarrier: 0x33383b,
+  bezel: 0x3d4347,
+  key: 0x565c60,
 } as const
 
 function standard(
@@ -113,6 +122,32 @@ export function dialFaceMaterial(map: Texture): MeshStandardMaterial {
     emissiveIntensity: 0.28,
     roughness: 0.55,
     metalness: 0.05,
+    side: DoubleSide,
+  })
+}
+
+/** Round 9b's glass-cockpit trio: the dark carrier the whole panel is hung on,
+ *  the harder bezel each MFD sits in, and the keys around it. Deliberately
+ *  three near tones rather than one — a bezel that is exactly its carrier's
+ *  colour is invisible, and B2 asks for keys a critic can COUNT. */
+export const panelCarrierMaterial = () => standard(COLOR.panelCarrier, 0.66, 0.3)
+export const bezelMaterial = () => standard(COLOR.bezel, 0.52, 0.45)
+export const keyMaterial = () => standard(COLOR.key, 0.6, 0.35)
+
+/**
+ * An MFD screen. Same map-as-emissiveMap trick as dialFaceMaterial, at nearly
+ * twice the intensity: a dial is a printed face catching cabin light, a
+ * multifunction display is the thing generating it. Held below 1 on purpose —
+ * see mfdFaces.ts on B3's "exactly one region above luminance 215".
+ */
+export function screenMaterial(map: Texture): MeshStandardMaterial {
+  return new MeshStandardMaterial({
+    map,
+    emissiveMap: map,
+    emissive: 0xffffff,
+    emissiveIntensity: 0.62,
+    roughness: 0.3,
+    metalness: 0.0,
     side: DoubleSide,
   })
 }

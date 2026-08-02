@@ -15,14 +15,10 @@
 // sampled rather than invented: an ivory-on-charcoal face, a brass bezel, a
 // dull red danger sector, and a green-grey nav globe with a bright graticule.
 
-import {
-  DataTexture, RGBAFormat, SRGBColorSpace, ClampToEdgeWrapping, LinearFilter,
-  UnsignedByteType,
-} from 'three'
+import type { DataTexture } from 'three'
+import { bakeFace, type RGB } from './faceBaker'
 
 const SIZE = 64
-
-type RGB = readonly [number, number, number]
 
 const PLATE: RGB = [96, 101, 92]
 const FACE: RGB = [34, 37, 31]
@@ -32,34 +28,9 @@ const DANGER: RGB = [156, 70, 56]
 const GLOBE: RGB = [74, 92, 74]
 const GRAT: RGB = [176, 196, 168]
 
-interface Painter {
-  (nx: number, ny: number): RGB
-}
-
 /** nx/ny run -1..1 with the face centred, y up. */
-function bake(paint: Painter): DataTexture {
-  const data = new Uint8Array(SIZE * SIZE * 4)
-  for (let y = 0; y < SIZE; y++) {
-    const ny = 1 - ((y + 0.5) * 2) / SIZE
-    for (let x = 0; x < SIZE; x++) {
-      const nx = ((x + 0.5) * 2) / SIZE - 1
-      const [r, g, b] = paint(nx, ny)
-      const i = (y * SIZE + x) * 4
-      data[i] = r
-      data[i + 1] = g
-      data[i + 2] = b
-      data[i + 3] = 255
-    }
-  }
-  const texture = new DataTexture(data, SIZE, SIZE, RGBAFormat, UnsignedByteType)
-  texture.colorSpace = SRGBColorSpace
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
-  texture.magFilter = LinearFilter
-  texture.minFilter = LinearFilter
-  texture.generateMipmaps = false
-  texture.needsUpdate = true
-  return texture
+function bake(paint: (nx: number, ny: number) => RGB): DataTexture {
+  return bakeFace(SIZE, paint)
 }
 
 /** Perpendicular distance from (nx, ny) to the ray from the origin at
