@@ -1,10 +1,10 @@
 // vehicle-shop/harvester/src/model/link.ts
 // COMPONENT 8 — ONE chain link, the repeatable unit of the belt (user
 // direction: "create the piece component of the belt; like the chain link,
-// with same thickness at the ground level"). A thick plate with a grouser
-// ridge on its outer face — the tread block. Built once and instantiated
-// around the whole loop (straight runs + sprocket wraps) so the belt reads
-// as a continuous chain, not a monolithic slab.
+// with same thickness at the ground level" and "make the link components
+// as wide as the wheels"). A thick plate as wide as the road wheels, with a
+// grouser ridge on its outer face — the tread block. Built once and
+// instantiated around the whole loop.
 
 import { BoxGeometry, Group, Mesh, type BufferGeometry, type MeshStandardMaterial } from 'three'
 import { TRACK } from '../spec'
@@ -14,8 +14,8 @@ export interface LinkPart {
   dispose(): void
 }
 
-/** The link spans the belt's full width plus a small overhang, and is as
- *  thick as the bottom plate (derived from the sprocket Y-centre). */
+const LINK_WIDTH = TRACK.belt.outerWidth
+
 export function buildLink(
   side: 1 | -1,
   thickness: number,
@@ -26,10 +26,10 @@ export function buildLink(
   group.name = 'link'
   const geometries: BufferGeometry[] = []
 
-  const outerX = side * (TRACK.belt.width / 2)
+  const outerX = side * (LINK_WIDTH / 2)
 
-  // The link body.
-  const body = new BoxGeometry(TRACK.belt.width + 0.2, thickness, length)
+  // The link body — as wide as the wheels.
+  const body = new BoxGeometry(LINK_WIDTH, thickness, length)
   geometries.push(body)
   const bodyMesh = new Mesh(body, material)
   bodyMesh.position.set(0, 0, 0)

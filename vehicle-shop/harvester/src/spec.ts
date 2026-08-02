@@ -84,7 +84,7 @@ export const TRACK = {
   /** The belt loop: the tall band wrapping the running gear. Widened in the
    *  wheel-above-belt round — the belt is now the machine's ground contact
    *  medium, the wheels ride ON it. */
-  belt: { width: 4.6, height: 7.8, zLow: -24, zHigh: 24 },
+  belt: { width: 4.6, height: 7.8, outerWidth: 6.8, zLow: -24, zHigh: 24 },
   /** The Y-centre of both sprockets — they sit ON the belt's bottom plate,
    *  so this is bottom-thickness + sprocketRadius. Every other wheel's
    *  Y-centre falls out of this value. */

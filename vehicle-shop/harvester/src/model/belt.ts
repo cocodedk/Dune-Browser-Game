@@ -90,14 +90,14 @@ export function buildBelt(
     }
 
     // Lugs on the wrap's outer face where the sprocket teeth engage.
-    const outerX = side * (BELT.width / 2)
+    const lugOuterX = side * (TRACK.belt.outerWidth / 2)
     for (let t = 0; t < LUG_COUNT; t++) {
       const angle = LUG_START + t * LUG_STEP
       const lug = new BoxGeometry(0.6, 1.0, 0.8)
       geometries.push(lug)
       const lugMesh = new Mesh(lug, beltMaterial)
       lugMesh.position.set(
-        outerX + side * 0.4,
+        lugOuterX + side * 0.4,
         TRACK.sprocketY + LUG_RADIUS * Math.sin(angle),
         sz + LUG_RADIUS * Math.cos(angle)
       )
