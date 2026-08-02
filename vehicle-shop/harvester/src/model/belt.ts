@@ -1,18 +1,15 @@
 // vehicle-shop/harvester/src/model/belt.ts
-// COMPONENT 7 — one belt BAND, with open space between its runs (user
-// finding, round 12: "the belt became a block again"). A real track belt is
-// a band: you see the lower run, the upper run, the end wraps — and the
-// wheels in the open middle. There is NO full-height sheet on the face, so
-// the belt cannot read as a block and the running gear stays fully visible.
+// COMPONENT 7 — one belt BAND, heavy and mechanical (user direction: "can
+// you do it better?"). A real track belt is not wire — the runs are thick
+// plates, the ends CURVE around the sprockets, and the tread shoes and
+// engagement lugs hold their detail at close range.
 //
-//   - bottom strip (the ground run, with tread shoes on its outer edge)
-//   - top strip (the return run)
-//   - end connectors closing the loop
-//   - SHORT wrap segments at each sprocket — the only full-height belt
-//     material, where the belt passes over the sprocket, carrying the
-//     ENGAGEMENT LUGS the sprocket's grey teeth visibly pass between
-//
-// Built once and instantiated for both sides at mirrored X.
+//   - thick bottom plate (ground run) with tread shoes on its outer edge
+//   - thick top plate (return run)
+//   - CURVED end wraps at the sprockets — thick rounded blocks that read
+//     as the belt looping over the sprocket, with engagement lugs the
+//     teeth pass between
+//   - the middle stays open — the wheels fully visible against the hull
 
 import { BoxGeometry, Group, Mesh, type BufferGeometry, type MeshStandardMaterial } from 'three'
 import { TRACK, BODY } from '../spec'
@@ -30,10 +27,14 @@ const BELT = TRACK.belt
 const SHOE_SPACING = POD_LENGTH / TRACK.grouserCount
 const SHOE_LENGTH = SHOE_SPACING * 0.85
 
-/** Strip thickness — thin, so the band reads as a band. */
-const STRIP_THICK = 0.4
-/** Half-length of the full-height wrap segment at each sprocket. */
+/** The runs are PLATES, not wire — heavier, more mechanical. */
+const BOTTOM_THICK = 0.7
+const TOP_THICK = 0.5
+const END_THICK = 1.2
+const END_RADIUS = 1.0
 const WRAP_HALF = 4.5
+const WRAP_THICK = 0.7
+const WRAP_RADIUS = 0.8
 
 /** Engagement lugs: at the sprocket arc, offset from the teeth so the teeth
  *  pass between them. */
@@ -62,26 +63,27 @@ export function buildBelt(
     group.add(mesh)
   }
 
-  // The band's open frame: bottom run, top run, end connectors. No sheets —
-  // the middle is open so the wheels stay fully visible.
-  add(roundedBox(BELT.width, STRIP_THICK, POD_LENGTH, 0.2), 0, STRIP_THICK / 2, 0)
-  add(roundedBox(BELT.width, STRIP_THICK, POD_LENGTH, 0.2), 0, BELT.height - STRIP_THICK / 2, 0)
-  add(roundedBox(BELT.width, BELT.height, STRIP_THICK, 0.2), 0, BELT.height / 2, -POD_LENGTH / 2)
-  add(roundedBox(BELT.width, BELT.height, STRIP_THICK, 0.2), 0, BELT.height / 2, POD_LENGTH / 2)
+  // The band's open frame — now heavy plates.
+  add(roundedBox(BELT.width, BOTTOM_THICK, POD_LENGTH, 0.3), 0, BOTTOM_THICK / 2, 0)
+  add(roundedBox(BELT.width, TOP_THICK, POD_LENGTH, 0.25), 0, BELT.height - TOP_THICK / 2, 0)
+  // Thick rounded end wraps closing the loop at the very ends.
+  add(roundedBox(BELT.width, BELT.height, END_THICK, END_RADIUS), 0, BELT.height / 2, -POD_LENGTH / 2)
+  add(roundedBox(BELT.width, BELT.height, END_THICK, END_RADIUS), 0, BELT.height / 2, POD_LENGTH / 2)
 
-  // The outer-face wrap segment at each sprocket — the only full-height belt
-  // material, where the belt passes over the sprocket and its teeth engage.
+  // Curved end wraps — two thick rounded blocks closing the loop, and one
+  // short sprocket-wrap segment per sprocket carrying the lugs.
   const outerX = side * (BELT.width / 2)
   for (const sz of TRACK.sprocketZ) {
-    add(roundedBox(STRIP_THICK, BELT.height, WRAP_HALF * 2, 0.2), outerX, BELT.height / 2, sz)
-    // Lugs at the tooth arc, interleaved with the teeth.
+    // the sprocket wrap: thicker, larger radius so it reads curved.
+    add(roundedBox(WRAP_THICK, BELT.height, WRAP_HALF * 2, WRAP_RADIUS), outerX, BELT.height / 2, sz)
+    // lugs bigger — detail that holds at close range.
     for (let t = 0; t < LUG_COUNT; t++) {
       const angle = LUG_START + t * LUG_STEP
-      const lug = new BoxGeometry(0.5, 0.9, 0.7)
+      const lug = new BoxGeometry(0.6, 1.0, 0.8)
       geometries.push(lug)
       const lugMesh = new Mesh(lug, beltMaterial)
       lugMesh.position.set(
-        outerX + side * 0.3,
+        outerX + side * 0.4,
         LUG_RADIUS * Math.sin(angle),
         sz + LUG_RADIUS * Math.cos(angle)
       )
@@ -90,7 +92,7 @@ export function buildBelt(
     }
   }
 
-  // Tread shoes on the bottom run's outer edge — the segmented ground read.
+  // Tread shoes on the bottom plate's outer edge — the segmented ground read.
   for (let i = 0; i < TRACK.grouserCount; i++) {
     const z = -POD_LENGTH / 2 + SHOE_SPACING * (i + 0.5)
     const shoe = new BoxGeometry(0.35, 1.0, SHOE_LENGTH)
