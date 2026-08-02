@@ -42,6 +42,32 @@ structure · high sills / armored-tub read · heavy framed flat-plate transparen
 - Luminance > 215 forms exactly **one** connected region (the cockpit light). No second
   sun, no stray glow.
 
+### B3-LIVE — the view must work in REAL FLIGHT (user finding, 2026-08-02 evening)
+
+The user flew the craft: "the pilot view is not good at all. I see literally nothing.
+Just a narrow band of view." The original B3 was measured at a +12 deg HELD head-look;
+the live camera flies LEVEL. Lesson recorded: the bar must measure the pose the pilot
+actually flies in. Amended targets, measured at LEVEL live-flight gaze (pitch 0):
+- Exterior >= 20% of the frame at pitch 0 (not just at +12).
+- The horizon line is visible dead ahead in level flight.
+- The aperture may open REARWARD over the pilot's head (the exterior lens runs to 6.9m
+  aft; the interior aperture stops at 2.45m — that margin is ours), the brow may thin,
+  the eye may rise — the kit-frozen exterior outline may NOT change.
+
+### B5 — Flyable by instruments (user finding, same message)
+
+"I have no clue about the pitch and the altitude. and no compass and those sort of
+nav things. I might need an option to auto-level the craft when it gets out of
+control."
+- HUD-style flight symbology in the pilot view: pitch ladder / horizon bar, heading
+  tape or compass rose, altitude and speed readouts — legible at a glance, Apache
+  flavoured.
+- The MFD nav page shows LIVE heading; the systems page shows LIVE altitude/throttle
+  (DataTexture updates from FlightState — keep the no-DOM test rule).
+- AUTO-LEVEL: a held key smoothly levels roll and pitch; a unit-tested flight-model
+  behaviour (fail-first: from a banked/pitched state, N seconds of auto-level bring
+  attitude within tolerance), plus a HUD hint that it is active.
+
 ### B4 — Correctness. Every critic answers these; each is mechanically asserted where possible.
 
 1. `forwardCone.test.ts` green, UNTOUCHED — the central forward cone hits glazing first.

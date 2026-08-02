@@ -74,8 +74,28 @@ the 9b standby-occlusion carry fixed, lead-verified by eye. Carries: grip dark-m
 close up; collective deliberately outboard; conduit-vs-rail diff inconclusive (sim
 drift between captures — another argument for the tooling round's deterministic pose).
 
+**USER FINDINGS #3/#4 (2026-08-02 evening, from flying the craft):** "the pilot view is
+not good at all. I see literally nothing. Just a narrow band" — in LIVE level flight;
+the 9a bar was measured at a +12 held head-look, a pose the pilot does not fly in
+(bar defect, lesson logged in apache-gauntlet.md B3-LIVE). "The flight is good. the
+exterior is good." And: no indication of pitch, altitude, heading/compass, OR SPEED
+from the pilot seat; wants an auto-level option for recovery. Bar amended: B3-LIVE
+(level-gaze view targets; aperture may open rearward within the frozen exterior) and
+B5 (flight symbology incl. speed; live MFD data; unit-tested auto-level).
+
 **Do next, in order (interior campaign):**
-1. **Round 9d — tub, palette, crew — IN FLIGHT** (last build round before the panel) (prereq for everything; interior critic's #1 with concrete
+1. **Round 9d — tub, palette, crew — IN FLIGHT** (workflow `wf_512e6db4-4ab`)
+2. **Round 9e — the LIVE view** (B3-LIVE): open the aperture rearward over the pilot's
+   head (exterior lens runs to 6.9m aft, interior aperture stops at 2.45 — ours to
+   spend), thin the brow, raise the eye if needed; horizon visible dead ahead at level
+   flight; >=20% exterior at pitch 0. forwardCone/enclosure contracts adapt WITH the
+   layout change (they are 6f-era authored bays, not kit measurement) — fail-first.
+3. **Round 9f — flight symbology + live MFDs** (B5): HUD pitch ladder/horizon bar,
+   heading tape/compass, ALTITUDE and SPEED readouts, Apache flavour; MFD nav page
+   gets live heading, systems page live altitude/throttle (DataTexture, no DOM).
+4. **Round 9g — auto-level** (B5): held-key recovery levelling roll+pitch, fail-first
+   unit tests in the flight model, HUD active-hint.
+5. **Q3 re-panel** against the amended bar (B1-B5), then close out. (prereq for everything; interior critic's #1 with concrete
    acceptance): glazing must read as glass — bright desert through it, edge highlights,
    Apache-style heavy frames legible as frames; eye/camera placement verified.
    Acceptance on pilot.png: >=20% of frame pixels exterior (currently 0.9%), a real
