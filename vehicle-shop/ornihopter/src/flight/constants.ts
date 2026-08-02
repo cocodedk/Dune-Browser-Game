@@ -38,6 +38,40 @@ export const CRUISE_ALTITUDE = 60
 export const CRUISE_THROTTLE = 0.5
 export const CRUISE_SPEED = 50
 
+/**
+ * WEIGHT. Round 1 Finding 2, unfixed until now: "there is no weight force.
+ * The craft cannot fall." kinematics.ts's speed equation already subtracts
+ * gravity's component ALONG THE NOSE, but that term is exactly zero in level
+ * flight (nose.y = 0) at any throttle, which is why a level, idle craft used
+ * to hold its altitude forever instead of settling. This is the missing
+ * piece: a throttle-only vertical trim, independent of attitude, standing in
+ * for the wing beat's lift versus the craft's weight.
+ *
+ * HOVER_THROTTLE is picked, not measured: it must sit strictly between
+ * TAKEOFF_THROTTLE (0.35, below which a landed craft keeps winding down) and
+ * CRUISE_THROTTLE (0.5, reset()'s default, which must go on cruising dead
+ * level exactly as it always did). 0.4 splits that gap and sits comfortably
+ * below keyboard.ts's 0.45 starting throttle, so a fresh session already
+ * flies above hover and the pre-existing feel — level flight holds altitude,
+ * pitch is what climbs or dives — is untouched for every throttle a fresh
+ * session or the round-1 sign tests ever use (0.5, 0.6, 0.9, 1.0).
+ *
+ * At and above HOVER_THROTTLE the trim is exactly zero: kinematics.ts's
+ * vertical velocity there is bit-for-bit nose.y * speed, the original
+ * equation, which is what keeps pitchAltitude.test.ts and noseLeads.test.ts
+ * passing unmodified — the fix only touches the band below hover.
+ */
+export const HOVER_THROTTLE = 0.4
+
+/**
+ * Terminal sink at throttle 0 in level attitude, m/s. Chosen inside the
+ * round's target band (2.5-4) with margin either side of the proof's wider
+ * [2.5, 4.5] tolerance, and comfortably under TOUCHDOWN_SINK_MAX (6) on its
+ * own so a hands-off idle descent always qualifies for a landing rather than
+ * the legacy crash clamp.
+ */
+export const BEAT_SINK_MAX = 3.2
+
 /** Hard ceiling on the integration step, matching main.ts's own frame-time clamp. */
 export const MAX_DT = 0.1
 

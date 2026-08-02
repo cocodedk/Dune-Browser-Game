@@ -129,6 +129,16 @@ export function groundPhase(
 
   if (touchedDown(previous, altitude, kinematics, orientation)) {
     const heading = groundHeading(orientation)
+    // COHERENCE (user finding: "frozen at 4.3m", never moving again). A
+    // craft that reaches the gear plane hot — throttle already at or above
+    // TAKEOFF_THROTTLE — must not latch into a parked state it can never
+    // leave under its own logic (spool-down only engages below that
+    // throttle). Preferred over refusing the touchdown: the gear still
+    // absorbs this step's descent (below), but the flag it hands back is
+    // "flying", so the very same tick a pilot who never lifted off throttle
+    // reads as an uninterrupted touch-and-go, not a landing that later has
+    // to un-latch.
+    const leaving = throttle >= TAKEOFF_THROTTLE
     return {
       position: restingAt(position.x, position.z),
       // The gear absorbs the descent: what is left is the landing roll.
@@ -136,7 +146,7 @@ export function groundPhase(
       speed,
       altitude: GEAR_HEIGHT,
       orientation,
-      landed: true,
+      landed: !leaving,
       beatAmplitude: spool,
     }
   }

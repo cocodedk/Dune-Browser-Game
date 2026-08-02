@@ -12,6 +12,7 @@
 
 import type { FlightState } from '../contracts'
 import { noseDirection, upDirection, starboardDirection } from '../contracts'
+import { GEAR_HEIGHT } from '../flight/constants'
 
 export interface HudReading {
   /** Degrees, positive nose-up. */
@@ -20,7 +21,13 @@ export interface HudReading {
   rollDeg: number
   /** Degrees 0..360, 0 = north. */
   headingDeg: number
-  /** Metres above the terrain directly below. */
+  /** Metres above the terrain directly below, GEAR-relative: 0 on the
+   *  ground. FlightState.altitude itself is ORIGIN-relative (0 puts the
+   *  gear 4.3m into the sand; GEAR_HEIGHT puts the feet on it) because the
+   *  flight model and its landing lifecycle are specified against the
+   *  origin — see flight/constants.ts's GEAR_HEIGHT doc. A pilot never reads
+   *  the origin height, so the subtraction happens once, here, at the
+   *  display boundary, rather than pulling gear geometry into flight/. */
   altitude: number
   /** Metres per second. */
   speed: number
@@ -49,7 +56,7 @@ export function readFlight(state: Readonly<FlightState>): HudReading {
     pitchDeg: Math.asin(clamp1(nose.y)) * DEG,
     rollDeg: Math.atan2(-right.y, up.y) * DEG,
     headingDeg: (Math.atan2(nose.x, -nose.z) * DEG + 360) % 360,
-    altitude: state.altitude,
+    altitude: state.altitude - GEAR_HEIGHT,
     speed: state.speed,
     throttle: state.throttle,
     autoLevel: state.autoLevel === true,

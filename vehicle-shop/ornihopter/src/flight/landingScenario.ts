@@ -20,10 +20,22 @@ export const PARKED_ALTITUDE = -GROUND_Y
 
 export const DT = 0.02
 
-/** Nose-down for this long, then hands off the stick. The glide settles into
- *  a steady ~9-degree, ~16 m/s descent — about 2.5 m/s of sink — which is the
- *  ordinary approach a pilot would fly, not a contrived one-frame setup. */
-const PUSHOVER_SECONDS = 0.3
+/**
+ * Nose-down for this long, then hands off the stick — an ordinary approach a
+ * pilot would fly, not a contrived one-frame setup.
+ *
+ * RETUNED for the weight fix (kinematics.ts's beatLiftTrim): idle flight now
+ * sinks on its own (~3.2 m/s in level attitude), stacked on top of whatever
+ * this pushover's dive angle contributes. The original 0.3s/9-degree pushover
+ * carried enough leftover cruise speed into the dive that the two sink
+ * sources together hit 6.058 m/s at the moment of crossing — ABOVE
+ * TOUCHDOWN_SINK_MAX (6) by 0.058, so it missed the gate and fell through to
+ * the legacy clamp instead of landing (measured: touchdownAt -1, never
+ * lands). 0.2s/6 degrees measures 4.750 m/s at crossing — 1.25 m/s of
+ * headroom under the gate — while still comfortably clearing (a4)'s "it
+ * really did land nose-down" tiltDeg > 3 check.
+ */
+const PUSHOVER_SECONDS = 0.2
 
 export function approachInput(elapsed: number, throttle = 0): FlightInput {
   return { pitch: elapsed < PUSHOVER_SECONDS ? -1 : 0, roll: 0, yaw: 0, throttle }

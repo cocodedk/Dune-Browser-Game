@@ -6,6 +6,7 @@
 import { noseDirection, normalise, dot } from '../contracts'
 import type { FlightState } from '../contracts'
 import type { CameraMode } from '../camera/cameraRig'
+import { GEAR_HEIGHT } from '../flight/constants'
 
 export interface Hud {
   update(state: Readonly<FlightState>, mode: CameraMode, fps: number): void
@@ -42,9 +43,14 @@ export function createHud(): Hud {
       const nose = noseDirection(state.orientation)
       const along = speed > 0.5 ? dot(nose, normalise(state.velocity)) : Number.NaN
 
+      // GEAR-relative, not origin-relative: 0 on the ground, matching the
+      // cockpit HUD's ALT box (hud/reading.ts). The raw ORIGIN height is
+      // what a resting craft's state.altitude actually holds (GEAR_HEIGHT,
+      // 4.3m) — shown unsubtracted here it reads as still airborne, which is
+      // the user's "frozen at 4.3m" finding.
       readout.textContent = [
         `speed      ${speed.toFixed(1)} m/s`,
-        `altitude   ${state.altitude.toFixed(1)} m`,
+        `altitude   ${(state.altitude - GEAR_HEIGHT).toFixed(1)} m`,
         `throttle   ${(state.throttle * 100).toFixed(0)}%`,
         `beat       ${state.beatHz.toFixed(2)} Hz`,
         `pos        ${state.position.x.toFixed(0)}, ${state.position.y.toFixed(0)}, ${state.position.z.toFixed(0)}`,
