@@ -116,25 +116,21 @@ today, NOT 9f's (A/B byte-identical) — triage before the panel scores B3.
    held-key recovery levelling roll+pitch (60-deg bank -> level in 1.5-2.5s, monotonic,
    override-proof, release-instant), pure flight-model tests, HUD AUTO hint under the
    ink cap, key legend updated.
-4. **Round 9g — auto-level** (B5): held-key recovery levelling roll+pitch, fail-first
-   unit tests in the flight model, HUD active-hint.
-5. **Q3 re-panel** against the amended bar (B1-B5), then close out. (prereq for everything; interior critic's #1 with concrete
-   acceptance): glazing must read as glass — bright desert through it, edge highlights,
-   Apache-style heavy frames legible as frames; eye/camera placement verified.
-   Acceptance on pilot.png: >=20% of frame pixels exterior (currently 0.9%), a real
-   unbroken exterior run in the centre column, glazing legible AS glass.
-2. **Round 9b — the Apache panel**: two large colour MFDs with bezelled button rows,
-   up-front display + keypad between them, a small standby-analog cluster (keep the
-   best of the round-6b gauges there), legible labels. Dark panel carrier.
-3. **Round 9c — controls**: articulated cyclic grip (segmented, knuckled, hand-scaled)
-   plus a collective at the pilot's left; the black coil conduit moves off the stick
-   and hangs from the overhead console (where the boards put it).
-4. **Round 9d — tub, palette, crew**: Apache black/dark-grey panel surfaces against
-   olive structure (kill the uniform warm-sage read), high-sill armored-tub emphasis,
-   second crew position present (seat + implied yoke/panel bay).
-5. **Q3 re-panel** with the AMENDED reference definition, then close out.
-6. Still queued (process, cheap, after the above): axis-contract guard round; tooling
-   round (shop:quick, shoot flags + pixel-diff, belly + true-rear views).
+2. **B3 bright-regions triage** (cheap): the tree has 8 bright regions >=12px where the
+   bar demands exactly one — pre-existing, surfaced by 9f's A/B proof. Find the 7
+   extras (suspects: 9d armor speculars, overhead strip edges), fix or re-derive the
+   bar line with evidence.
+3. **Round 10 — the landing lifecycle** (USER, 2026-08-02: "at one point we need to
+   think about making it land and stop beating the wings and not sink in the desert
+   sand."): touchdown detection against heightAt(), a LANDED state in the flight model
+   (beat spools to zero, wings settle to the parked pose), ground rest on the gear's
+   proven foot plane (no sinking, no clamp-jitter), takeoff spool-up. Pure-model
+   fail-first tests; the parked pose exists from the gear rounds.
+4. **Re-shoot + gallery refresh**, then the **Q3 re-panel** against the amended bar
+   (B1-B5); the user flies the result as the final acceptance.
+5. Process rounds (cheap, after the above): axis-contract guard; tooling round
+   (shop:quick, shoot flags + pixel-diff, belly + true-rear views, fix the stale
+   pilot.png bug, ladder combiner-aperture clipping).
 Longer tail (older queue, still valid): gauge labels; port cockpit wall dull; forward
 roof liner dark; cockpit draw-call merge before game integration; deferred deliverables
 (showcase page + SVG blueprint). Process note: two disjoint substantial rounds may run
