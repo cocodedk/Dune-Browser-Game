@@ -599,3 +599,48 @@ blind identification (Sonnet), Q1 exterior fidelity vs the three kit photographs
 Q3 interior vs the concept boards (Opus), all at max effort, none shown any builder
 reasoning, every prompt carrying both the quality half and the correctness half per the
 bar's own rule. This is the first scoring pass with no known defect standing in the frame.
+
+## Round 5 — the critics' verdicts, and the lead's triage
+
+**Q2 blind identification: PASS.** "Dune ornithopter, Villeneuve dragonfly redesign" —
+and the critic counted 8 wings EXACTLY (4 per side, from the top view) and derived
+nose-first from geometry alone. It also mistook the craft's own ground shadow for a
+"branding icon of a dragonfly" — the silhouette now advertises the species by itself.
+Its flags: the wings read as two mismatched sets (fore/aft pairs tan-membranous vs
+near-black-rigid — deterministic, not port/starboard, so not the old sun issue); the legs
+read as an uncountable knot with no belly view in the capture set (a HARNESS gap — shoot.mjs
+has no underside view; fix with the next tools touch); the bare boom.
+
+**Q1 exterior: 4/10.** Correctness ALL PASSES — orientation, count, cross-view consistency,
+plausible beat kinematics, nothing floating (it zoomed the one suspicious sliver and
+identified it as the attached ventral strake). Named biggest gap: **the hull's form
+language** — the pod reads as a lofted organic bulb where the kit is a machined,
+hard-chined prism; wants flat slab sides, constant section forward, blunt nose face with
+three vertical fins, and the proud windshield box replaced by a flush chamfered glazing
+deck ~45% of pod length. Other fails: wing root arms missing the rod+screw-jack anatomy;
+mounts in one flat row vs the kit's 2x2 clusters; gear (count/stance/value); panel density
+~quarter of reference and drawn-on rather than cut; tonal structure inverted (bone hull vs
+near-black wings — converges with the blind critic's "two asset kits" read).
+
+**Q3 interior: 3/10.** Named gap: **no canopy shell from the pilot's eye** — 82% of the
+upper frame is bare sky; no brow, roof, sills, seat, or visible glazing tint. Correctness
+finds real holes: a see-through slot between panel top and coaming; sunlit desert through
+the lower-left past the dash's end (the long-unexplained "bottom-left sliver," now
+diagnosed); the glow patches read as TWO SUNS; instruments read as pastel slabs; the stick
+is a bare post vs the reference's articulated arm with bulbous grip.
+
+**Lead's triage — what stands, what is contested.** Accepted as the Round 6 agenda: form
+language, flush glazing deck, root-arm anatomy, 2x2 mounts, wing/hull tonal unity, panel
+density, and the full cockpit-enclosure brief. Contested on evidence: "no chine" is wrong
+as stated (the section HAS a hard chine, per-panel normals — the organic read comes from
+plan curvature, which is the real defect); "4 crouched legs with skids" (photo-derived)
+conflicts with the 6-leg headroom stance built from the production ingress board, and
+"flush vs proud canopy" pits kit photos against film boards. RULING: the flat-pack print
+kit's own plates are true 2D profiles — they out-rank every photograph for any feature
+they cover. A measurement round (workflow `wf_52a1d194-91b`, Sonnet, max effort) is
+rendering and measuring every relevant plate into docs/profiles/kit-dossier.md (leg
+anatomy and count, nose fins, canopy proportion, boom plan, mount plates, wing-root rod),
+regenerating the de-rotated profiles (the first airframe-side.json extraction is
+CONTAMINATED — the plate lies diagonally and the extractor does not de-rotate; its offsets
+sweep -1.18..+1.28). Round 6 briefs are written from the dossier, not from the critique's
+photo-derived specifics.
