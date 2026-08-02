@@ -21,29 +21,39 @@ four poses = 5,760 rays for the zero-escape checks), one sun, a clear forward si
 (Round 6f), gear in film stance with kit anatomy. Last critic scores — Q1 4/10, Q3 3/10,
 blind-ID PASS — predate ALL of rounds 6a-6f; the Round 7 re-panel is next.
 
-**Do next, in order:**
-1. **CANOPY RULING — BLOCKED ON USER.** Round 7 named the kit-vs-film tension (Q3 3/10:
-   "the pilot cannot see out"; Q1 praises the flush kit lens). Evidence page published:
-   https://claude.ai/code/artifact/04a595d9-0fa8-41ed-8fc4-c85b99b85ebc — user asked to
-   see before deciding. Options on the table: hybrid (kit outline + true see-through
-   glass + eye raise + side glazing bands), kit-absolute, film-bubble. The interior
-   round (glazing clarity, stick anatomy, second seat, cold-graphite palette, eye
-   placement — critic's concrete acceptance test: pixel (800,500) is sky, >=20% of
-   pilot-frame pixels exterior) is written after the ruling.
-2. **Round 8b — gear splay** (uncontested, cheap): legs splay ~10 deg today vs the kit's
-   ~33 deg; skids too short. Film stance (ground plane, walk-under height) preserved.
-3. **Round 8c — aft end**: scribe the blank aft flanks; pod-to-boom contrast. NOTE the
-   Round 7 critic's "single spoon vane" claim CONTRADICTS the dossier's plate-verified
-   two-tine fork — dossier wins; do not delete the fork on a critic's photo-read.
-4. **Round 8d — hull section read** (big, Opus): critic measured section aspect 1.20,
-   "rounded capsule, ogive prow" vs the kit's hard-chined wedge with flat hexagonal
-   nose plate + vertical mullion comb. Conflicts partially with 6a's landing; a
-   measurement pass against kit-3 comes FIRST, then the reshape brief.
-5. Then: axis-contract guard round; tooling round (shop:quick, shoot flags + pixel-diff,
-   belly view, TRUE REAR view — Round 7 found rear34.png is actually a front-quarter);
-   blade chord trim (L/c 18.2-20.6 vs 20.69 measured, three of four ~12% fat); beat
-   arc bias (blades never carry below the root plane — reads as a shiver, not a beat);
-   dead-end bracket stubs between mount clusters (blind critic).
+**USER RULING (2026-08-02, supersedes the exterior queue): the exterior is ~98/100 —
+FROZEN.** All queued exterior rounds are DROPPED (8c aft end, 8d hull section, blade
+chord trim, beat-arc bias, bracket stubs — parked, not scheduled). The Round 7 exterior
+6.5/10 is overridden by the user's eye, which has final authority in this loop. The one
+exception: Round 8b (gear splay, measured off the user's own kit photo) was already in
+flight at ruling time — it lands, gets verified, and is the LAST exterior touch.
+
+**USER RULING (same message): the interior is now the whole focus, and the reference
+is the latest APACHE ATTACK HELICOPTER interior (AH-64E).** This also settles the
+canopy tension: kit exterior outline stays; inside goes Apache — heavily framed but
+GENUINELY transparent glazing, armored-tub feel, modern glass cockpit. Q3's reference
+amends from thopter-03.jpg to "reads as a modern AH-64E-style attack-helicopter glass
+cockpit" (thopter-03 stays in the table as historical context; seating stays this
+craft's side-by-side unless the user says otherwise).
+
+**Do next, in order (interior campaign):**
+1. **Round 9a — SEE OUT** (prereq for everything; interior critic's #1 with concrete
+   acceptance): glazing must read as glass — bright desert through it, edge highlights,
+   Apache-style heavy frames legible as frames; eye/camera placement verified.
+   Acceptance on pilot.png: >=20% of frame pixels exterior (currently 0.9%), a real
+   unbroken exterior run in the centre column, glazing legible AS glass.
+2. **Round 9b — the Apache panel**: two large colour MFDs with bezelled button rows,
+   up-front display + keypad between them, a small standby-analog cluster (keep the
+   best of the round-6b gauges there), legible labels. Dark panel carrier.
+3. **Round 9c — controls**: articulated cyclic grip (segmented, knuckled, hand-scaled)
+   plus a collective at the pilot's left; the black coil conduit moves off the stick
+   and hangs from the overhead console (where the boards put it).
+4. **Round 9d — tub, palette, crew**: Apache black/dark-grey panel surfaces against
+   olive structure (kill the uniform warm-sage read), high-sill armored-tub emphasis,
+   second crew position present (seat + implied yoke/panel bay).
+5. **Q3 re-panel** with the AMENDED reference definition, then close out.
+6. Still queued (process, cheap, after the above): axis-contract guard round; tooling
+   round (shop:quick, shoot flags + pixel-diff, belly + true-rear views).
 Longer tail (older queue, still valid): gauge labels; port cockpit wall dull; forward
 roof liner dark; cockpit draw-call merge before game integration; deferred deliverables
 (showcase page + SVG blueprint). Process note: two disjoint substantial rounds may run
