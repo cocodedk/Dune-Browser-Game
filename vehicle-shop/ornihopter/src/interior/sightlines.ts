@@ -86,6 +86,38 @@ export function castGaze(targets: Object3D[], direction: Vector3): { hit: GazeHi
 }
 
 /**
+ * Does this ray REACH THE OUTSIDE — sky or desert — rather than merely meet
+ * glass?
+ *
+ * castGaze above stops at the first hit and calls a transparent one 'glazing',
+ * which is the right instrument for "is the airframe sealed" and the WRONG one
+ * for "what can the pilot see". MEASURED, round 9e: the shipped tree read
+ * 15.2% glazing at pitch 0 by that count while the capture showed under 11%
+ * exterior, because a ray can pass the cabin-side pane and then land on the
+ * canopy's own opaque rim or a roof member behind it. This walks the whole hit
+ * list instead and answers with the FIRST OPAQUE hit, which is what a pixel
+ * shows: null means nothing opaque is in the way and the desert is there.
+ */
+export function firstOpaque(
+  targets: Object3D[],
+  direction: Vector3
+): { object: Object3D; point: Vector3 } | null {
+  const raycaster = new Raycaster(EYE, direction, 0.02, 400)
+  for (const t of targets) t.updateMatrixWorld(true)
+  for (const hit of raycaster.intersectObjects(targets, true)) {
+    const object = hit.object as Object3D & { material?: Material | Material[] }
+    if (!isGlazing(object.material)) return { object, point: hit.point }
+  }
+  return null
+}
+
+/** True when the ray leaves the craft — the fraction of these across the frame
+ *  is bar B3-LIVE's "exterior >= 20% at pitch 0". */
+export function reachesExterior(targets: Object3D[], direction: Vector3): boolean {
+  return firstOpaque(targets, direction) === null
+}
+
+/**
  * A grid of samples across the pilot frame. Sampled on a grid rather than at
  * hand-picked points because the holes this exists to catch were found by a
  * critic sweeping pixels, and a hand-picked point can always be the one the

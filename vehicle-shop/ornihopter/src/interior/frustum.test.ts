@@ -14,10 +14,13 @@ import { PerspectiveCamera, Frustum, Matrix4, Box3, type Object3D } from 'three'
 import { createCockpit } from './Cockpit'
 import { EYE } from './layout'
 
-function pilotFrustum(): Frustum {
+function pilotFrustum(pitchDeg = 0): Frustum {
   const camera = new PerspectiveCamera(68, 1600 / 1000, 0.25, 6000)
   camera.position.set(EYE.x, EYE.y, EYE.z)
-  camera.quaternion.set(0, 0, 0, 1)
+  camera.rotation.order = 'YXZ'
+  // cameraRig.ts's applyHead, for the one pose this file needs beyond level:
+  // a head raised to look up through the canopy.
+  camera.rotation.set((pitchDeg * Math.PI) / 180, 0, 0)
   camera.updateProjectionMatrix()
   camera.updateMatrixWorld(true)
   const viewProjection = new Matrix4().multiplyMatrices(
@@ -82,8 +85,20 @@ describe('pilot-cam visibility, measured against the built geometry', () => {
     expect(frustum.intersectsBox(boxFor(root, 'stick-pilot'))).toBe(true)
   })
 
-  it('mitigation: the shared overhead panel is visible', () => {
-    expect(frustum.intersectsBox(boxFor(root, 'overheadPanel'))).toBe(true)
+  it('CHANGED in round 9e: the overhead panel is OUT of the level view, and found by looking up', () => {
+    // It used to hang at 2.45m aft, which was the brow station — the aperture's
+    // own aft edge — and so it sat directly over the windscreen. MEASURED at
+    // pitch 0 before this round: it was the first opaque surface for 216 of
+    // 2560 rays, 8.4% of the pilot's frame, all of it top-centre where the sky
+    // is now. The aperture runs to 4.6m aft now, so leaving the panel there
+    // would have hung it in the middle of the new glazing.
+    //
+    // Its being out of the LEVEL frame is therefore the round's intent, not a
+    // regression, and the assertion is inverted rather than deleted: it must
+    // still be reachable, and it is, at a head raised 30 degrees — where an
+    // overhead console is looked for in the aircraft this references.
+    expect(frustum.intersectsBox(boxFor(root, 'overheadPanel'))).toBe(false)
+    expect(pilotFrustum(30).intersectsBox(boxFor(root, 'overheadPanel'))).toBe(true)
   })
 
   it('the cabin shell pokes into frame via the forward floor and wall greebles', () => {

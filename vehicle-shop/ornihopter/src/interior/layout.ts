@@ -123,7 +123,17 @@ export const COLLECTIVE = {
   leverRadius: 0.024,
 } as const
 
-const OVERHEAD_Z = stationFromNose(2.45)
+// ROUND 9e: was 2.45m aft, which WAS the brow station — the aperture's aft
+// edge. The aperture now runs to 4.6m aft (canopyLayout.ts), so a panel left
+// at 2.45 would hang in the middle of the new glazing, dead over the
+// windscreen. MEASURED at pitch 0 before the move: this panel alone was the
+// first opaque hit for 216 of 2560 rays — 8.4% of the pilot's frame, all of
+// it top-centre where the sky now is. At 3.0m aft it hangs off the mullion
+// arch (canopyLayout.ts's mullionStations() puts one on that canopy station),
+// 0.45m ahead of the eye and 0.93m above it: 60-odd degrees up, out of a
+// 34-degree half-VFOV entirely, and found by looking up — where an overhead
+// console is found in the aircraft this is referenced to.
+const OVERHEAD_Z = stationFromNose(3.0)
 
 export const OVERHEAD = {
   // Centred slightly toward the pilot's side because the eye itself is

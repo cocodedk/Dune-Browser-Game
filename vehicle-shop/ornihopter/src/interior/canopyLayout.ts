@@ -46,17 +46,29 @@ const EDGE_MARGIN = 0.05
 
 /** Aperture ends, aft of the nose. The forward end stops short of the
  *  bullnose (the panel is only 0.42m half-wide at 0.5m aft — too narrow to
- *  see through and too narrow to fence); the rear end is the BROW, and it is
- *  what puts a header across the top of the pilot's view. MEASURED from
- *  PILOT_EYE: the brow beam's lower face subtends about +21 degrees against a
- *  34-degree half-VFOV, so the top of the forward frame is roof liner and the
- *  window stops short of it. The rear end is also what makes the window WIDE:
- *  the panel is 1.21m half-wide there against 0.76 at the sightline's own
- *  crossing, so the aperture is a wedge that opens upward, which is both what
- *  a raked deck window has to be and what puts glass in front of a pilot whose
- *  seat is off the craft's centreline. */
+ *  see through and too narrow to fence).
+ *
+ *  THE REAR END WAS 2.45m AFT AND IS NOW 4.6m — round 9e, USER FINDING #3,
+ *  flying the craft: "the pilot view is not good at all. I see literally
+ *  nothing. Just a narrow band of view." The eye sits at 3.45m aft
+ *  (spec.ts's PILOT_EYE), so a window that ENDED at 2.45 stopped a metre
+ *  short of the pilot's own head: everything from straight up to 33 degrees
+ *  above the sightline was roof liner, and the brow beam hanging 0.16m below
+ *  it took the top of the frame as well. That is the "cave with a distant
+ *  skylight" read — the outside arrived through a hole 2.2m away down a
+ *  tunnel of cabin wall.
+ *
+ *  4.6m aft is the panel's own next station (canopyPlan.ts's PLAN, a hull
+ *  deck-kink break), so the glass still ends ON an authored break rather than
+ *  in the middle of a bay, and the exterior lens — which runs to 6.9m aft and
+ *  is frozen — is unchanged: this spends margin the outside always had.
+ *  MEASURED at PITCH 0 (64x40 rays, first-opaque-hit): exterior 9.7% -> 20.5%,
+ *  and 11.0% -> 21.4% counted on the capture's own pixels.
+ *  What the pilot gains is not width at the horizon, which the kit's own
+ *  panel outline fixes, but the whole upper frame: he now sits UNDER the
+ *  glass instead of looking down a duct at it. */
 export const APERTURE_FORE_Z = stationFromNose(0.6)
-export const APERTURE_REAR_Z = stationFromNose(2.45)
+export const APERTURE_REAR_Z = stationFromNose(4.6)
 
 /** Underside of the roof liner at craft-local z. */
 export function roofYAt(z: number): number {

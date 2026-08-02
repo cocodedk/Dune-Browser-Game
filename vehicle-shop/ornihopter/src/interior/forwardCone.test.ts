@@ -115,6 +115,31 @@ describe('the forward cone is glazed edge to edge', () => {
     )
   })
 
+  it('ROUND 9E: the cone reaches far HIGHER now — up to +24 degrees, all glazing', () => {
+    // The 6f cone above stopped at +6 degrees because that was all the
+    // aperture had: it ended at 2.45m aft, a metre AHEAD of the eye, and the
+    // brow beam hung 0.16m under its aft edge. MEASURED on the pre-9e tree,
+    // this same sweep: 27 of 117 rays missed glazing, every one of them naming
+    // canopyFrame (the brow at 2.45m aft and the roof liner behind it) or the
+    // overheadPanel that hung from it. With the aperture opened to 4.6m aft
+    // the whole upward wedge is glass: 0 of 117.
+    //
+    // This is the "should get STRONGER" half of the contract — the same
+    // dead-ahead-through-the-right region, swept two and a half times further
+    // up, where the pilot looks when he raises the nose.
+    const angles: Array<readonly [number, number]> = []
+    for (let r = 0; r <= 8; r++) {
+      const pitch = (r * 24) / 8
+      for (let c = 0; c <= 12; c++) angles.push([(c * 10) / 12, pitch])
+    }
+    const misses = angles.filter(
+      ([yaw, pitch]) => castGaze(targets, gazeDirection(0, 0, yaw, pitch)).hit !== 'glazing'
+    )
+    expect(`${misses.length} of ${angles.length}: ${missReport(targets, angles)}`).toBe(
+      `0 of ${angles.length}: `
+    )
+  })
+
   it('KNOWN LIMITATION: the bottom pitch row and the pilot-side wedge are pre-existing, not the mullion', () => {
     // MEASURED, round 6f, AFTER the 1.2m mullion fix: 80 of 273 rays in the
     // full grid still miss glazing, but every one is either (a) pitch -6,

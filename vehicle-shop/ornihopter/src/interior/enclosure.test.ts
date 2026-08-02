@@ -64,12 +64,25 @@ describe('no ray from the pilot eye leaves the airframe', () => {
 })
 
 describe('the cockpit reads as a cave, not a dash floating in open air', () => {
-  it('opaque structure fills most of the top half of the forward frame', () => {
+  it('opaque structure holds a real share of the top half of the forward frame', () => {
     const c = coverage(sampleFrame(targets, 48, 30, 0, 0))
-    // Was 16.3%. The reference (.shots/reference/thopter-03.jpg) is a cave
-    // with one glazed aperture, so most of the upper frame has to be brow,
-    // roof liner and rails.
-    expect(c.structureTopHalf).toBeGreaterThan(0.55)
+    // THRESHOLD CHANGED, round 9e: 0.55 -> 0.30. MEASURED across the change,
+    // same 48x30 grid, same pose: structureTopHalf 0.721 -> 0.426.
+    //
+    // 0.55 encoded round 6b's cave — brow, roof liner and rails over the
+    // pilot's head, one aperture ahead of him — and the user then flew it and
+    // could not see out ("just a narrow band of view"). The aperture now spans
+    // the eye station (canopyLayout.ts's APERTURE_REAR_Z, 2.45 -> 4.6m aft), so
+    // the top of the frame is DELIBERATELY glass; keeping 0.55 would pin the
+    // defect. What must not come back is the round-6b failure this assertion
+    // was really built against — a dash floating in open air with no canopy at
+    // all, which measured 0.163 — so the floor stays well above that, and the
+    // zero-escape contract above still runs at its full ray count. What holds
+    // the remaining 42.6% is the reveal rails down both sides, the mullion arch
+    // at 3.0m aft (canopyLayout.ts's mullionStations(), on the canopy's own
+    // station), the rear arch at 4.3m, the aft header at 4.58m and the wall
+    // tops — frame members, not an absence of hole.
+    expect(c.structureTopHalf).toBeGreaterThan(0.3)
   })
 
   it('glazing is a real fraction of the forward frame, not a token pane', () => {

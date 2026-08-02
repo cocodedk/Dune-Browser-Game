@@ -135,16 +135,16 @@ for (const view of VIEWS) {
 await page.evaluate(() => window.__THOPTER__.resume())
 await page.waitForTimeout(2500)
 await page.evaluate(() => window.__THOPTER__.setCamera('pilot'))
-// ROUND 9a: head held +12deg up (debug.look, Round 6b's own capture-repeatability
-// API — see debug.ts). Dead-level (pitch 0) undercounts the aperture the pilot
-// already has: sightlines.ts's own grid instrument measures glazing coverage at
-// yaw0 rising from 15.4% at pitch 0 to >20% by pitch ~10-12 through the SAME
-// unchanged Round-6f aperture (forwardCone.test.ts's cone is untouched by this,
-// its own angles are independent of this held pose). A forward-and-slightly-up
-// gaze toward the greenhouse is an ordinary cockpit posture, not a new frame in
-// the geometry. Measured at this pose (progress.md/handoff for the numbers):
-// brightPct(>150) 2.4% -> 19.6%, central-third run 55px -> 364px.
-await page.evaluate(() => window.__THOPTER__.look(0, 12))
+// ROUND 9e: LEVEL. This was +12 degrees, held, from round 9a — and the argument
+// for it (a forward-and-slightly-up gaze is an ordinary cockpit posture, and it
+// measured >20% exterior where dead level measured less) was how the campaign
+// came to believe the view was fixed while the user, flying it, could see
+// "literally nothing. Just a narrow band". The live camera flies at pitch 0.
+// A capture pose that is not the flying pose is a bar that flatters the build,
+// so the standard set is taken where the pilot actually looks; the aperture
+// itself was opened to earn the number at this pose instead
+// (interior/liveView.test.ts, 21.4% exterior on these very pixels at pitch 0).
+await page.evaluate(() => window.__THOPTER__.look(0, 0))
 await page.waitForTimeout(900)
 await page.screenshot({ path: join(OUT, 'pilot.png') })
 manifest.views.push({ name: 'pilot', ref: 'thopter-03.jpg', file: join(OUT, 'pilot.png') })
