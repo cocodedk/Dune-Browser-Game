@@ -28,6 +28,17 @@ export interface DebugHandle {
   viewpoint(azimuthDeg: number, elevationDeg: number, distance: number): void
   /** Park the craft at a fixed pose and beat phase for matched renders. */
   pose(y: number, yawDeg: number, beatPhase: number): void
+  /**
+   * Turn the pilot's head and HOLD it there, so a capture of a head-look pose
+   * is repeatable. Added round 6b: the cockpit's enclosure has to be judged at
+   * yaw 0 and +/-60 and pitch -20, and there was no way to reach those poses
+   * from a headless browser — camera/cameraRig.ts's lookAround was driven only
+   * by live keyboard/mouse input, which main.ts re-applies every frame and
+   * which would have overwritten anything set from here on the next tick.
+   */
+  look(yawDeg: number, pitchDeg: number): void
+  /** The held head pose, or null when the pilot's own input has the head. */
+  heldLook(): { yaw: number; pitch: number } | null
   measure(): CraftMeasurement
   state(): unknown
 }
@@ -46,6 +57,7 @@ interface Deps {
 
 export function installDebugHandle({ flight, rig, craft }: Deps): DebugHandle {
   let paused = false
+  let held: { yaw: number; pitch: number } | null = null
   const root = craft.root as unknown as Object3D
 
   const handle: DebugHandle = {
@@ -71,6 +83,13 @@ export function installDebugHandle({ flight, rig, craft }: Deps): DebugHandle {
       root.quaternion.set(0, Math.sin(half), 0, Math.cos(half))
       craft.update({ ...flight.state, beatPhase })
       root.updateMatrixWorld(true)
+    },
+    look(yawDeg, pitchDeg) {
+      held = { yaw: yawDeg, pitch: pitchDeg }
+      rig.lookAround(yawDeg, pitchDeg)
+    },
+    heldLook() {
+      return held
     },
     measure() {
       root.updateMatrixWorld(true)

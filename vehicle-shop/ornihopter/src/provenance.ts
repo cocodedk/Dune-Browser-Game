@@ -44,6 +44,37 @@ export const PROVENANCE = {
     'cabin behind". Seat and eye heights below are ordinary human seated ' +
     'anthropometry fitted to the measured cabin volume. Concept art at ' +
     '.shots/reference/thopter-03.jpg and thopter-04.jpg is the visual reference.',
+  flightDeck:
+    'DERIVED, round 6b, from model/geometry/canopyPlan.ts — not authored and not ' +
+    'guessed. The canopy is a flush deck panel, so the only glass a level sightline ' +
+    'can cross is the deck itself where it rakes down over the nose. Sampling ' +
+    'deckYAt across the panel: the glazed forward bay runs from 0.5m aft (deck ' +
+    '0.806, panel half-width 0.420) to 1.2m aft (deck 1.333, half-width 0.780), and ' +
+    'canopyGeometry.ts glazes that bay edge to edge — chamfer, rim face and strip ' +
+    'alike. A level ray from an eye at height y crosses the deck where deckYAt = y, ' +
+    'so y must lie inside [0.806, 1.333] for the crossing to land on that bay at ' +
+    'all. COCKPIT.floorY = -0.38 puts the eye at 1.27, crossing at 1.116m aft where ' +
+    'the panel is 0.737 half-wide. SEPARATELY, the eye has to be inboard of that ' +
+    'half-width or it crosses outboard of the panel and exits through bare deck ' +
+    'plate: 0.85 never clears it anywhere in the bay, which is why seatOffsetX is ' +
+    'now 0.62 (margin 0.117m). Containment re-checked against hullSection.ts at the ' +
+    'new heights — the hull is WIDER up there (2.08m interior half-width at the eye ' +
+    'against 1.40m at the old floor), so nothing got tighter. Verified by raycast, ' +
+    'not by arithmetic alone: interior/sightlines.ts casts the real pilot frustum ' +
+    'against the real meshes and interior/enclosure.test.ts asserts no ray escapes. ' +
+    'WHY -0.53 AND NOT -0.38, both of which put the eye inside the band: the ' +
+    'interior roof liner hangs 0.06m under the deck and carries a mullion on the ' +
+    "canopy's own break at 1.2m aft. At -0.38 the eye landed at 1.27, the level " +
+    'sightline grazed the roof plane at 1.196m aft, and it hit that mullion instead ' +
+    'of the sky. -0.53 puts the eye at 1.12: 43mm under the mullion, crossing the ' +
+    'deck at 0.921m aft with margin at both ends of the bay rather than 11mm from ' +
+    'one, and 0.99m of headroom left for the brow and roof. ' +
+    'WHY seatOffsetX 0.38 AND NOT 0.62: the window over the nose is a CENTRED slot, ' +
+    'so a seat offset by s puts the window\'s angular centre atan(s/d) off the nose ' +
+    'for a crossing distance d of about 2.5m. At 0.62 that is 14 degrees and the ' +
+    'window sat visibly off to starboard of straight ahead; at 0.38 it is 9, and ' +
+    'the window still contains the forward direction with room either side. Seat ' +
+    'CENTRES then sit 0.76m apart, roomier than most side-by-side light aircraft.',
   landedHeight:
     'RULING: landedHeight is the overall height of the craft parked on its gear, not ' +
     'ground clearance to the hull underside — read either way, the old value (7.2) could ' +

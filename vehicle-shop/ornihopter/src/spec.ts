@@ -128,28 +128,47 @@ export const WING_ROOTS: readonly WingRootMount[] = [
 export const WING_ROOT_X = OVERALL.bodyWidth / 2
 
 /**
- * Cockpit interior. AUTHORED — see PROVENANCE.interior. The numbers are chosen
- * so a 1.8m human fits: 0.45m seat pan above the cabin floor, 1.2m from pan to
- * eye. The pilot camera goes at EYE, and the correctness bar asserts that point
- * lies inside the cabin shell with the canopy in front of it.
+ * Cockpit interior. AUTHORED — see PROVENANCE.interior and, for floorY and
+ * seatOffsetX, PROVENANCE.flightDeck. The seated proportions are ordinary
+ * anthropometry (0.45m pan above the floor, 1.2m pan to eye); what round 6b
+ * re-derived is where that seated body has to SIT for its level sightline to
+ * leave the craft through glass. interior/eyeLine.test.ts asserts the
+ * derivation against canopyPlan.ts rather than trusting these literals.
  */
 export const COCKPIT = {
-  /** Cabin floor height relative to the craft origin. */
-  floorY: -OVERALL.bodyHeight / 2 + 0.35,
+  /** Cabin floor height relative to the craft origin. DERIVED, round 6b, from
+   *  the canopy's own rake and from the interior roof's mullion spacing — the
+   *  full derivation and the two numbers it was solved against are in
+   *  PROVENANCE.flightDeck, and interior/eyeLine.test.ts re-checks it against
+   *  canopyPlan.ts every run. Was -1.80, which put the eye 2.26m below the deck
+   *  and a level sightline out through the bullnose. */
+  floorY: -0.53,
   seatPanAboveFloor: 0.45,
   eyeAbovePan: 1.2,
-  /** Lateral offset of each of the two front seats from the centreline. */
-  seatOffsetX: 0.85,
-  seatWidth: 0.7,
+  /** Lateral offset of each of the two front seats from the centreline.
+   *  DERIVED, round 6b, down from 0.85: the canopy is only 0.42-0.78m
+   *  half-wide over its glazed forward bay, so a pilot at 0.85 looked into
+   *  opaque deck plate at every seated eye height there is. See
+   *  PROVENANCE.flightDeck for why 0.38 and not 0.62. */
+  seatOffsetX: 0.38,
+  seatWidth: 0.64,
   seatBackHeight: 1.1,
   /** Seat reference point, measured aft of the nose. */
   seatZ: stationFromNose(3.6),
-  /** Instrument console front face, aft of the nose. */
-  consoleZ: stationFromNose(2.1),
-  consoleHeightAboveFloor: 0.95,
-  /** Interior clear width and height, inside the shell. */
-  clearWidth: OVERALL.bodyWidth - 0.5,
-  clearHeight: OVERALL.bodyHeight - 0.7,
+  /** Instrument console front face, aft of the nose. Brought 0.45m nearer the
+   *  crew and raised 0.10m in round 6b: with the eye at 1.30 the old station
+   *  put the dash 20-27 degrees below level, a thin strip across the frame.
+   *  From here it spans 20-30 degrees and reads as a panel you are sitting at. */
+  consoleZ: stationFromNose(2.55),
+  consoleHeightAboveFloor: 1.05,
+  /** Interior clear width and height, inside the shell. MEASURED off the hull
+   *  section at the cockpit, not derived from the overall envelope: the floor
+   *  now sits at -0.38 and the deck over it at 2.107, so the clear height is
+   *  2.45, not the 3.6 an envelope-minus-skin guess gave. canopyPlan.ts reads
+   *  clearHeight for CANOPY_SIDE_SILL_Y, so an honest number here is what
+   *  puts the side rail at a shoulder line instead of over the pilot's head. */
+  clearWidth: 4.6,
+  clearHeight: 2.45,
 } as const
 
 /** Pilot eye point in craft-local space — the pilot camera sits exactly here. */

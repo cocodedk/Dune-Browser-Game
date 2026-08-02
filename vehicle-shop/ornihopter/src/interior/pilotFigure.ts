@@ -19,6 +19,15 @@ const HIP_Y = PAN_Y + 0.15
 const KNEE_Z_AHEAD = 0.45
 const SHOULDER_HALF_SPAN = 0.23
 const FLOOR_Y = COCKPIT.floorY
+// FIXED, round 6b: these three were absolute y literals (-0.35, -0.17, -0.4)
+// left over from a cabin floor at -1.80. With the flight deck raised they put
+// the figure's torso, head and shoulders BELOW its own hips, inside the seat
+// pan. Derived from PAN_Y now, which is where they should always have come
+// from — seated anthropometry is measured from the cushion, not from the
+// craft's origin.
+const TORSO_TOP_Y = PAN_Y + 0.62
+const HEAD_Y = PAN_Y + 0.78
+const SHOULDER_Y = PAN_Y + 0.57
 
 export function createPilotFigure(): { group: Group; dispose(): void } {
   const group = new Group()
@@ -30,17 +39,16 @@ export function createPilotFigure(): { group: Group; dispose(): void } {
   const helmet = figureHelmetMaterial()
 
   const pelvis = box(0.5, 0.3, 0.4, suit, { x, y: HIP_Y, z })
-  const torsoTop = -0.35
-  const torso = box(0.46, torsoTop - (HIP_Y + 0.15), 0.32, suit, {
+  const torso = box(0.46, TORSO_TOP_Y - (HIP_Y + 0.15), 0.32, suit, {
     x,
-    y: (HIP_Y + 0.15 + torsoTop) / 2,
+    y: (HIP_Y + 0.15 + TORSO_TOP_Y) / 2,
     z: z + 0.03,
   })
-  const head = ball(0.13, helmet, { x, y: -0.17, z: z + 0.05 })
+  const head = ball(0.13, helmet, { x, y: HEAD_Y, z: z + 0.05 })
 
   const parts = [pelvis, torso, head]
 
-  const shoulderY = -0.4
+  const shoulderY = SHOULDER_Y
   const elbowY = PAN_Y + 0.2 // resting on the armrest, see seats.ts
 
   for (const side of [-1, 1] as const) {

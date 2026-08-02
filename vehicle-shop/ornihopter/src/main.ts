@@ -82,8 +82,14 @@ function frame(now: number): void {
 
   if (controls.takeCameraCycle()) rig.cycle()
   if (controls.takeReset()) flight.reset()
+  // A head pose held by the capture harness (debug.look) wins until the pilot
+  // actually reaches for the head-look control themselves, at which point the
+  // live input takes it back. Without the hand-back a headless capture would
+  // silently lock the head for the rest of the session.
   const aim = controls.head()
-  rig.lookAround(aim.yaw, aim.pitch)
+  const held = debug.heldLook()
+  const live = aim.yaw !== 0 || aim.pitch !== 0
+  rig.lookAround(held && !live ? held.yaw : aim.yaw, held && !live ? held.pitch : aim.pitch)
 
   // When the capture harness has paused us, the scene still renders — but the
   // sim, the clock and the craft transform are left exactly where pose() put

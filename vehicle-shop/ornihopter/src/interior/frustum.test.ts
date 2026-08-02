@@ -45,16 +45,32 @@ describe('pilot-cam visibility, measured against the built geometry', () => {
 
   afterAll(() => cockpit.dispose())
 
-  it('KNOWN LIMITATION: neither seat, the copilot figure, nor the copilot stick is visible here', () => {
+  it('KNOWN LIMITATION: neither seat is visible here', () => {
     expect(frustum.intersectsBox(boxFor(root, 'seat-pilot'))).toBe(false)
     expect(frustum.intersectsBox(boxFor(root, 'seat-copilot'))).toBe(false)
-    expect(frustum.intersectsBox(boxFor(root, 'pilotFigure'))).toBe(false)
-    // layout.ts's STICK now sits at each seat's OWN x — the ergonomically
-    // correct place, and the same reason the copilot's seat is not visible
-    // either. This fixed forward frame was never going to show anything at
-    // the copilot's x; camera/cameraRig.ts's lookAround (headLook.test.ts)
-    // is the actual fix, not a stick position chosen to cheat this frustum.
-    expect(frustum.intersectsBox(boxFor(root, 'stick-copilot'))).toBe(false)
+  })
+
+  it('CHANGED in round 6b: the copilot figure reaches into frame at the knees', () => {
+    // The seats still sit at the eye's own station and are still behind the
+    // camera. The figure is not entirely behind it any more: with the crew
+    // 0.38m off the centreline rather than 0.85m, its thighs and boots — which
+    // reach 0.58m forward of the seat reference — cross into the frustum on
+    // the pilot's right. That is a body beside you, which is what bar Q3 was
+    // ever really asking for.
+    expect(frustum.intersectsBox(boxFor(root, 'pilotFigure'))).toBe(true)
+  })
+
+  it('CHANGED in round 6b: BOTH control arms are visible', () => {
+    // They used to be floor-mounted posts at each seat's own x, and the
+    // copilot's could not be in this frame at any height. The arms now hang
+    // from the brow beam ahead of the crew (layout.ts's STICK, and
+    // .shots/reference/thopter-03.jpg, which is where they hang in the
+    // reference too), so both run down through the forward view. This is a
+    // better answer to bar Q3 than the old console-cluster mitigation, and it
+    // is recorded as a change of contract rather than left as a stale
+    // expectation that happens to still pass.
+    expect(frustum.intersectsBox(boxFor(root, 'stick-pilot'))).toBe(true)
+    expect(frustum.intersectsBox(boxFor(root, 'stick-copilot'))).toBe(true)
   })
 
   it('mitigation: the console, including the copilot-side cluster, is visible', () => {

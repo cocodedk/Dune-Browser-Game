@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest'
 import { COCKPIT, PILOT_EYE } from '../spec'
 import { EYE, PAN_Y, SEAT, CONSOLE, WALL, seatX, NOSE_Z, CABIN_BOUNDARY_Z, FLOOR_FRONT_Z, FLOOR_REAR_Z } from './layout'
+import { hullInteriorHalfWidthAt } from './hullSection'
 
 describe('EYE / PAN_Y agree with spec.ts', () => {
   it('PAN_Y plus eyeAbovePan reproduces PILOT_EYE.y exactly', () => {
@@ -48,9 +49,22 @@ describe('the console sits forward of and below the eye (bar Q5, horizon visible
     expect(EYE.y - CONSOLE.topY).toBeGreaterThan(0.5)
   })
 
-  it("the copilot cluster's far strip is forward of its near strip", () => {
-    expect(CONSOLE.copilotClusterZMax).toBeGreaterThan(CONSOLE.copilotClusterZMin)
-    expect(CONSOLE.copilotClusterZMin).toBeLessThan(CONSOLE.nearZ)
+  it('the dash TAPERS with the hull instead of taking one width', () => {
+    // Round 6a took hullInteriorHalfWidthAt once, at the box's narrowest
+    // corner, and got a 2.17m dash with an empty third and a gap at the sill.
+    const near = CONSOLE.halfWidthAt(CONSOLE.nearZ)
+    const far = CONSOLE.halfWidthAt(CONSOLE.farZ)
+    expect(near).toBeGreaterThan(far)
+    expect(near - far).toBeGreaterThan(0.1)
+  })
+
+  it('and reaches the side liner at its widest station', () => {
+    // Same function the wall's own panels read, so "meets the sill" is one
+    // number rather than two that happen to agree.
+    const dash = CONSOLE.halfWidthAt(CONSOLE.nearZ)
+    const wall = hullInteriorHalfWidthAt(CONSOLE.topY, CONSOLE.nearZ)
+    expect(wall - dash).toBeLessThan(0.05)
+    expect(dash).toBeGreaterThan(1.2)
   })
 })
 

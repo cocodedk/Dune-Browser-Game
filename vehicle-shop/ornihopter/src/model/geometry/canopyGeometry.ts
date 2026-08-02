@@ -105,14 +105,29 @@ export function buildCanopy(): CanopyBuild {
   const frameMaterial = new MeshStandardMaterial({
     color: FRAME_COLOR, roughness: 0.55, metalness: 0.6, side: DoubleSide,
   })
-  // Round 3's critic read opacity 0.38 with depthWrite off as "neither
-  // occludes anything nor catches a visible highlight". These numbers are the
-  // ones that fixed it and they stay: a real tinted-glass level, depthWrite
-  // on, low roughness for a tight highlight instead of a blob. Opacity must
-  // stay under 0.95 or main.ts starts casting an opaque shadow through it.
+  // Round 3's critic read opacity 0.38 with depthWrite OFF as "neither
+  // occludes anything nor catches a visible highlight". depthWrite stays on,
+  // and the low roughness that gives a tight highlight instead of a blob stays
+  // too; opacity must also stay under 0.95 or main.ts starts casting an opaque
+  // shadow through it (this file's header).
+  //
+  // OPACITY LOWERED, round 6b, 0.60 -> 0.34, and this is the one number in the
+  // exterior the cockpit round touched. MEASURED from the pilot's eye with the
+  // interior's own inner pane disabled, so the exterior glazing was the only
+  // layer in the path: bare sky renders at 188/255 and sky through this glass
+  // at 74-120, while the cabin wall beside the window renders at 117-125. The
+  // canopy sits in the hull's own shadow (main.ts) so its lit contribution is
+  // near zero, which makes the transmitted value almost exactly (1 - opacity)
+  // x sky — at 0.60 that is 75, and a window darker than the wall next to it
+  // is not a window. No interior change can lift it: the loss happens before
+  // any cabin surface is involved. At 0.34 the same sightline lands near 124,
+  // a step of about a third off bare sky, which is a tinted canopy rather than
+  // a dark panel. The exterior captures were re-shot to confirm the canopy
+  // still reads as glazing from outside — the liner behind it is opaque and
+  // dark now (interior/canopyFrame.ts), which it was not when 0.6 was chosen.
   const glassMaterial = new MeshStandardMaterial({
     color: GLASS_COLOR, roughness: 0.22, metalness: 0.12,
-    transparent: true, opacity: 0.6, side: DoubleSide, depthWrite: true,
+    transparent: true, opacity: 0.34, side: DoubleSide, depthWrite: true,
   })
   const ribGeometry = new BoxGeometry(1, RIB_THICKNESS * 0.6, RIB_THICKNESS)
   const geometries: BufferGeometry[] = [ribGeometry]

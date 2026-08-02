@@ -62,8 +62,11 @@ describe('createCockpit contract', () => {
     const cockpit = createCockpit()
     const root = cockpit.root as unknown as Object3D
     const names = [
-      'seats', 'pilotFigure', 'console', 'sticks', 'cabinShell', 'canopyLiner', 'overheadPanel',
-      'cabinLighting',
+      'seats', 'pilotFigure', 'console', 'sticks', 'cabinShell', 'cabinFrames', 'canopyFrame',
+      'overheadPanel', 'cabinLighting',
+      // The shell's own parts, named because interior/enclosure.test.ts's
+      // coverage bar depends on every one of them existing.
+      'wall-pilot', 'wall-copilot', 'floor', 'bulkhead', 'noseBulkhead', 'rearArch',
     ]
     for (const name of names) expect(root.getObjectByName(name)).toBeTruthy()
     cockpit.dispose()
@@ -73,7 +76,13 @@ describe('createCockpit contract', () => {
     const cockpit = createCockpit()
     const { meshes, triangles } = countMeshes(cockpit.root as unknown as Object3D)
     expect(meshes).toBeGreaterThan(10)
-    expect(meshes).toBeLessThan(200)
+    // Raised from 200 in round 6b. The cockpit stopped being a dash and four
+    // panels: the shell is now a swept liner (floor, two three-band side walls,
+    // roof, two transverse frames) sampled every 0.3m along a 5.1m cabin, which
+    // is most of the count on its own, and it is exactly what closed the holes
+    // a critic found by pixel-sampling. The budget that matters is triangles,
+    // and this is a few thousand of them.
+    expect(meshes).toBeLessThan(700)
     expect(triangles).toBeGreaterThan(50)
     expect(triangles).toBeLessThan(20000)
     cockpit.dispose()
