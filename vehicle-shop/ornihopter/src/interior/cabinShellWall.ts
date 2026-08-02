@@ -28,6 +28,8 @@ import { FLOOR_FRONT_Z, FLOOR_REAR_Z, WALL } from './layout'
 import { RAIL_Y, roofHalfWidthAt, roofYAt } from './canopyLayout'
 import { deckYAt } from '../model/geometry/canopyPlan'
 import { hullInteriorHalfWidthAt, hullSectionBreakpoints, hullZSamples } from './hullSection'
+import { WINDOW_FORE_Z, WINDOW_AFT_Z, flankWindowEdgeAt } from '../model/geometry/flankWindow'
+import { buildFlankPane } from './flankPaneFrame'
 import { box, flatQuad, type Placed } from './sceneUtils'
 import { hullLinerMaterial, armorMaterial, gunmetalMaterial } from './materials'
 
@@ -64,23 +66,47 @@ function profileYs(z: number): number[] | null {
  */
 const TOP_OVERLAP_X = 0.04
 
-function widthsAt(z: number): { ys: number[]; xs: number[] } | null {
+interface Profile {
+  ys: number[]
+  xs: number[]
+  /** Band index the liner does NOT emit — the Apache side pane's opening. */
+  skip: number
+}
+
+/**
+ * ROUND 11, the B6 user ruling. Over the side window's run the liner gains
+ * two extra breakpoints — the opening's own sill and header, read from
+ * model/geometry/flankWindow.ts so the hole in the cabin and the hole in the
+ * skin are the same rectangle — and stops emitting the band between them.
+ * Everything else about the wall is unchanged, including the sill rail below
+ * it: the glass starts where the armoured tub ends (round 9d), it does not
+ * replace it.
+ */
+function widthsAt(z: number, windowed: boolean): Profile | null {
   const ys = profileYs(z)
   if (!ys) return null
-  const xs = ys.map((y) => hullInteriorHalfWidthAt(y, z))
   const top = ys.length - 1
-  xs[top] = roofHalfWidthAt(z) - TOP_OVERLAP_X
   ys[top] = deckYAt(z) - 0.005
+  const opening = windowed ? flankWindowEdgeAt(z) : null
+  if (opening) {
+    // floor, chine, SILL, HEADER, roof — the upper-flank break between them
+    // is inside the opening and goes with it.
+    ys.splice(2, 1, opening.low.y, opening.high.y)
+  }
+  const xs = ys.map((y) => hullInteriorHalfWidthAt(y, z))
+  xs[xs.length - 1] = roofHalfWidthAt(z) - TOP_OVERLAP_X
   if (xs.some((x) => x <= 0)) return null
-  return { ys, xs }
+  return { ys, xs, skip: opening ? 2 : -1 }
 }
 
 function panels(group: Group, sign: 1 | -1, za: number, zb: number): void {
-  const a = widthsAt(za)
-  const b = widthsAt(zb)
-  if (!a || !b) return
+  const windowed = za >= WINDOW_FORE_Z - 1e-9 && zb <= WINDOW_AFT_Z + 1e-9
+  const a = widthsAt(za, windowed)
+  const b = widthsAt(zb, windowed)
+  if (!a || !b || a.ys.length !== b.ys.length) return
   const material = hullLinerMaterial()
-  for (let i = 0; i < PROFILE_POINTS - 1; i++) {
+  for (let i = 0; i < a.ys.length - 1; i++) {
+    if (i === a.skip) continue
     const lowA: Placed = { x: sign * a.xs[i], y: a.ys[i], z: za }
     const lowB: Placed = { x: sign * b.xs[i], y: b.ys[i], z: zb }
     const highB: Placed = { x: sign * b.xs[i + 1], y: b.ys[i + 1], z: zb }
@@ -130,9 +156,13 @@ export function buildSideWall(sign: 1 | -1): Group {
   const group = new Group()
   group.name = sign === -1 ? 'wall-pilot' : 'wall-copilot'
 
-  const samples = hullZSamples(FLOOR_FRONT_Z, FLOOR_REAR_Z, 0.3)
+  // The window's two ends are sampled EXACTLY, so no band ever straddles the
+  // boundary with one end open and the other closed.
+  const samples = [...hullZSamples(FLOOR_FRONT_Z, FLOOR_REAR_Z, 0.3), WINDOW_FORE_Z, WINDOW_AFT_Z]
+    .sort((p, q) => p - q)
   for (let i = 0; i < samples.length - 1; i++) panels(group, sign, samples[i], samples[i + 1])
 
+  group.add(buildFlankPane(sign))
   shoulderRail(group, sign)
 
   // Greeble ribs on the flank panel, between the rail and the floor. X and Y

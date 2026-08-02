@@ -34,7 +34,13 @@ export function bandsOver(zs: readonly number[]): Band[] {
 // than one windscreen. 0.06 still catches a highlight and still reads as a
 // machined edge.
 const RAIL_DEPTH = 0.06
-export const RAIL_THICKNESS = 0.09
+/** ROUND 11, second half of the B6 ruling ("...and thiner frames"): 0.09 ->
+ *  0.065. This rail runs down both sides of the forward aperture, so it is
+ *  the member that brackets the pilot's own windscreen, and it also sets the
+ *  header and brow beams' fore-aft thickness (canopyFrame.ts scales by it).
+ *  Thinned against interior/forwardCone.test.ts, which is the guard that says
+ *  whether a frame member has walked into the dead-ahead cone. */
+export const RAIL_THICKNESS = 0.065
 
 type Sign = 1 | -1
 const SIDES: readonly Sign[] = [-1, 1]

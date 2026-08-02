@@ -32,6 +32,7 @@ import {
   CANOPY_Z, FRAMED_CANOPY_Z, CANOPY_RIM, CANOPY_RECESS, RIM_TOP_FRACTION, GLAZE_FRACTION,
   canopyHalfWidthAt, deckYAt,
 } from './canopyPlan'
+import { buildFlankGlazing } from './flankGlazing'
 
 export {
   canopySectionAt, ridgeHeightAt, CANOPY_STATION_Z, CANOPY_SIDE_SILL_Y,
@@ -184,6 +185,14 @@ export function buildCanopy(): CanopyBuild {
 
   add(cap(CANOPY_Z[0]), glassMaterial)
   add(cap(CANOPY_Z[CANOPY_Z.length - 1]), frameMaterial)
+
+  // ROUND 11, the B6 user ruling: the flat side panes cut into the upper
+  // flanks join the canopy group and share its two materials, so the whole
+  // exterior glazing family is one tint and one frame tone — and so every
+  // sightline harness that already raycasts `canopy.group` sees them.
+  const flanks = buildFlankGlazing(glassMaterial, frameMaterial)
+  group.add(flanks.group)
+  geometries.push(...flanks.geometries)
 
   return { group, geometries, materials }
 }

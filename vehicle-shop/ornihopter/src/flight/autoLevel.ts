@@ -29,7 +29,7 @@
 import type { Quat } from '../contracts'
 import { noseDirection, upDirection, starboardDirection } from '../contracts'
 import { quatFromAxisAngle, quatMultiply, quatNormalise } from './quatMath'
-import { AUTO_LEVEL_RATE } from './constants'
+import { AUTO_LEVEL_RATE, TERMINAL_LEVEL_RATE } from './constants'
 
 const clamp1 = (v: number): number => Math.max(-1, Math.min(1, v))
 
@@ -65,9 +65,19 @@ function fromEuler(headingRad: number, pitchRad: number, rollRad: number): Quat 
  * autopilot flying the aircraft level.
  */
 export function levelOrientation(orientation: Quat, dt: number, rate = AUTO_LEVEL_RATE): Quat {
-  const decay = Math.exp(-rate * Math.max(dt, 0))
-  const heading = headingOf(orientation)
-  const pitch = pitchOf(orientation) * decay
-  const roll = rollOf(orientation) * decay
-  return fromEuler(heading, pitch, roll)
+  const step = Math.max(dt, 0)
+  const decay = Math.exp(-rate * step)
+  // The terminal term, and the reason "0 bubble" is reachable at all: the
+  // exponential alone is asymptotic, so it hands back a smaller error every
+  // tick and never zero. Subtracting a fixed sweep closes the last fraction
+  // of a degree in finite time. Clamped at zero, so it can neither overshoot
+  // nor flip sign -- and returning a literal 0 rather than sign*0 keeps the
+  // negative-zero out of the quaternion (round 6e.2's -0 lesson).
+  const floor = (TERMINAL_LEVEL_RATE * Math.PI) / 180 * step
+  const shrink = (angle: number): number => {
+    const decayed = angle * decay
+    const magnitude = Math.abs(decayed) - floor
+    return magnitude <= 0 ? 0 : Math.sign(decayed) * magnitude
+  }
+  return fromEuler(headingOf(orientation), shrink(pitchOf(orientation)), shrink(rollOf(orientation)))
 }

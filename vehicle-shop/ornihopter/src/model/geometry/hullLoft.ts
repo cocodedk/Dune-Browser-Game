@@ -22,9 +22,11 @@
 // derived from the ring's CCW convention and confirmed against the built
 // geometry edge by edge.
 
-import { STATION_Z, hullHalfWidthAt, hullHalfHeightAt, hullShapeAt, hullKeelYAt } from './hullStations'
+import { hullHalfWidthAt, hullHalfHeightAt, hullShapeAt, hullKeelYAt } from './hullStations'
 import { buildRing, type Point2 } from './hullCrossSection'
 import { HULL_U_MAX } from './hullUv'
+import { isWindowBay, loftStationZs, stationUFraction } from './flankWindow'
+import { FLANK_PANELS, bayCanCut, cutFlankBay } from './hullFlankCut'
 
 export interface LoftMesh {
   positions: number[]
@@ -45,37 +47,80 @@ export function loftRingsFlat(
   const positions: number[] = []
   const uvs: number[] = []
   const bays = Math.max(1, rings.length - 1)
-  const push = (p: Point2, z: number, u: number, v: number) => {
-    positions.push(p.x, p.y, z)
-    uvs.push(u, v)
-  }
 
   for (let s = 0; s < rings.length - 1; s++) {
-    const ringA = rings[s]
-    const ringB = rings[s + 1]
-    const size = ringA.length
-    const zA = zs[s]
-    const zB = zs[s + 1]
     const uA = uStart + ((uEnd - uStart) * s) / bays
     const uB = uStart + ((uEnd - uStart) * (s + 1)) / bays
-    for (let k = 0; k < size; k++) {
-      const k1 = (k + 1) % size
-      const vA = k / size
-      const vB = (k + 1) / size
-      push(ringA[k], zA, uA, vA)
-      push(ringA[k1], zA, uA, vB)
-      push(ringB[k1], zB, uB, vB)
-      push(ringA[k], zA, uA, vA)
-      push(ringB[k1], zB, uB, vB)
-      push(ringB[k], zB, uB, vA)
-    }
+    const bay = loftBay(rings[s], rings[s + 1], zs[s], zs[s + 1], uA, uB)
+    positions.push(...bay.positions)
+    uvs.push(...bay.uvs)
   }
   return { positions, uvs }
 }
 
-/** One ring per station in STATION_Z, nose to tail, lofted flat-shaded. */
+/**
+ * One bay, panel by panel. `skip` drops panels the caller means to emit some
+ * other way — round 11's flank window is the only user, and hullFlankCut.ts
+ * re-emits exactly the panels it names, minus the opening.
+ */
+export function loftBay(
+  ringA: readonly Point2[],
+  ringB: readonly Point2[],
+  zA: number,
+  zB: number,
+  uA: number,
+  uB: number,
+  skip?: ReadonlySet<number>,
+): LoftMesh {
+  const positions: number[] = []
+  const uvs: number[] = []
+  const size = ringA.length
+  const push = (p: Point2, z: number, u: number, v: number) => {
+    positions.push(p.x, p.y, z)
+    uvs.push(u, v)
+  }
+  for (let k = 0; k < size; k++) {
+    if (skip?.has(k)) continue
+    const k1 = (k + 1) % size
+    const vA = k / size
+    const vB = (k + 1) / size
+    push(ringA[k], zA, uA, vA)
+    push(ringA[k1], zA, uA, vB)
+    push(ringB[k1], zB, uB, vB)
+    push(ringA[k], zA, uA, vA)
+    push(ringB[k1], zB, uB, vB)
+    push(ringB[k], zB, uB, vA)
+  }
+  return { positions, uvs }
+}
+
+const ringAt = (z: number): Point2[] =>
+  buildRing(hullHalfWidthAt(z), hullHalfHeightAt(z), hullShapeAt(z), 0, hullKeelYAt(z))
+
+/**
+ * One ring per station, nose to tail, lofted flat-shaded — with the Apache
+ * side windows cut out of the upper flanks over their run (flankWindow.ts).
+ * The station list is the authored table PLUS the window's two ends, and u is
+ * read from the ORIGINAL bay each station falls in, so the painted panel seams
+ * land exactly where they did before the cut existed.
+ */
 export function buildHullLoft(): LoftMesh {
-  const rings = STATION_Z.map((z) =>
-    buildRing(hullHalfWidthAt(z), hullHalfHeightAt(z), hullShapeAt(z), 0, hullKeelYAt(z)))
-  return loftRingsFlat(rings, STATION_Z, 0, HULL_U_MAX)
+  const zs = loftStationZs()
+  const rings = zs.map(ringAt)
+  const positions: number[] = []
+  const uvs: number[] = []
+  const add = (mesh: LoftMesh): void => {
+    positions.push(...mesh.positions)
+    uvs.push(...mesh.uvs)
+  }
+  for (let s = 0; s < zs.length - 1; s++) {
+    const zA = zs[s]
+    const zB = zs[s + 1]
+    const uA = HULL_U_MAX * stationUFraction(zA)
+    const uB = HULL_U_MAX * stationUFraction(zB)
+    const cut = isWindowBay(zA, zB) && bayCanCut(zA, zB)
+    add(loftBay(rings[s], rings[s + 1], zA, zB, uA, uB, cut ? FLANK_PANELS : undefined))
+    if (cut) add(cutFlankBay(rings[s], rings[s + 1], zA, zB, uA, uB))
+  }
+  return { positions, uvs }
 }

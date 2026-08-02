@@ -17,7 +17,7 @@
 // math, so this runs in the node unit environment like everything else.
 
 import { Raycaster, Vector3, type Object3D, type Material } from 'three'
-import { PILOT_EYE } from '../spec'
+import { COCKPIT, PILOT_EYE } from '../spec'
 
 /** Camera contract, copied from camera/cameraRig.ts's pilot mode and
  *  tools/shoot.mjs's capture size so a sample here is a pixel there. */
@@ -70,13 +70,33 @@ function isGlazing(material: Material | Material[] | undefined): boolean {
 
 const EYE = new Vector3(PILOT_EYE.x, PILOT_EYE.y, PILOT_EYE.z)
 
+/**
+ * The OTHER seat's eye. spec.ts derives PILOT_EYE.x from COCKPIT.seatOffsetX
+ * (negated: the pilot sits to port); the copilot is that offset mirrored, at
+ * the same height and station. Exported here rather than in spec.ts because
+ * nothing outside these raycasts needs a second camera point — round 11's
+ * B6 side-glance proof has to ask BOTH seats whether a level look to its own
+ * side reaches daylight, and asking only the pilot's would pass a cockpit
+ * glazed on one flank.
+ */
+export const COPILOT_EYE = { x: COCKPIT.seatOffsetX, y: PILOT_EYE.y, z: PILOT_EYE.z } as const
+
+/** Vector3 form of either seat, for the eye argument below. */
+export function seatEye(seat: { x: number; y: number; z: number }): Vector3 {
+  return new Vector3(seat.x, seat.y, seat.z)
+}
+
 /** One ray from the eye. `targets` are craft-local roots — the cockpit and
  *  the canopy — each at identity, which is how both are parented in main.ts
  *  before the craft root's own transform. Their world matrices are refreshed
  *  here rather than assumed: Raycaster reads matrixWorld and does not update
  *  it, and a stale one silently raycasts against the origin. */
-export function castGaze(targets: Object3D[], direction: Vector3): { hit: GazeHit; distance: number } {
-  const raycaster = new Raycaster(EYE, direction, 0.02, 400)
+export function castGaze(
+  targets: Object3D[],
+  direction: Vector3,
+  eye: Vector3 = EYE
+): { hit: GazeHit; distance: number } {
+  const raycaster = new Raycaster(eye, direction, 0.02, 400)
   for (const t of targets) t.updateMatrixWorld(true)
   const hits = raycaster.intersectObjects(targets, true)
   if (hits.length === 0) return { hit: 'open', distance: Infinity }
@@ -100,9 +120,10 @@ export function castGaze(targets: Object3D[], direction: Vector3): { hit: GazeHi
  */
 export function firstOpaque(
   targets: Object3D[],
-  direction: Vector3
+  direction: Vector3,
+  eye: Vector3 = EYE
 ): { object: Object3D; point: Vector3 } | null {
-  const raycaster = new Raycaster(EYE, direction, 0.02, 400)
+  const raycaster = new Raycaster(eye, direction, 0.02, 400)
   for (const t of targets) t.updateMatrixWorld(true)
   for (const hit of raycaster.intersectObjects(targets, true)) {
     const object = hit.object as Object3D & { material?: Material | Material[] }
@@ -113,8 +134,12 @@ export function firstOpaque(
 
 /** True when the ray leaves the craft — the fraction of these across the frame
  *  is bar B3-LIVE's "exterior >= 20% at pitch 0". */
-export function reachesExterior(targets: Object3D[], direction: Vector3): boolean {
-  return firstOpaque(targets, direction) === null
+export function reachesExterior(
+  targets: Object3D[],
+  direction: Vector3,
+  eye: Vector3 = EYE
+): boolean {
+  return firstOpaque(targets, direction, eye) === null
 }
 
 /**
@@ -128,7 +153,8 @@ export function sampleFrame(
   cols: number,
   rows: number,
   yawDeg = 0,
-  pitchDeg = 0
+  pitchDeg = 0,
+  eye: Vector3 = EYE
 ): FrameSample[] {
   const samples: FrameSample[] = []
   for (let r = 0; r < rows; r++) {
@@ -136,7 +162,7 @@ export function sampleFrame(
     const ndcY = 1 - ((r + 0.5) * 2) / rows
     for (let c = 0; c < cols; c++) {
       const ndcX = ((c + 0.5) * 2) / cols - 1
-      const { hit, distance } = castGaze(targets, gazeDirection(ndcX, ndcY, yawDeg, pitchDeg))
+      const { hit, distance } = castGaze(targets, gazeDirection(ndcX, ndcY, yawDeg, pitchDeg), eye)
       samples.push({ ndcX, ndcY, hit, distance })
     }
   }

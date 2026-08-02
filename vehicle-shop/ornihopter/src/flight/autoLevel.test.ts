@@ -125,6 +125,25 @@ describe('auto-level recovers a banked/pitched craft', () => {
     expect(Math.abs(rollDegOf(released.orientation))).toBeGreaterThan(Math.abs(rollBeforeRelease))
   })
 
+  it('(e) 0 BUBBLE: a 4s hold ends at exactly level, not merely near it', () => {
+    // USER RULING, 2026-08-02 (apache-gauntlet.md B6): "auto level must bring
+    // the craft to 0 bubble." Under the pure exponential this test was written
+    // against, a 4s hold from 60deg left |roll| = 60 * exp(-1.5*4) = 0.149deg
+    // — RED, and correctly so: an exponential never arrives, it only gets
+    // small, and a bubble that never centres is what the user was looking at.
+    // flight/constants.ts's TERMINAL_LEVEL_RATE is what makes arrival finite.
+    const trace = recoveryTrace(bankedState(60, -20), neutralInput({ autoLevel: true }), 0.02, 4)
+    const last = trace[trace.length - 1]
+    expect(Math.abs(last.roll)).toBeLessThan(0.1)
+    expect(Math.abs(last.pitch)).toBeLessThan(0.1)
+    // Not "small": zero. The terminal rate lands the error exactly on it.
+    // Through Math.abs, because the attitude round-trip (fromEuler, then
+    // asin/atan2 back out) hands a level craft -0 as readily as +0 and
+    // Object.is separates the two -- a sign bit on zero is not a bubble.
+    expect(Math.abs(last.roll)).toBe(0)
+    expect(Math.abs(last.pitch)).toBe(0)
+  })
+
   it('(d) holding auto-level in level flight injects no drift (identity)', () => {
     const model = createFlightModel() // createInitialState(): level, cruising
     expect(model.state.orientation).toEqual(IDENTITY_QUAT)

@@ -98,3 +98,17 @@ export const LANDED_LEVEL_RATE = 2.5
  * its test for the measured numbers.
  */
 export const AUTO_LEVEL_RATE = 1.5
+
+/**
+ * The last degree, in degrees PER SECOND. USER RULING, 2026-08-02: "auto level
+ * must bring the craft to 0 bubble." An exponential never arrives -- MEASURED
+ * at AUTO_LEVEL_RATE, a 4-second hold from a 60-degree bank still leaves 0.149
+ * degrees of roll on the clock, which is a bubble that is nearly but not
+ * centred, forever. Subtracting a fixed angular rate on top of the decay makes
+ * the arrival FINITE (about 3.0s from 60 degrees) without touching the shape of
+ * the recovery a pilot sees: the magnitude still only ever shrinks, so the
+ * no-overshoot property is unchanged, and the term is small enough (1 deg/s
+ * against an initial 90 deg/s of decay) that the first second is the same
+ * flight.
+ */
+export const TERMINAL_LEVEL_RATE = 1

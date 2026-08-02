@@ -93,8 +93,26 @@ describe('the cockpit reads as a cave, not a dash floating in open air', () => {
   it('turning the head to either side finds cabin, symmetrically', () => {
     const port = coverage(sampleFrame(targets, 32, 20, -60, 0))
     const starboard = coverage(sampleFrame(targets, 32, 20, 60, 0))
-    expect(port.structure).toBeGreaterThan(0.75)
-    expect(starboard.structure).toBeGreaterThan(0.75)
+    // ADAPTED, round 11, and disclosed: this asserted structure > 0.75 on
+    // both flanks. MEASURED across the change on a stashed rebuild of the
+    // pre-round tree, same 32x20 grid, same two poses:
+    //   yaw -60  structure 0.941 -> 0.580   glazing 0.059 -> 0.420
+    //   yaw +60  structure 0.783 -> 0.561   glazing 0.217 -> 0.439
+    // The frame did not open, it GLAZED: every point the assertion lost to
+    // structure went to glass, and open stayed at zero. The B6 user ruling
+    // put a large flat pane in each upper flank precisely so that a sideways
+    // glance is not wall.
+    //
+    // What the original was really guarding is intact and is asserted
+    // harder below: turning the head must find CABIN — structure or glass,
+    // never sky — which is the zero-escape suite above restated per flank,
+    // and opaque structure must still hold a real share so the pane reads
+    // as a framed window rather than a missing flank.
+    for (const side of [port, starboard]) {
+      expect(side.structure + side.glazing).toBeGreaterThan(0.99)
+      expect(side.structure).toBeGreaterThan(0.45)
+    }
+    expect(Math.abs(port.structure - starboard.structure)).toBeLessThan(0.05)
   })
 })
 
