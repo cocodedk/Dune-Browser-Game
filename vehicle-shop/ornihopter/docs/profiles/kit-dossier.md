@@ -24,6 +24,21 @@ taken directly off them.
    triangle-count matching** (e.g. `Gear_left.stl` = 166 tri = the 3MF's `Left_Gear.stl`,
    166 tri — not by name similarity, which differs between the two exports).
 
+> **CORRECTION (Round 6a, verified by the lead).** Layer 3's premise is wrong. The
+> per-part transforms in the `Kit options/*.3mf` `3dmodel.model` files are **print-bed
+> placements**, not assembly positions: every translation's z lies within ~1mm of the
+> bed and the 3×3 blocks are the rotations that lay each part FLAT (checked twice,
+> independently — by the Round 6a builder and by the lead, who also confirmed
+> `Assembly_168.model` contains no internal transforms at all). Consequences, claim by
+> claim: **part-list facts stand** (ramp gear co-installed with main gear — that is a
+> `model_settings.config` membership fact, true of a bed too); **single-plate anatomy
+> stands** (all layer-1/2 measurements); **cross-part distances are DOWNGRADED to
+> bed-packing artifacts** — §e's 39.52mm row gap survives only because the kit-2
+> photograph independently corroborates it, and the tail-end anchoring of
+> `Airframe_main` is likewise photo-derived now, not 3MF-derived. The "bosses, not nose
+> fins" verdict (§b) survives either end-anchoring: the bosses sit 62–85% along the
+> plate, i.e. not at EITHER tip.
+
 Every plate render mentioned below (one PNG per part, de-rotated, filled top-face +
 true-boundary outline + mm grid, plus a contact sheet) was produced and visually
 inspected during this pass; they live in the measurement session's scratchpad, not in

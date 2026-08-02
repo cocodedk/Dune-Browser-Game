@@ -672,3 +672,38 @@ brace, skid-style feet. Queued as its own round behind 6a (shared Ornithopter.ts
 and the shared dev server keep the sequence rule in force). Queue after 6a, one landing at
 a time: cockpit enclosure (the 3/10 brief), wing arm/tonal round, gear restyle, then
 re-shoot and a fresh critic panel.
+
+### Round 6a — LANDED. Verified. The craft reads engineered.
+
+Commit `c71aa14`. The station table is now the list of hard breaks and nothing else: 21 ->
+10 stations, zero interpolation-softened breaks, longest straight flank run 1.30m ->
+3.60m, and the slenderness guard tightened in passing (>=90% run 2.88m). The tent canopy
+is deleted for a flush chamfered lens (proudness above deck 1.14m -> 0.22m, glazing
+recessed, mullioned; 47.4% of pod length vs the plate's 39.9% — over, flagged, accepted
+for now). WING_ROOTS re-authored to the kit's two 2x2 clusters (7.15/12.45m, gap 5.30m)
+with mount shelves and clevis cheeks. The boom terminates in the measured two-tine fork —
+and the slot came out 0.273m against the kit's independently scaled 0.270m, a 3mm
+convergence arrived at through different ratios. Eleven fail-first reds recorded; the
+builder caught a vacuous assertion in its own gap test. It also fixed a defect no critic
+had isolated: the console had been poking through the nose hull in every exterior capture
+for rounds (CONSOLE.halfWidth 2.1m vs a 1.03m hull corner) — both console dimensions now
+hull-derived. Lead reproduced: lint 0, tsc 0, **1430/1430**, lengths clean, span/length
+2.2249 in window; top and hero frames now read machined against kit-3.
+
+**Evidence correction, verified by the lead.** 6a challenged the dossier's layer-3 method
+and is RIGHT: the 3MF per-part transforms are print-bed placements (flat-lay rotations, z
+within ~1mm; Assembly_168.model holds no internal transforms — lead re-checked
+independently). Cross-part distances are downgraded to bed packing; the 5.30m mount-row
+gap survives on kit-2 photo corroboration; part-list and single-plate facts stand;
+"bosses, not nose fins" survives either end-anchoring. Correction block added to
+kit-dossier.md. Lesson logged: an agent that VERIFIES its inputs beats an agent that
+consumes them — the dossier's confident method paragraph did not survive contact with a
+builder that actually opened the files.
+
+Carried forward to open rounds: pilot eye 2.26m below deck (6b raises it — lead ruling);
+dash 2.17m wide with an empty left third (6b builds the tapered console); fork tines read
+thin; rear34 bullnose; landedHeight stale at measured 6.66 (gear round owns it); legs
+read overbright in the new frames (gear round re-tunes). **Round 6b dispatched** (workflow
+`wf_e6b57894-981`, Opus, max effort): full cockpit enclosure per the 3/10 critique — brow,
+sills, visible glazing, both correctness holes closed, ONE sun, military-palette
+instruments, articulated stick, seat presence, eye raised into the glazed sightline.
