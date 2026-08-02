@@ -247,6 +247,24 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round 12 — wheels ENGAGE the belt; the conveyor elements are back (user finding: "the wheels must engage with the belt and not sink into it. the belt lacks elements of the conveyor belt. where the teeth of the wheels engage with the belt")
+
+Two changes. (1) The belt's runs were 3.85m-deep walls — the wheels read as
+embedded. The loop is now THIN: inner face, outer face, top/bottom bands and
+end connectors at 0.4m, so the wheels sit in open space between the faces
+with the hull showing through. (2) Engagement: the belt now carries red LUGS
+on its outer face at each sprocket (4 per sprocket, interleaved with the
+tooth angles), and the sprocket TEETH were extended to pass THROUGH the belt
+face (they span from inside the belt to past the sprocket) and made children
+of a sprocket group so they TURN with the wheel — grey teeth visibly passing
+between red lugs, the conveyor read the machine was missing.
+
+Gates: lint 0, shop tsc 0, **22/22** tests, lengths clean.
+
+**Open:** belt scrolling, dust, panel lines, first blind critic panel.
+
+_Status: complete._
+
 ### Round 11 — perfect the belt: a chain of tread shoes (user direction: "perfect the belt")
 
 Round 10 made the loop; this makes the GROUND RUN a belt. The smooth

@@ -1,15 +1,17 @@
 // vehicle-shop/harvester/src/model/belt.ts
-// COMPONENT 7 — one belt LOOP, made to read as a real track belt:
+// COMPONENT 7 — one belt LOOP, thin enough that the wheels ENGAGE it rather
+// than sink into it (user finding), and with the conveyor elements where the
+// sprocket teeth mesh:
 //
-//   - the LOWER run is a CHAIN OF TREAD SHOES — 24 blocks with small gaps
-//     and a raised grouser ridge on each, the segmented caterpillar read
-//     (round 10 made the loop; this makes the ground run a belt)
-//   - a smooth UPPER run at the top, with the return rollers tucking under
-//   - rounded END CONNECTORS wrapping the sprockets
-//   - the middle stays OPEN, so the running gear sits in clear space
+//   - a THIN loop: outer face, inner face, top and bottom bands, end
+//     connectors — 0.4m deep, so the running gear sits in clear space and
+//     the hull shows through; the wheels are NOT buried in a wall
+//   - tread shoes on the outer face's lower run (the segmented ground read)
+//   - ENGAGEMENT LUGS on the outer face at each sprocket — red blocks at
+//     the same arc as the sprocket's grey teeth, interleaved, so the teeth
+//     visibly pass between them like a conveyor
 //
-// Built once and instantiated for both sides at mirrored X. The shoes are
-// where the still-open belt-scrolling animation will drive the tread.
+// Built once and instantiated for both sides at mirrored X.
 
 import { BoxGeometry, Group, Mesh, type BufferGeometry, type MeshStandardMaterial } from 'three'
 import { TRACK, BODY } from '../spec'
@@ -26,10 +28,19 @@ const POD_LENGTH = BODY.tailZ - BODY.noseZ
 const BELT = TRACK.belt
 const SHOE_SPACING = POD_LENGTH / TRACK.grouserCount
 const SHOE_LENGTH = SHOE_SPACING * 0.85
-const SHOE_HEIGHT = 1.2
+const SHOE_HEIGHT = 1.0
 
-const UPPER_THICK = 1.2
-const END_THICK = 1.2
+/** How deep each band is — thin on purpose: the wheels must sit in open
+ *  space between the faces, not behind a wall. */
+const FACE_THICK = 0.4
+const BAND_THICK = 0.4
+
+/** Engagement lugs: at the sprocket arc, offset from the teeth so the teeth
+ *  pass between them. */
+const LUG_RADIUS = TRACK.sprocketRadius + 0.55
+const LUG_START = (36 * Math.PI) / 180
+const LUG_STEP = (36 * Math.PI) / 180
+const LUG_COUNT = 4
 
 /** One belt loop for one side. `side` 1 = starboard, -1 = port; the whole
  *  group is positioned at that side's track centreline. */
@@ -51,30 +62,45 @@ export function buildBelt(
     group.add(mesh)
   }
 
-  // Upper run at the top.
-  add(roundedBox(BELT.width, UPPER_THICK, POD_LENGTH, 0.45), 0, BELT.height - UPPER_THICK / 2, 0)
-  // End connectors wrapping the sprockets, rounded so the loop reads curved.
-  add(roundedBox(BELT.width, BELT.height, END_THICK, 0.8), 0, BELT.height / 2, -POD_LENGTH / 2)
-  add(roundedBox(BELT.width, BELT.height, END_THICK, 0.8), 0, BELT.height / 2, POD_LENGTH / 2)
+  // The loop: inner and outer faces, top and bottom bands, end connectors —
+  // 0.4m thin, so the wheels read as sitting INSIDE the belt, not in it.
+  const outerX = side * (BELT.width / 2)
+  const innerX = side * (-BELT.width / 2)
+  add(roundedBox(FACE_THICK, BELT.height, POD_LENGTH, 0.2), outerX, BELT.height / 2, 0)
+  add(roundedBox(FACE_THICK, BELT.height, POD_LENGTH, 0.2), innerX, BELT.height / 2, 0)
+  add(roundedBox(BELT.width, BAND_THICK, POD_LENGTH, 0.2), 0, BELT.height - BAND_THICK / 2, 0)
+  add(roundedBox(BELT.width, BAND_THICK, POD_LENGTH, 0.2), 0, BAND_THICK / 2, 0)
+  add(roundedBox(BELT.width, BELT.height, BAND_THICK, 0.2), 0, BELT.height / 2, -POD_LENGTH / 2)
+  add(roundedBox(BELT.width, BELT.height, BAND_THICK, 0.2), 0, BELT.height / 2, POD_LENGTH / 2)
 
-  // The lower run: a chain of tread shoes with a raised grouser ridge on
-  // each shoe's outer face — segmented, like a real track belt.
+  // Tread shoes on the OUTER face's lower run — the segmented ground read.
   for (let i = 0; i < TRACK.grouserCount; i++) {
     const z = -POD_LENGTH / 2 + SHOE_SPACING * (i + 0.5)
-    const shoe = new BoxGeometry(BELT.width + 0.25, SHOE_HEIGHT, SHOE_LENGTH)
+    const shoe = new BoxGeometry(0.35, SHOE_HEIGHT, SHOE_LENGTH)
     geometries.push(shoe)
     const shoeMesh = new Mesh(shoe, beltMaterial)
-    shoeMesh.position.set(0, SHOE_HEIGHT / 2, z)
+    shoeMesh.position.set(outerX + side * 0.2, SHOE_HEIGHT / 2, z)
     shoeMesh.castShadow = true
-    shoeMesh.receiveShadow = true
     group.add(shoeMesh)
+  }
 
-    const ridge = new BoxGeometry(0.4, SHOE_HEIGHT + 0.15, SHOE_LENGTH * 0.7)
-    geometries.push(ridge)
-    const ridgeMesh = new Mesh(ridge, beltMaterial)
-    ridgeMesh.position.set(side * (BELT.width / 2 + 0.35), SHOE_HEIGHT / 2, z)
-    ridgeMesh.castShadow = true
-    group.add(ridgeMesh)
+  // Engagement lugs at each sprocket — the conveyor element the teeth mesh
+  // with. Interleaved with the tooth angles so the grey teeth pass between
+  // the red lugs.
+  for (const sz of TRACK.sprocketZ) {
+    for (let t = 0; t < LUG_COUNT; t++) {
+      const angle = LUG_START + t * LUG_STEP
+      const lug = new BoxGeometry(0.5, 0.9, 0.7)
+      geometries.push(lug)
+      const lugMesh = new Mesh(lug, beltMaterial)
+      lugMesh.position.set(
+        outerX + side * 0.3,
+        LUG_RADIUS * Math.sin(angle),
+        sz + LUG_RADIUS * Math.cos(angle)
+      )
+      lugMesh.castShadow = true
+      group.add(lugMesh)
+    }
   }
 
   return {

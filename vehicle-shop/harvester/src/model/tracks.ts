@@ -82,30 +82,35 @@ export function buildTracks(
     }
 
     // End sprockets, bigger than the road wheels, with a ring of teeth — the
-    // belt visibly wraps these. Bespoke: they are the toothed ends, not the
-    // plain wheel component.
+    // belt visibly wraps these and the teeth ENGAGE the belt's lugs (built
+    // in belt.ts at the same arc, interleaved). The sprocket is a GROUP at
+    // the axle holding the cylinder plus its teeth, so the update loop rolls
+    // the whole toothed wheel.
     for (const sz of TRACK.sprocketZ) {
+      const sprocketGroup = new Group()
+      sprocketGroup.name = 'wheel'
+      sprocketGroup.position.set(x, TRACK.sprocketRadius, sz)
       const sprocket = new CylinderGeometry(TRACK.sprocketRadius, TRACK.sprocketRadius, BELT.width + SPROCKET_OVER * 2, 18)
       geometries.push(sprocket)
       const mesh = new Mesh(sprocket, wheelMaterial)
-      mesh.name = 'wheel'
       mesh.rotation.z = Math.PI / 2
-      mesh.position.set(x, TRACK.sprocketRadius, sz)
       mesh.castShadow = true
-      group.add(mesh)
-      const faceX = x + (side * (BELT.width + SPROCKET_OVER * 2)) / 2
+      sprocketGroup.add(mesh)
+      // Teeth span from just inside the belt's outer face to past the
+      // sprocket face, so they pass THROUGH the belt and meet its lugs.
+      const toothLocalX = BELT.width / 2 + 0.55
       for (let t = 0; t < TOOTH_COUNT; t++) {
         const angle = TOOTH_START + t * TOOTH_STEP
-        const tooth = new BoxGeometry(0.5, 0.9, 0.9)
+        const tooth = new BoxGeometry(1.5, 0.9, 0.9)
         geometries.push(tooth)
         const toothMesh = new Mesh(tooth, darkMaterial)
-        toothMesh.position.set(faceX, TOOTH_RADIUS * Math.sin(angle), sz + TOOTH_RADIUS * Math.cos(angle))
+        toothMesh.position.set(toothLocalX, TOOTH_RADIUS * Math.sin(angle), TOOTH_RADIUS * Math.cos(angle))
         toothMesh.rotation.x = angle
         toothMesh.castShadow = true
-        group.add(toothMesh)
+        sprocketGroup.add(toothMesh)
       }
-      const sprocketRunner = { group: mesh, side, radius: TRACK.sprocketRadius }
-      runners.push(sprocketRunner)
+      group.add(sprocketGroup)
+      runners.push({ group: sprocketGroup, side, radius: TRACK.sprocketRadius })
     }
 
     // Return rollers in the gaps between road wheels, top run — same wheel
