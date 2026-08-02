@@ -19,6 +19,7 @@ import { TRACK, BODY } from '../spec'
 import { wheelAngularSpeed } from '../crawler/kinematics'
 import { roundedBox } from './rounded'
 import { buildWheel, type WheelPart } from './wheel'
+import { buildBelt, type BeltPart } from './belt'
 
 export interface Tracks {
   group: Group
@@ -31,8 +32,6 @@ export interface Tracks {
  *  cutter extends past). */
 const POD_LENGTH = BODY.tailZ - BODY.noseZ
 const BELT = TRACK.belt
-const GROUSER_SPACING = POD_LENGTH / TRACK.grouserCount
-const GROUSER_LENGTH = GROUSER_SPACING * 0.55
 const TOOTH_COUNT = 5
 /** Teeth on the UPPER arc only: a real belt covers the lower run, and teeth
  *  pointing at the ground would poke through it. */
@@ -61,34 +60,16 @@ export function buildTracks(
   group.name = 'tracks'
   const geometries: BufferGeometry[] = []
   const wheels: WheelPart[] = []
+  const belts: BeltPart[] = []
   const runners: Runner[] = []
 
   for (const side of [1, -1] as const) {
     const x = side * TRACK.centreX
 
-    // The belt loop: one tall dark band. Edges rounded so the belt reads as
-    // a wrapped loop rather than a slab.
-    const belt = roundedBox(BELT.width, BELT.height, POD_LENGTH, 0.9)
-    geometries.push(belt)
-    const beltMesh = new Mesh(belt, darkMaterial)
-    beltMesh.position.set(x, BELT.height / 2, 0)
-    beltMesh.castShadow = true
-    beltMesh.receiveShadow = true
-    group.add(beltMesh)
-
-    // Grousers: short tread teeth on the belt's LOWER outer face only.
-    for (let i = 0; i < TRACK.grouserCount; i++) {
-      const grouser = new BoxGeometry(0.45, 1.1, GROUSER_LENGTH)
-      geometries.push(grouser)
-      const grouserMesh = new Mesh(grouser, wheelMaterial)
-      grouserMesh.position.set(
-        x + side * (BELT.width / 2 + 0.25),
-        0.55,
-        -POD_LENGTH / 2 + GROUSER_SPACING * (i + 0.5)
-      )
-      grouserMesh.castShadow = true
-      group.add(grouserMesh)
-    }
+    // The belt loop — its own component, one per side.
+    const belt = buildBelt(side, darkMaterial, wheelMaterial)
+    group.add(belt.group)
+    belts.push(belt)
 
     // Road wheels: the one wheel component, at each station.
     for (const wz of TRACK.roadWheelsZ) {
@@ -172,6 +153,7 @@ export function buildTracks(
     dispose() {
       for (const g of geometries) g.dispose()
       for (const wheel of wheels) wheel.dispose()
+      for (const belt of belts) belt.dispose()
     },
   }
 }
