@@ -67,8 +67,15 @@ page palette at L155. Lead re-ran all gates WITH files staged (the length hook o
 checks staged files — a builder disclosure now closed): 1495/1495. Carry: cyclic arm
 crosses the standby cluster -> 9c.
 
+**Round 9c — LANDED (commit `ca26c25`).** Cyclic: 4 tubes + 3 knuckles + end-grip
+(guard pins grip centroid at assembly top); collective at pilot's left; conduit off
+the stick, hung from the overhead (0.15m assertion). 10/10 fail-first; 1505/1505;
+the 9b standby-occlusion carry fixed, lead-verified by eye. Carries: grip dark-massy
+close up; collective deliberately outboard; conduit-vs-rail diff inconclusive (sim
+drift between captures — another argument for the tooling round's deterministic pose).
+
 **Do next, in order (interior campaign):**
-1. **Round 9c — controls — IN FLIGHT** (prereq for everything; interior critic's #1 with concrete
+1. **Round 9d — tub, palette, crew — IN FLIGHT** (last build round before the panel) (prereq for everything; interior critic's #1 with concrete
    acceptance): glazing must read as glass — bright desert through it, edge highlights,
    Apache-style heavy frames legible as frames; eye/camera placement verified.
    Acceptance on pilot.png: >=20% of frame pixels exterior (currently 0.9%), a real
