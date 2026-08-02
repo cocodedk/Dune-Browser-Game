@@ -111,23 +111,26 @@ export function buildCanopy(): CanopyBuild {
   // too; opacity must also stay under 0.95 or main.ts starts casting an opaque
   // shadow through it (this file's header).
   //
-  // OPACITY LOWERED, round 6b, 0.60 -> 0.34, and this is the one number in the
-  // exterior the cockpit round touched. MEASURED from the pilot's eye with the
-  // interior's own inner pane disabled, so the exterior glazing was the only
-  // layer in the path: bare sky renders at 188/255 and sky through this glass
-  // at 74-120, while the cabin wall beside the window renders at 117-125. The
-  // canopy sits in the hull's own shadow (main.ts) so its lit contribution is
-  // near zero, which makes the transmitted value almost exactly (1 - opacity)
-  // x sky — at 0.60 that is 75, and a window darker than the wall next to it
-  // is not a window. No interior change can lift it: the loss happens before
-  // any cabin surface is involved. At 0.34 the same sightline lands near 124,
-  // a step of about a third off bare sky, which is a tinted canopy rather than
-  // a dark panel. The exterior captures were re-shot to confirm the canopy
-  // still reads as glazing from outside — the liner behind it is opaque and
-  // dark now (interior/canopyFrame.ts), which it was not when 0.6 was chosen.
+  // OPACITY, round 6b: 0.60 -> 0.34. MEASURED from the pilot's eye with the
+  // interior's own inner pane disabled, so this layer alone was in the path:
+  // bare sky renders at 188/255, sky through 0.60 glass at 75 — darker than
+  // the 117-125 cabin wall beside it, not a window — sky through 0.34 glass at
+  // 124, a tinted canopy rather than a dark panel. Held through round 6f.
+  //
+  // OPACITY, round 9a: 0.34 -> 0.14. The round 7 interior critic measured the
+  // STACKED result of this layer plus the cabin-side pane behind it
+  // (interior/materials.ts's innerGlazingMaterial) at ~114-124 on the
+  // sightline — indistinguishable from the wall, "the pilot cannot see out"
+  // despite forwardCone's raycast proving the geometry already clear. This
+  // layer is the dominant loss (no opacity on the inner pane can exceed what
+  // THIS one lets through), so it had to move too. Proved equivalent from
+  // OUTSIDE by crop, not assumed: what sits behind this glass along an
+  // exterior ray is the dark opaque cabin, either opacity, so the swap trades
+  // between two dark quantities and hero/top read the same to the eye
+  // (pixel numbers in progress.md).
   const glassMaterial = new MeshStandardMaterial({
     color: GLASS_COLOR, roughness: 0.22, metalness: 0.12,
-    transparent: true, opacity: 0.34, side: DoubleSide, depthWrite: true,
+    transparent: true, opacity: 0.14, side: DoubleSide, depthWrite: true,
   })
   const ribGeometry = new BoxGeometry(1, RIB_THICKNESS * 0.6, RIB_THICKNESS)
   const geometries: BufferGeometry[] = [ribGeometry]

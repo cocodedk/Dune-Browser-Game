@@ -119,35 +119,34 @@ export function dialFaceMaterial(map: Texture): MeshStandardMaterial {
 
 /**
  * The inner windscreen pane. The canopy's own glazing (canopyGeometry.ts) is
- * a 0.6-opacity tint on the OUTSIDE of the deck; this is the cabin-side pane
- * inside the same reveal. Two layers is what gives the measurable brightness
- * step a critic could not find from inside — "sky through the canopy is
- * identical to sky at the open top of frame" — without reaching into the
- * exterior module to darken a surface the hull round already signed off.
+ * a tint on the OUTSIDE of the deck; this is the cabin-side pane inside the
+ * same reveal, and the two stack along the pilot's own sightline.
+ *
+ * ROUND 9a, "the pilot cannot see out" (Q3 interior critic, 3/10): forwardCone
+ * proved the geometry already correct — the central cone hits glazing edge to
+ * edge — but PERCEPTION was not: the old numbers here (a dark 0x334039 tint at
+ * opacity 0.1) stacked behind the exterior's old 0.34 rendered a sightline
+ * pixel of ~114-124, indistinguishable from the 117-125 cabin wall beside it.
+ * A ray that hits "glazing" and renders as "wall" is still a wall to the eye.
+ *
+ * MEASURED: the exterior layer was the dominant loss — this pane's own
+ * transmission can never exceed what THAT layer already lets through, however
+ * low this opacity goes. It came down too (canopyGeometry.ts's glassMaterial,
+ * 0.34 -> 0.14, justified and pixel-proven equivalent there). This layer then
+ * spends its own budget on opacity 0.1 -> 0.045 with a PALE cool tint (was
+ * dark, near the wall's own hue) rather than a dark one: a light colour
+ * blended in at low opacity barely dims what passes through it; a dark one
+ * taxes the view twice. A touch of metalness (0 -> 0.08) gives the pane its
+ * own faint sheen so it still reads as glass, not an empty hole, once
+ * transmission is this high — see innerGlazingTransparency.test.ts.
  */
 export const innerGlazingMaterial = () =>
   new MeshStandardMaterial({
-    color: 0x334039,
-    // TWO measurements set these numbers, in opposite directions.
-    // (1) Built at roughness 0.18, the pane is nearly horizontal and the pilot
-    //     looks ALONG it at about 15 degrees, so it answered with a full-width
-    //     grazing specular sheen: sky through it measured 183.1 against 188.4
-    //     for bare sky, a 2.8% step — the critic's "sky through the canopy is
-    //     identical to sky at the open top of frame" all over again, made by
-    //     the glass rather than by its absence. Rough and non-metallic tints;
-    //     shiny mirrors.
-    // (2) Then at opacity 0.55 it went the other way: the window measured 45,
-    //     against 125 for the cabin wall beside it — a window darker than its
-    //     own wall, which is not a window. Isolating the layers (this pane at
-    //     0.05) showed the EXTERIOR canopy glazing alone already takes 188 down
-    //     to 74-120, so nearly all the tint budget is spent before this pane
-    //     sees the light at all. The exterior's own opacity came down to 0.34
-    //     as a result (canopyGeometry.ts, justified there); 0.1 is what is
-    //     left for this layer to spend without undoing that.
-    roughness: 0.62,
-    metalness: 0,
+    color: 0xcfe6e6,
+    roughness: 0.42,
+    metalness: 0.08,
     transparent: true,
-    opacity: 0.1,
+    opacity: 0.045,
     side: DoubleSide,
     depthWrite: false,
   })
