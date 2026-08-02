@@ -49,4 +49,16 @@ export const PROVENANCE = {
     'AUTHORED. The film harvester is slow, heavy and unstoppable. MAX_SPEED ' +
     '8 m/s with MAX_ACCEL 1.5 m/s^2 and full-steer yaw rate ~0.25 rad/s read ' +
     'as enormous and deliberate against the ornithopter\'s 82 m/s cruise.',
+  round2:
+    'RULING, 2026-08-02: the 3MF\'s chunky 1.4:1 plan read as a box to the ' +
+    'user\'s eye ("very weird, not clear what it is") and the full-height ' +
+    'track pods read as flat walls. The measured model is a stylised AI ' +
+    'reconstruction, not a licensed kit; the FILM proportions now win where ' +
+    'they conflict. Width over tracks 34.2 -> 29 (span 28 -> 24), deck ' +
+    '14.2 -> 12.0, pods rebuilt as running gear (tread band + big wheels + ' +
+    'housing), cutter enlarged from a thin stick to a 18m-wide grinder with ' +
+    'teeth and a feed hopper, cab given a glass band, deck machinery added. ' +
+    'The 3MF ratios remain the record of the model; the eye is the record of ' +
+    'the machine. Recorded so a later round does not silently re-assert the ' +
+    'measured numbers over the user\'s judgement.',
 } as const

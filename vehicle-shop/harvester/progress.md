@@ -135,3 +135,33 @@ absolute scale (48m hull) is authored, not sourced; the cutter and cab are
 film-derived additions the 3MF lacks.
 
 _Status: complete._
+
+### Round 2 — make it read as a harvester. LANDED. Verified.
+
+User's verdict on the Round 1 blockout: **"this harvester looks very weird. it
+is not clear what it is."** Diagnosis from the geometry, then the fix:
+
+**Why it read as a box.** (1) The track pods were 48m x 14m flat walls with
+small wheels — a wall, not a track. (2) The plan was nearly square
+(48 x 34.2 = 1.4:1), from the 3MF's chunky AI proportions. (3) The cutter
+was a 1.2m-thin stick on a 34m-wide machine — invisible at capture distance.
+(4) The deck was a flat unbroken top with no machinery for scale.
+
+**The fix (film proportions win over the measured model — ruling recorded in
+provenance.round2):** width over tracks 34.2 -> 29 (span 28 -> 24), deck
+14.2 -> 12.0; pods rebuilt as running gear — tread band + seven big wheels
+sticking above it + an upper housing tucked under the deck (the classic
+crawler silhouette); cutter enlarged to an 18m-wide grinder head with five
+teeth, a 14m-wide arm, and a feed hopper; cab widened with a glass band;
+three hoppers, a gantry and a conveyor on the open deck; tail housing
+lowered.
+
+Gates reproduced: lint 0, shop tsc 0, **15/15** harvester tests (seam bounds
+all still pass off the real geometry), lengths clean. The seam guard earned
+its keep again: no test needed changing for the new silhouette, because the
+bounds are geometry-derived, not authored constants.
+
+**Open:** tread scrolling (the band is static; only the wheels roll), dust,
+panel lines, and the first blind critic panel.
+
+_Status: complete._
