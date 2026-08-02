@@ -116,16 +116,14 @@ today, NOT 9f's (A/B byte-identical) — triage before the panel scores B3.
    held-key recovery levelling roll+pitch (60-deg bank -> level in 1.5-2.5s, monotonic,
    override-proof, release-instant), pure flight-model tests, HUD AUTO hint under the
    ink cap, key legend updated.
-2. **B3 bright-regions triage** (cheap): the tree has 8 bright regions >=12px where the
-   bar demands exactly one — pre-existing, surfaced by 9f's A/B proof. Find the 7
-   extras (suspects: 9d armor speculars, overhead strip edges), fix or re-derive the
-   bar line with evidence.
-3. **Round 10 — the landing lifecycle** (USER, 2026-08-02: "at one point we need to
-   think about making it land and stop beating the wings and not sink in the desert
-   sand."): touchdown detection against heightAt(), a LANDED state in the flight model
-   (beat spools to zero, wings settle to the parked pose), ground rest on the gear's
-   proven foot plane (no sinking, no clamp-jitter), takeoff spool-up. Pure-model
-   fail-first tests; the parked pose exists from the gear rounds.
+2. **Round 10 — the landing lifecycle — NEXT, user-ordered ("continue with the landing
+   round when auto-level is done")**: touchdown detection against heightAt(), a LANDED
+   state in the flight model (beat spools to zero, wings settle to the parked pose),
+   ground rest on the gear's proven foot plane (no sinking, no clamp-jitter), takeoff
+   spool-up. Pure-model fail-first tests; the parked pose exists from the gear rounds.
+3. **B3 bright-regions triage** (cheap): 8 bright regions >=12px where the bar demands
+   one — pre-existing, surfaced by 9f's A/B proof. Suspects: 9d armor speculars,
+   overhead strip edges. Fix or re-derive the bar line with evidence, before the panel.
 4. **Re-shoot + gallery refresh**, then the **Q3 re-panel** against the amended bar
    (B1-B5); the user flies the result as the final acceptance.
 5. Process rounds (cheap, after the above): axis-contract guard; tooling round
