@@ -156,7 +156,42 @@ silently-advancing clock, M mute. 17 new pure-layer tests (1573/1573); live node
 readbacks proven at parked-idle vs full climb. THE TIMBRE VERDICT BELONGS TO THE
 USER'S EAR — no agent listened.
 
-**FINALE — IN FLIGHT:** full re-shoot done (8 exterior views + fresh level-gaze and
+### FINAL PANEL VERDICTS (2026-08-02, two fresh critics)
+
+**B1 blind ID: PASS, decisively.** Told nothing, the critic derived: first-person
+pilot's seat of a flying vehicle, three-axis flight controls, "beat 2.63 Hz implies
+flapping propulsion — an ornithopter-type craft, single-occupant, airborne." Read the
+HUD correctly instrument by instrument. (Round 7's blind read was "inside a box.")
+
+**B2 Apache element score: 4.5/10 (bar 7) — FAIL, with the gaps concentrated and
+specified.** Wins: two-family palette 8/10 ("cleanest thing in the shot"); HUD content
+7/10 (ladder/tape/boxes all correct convention); side aperture 76.3% outside. Fails,
+ranked by the critic: (1) the forward transparency is a downward-narrowing V — 9.8%
+outside at the horizon row, zero below y~555; wants a windscreen WIDER at the bottom
+(NOTE: collides with the kit's flush deck lens — an exterior-authority decision for
+the user); (2) nothing reads as GLASS — no Fresnel, no reflections, 400 rows of the
+side pane within 1 LSB; and the displays have no emission (MFDs DIMMER than the
+standby dials — hierarchy inverted); the symbology is screen-locked (a 65-deg head
+turn moved nothing — neither a fixed HUD nor a true helmet display; zero rung 1.2 deg
+off the measured horizon); (3) controls do not read (cyclic "reads as legs", the
+collective "a bollard"), no body anchoring (no seat pan/harness/hands), second crew
+not legible from the side glance, and the 9c conduit crosses the right pane exactly
+where the crewmate should be. Cheap extras: standby bezels cream->black, UFD cells
+need characters.
+
+**Machine-proven bar lines (no critic needed): B3/B3-LIVE/B5/B6 all green** — 1573
+tests, level-gaze 21%, side-glance 31.6%, zero escapes, zero stray brights, auto-level
+to 0, landing lifecycle, sound params.
+
+**LOOP STOPPED at the gauntlet's own stop rule: the next gap needs user decisions** —
+(a) forward windscreen shape is a kit-vs-Apache exterior call only the user can make;
+(b) the remaining fidelity block (display emission, glass Fresnel, combiner-locked
+symbology, control/crew props) is a multi-round spend the user should authorize. Every
+user-ordered item (sightline, symbology, auto-level, landing, side panes, sound) is
+DELIVERED and lead-verified. Gallery:
+https://claude.ai/code/artifact/887f2ab2-70fe-4f50-b72f-6bf1ca8e481e
+
+**FINALE — was:** full re-shoot done (8 exterior views + fresh level-gaze and
 side-glance pilot probes), gallery artifact refreshed
 (https://claude.ai/code/artifact/887f2ab2-70fe-4f50-b72f-6bf1ca8e481e), and the final
 scoring panel dispatched (workflow `wf_cfa5421f-449`): blind interior critic +
