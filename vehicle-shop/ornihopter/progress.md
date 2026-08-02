@@ -156,6 +156,17 @@ silently-advancing clock, M mute. 17 new pure-layer tests (1573/1573); live node
 readbacks proven at parked-idle vs full climb. THE TIMBRE VERDICT BELONGS TO THE
 USER'S EAR — no agent listened.
 
+**POST-PANEL USER FINDINGS QUEUE (from the acceptance flight, 2026-08-02/03):**
+1. **Round 13 — weight — IN FLIGHT** (workflow `wf_ca77571e-2a9`): zero throttle must
+   sink (2.5-4 m/s terminal) and reach the Round 10 landing; hover threshold between
+   takeoff and cruise; PLUS: pilot-facing altitude reads gear-relative (0 on ground —
+   the user diagnosed the 4.3m readout as the gear-leg height themselves); PLUS the
+   landed-with-throttle truth table (no frozen state, hot-touchdown behaviour defined).
+2. **Round 13b — engine whine tune (USER: "the pitch of the engine sound gets eerie",
+   ruled HIGH THROTTLE)**: cap whineHz ceiling, soften top-end whine gain, roll off so
+   full power reads as strain not siren. Pure params change + bounds test; user's ear
+   is the acceptance.
+
 ### FINAL PANEL VERDICTS (2026-08-02, two fresh critics)
 
 **B1 blind ID: PASS, decisively.** Told nothing, the critic derived: first-person
