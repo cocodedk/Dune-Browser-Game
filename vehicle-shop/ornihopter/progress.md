@@ -578,3 +578,24 @@ measured 7.582. Accepted as authored (not measured): the middle-leg rake (0.95m,
 the knee survives the side projection); the lens-shaped femur cutout and heel-spur feet
 deferred — the flat sole is what makes the ground plane provable. After 4c.2: re-shoot and
 the blind Q1/Q3 critics.
+
+### Round 4c.2 — LANDED. Verified. The known-defect list is empty.
+
+Commit `093a5fc`. Dedicated gearMaterial (0xddd6c4, roughness 0.78, metalness 0.08): lit
+femur luminance 17% -> 85% of the lit hull at high resolution, measured by pixel sampling
+before and after with the hull sample bit-identical across the change. The builder's own
+report retracted its first material comment ("darker than BONE" — arithmetically false;
+matching RENDERED brightness needed an albedo brighter than BONE because the femur faces
+meet the light at a shallower angle) — recorded because that shading fact will matter to
+any future material tuning. rootPod.ts's strut-era comments rewritten to describe the
+six-unique-legs reality; landedHeight = 7.582 with a PROVENANCE entry, every reader
+reconciled by exhaustive grep, no test depended on the old 7.2. Lead reproduced: lint 0,
+tsc 0, **1413/1413**, lengths clean; own capture confirms the legs read in the airframe
+family with segmentation legible (front leg sits darker in some frames — that is the pod's
+shadow, not the material; the whole-leg average mixes lit and shadowed facets by design).
+
+**Round 5 dispatched** (workflow `wf_434807e4-c85`): three parallel fresh-context critics —
+blind identification (Sonnet), Q1 exterior fidelity vs the three kit photographs (Opus),
+Q3 interior vs the concept boards (Opus), all at max effort, none shown any builder
+reasoning, every prompt carrying both the quality half and the correctness half per the
+bar's own rule. This is the first scoring pass with no known defect standing in the frame.
