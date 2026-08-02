@@ -5,7 +5,7 @@
 // triangle budget.
 
 import { describe, it, expect } from 'vitest'
-import { buildWingBladeGeometry } from './wingGeometry'
+import { buildWingBladeGeometry, SPAN_STATIONS, SECTION_POINTS } from './wingGeometry'
 import { sweepOffsetAt } from './wing/sweepProfile'
 import { WING } from '../../spec'
 
@@ -47,12 +47,19 @@ describe('buildWingBladeGeometry', () => {
     // records only WIDTH... a builder... had no way to know the centreline
     // moves at all". The envelope itself (chord never exceeds its own
     // measured max) is unchanged and still what this guards.
+    // Round 6c: the station layout is read from the geometry module rather
+    // than assumed. It used to be `Math.floor(i / 4) / (stations - 1)`, which
+    // was true only while the loft emitted four points per station at even
+    // span intervals — neither holds now that the arm is sampled where the
+    // measured shape actually moves. Same contract, correct station lookup:
+    // an assertion about "its OWN station's centreline" has to know which
+    // station each vertex belongs to.
     const geometry = buildWingBladeGeometry('right', WING.reach)
     const position = geometry.attributes.position
-    const stations = position.count / 4
+    expect(position.count).toBe(SPAN_STATIONS.length * SECTION_POINTS)
     const halfMaxChord = WING.reach / WING.lengthOverMaxChord / 2
     for (let i = 0; i < position.count; i++) {
-      const spanFraction = Math.floor(i / 4) / (stations - 1)
+      const spanFraction = SPAN_STATIONS[Math.floor(i / SECTION_POINTS)]
       const centreline = sweepOffsetAt(spanFraction)
       expect(Math.abs(position.getZ(i) - centreline)).toBeLessThanOrEqual(halfMaxChord + 1e-6)
     }

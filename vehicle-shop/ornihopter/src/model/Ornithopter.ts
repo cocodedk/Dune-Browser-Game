@@ -27,8 +27,23 @@ import { seatForMount, pivotForMount, buildRootPodGeometries } from './geometry/
 import { createWingRig, type WingRig } from './WingRig'
 import type { WingSide } from './wingKinematics'
 
-const METAL_COLOR = 0x54514a
-const WING_COLOR = 0x5c5548
+/** Wing-root posts and ball housings only — nothing else uses metalMaterial.
+ *  Was 0x54514a at metalness 0.7: the same no-envMap metal bug as the blades
+ *  below, so the eight balls rendered at ~28% of lit-hull luminance and, once
+ *  the wings rejoined the airframe's tone, were the only near-black objects
+ *  left on the craft — at the very joint this round exists to make legible.
+ *  Still deliberately the darkest part of the airframe (~66-74% measured): a
+ *  ball joint should read as hardware, just not as a hole. */
+const METAL_COLOR = 0x8f887a
+/** The kit prints hull and wings in ONE filament (docs/dune_ornihopter_kit-2.png),
+ *  so the blades share GEAR_COLOR's family below — the same hue exactly, one
+ *  value step down. DOWN, for the reason GEAR_COLOR had to go UP: the number
+ *  that matters is the rendered one, and a blade's near-horizontal upper face
+ *  meets the 57-degree sun almost square where a gear femur meets it
+ *  obliquely. At the gear's own albedo the blades measured 96-108% of lit
+ *  hull — the critique's inversion, the other way round. Measured back to the
+ *  round 4c.2 target of 80-90%; see wingTone.test.ts. */
+const WING_COLOR = 0xada89a
 /** Same bone/tan family as the hull's own palette (hullTexel.ts's BONE and
  *  DECK_PANEL tones), not the wing-root pods' bare metalMaterial: metalness
  *  0.7 there crushes the diffuse response that makes the hull read bright,
@@ -62,14 +77,19 @@ export function createOrnithopter(): CraftModel {
     color: 0xffffff, map: hull.map, roughnessMap: hull.roughnessMap,
     roughness: 1, metalness: 0.08, flatShading: true,
   })
-  const metalMaterial = new MeshStandardMaterial({ color: METAL_COLOR, roughness: 0.5, metalness: 0.7 })
-  // Dark metal with real specular response, not flat unlit black: a blind
-  // critic read the previous wings as "black pencil lines" and the whole
-  // craft as too dark against the reference's pale bone/tan. Lower roughness
-  // and higher metalness than the hull's own material so the beat cycle's
-  // motion actually sweeps a highlight across the blade.
+  const metalMaterial = new MeshStandardMaterial({ color: METAL_COLOR, roughness: 0.5, metalness: 0.25 })
+  // Airframe, not machined metal. The previous material chased "real specular
+  // response" with metalness 0.65 and it backfired: stage/scene.ts has no
+  // environment map, and in three.js a metal's reflection IS the environment,
+  // so 65% of the albedo went into a lobe nothing could fill. Measured off the
+  // render, the blades came in at 12-19% of lit-hull luminance in the hero
+  // view and split into two sets in the top view — the pairs whose feather
+  // angle pointed into the sun's narrow highlight read tan, the rest black.
+  // Metalness 0.1 returns that response to diffuse, where the hemisphere light
+  // reaches it; roughness 0.45 keeps a sheen sweeping the blade through the
+  // beat without buying it with brightness.
   const wingMaterial = new MeshStandardMaterial({
-    color: WING_COLOR, roughness: 0.32, metalness: 0.65, side: DoubleSide,
+    color: WING_COLOR, roughness: 0.45, metalness: 0.1, side: DoubleSide,
   })
   const gearMaterial = new MeshStandardMaterial({ color: GEAR_COLOR, roughness: 0.78, metalness: 0.08 })
   materials.push(hullMaterial, metalMaterial, wingMaterial, gearMaterial)
