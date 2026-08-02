@@ -83,9 +83,15 @@ from the pilot seat; wants an auto-level option for recovery. Bar amended: B3-LI
 (level-gaze view targets; aperture may open rearward within the frozen exterior) and
 B5 (flight symbology incl. speed; live MFD data; unit-tested auto-level).
 
+**Round 9d — LANDED (commit `6b05f23`).** Equipment family 0.25x structure in material
+space (bar 0.55), confirmed by an independent capture-luma instrument (dash 107->44,
+structure regions bit-identical — nothing else moved). Copilot station pinned by
+5/6-red fail-first guard; own cyclic + cluster legible at right-glance. 1511/1511.
+Carries: copilot seat itself needs a steep glance (6b eye/seat geometry); pilot seat
+presence at frame edges still unmet (frustum KNOWN LIMITATION).
+
 **Do next, in order (interior campaign):**
-1. **Round 9d — tub, palette, crew — IN FLIGHT** (workflow `wf_512e6db4-4ab`)
-2. **Round 9e — the LIVE view** (B3-LIVE): open the aperture rearward over the pilot's
+1. **Round 9e — the LIVE view — IN FLIGHT** (workflow `wf_563c1d86-c59`, Opus, max): open the aperture rearward over the pilot's
    head (exterior lens runs to 6.9m aft, interior aperture stops at 2.45 — ours to
    spend), thin the brow, raise the eye if needed; horizon visible dead ahead at level
    flight; >=20% exterior at pitch 0. forwardCone/enclosure contracts adapt WITH the
