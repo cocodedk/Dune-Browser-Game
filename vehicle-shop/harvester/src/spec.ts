@@ -106,4 +106,9 @@ export const TRACK = {
   housing: { yLow: 8.0, yHigh: 11.0, width: 4.6 },
   /** Grouser teeth across the belt's LOWER outer face — tread, not a fence. */
   grouserCount: 24,
+  /** Chain-link density — the I1 art-director numbers (gauntlet loop,
+   *  immediate-improvements §1): 29 links per straight run (pitch ≈ 1.41 m,
+   *  link ≈ 1.1 m, gap ≈ 0.3 m) and 15 wrap links per sprocket with link
+   *  length ≈ arc pitch, so the wrap reads as a continuous curve. */
+  beltLinks: { straightPerRun: 29, wrapPerSprocket: 15 },
 } as const
