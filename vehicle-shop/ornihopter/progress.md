@@ -127,6 +127,14 @@ files mid-round for the length hook — lead docs commits must use pathspec form
    parked, rest on the gear plane at landedHeight 6.706 (no sinking, no jitter),
    takeoff spool-up; too-fast contact keeps the legacy clamp. Live Playwright
    fly-land-sit-takeoff sequence as visual proof.
+2b. **Round 11 — Apache side panes (USER RULING, exterior-freeze exception): "full
+   apache side panes and thiner frames. cause the two pilots share the same narrow
+   front window and they don't sit center to it. so each pilot sees more to the other
+   side than its front view."** Large flat side transparencies cut into BOTH upper
+   flanks + thinner frames; enclosure/cone contracts extend over the new panes,
+   fail-first; the rest of the exterior stays frozen (gauntlet doc B6). Opus. Include
+   the 0-bubble tightening: auto-level to |roll|,|pitch| < 0.1 deg at 4s hold
+   ("auto level must bring the craft to 0 bubble").
 3. **B3 bright-regions triage** (cheap): 8 bright regions >=12px where the bar demands
    one — pre-existing, surfaced by 9f's A/B proof. Suspects: 9d armor speculars,
    overhead strip edges. Fix or re-derive the bar line with evidence, before the panel.
