@@ -24,13 +24,28 @@ const PORT = Number(flag('port', 5220))
 // straight down. Distance is in machine lengths (OVERALL.length = 60m).
 // NEGATIVE azimuths on purpose: the sun sits off the machine's port side
 // (main.ts), so the lit flank is the one to photograph.
+//
+// More angles than the bar needs: the bar's primary is `hero`; the rest are
+// for the user's eye and the eventual artifact page. Filter with --views.
 const VIEWS = [
   { name: 'hero', az: -42, el: 22, dist: 1.6 },
+  { name: 'hero2', az: -30, el: 12, dist: 1.3 },
   { name: 'side', az: -90, el: 4, dist: 1.7 },
   { name: 'front', az: 0, el: 5, dist: 1.6 },
+  { name: 'frontlow', az: 0, el: 2, dist: 0.9 },
   { name: 'rear', az: 180, el: 6, dist: 1.7 },
+  { name: 'rear34', az: -135, el: 14, dist: 1.6 },
   { name: 'top', az: 0, el: 88, dist: 1.7 },
+  { name: 'tracks', az: -90, el: 3, dist: 0.55 },
+  { name: 'boom', az: -18, el: 5, dist: 1.0 },
 ]
+
+// --views hero,side  -> only those, in that order; absent means all.
+const rawFilter = flag('views', '')
+const VIEW_FILTER = rawFilter
+  ? rawFilter.split(',').map((s) => s.trim()).filter(Boolean)
+  : null
+const views = VIEW_FILTER ? VIEWS.filter((v) => VIEW_FILTER.includes(v.name)) : VIEWS
 
 await rm(OUT, { recursive: true, force: true })
 await mkdir(OUT, { recursive: true })
@@ -96,7 +111,7 @@ const measurement = await page.evaluate(() => {
 
 const manifest = { width: WIDTH, height: HEIGHT, measurement, views: [], errors }
 
-for (const view of VIEWS) {
+for (const view of views) {
   await page.evaluate(
     ([az, el, dist]) => {
       const t = window.__HARVESTER__
@@ -118,5 +133,5 @@ if (errors.length) {
   console.error('page errors:', errors)
   process.exitCode = 1
 } else {
-  console.log(`captured ${VIEWS.length} views to ${OUT}`)
+  console.log(`captured ${views.length} views to ${OUT}`)
 }

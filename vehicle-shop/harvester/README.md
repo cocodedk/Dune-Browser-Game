@@ -22,6 +22,12 @@ npm run shop:harvester:shoot    # capture the reference views to .shots/harveste
 npm run shop:harvester:build    # production build of the shop alone
 ```
 
+Ten views by default (`hero`, `hero2`, `side`, `front`, `frontlow`, `rear`,
+`rear34`, `top`, `tracks`, `boom`); take a subset with
+`npm run shop:harvester:shoot -- --views hero,tracks,boom` (comma-separated,
+in the order given). Distances are in machine lengths — `dist` under 1 is a
+close-up.
+
 Controls: `W`/`S` forward/reverse, `A`/`D` steer, `C` cycles camera, `R`
 resets. The machine is heavy: it takes seconds to reach its crawl, and it
 turns by running its two tracks at different speeds, like the real thing.
