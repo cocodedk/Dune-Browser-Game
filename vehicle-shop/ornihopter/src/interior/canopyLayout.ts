@@ -25,7 +25,7 @@
 // a shallow ray cannot crawl through the 0.06m gap and out the side either.
 
 import { COCKPIT, HALF_LENGTH, PILOT_EYE, stationFromNose } from '../spec'
-import { deckYAt, canopyHalfWidthAt, CANOPY_Z } from '../model/geometry/canopyPlan'
+import { deckYAt, canopyHalfWidthAt, CANOPY_Z, FRAMED_CANOPY_Z } from '../model/geometry/canopyPlan'
 import { hullInteriorHalfWidthAt, HULL_INSET } from './hullSection'
 
 /** Clearance between the roof liner and the deck skin above it. Big enough
@@ -110,9 +110,18 @@ export function apertureStations(): number[] {
 
 /** The canopy's own transverse breaks inside the aperture — where
  *  canopyGeometry.ts puts a mullion on the outside, so the inner frame puts
- *  one in the same place instead of inventing a second rhythm. */
+ *  one in the same place instead of inventing a second rhythm.
+ *
+ *  Filters FRAMED_CANOPY_Z, not CANOPY_Z: the loft (apertureStations(),
+ *  above) still runs through every station including 1.2m aft, because that
+ *  is a hull deck-kink break the panel can't chord across, but 1.2m aft is
+ *  ALSO the one station this band contains and canopyPlan.ts's
+ *  FRAMED_CANOPY_Z drops it from the framed set — round 6f, user finding #2
+ *  — because it sits 43mm above the pilot's level sightline. So this
+ *  currently returns nothing, which is correct: the forward aperture is
+ *  glazed straight through with no crossbeam in it. */
 export function mullionStations(): number[] {
-  return CANOPY_Z.filter((z) => z > APERTURE_FORE_Z + 0.15 && z < APERTURE_REAR_Z - 0.15)
+  return FRAMED_CANOPY_Z.filter((z) => z > APERTURE_FORE_Z + 0.15 && z < APERTURE_REAR_Z - 0.15)
 }
 
 /** Forward bulkhead: closes the nose bay off from the cockpit. Without it the

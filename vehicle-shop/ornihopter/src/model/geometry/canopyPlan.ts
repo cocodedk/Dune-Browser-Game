@@ -71,8 +71,31 @@ const PLAN: ReadonlyArray<readonly [number, number]> = [
   [6.9, 0.72],
 ]
 
-/** Craft-local z of every authored canopy station, nose to rear. */
+/** Craft-local z of every authored canopy station, nose to rear. Every entry
+ *  stays in the LOFT (the panel geometry, the roof liner sampling) no matter
+ *  what follows below — 1.2/4.6/6.2 are the hull's own deck-kink breaks (PLAN
+ *  comment above) and the panel must never chord across one. */
 export const CANOPY_Z: readonly number[] = PLAN.map(([aft]) => aft - HALF_LENGTH)
+
+/** The 1.2m-aft station, singled out: a hull deck-kink break (PLAN comment
+ *  above) that CANOPY_Z can never drop, and ALSO the one canopy station that
+ *  falls inside the pilot's forward aperture band. MEASURED, round 6f: the
+ *  level sightline crosses the deck 43mm under a member placed there
+ *  (interior/canopyFrame.ts's MULLION_DEPTH comment) — dead centre of the
+ *  forward view, which is user finding #2 ("a windows/windshield frame
+ *  blocks the view right in front of the pilot"). */
+const SIGHTLINE_STATION_Z = CANOPY_Z[1]
+
+/** Loft stations that also get a visible rib or crossbeam — every CANOPY_Z
+ *  entry except SIGHTLINE_STATION_Z. The panel and the roof liner still loft
+ *  through 1.2m (CANOPY_Z, unchanged, keeps the deck-kink break); only the
+ *  FRAMED member there is dropped. Shared by
+ *  model/geometry/canopyGeometry.ts's exterior mullion loop and
+ *  interior/canopyLayout.ts's mullionStations() so the two canopy layers
+ *  cannot disagree about where a member does or does not cross the glazing. */
+export const FRAMED_CANOPY_Z: readonly number[] = CANOPY_Z.filter(
+  (z) => z !== SIGHTLINE_STATION_Z
+)
 
 /** The three named z's interior/cabinShellWall.ts brackets its own sampling
  *  with. Kept as three keys because that is the shape its WALL_ZS expects;

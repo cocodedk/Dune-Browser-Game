@@ -34,9 +34,22 @@ import { bandsOver, roofBand, apertureReveal, innerPane, RAIL_THICKNESS } from '
  *  the upper frame is structure. */
 const BROW_DEPTH = 0.16
 const HEADER_DEPTH = 0.12
-/** Mullion depth. Capped: spec.ts's floorY is chosen so the level sightline
- *  passes 43mm under the mullion at 1.2m aft, and a deeper rib would take that
- *  clearance back and put a frame member across the horizon. */
+/** Mullion depth, for whichever stations mullionStations() returns.
+ *
+ *  ROUND 6f, user finding #2: it USED to be capped instead of this, on the
+ *  theory that spec.ts's floorY put the level sightline 43mm under the one
+ *  mullion this band ever had (canopyLayout.ts's mullionStations(), at
+ *  1.2m aft) and a deeper rib would eat that clearance. That theory was
+ *  wrong in a way 43mm of clearance was never going to survive: pitch and
+ *  yaw both move the sightline off dead-level, and the cone around
+ *  dead-level a pilot's eye actually sweeps is centimetres wide at 1.2m
+ *  range, not a knife-edge. interior/forwardCone.test.ts measured it —
+ *  126 of 273 rays in a +/-6/+/-10 degree cone hit that one beam. The station
+ *  is now dropped from the framed set entirely (canopyPlan.ts's
+ *  FRAMED_CANOPY_Z), so this depth no longer has a member at 1.2m to cap;
+ *  kept as the mullion depth for whatever FUTURE framed stations
+ *  mullionStations() returns, should the aperture band ever gain another
+ *  one outside the sightline cone. */
 const MULLION_DEPTH = 0.075
 
 /** A transverse beam across the aperture, hanging `depth` below the roof. */

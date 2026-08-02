@@ -29,7 +29,7 @@ import {
   DoubleSide, Vector3, type Material,
 } from 'three'
 import {
-  CANOPY_Z, CANOPY_RIM, CANOPY_RECESS, RIM_TOP_FRACTION, GLAZE_FRACTION,
+  CANOPY_Z, FRAMED_CANOPY_Z, CANOPY_RIM, CANOPY_RECESS, RIM_TOP_FRACTION, GLAZE_FRACTION,
   canopyHalfWidthAt, deckYAt,
 } from './canopyPlan'
 
@@ -164,8 +164,14 @@ export function buildCanopy(): CanopyBuild {
     const bL = railAt(zB, -1)
     add(quad(aL.glaze, bL.glaze, bR.glaze, aR.glaze), glassMaterial)
 
-    // A mullion on every interior station, spanning the pane it closes.
-    if (i > 0) {
+    // A mullion on every interior FRAMED station, spanning the pane it
+    // closes. Round 6f, user finding #2: skips the 1.2m-aft station, which
+    // canopyPlan.ts's FRAMED_CANOPY_Z leaves out of this set because the
+    // pilot's level sightline crosses the deck 43mm under a member there
+    // (interior/canopyFrame.ts) — a rib on the OUTSIDE at that z would put
+    // frame dead centre in the forward view even with the interior member
+    // gone, so both layers share this one list.
+    if (i > 0 && FRAMED_CANOPY_Z.includes(zA)) {
       const rib = new Mesh(ribGeometry, frameMaterial)
       rib.scale.set(canopyHalfWidthAt(zA) * GLAZE_FRACTION * 2, 1, 1)
       rib.position.set(0, deckYAt(zA) + CANOPY_RIM - CANOPY_RECESS * 0.5, zA)
