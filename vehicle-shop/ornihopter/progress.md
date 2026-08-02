@@ -156,12 +156,24 @@ silently-advancing clock, M mute. 17 new pure-layer tests (1573/1573); live node
 readbacks proven at parked-idle vs full climb. THE TIMBRE VERDICT BELONGS TO THE
 USER'S EAR — no agent listened.
 
-**POST-PANEL USER FINDINGS QUEUE (from the acceptance flight, 2026-08-02/03):**
-1. **Round 13 — weight — IN FLIGHT** (workflow `wf_ca77571e-2a9`): zero throttle must
-   sink (2.5-4 m/s terminal) and reach the Round 10 landing; hover threshold between
-   takeoff and cruise; PLUS: pilot-facing altitude reads gear-relative (0 on ground —
-   the user diagnosed the 4.3m readout as the gear-leg height themselves); PLUS the
-   landed-with-throttle truth table (no frozen state, hot-touchdown behaviour defined).
+## PAUSED HERE, 2026-08-03 ~00:30 — user's order: "pause the work when the current
+## run is finished. it is time for sleep." Read this block first in a fresh session.
+
+State: PR #18 open (https://github.com/cocodedk/Dune-Browser-Game/pull/18), branch
+pushed through Round 13, the FULL hook gate (incl. build + 8/8 Playwright E2E) passed
+once for real before the PR. Tree clean. Cadence ruling in force: commit+push only on
+tangible progress (a landed round), docs ride along.
+
+**Round 13 — LANDED (commit `45e1a7f`), verified, pushed. Throttle-to-zero IS the
+landing procedure now.** beatLiftTrim smoothstep (idle -3.2 m/s -> 0 at hover 0.4);
+pilot-facing altitude gear-relative (0.0 on the ground — display layer only); landed
+latches only below takeoff throttle (hot touchdown = touch-and-go, no frozen state).
+Live hands-off proof: Ctrl to 0 -> 18s monotone sink -> touchdown -> wings park ->
+altitude 0.0 -> Shift -> away. 1582/1582. DISCLOSED: 18s idle glide reads noseLeads
+0.985 (< the historical 0.99 bar, unexercised by tests) — any future bar-tightening
+must know.
+
+**Queue when work resumes (user-ordered, in this order unless re-ruled):**
 2. **Round 14 — wing fold (USER: "it doesn't fold its wings when landed. that could
    be awesome... like an off/on switch which folds and unfolds the wings")**: a toggle
    key folds the eight blades aft about their root pivots to lie along the boom (film
