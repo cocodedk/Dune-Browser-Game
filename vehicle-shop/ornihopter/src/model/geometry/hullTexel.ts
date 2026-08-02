@@ -29,12 +29,36 @@ export type Rgb = readonly [number, number, number]
 
 const BONE: Rgb = [201, 193, 173]
 const TRIM: Rgb = [235, 229, 211]
-const INSET: Rgb = [154, 148, 130]
-const FLANK: Rgb = [138, 132, 116]
-const KEEL: Rgb = [94, 90, 78]
-const OLIVE: Rgb = [113, 112, 92]
-const SLOT: Rgb = [46, 45, 40]
-const DIRT: Rgb = [84, 76, 58]
+// RECESS FAMILY — round 7.1 (materials-only). A blind critic measured the
+// RENDERED craft against the RENDERED sand at noon sun and found them
+// statistically the same value (top.png craft median 172 vs sand 178 by this
+// file's own pixel-sampling method, gap 5.6; only 5.5% of craft pixels fell
+// below L=90) even though every one of these six tones already reads darker
+// than BONE on paper. The 4c.2 lesson applies in the opposite direction this
+// time: the earlier gear round had to push albedo UP because a shallow-angle
+// face rendered darker than its swatch; these hull recesses needed to go
+// DOWN because large, square-lit panel fields render close to their own
+// albedo, and "one value step down" from BONE is not a recess, it is a
+// slightly duller BONE. Each tone below is the SAME hue as before — every
+// channel scaled by one constant per tone, so the ratio between R, G and B
+// (and therefore the colour) is untouched and only the value drops.
+//
+// First pass landed near a quarter of a well-lit BONE panel (INSET's flank
+// use measured a real render drop of 162 -> 66 at one sampled panel, pixel
+// for pixel) but left the WHOLE-CRAFT median barely under sand's, because
+// wings and deck — both correctly bone, both untouched, both out of this
+// round's scope — are most of the silhouette's pixel area; recess area is
+// the minority the aggregate number can move. Pushed a second time, to
+// where the same flank panel measures in the 30s-40s, close to the kit
+// close-up's own measured ~50 for its dark elements: not because the first
+// pass read wrong, but because a minority-area feature has to go darker
+// than its own target to move an area-weighted median that far.
+const INSET: Rgb = [35, 34, 30]
+const FLANK: Rgb = [30, 29, 25]
+const KEEL: Rgb = [27, 26, 22]
+const OLIVE: Rgb = [32, 32, 26]
+const SLOT: Rgb = [17, 17, 15]
+const DIRT: Rgb = [27, 25, 18]
 
 /** Ring panel indices, matching hullCrossSection.ts's documented point order. */
 const DECK_PANEL = 2
@@ -59,7 +83,12 @@ const SEAM_EVERY_BAYS = 3
 // panel-field-versus-trim contrast it exists to create. 0.12 leaves the field
 // dominant and the trim a strip.
 const TRIM_HALF_WIDTH = 0.12
-const CREVICE_HALF_WIDTH = 0.03
+// 0.03 (one round 7.1 texel at this file's 512px map) mipmap-averaged toward
+// its lit neighbours by the time the hull is far enough away to frame a full
+// view — a scribed line invisible at capture distance is not a recess, it is
+// dead code. 0.05 is still a hairline against TRIM_HALF_WIDTH's 0.12 band,
+// not a new stripe.
+const CREVICE_HALF_WIDTH = 0.05
 
 export function hash01(x: number, y: number): number {
   const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453
