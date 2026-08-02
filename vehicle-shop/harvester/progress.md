@@ -247,6 +247,22 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round 11 — perfect the belt: a chain of tread shoes (user direction: "perfect the belt")
+
+Round 10 made the loop; this makes the GROUND RUN a belt. The smooth
+lower-run box is gone, replaced by 24 tread shoes with small gaps and a
+raised grouser ridge on each shoe's outer face — the segmented caterpillar
+read. The upper run stays smooth (that is where the belt returns), the end
+connectors are more rounded so the loop reads curved, and the middle stays
+open for the running gear. Everything stays in the belt's red.
+
+Gates: lint 0, shop tsc 0, **22/22** tests, lengths clean.
+
+**Open:** belt scrolling (the shoes are static — the tread does not
+translate as the wheels roll), dust, panel lines, first blind critic panel.
+
+_Status: complete._
+
 ### Round 10 — the belt is a loop, not a block (user finding: "belt is a block and not a band. the wheels sink into the belt")
 
 The belt was a solid 3.6 x 6.6 x 48 slab; the wheels poked out of its

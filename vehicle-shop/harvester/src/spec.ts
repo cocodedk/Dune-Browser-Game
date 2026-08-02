@@ -98,5 +98,5 @@ export const TRACK = {
   /** Housing over the running gear, tucked under the deck. */
   housing: { yLow: 6.8, yHigh: 10.8, width: 4.4 },
   /** Grouser teeth across the belt's LOWER outer face — tread, not a fence. */
-  grouserCount: 18,
+  grouserCount: 24,
 } as const
