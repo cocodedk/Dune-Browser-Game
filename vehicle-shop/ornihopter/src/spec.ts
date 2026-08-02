@@ -36,6 +36,17 @@ export const PROVENANCE = {
     'cabin behind". Seat and eye heights below are ordinary human seated ' +
     'anthropometry fitted to the measured cabin volume. Concept art at ' +
     '.shots/reference/thopter-03.jpg and thopter-04.jpg is the visual reference.',
+  landedHeight:
+    'RULING: landedHeight is the overall height of the craft parked on its gear, not ' +
+    'ground clearance to the hull underside — read either way, the old value (7.2) could ' +
+    'not be right: as clearance it implies an 11m leg, as overall height it implies ' +
+    '1.81m, under the headroom the gear stance requires. Derived from the landing gear ' +
+    'stance module (geometry/gear/stance.ts): the ground plane sits at GROUND_Y = -4.30, ' +
+    'chosen so the parked craft clears the deepest point of the belly by about 2.19m, ' +
+    'matched to the crew headroom shown on the production ingress/egress reference board ' +
+    '(.shots/reference/thopter-05.jpg), where crew walk upright under the fuselage to a ' +
+    'rear ramp. MEASURED at 7.582 via the debug measure() harness — the parked Box3 ' +
+    'height, wings at rest — which replaces the 7.2 estimate here.',
 } as const
 
 export const OVERALL = {
@@ -43,8 +54,9 @@ export const OVERALL = {
   span: 51.84,
   bodyWidth: 5.4,
   bodyHeight: 4.3,
-  /** Ground clearance to hull underside with the gear extended. */
-  landedHeight: 7.2,
+  /** Overall height parked on the gear, NOT clearance to the hull underside —
+   *  see PROVENANCE.landedHeight. */
+  landedHeight: 7.582,
 } as const
 
 /** Longitudinal stations, measured from the nose at z = 0 going aft (+z aft). */

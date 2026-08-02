@@ -86,12 +86,14 @@ export interface RootPodGeometries {
 }
 
 /** One shared ball + one shared post, reused via per-instance transform
- *  across all eight mount stations — the same sharing pattern
- *  gearGeometry.ts uses for its struts and feet. Post flares wider at its
- *  base (matching gearGeometry.ts's strut taper), fairing into the broader
- *  hull surface it stands on; ball is centred on wingPivotAt, post's own
- *  local y=0 is its BASE so positioning it at seatOnHull sits that base
- *  flush on the hull skin with the post rising to meet the ball. */
+ *  across all eight mount stations: the pods are geometrically identical,
+ *  station to station. The landing gear cannot do the same — each of its
+ *  six legs has its own length, rake and splay (gear/stance.ts), so
+ *  gearGeometry.ts bakes six unique shapes into one mesh instead of sharing
+ *  one. Post flares wider at its base, fairing into the broader hull
+ *  surface it stands on; ball is centred on wingPivotAt, post's own local
+ *  y=0 is its BASE so positioning it at seatOnHull sits that base flush on
+ *  the hull skin with the post rising to meet the ball. */
 export function buildRootPodGeometries(): RootPodGeometries {
   const ball = new SphereGeometry(BALL_RADIUS, 10, 7)
   const post = new CylinderGeometry(POST_RADIUS_TOP, POST_RADIUS_BOTTOM, POST_HEIGHT, 10)

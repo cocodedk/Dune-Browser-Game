@@ -29,6 +29,18 @@ import type { WingSide } from './wingKinematics'
 
 const METAL_COLOR = 0x54514a
 const WING_COLOR = 0x5c5548
+/** Same bone/tan family as the hull's own palette (hullTexel.ts's BONE and
+ *  DECK_PANEL tones), not the wing-root pods' bare metalMaterial: metalness
+ *  0.7 there crushes the diffuse response that makes the hull read bright,
+ *  so the legs measured near-black (~44% of the lit hull's luminance)
+ *  against reference photographs that show the legs in the body's own
+ *  colour. Chosen by render-and-measure, not computed: the femur's lit face
+ *  meets the scene light at a shallower angle than the hull panel it is
+ *  measured against, so matching brightness took a colour close to
+ *  DECK_PANEL rather than literally darker than BONE. Roughness 0.78,
+ *  above the hull's own ~0.6 typical value, is what keeps the legs reading
+ *  as mechanism rather than fairing. */
+const GEAR_COLOR = 0xddd6c4
 
 export function createOrnithopter(): CraftModel {
   const root = new Group()
@@ -59,7 +71,8 @@ export function createOrnithopter(): CraftModel {
   const wingMaterial = new MeshStandardMaterial({
     color: WING_COLOR, roughness: 0.32, metalness: 0.65, side: DoubleSide,
   })
-  materials.push(hullMaterial, metalMaterial, wingMaterial)
+  const gearMaterial = new MeshStandardMaterial({ color: GEAR_COLOR, roughness: 0.78, metalness: 0.08 })
+  materials.push(hullMaterial, metalMaterial, wingMaterial, gearMaterial)
 
   const hullGeometry = buildHullGeometry()
   geometries.push(hullGeometry)
@@ -83,7 +96,7 @@ export function createOrnithopter(): CraftModel {
   // geometry/gear/stance.ts).
   const gear = buildLandingGearGeometry()
   geometries.push(gear)
-  const gearMesh = new Mesh(gear, metalMaterial)
+  const gearMesh = new Mesh(gear, gearMaterial)
   gearMesh.name = 'landing-gear'
   root.add(gearMesh)
 

@@ -59,12 +59,14 @@ export interface GearLeg {
  * not a look — a stance that makes the crew stoop contradicts the board the
  * whole shape comes from.
  *
- * spec.ts's OVERALL.landedHeight (7.2) cannot settle it: read literally as
- * "clearance to the hull underside" it would put this craft on 11m of leg,
- * and read as overall parked height it implies 1.81m — under headroom. This
- * lands the parked craft at 7.58m tall overall, 5% over that number, which is
- * as close as a gear module can get without owning the canopy that sets the
- * top.
+ * spec.ts's OVERALL.landedHeight used to be an ambiguous 7.2 that could not
+ * settle it: read literally as "clearance to the hull underside" it would put
+ * this craft on 11m of leg, and read as overall parked height it implied
+ * 1.81m — under headroom. GROUND_Y is derived from headroom instead, and the
+ * parked craft lands at 7.582m tall overall (debug.measure()). That measured
+ * number is now what OVERALL.landedHeight means, by ruling, rather than a
+ * separate figure this stance had to approximate — see spec.ts's
+ * PROVENANCE.landedHeight.
  */
 export const GROUND_Y = -4.3
 /** Pad thickness at the heel; the ankle sits this far above the ground. */
