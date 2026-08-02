@@ -36,6 +36,9 @@ amends from thopter-03.jpg to "reads as a modern AH-64E-style attack-helicopter 
 cockpit" (thopter-03 stays in the table as historical context; seating stays this
 craft's side-by-side unless the user says otherwise).
 
+**The interior campaign's full gauntlet spec — bar (B1-B4), builder/critic prompt
+templates, loop mechanics — lives in `docs/apache-gauntlet.md`. Rounds below follow it.**
+
 **Do next, in order (interior campaign):**
 1. **Round 9a — SEE OUT** (prereq for everything; interior critic's #1 with concrete
    acceptance): glazing must read as glass — bright desert through it, edge highlights,
