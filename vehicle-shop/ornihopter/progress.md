@@ -171,6 +171,14 @@ USER'S EAR — no agent listened.
    (clearance test); takeoff refused while folded (or auto-unfolds — builder picks,
    justifies, tests); HUD hint + key legend. Touches WingRig/contracts/flight state +
    a wing-fold module; fail-first throughout.
+2b. **Round 15 — two more glass panels (USER: "there two more side pannels on the
+   cockpit which can be swapped with glass. to provide better view. one left and one
+   right.")**: the quarter panels flanking the windscreen — exactly where the final
+   critic measured the forward view pinching (the two opaque planes converging from
+   the upper corners). Swap for glazing with the Round 11 treatment: real cuts, thin
+   frames, reveal-overlap fencing, enclosure extended, both-seats raycast proof
+   (forward-quarter yaw ~30-50 deg), exterior equivalence outside the new panes.
+   Second user-authorized freeze exception, cockpit glazing area.
 3. **Round 13b — engine whine tune (USER: "the pitch of the engine sound gets eerie",
    ruled HIGH THROTTLE)**: cap whineHz ceiling, soften top-end whine gain, roll off so
    full power reads as strain not siren. Pure params change + bounds test; user's ear
