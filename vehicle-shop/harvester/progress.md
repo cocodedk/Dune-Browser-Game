@@ -251,6 +251,45 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round I2 pass 1 — hull structure. LANDED. Verified. Critic 4/10; pass 2 queued on the user's verdict.
+
+Builder: Sonnet, with honest self-flags that the critic largely confirmed.
+What landed: the deck is now 5 physical plates with 4 real transverse gaps
+holding dark fillers recessed 0.15 m (an embedded seam inside a solid box
+would never render — right call); the nose is two stepped tiers dropping
+3 m toward the cutter; the underframe keeps full 2.0 m thickness under the
+solid ends but thins to a 1.0 m web in the open middle with 3 proud ribs;
+louvred flank panels on the two solid end regions only. Tests 40 → 44 —
+including the FIRST test ever to pin the open see-under middle (a probe
+box asserting no hull geometry in the open span's flank zone).
+
+Lead verification: gates reproduced (lint 0, tsc 0, 44/44, lengths OK),
+ownership clean (hull.ts + hull.test.ts only), own captures across six
+views. Deck seams and the surviving see-under gap confirmed by the lead's
+eye in hero/low-flank.
+
+**Critic (fresh Sonnet): 4/10.** Flank panels MET (dark louvred strips
+bridging deck to housing at both ends — the round's clear win). Deck
+seams WEAK — they read as a plated platform from top/plan only and vanish
+at the 3/4 and profile angles the machine is judged from. Nose taper WEAK
+— present in side/top but ambiguous, and unreadable in the head-on boom
+view. Cross-members NOT VISIBLE in any frame — ribs against the thinned
+web hide under the deck from every standard angle. Correctness: YES-OPEN
+(daylight through the mid-bay), assembly fit clean; one possible thin gap
+between nose end-block and track housing flagged (likely shadow — verify
+next pass).
+
+**Named gap for pass 2 (queued, not dispatched — overnight pause order):**
+cross-beams spanning laterally between the pods' inner faces, placed to
+contrast against the sand seen THROUGH the gap in low-flank/hero — not
+tucked under the deck lip. Secondary: deepen seam shadows so they read at
+3/4; make the nose tiers read as hull (material flow), not a bolt-on;
+soften the panel-to-open cutoff with tapering slats; verify the nose-block
+gap.
+
+_Status: pass 1 complete and committed; checkpoint AND pass-2 decision
+await the user in the morning._
+
 ### Round I1 pass 2 — ONE caterpillar chain. LANDED. Verified. Critic 5/10, two findings refuted on evidence.
 
 Builder: Opus (same owner, pass 2). Ruling executed: one link geometry

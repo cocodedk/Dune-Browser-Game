@@ -19,7 +19,7 @@ What needs work — by priority
  - [ ] Nose housing taper — the nose block is a flat 19m × 8.3m × 9m box. The film harvester's nose tapers toward the cutter. Add a wedge or stepped transition from
        the deck edge to the cutter arm.
  - [ ] Underframe detail — the underframe is a plain slab. Add 2-3 cross-members (dark boxes) so the open mid-section reads as structure, not empty space.
- - [ ] Flank panels — the hull's flanks (between the deck and underframe) are open. The 3MF showed solid end blocks with open middle. Add side panels (dark, with
+ - [x] Flank panels — (I2, critic: MET) the hull's flanks (between the deck and underframe) are open. The 3MF showed solid end blocks with open middle. Add side panels (dark, with
        louvre slats) on the solid end regions, leaving the middle open.
 
  ### 3. The cutter (the signature — needs to dominate)
