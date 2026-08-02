@@ -165,3 +165,38 @@ bounds are geometry-derived, not authored constants.
 panel lines, and the first blind critic panel.
 
 _Status: complete._
+
+### Round 3 — component decomposition (user's method: build parts, assemble at the end)
+
+User direction: **"you build components which you assemble at the very end.
+plan which components are needed. then build them one by one."** The
+machine is now five independent parts, each a pure builder
+(`{ group, dispose }`, reads spec, no scene/crawler access), each with its
+own bounding-invariant test (`components.test.ts`), assembled only in
+`model/Harvester.ts`:
+
+1. **hull** — deck slab + trim lip, underframe, nose housing + intake grille, tail housing, flank slats.
+2. **tracks** — per side: tread band + 12 segmented ribs (the belt read), 7 rotating wheels (14 total, driven by the crawler's signed track speeds), housing + cap trim.
+3. **cutter** — arm + rails, 18m grinder head, 7 teeth, feed hopper, pipe to the head.
+4. **cab** — two-step body, slanted glass band + mullions, side windows, roof, antenna.
+5. **machinery** — hoppers, gantry + winch, conveyor, vent stacks, deck-edge control boxes.
+
+The old monolithic `deck.ts` is deleted; its parts became cutter/cab/machinery.
+
+**A defect the component test caught that the seam test could not:** the
+nose and tail housings were placed with their z-centre written into the X
+position slot — the same axis confusion that the seam test caught in Round
+1, in a new shape. The assembled-footprint assertion in components.test.ts
+failed on an asymmetric 58.85m width (the housings parked 20m off to each
+side) and named the offender by part. Fixed at source; the seam test's
+windows would have swallowed this (the machine was still ~60m long and the
+cutter still frontmost). Lesson recorded: the assembly footprint check is
+load-bearing, not decorative.
+
+Gates: lint 0, shop tsc 0, **21/21** tests (15 + 6 component), lengths clean.
+
+**Open:** tread scrolling, dust, panel lines, and the first blind critic
+panel. Re-shoot (`npm run shop:harvester:shoot`) still needs to run in a
+non-sandboxed shell.
+
+_Status: complete._

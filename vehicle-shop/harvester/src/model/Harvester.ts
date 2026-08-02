@@ -1,24 +1,26 @@
 // vehicle-shop/harvester/src/model/Harvester.ts
-// Entry point: assembles the hull, deck, cutter and the two track pods into
-// one HarvesterModel. The root never sets its own position or rotation —
-// main.ts drives those from the crawler state every frame (contracts.ts).
-//
-// Materials are flat-shaded authorings, no textures: this is the blockout
-// round. A later round adds panel lines, weathering and tread detail.
+// ASSEMBLY — the only file that knows all five components. It owns the
+// materials, adds the components in a fixed order, drives the wheels from
+// the crawler state, and disposes everything. Each component is a pure
+// builder ({ group, dispose }) reading spec.ts, so this file has nothing to
+// get wrong beyond wiring — and the component test suite verifies each
+// part's bounding invariants independently.
 
 import { Group, MeshStandardMaterial } from 'three'
 import type { HarvesterModel, CrawlerState } from '../contracts'
 import { buildHull } from './hull'
-import { buildDeck } from './deck'
 import { buildTracks } from './tracks'
+import { buildCutter } from './cutter'
+import { buildCab } from './cab'
+import { buildMachinery } from './machinery'
 
 /** Sand body — the film's desert-industrial platform tone. */
 const BODY_COLOR = 0xb8a87f
-/** Near-black pods and machinery — the two massive track masses. */
+/** Near-black pods, housings and machinery. */
 const DARK_COLOR = 0x2e2d29
-/** Wheels and caps — the machine's only bright hardware. */
+/** Wheels and trim caps — the machine's only bright hardware. */
 const WHEEL_COLOR = 0x6f6757
-/** Rusted-metal accents — boom, hopper, cutter. */
+/** Rusted-metal accents — boom, hoppers, cutter. */
 const ACCENT_COLOR = 0x6b4f35
 
 export function createHarvester(): HarvesterModel {
@@ -31,11 +33,16 @@ export function createHarvester(): HarvesterModel {
   const accentMaterial = new MeshStandardMaterial({ color: ACCENT_COLOR, roughness: 0.7, metalness: 0.25, flatShading: true })
 
   const hull = buildHull(bodyMaterial, darkMaterial)
-  root.add(hull.group)
-  const deck = buildDeck(bodyMaterial, darkMaterial, accentMaterial)
-  root.add(deck.group)
   const tracks = buildTracks(darkMaterial, wheelMaterial)
+  const cutter = buildCutter(darkMaterial, accentMaterial)
+  const cab = buildCab(bodyMaterial, darkMaterial, accentMaterial)
+  const machinery = buildMachinery(darkMaterial, accentMaterial)
+
+  root.add(hull.group)
   root.add(tracks.group)
+  root.add(cutter.group)
+  root.add(cab.group)
+  root.add(machinery.group)
 
   const materials = [bodyMaterial, darkMaterial, wheelMaterial, accentMaterial]
 
@@ -46,8 +53,10 @@ export function createHarvester(): HarvesterModel {
     },
     dispose(): void {
       hull.dispose()
-      deck.dispose()
       tracks.dispose()
+      cutter.dispose()
+      cab.dispose()
+      machinery.dispose()
       for (const material of materials) material.dispose()
       root.clear()
     },

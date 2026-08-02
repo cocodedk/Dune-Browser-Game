@@ -1,8 +1,8 @@
 // vehicle-shop/harvester/src/model/hull.ts
-// The centre hull between the track assemblies: a deck band across the top,
-// an underframe near the ground, and low solid housings at the nose and
-// tail. Round 2 lowered the profile (deck 14.2 -> 12.0) and shrank the end
-// blocks so the machine reads long and low, not as a box with solid walls.
+// COMPONENT 1 — the platform. A deck slab with a raised trim lip, an
+// underframe near the ground (the open-framed mid-section read), a solid
+// nose housing with a dark intake grille, a low tail housing, and flank
+// slats. Reads spec.BODY only; no scene access, no crawler state.
 
 import { BoxGeometry, Mesh, MeshStandardMaterial, Group } from 'three'
 import { BODY } from '../spec'
@@ -16,6 +16,7 @@ export interface HullParts {
 
 export function buildHull(bodyMaterial: MeshStandardMaterial, darkMaterial: MeshStandardMaterial): HullParts {
   const group = new Group()
+  group.name = 'hull'
   const geometries: BoxGeometry[] = []
 
   const box = (w: number, h: number, d: number, mat: MeshStandardMaterial, x: number, y: number, z: number): void => {
@@ -30,22 +31,33 @@ export function buildHull(bodyMaterial: MeshStandardMaterial, darkMaterial: Mesh
 
   const deckHalf = BODY.halfWidth
   const deckY = BODY.deckTop - BODY.deckThickness / 2
-  // The deck spans the whole hull, between and over the track housings.
+
+  // Deck slab and underframe: the machine is a platform you can see under.
   box(deckHalf * 2, BODY.deckThickness, LENGTH, bodyMaterial, 0, deckY, 0)
-  // Underframe: a shallow slab near the ground, the same plan as the deck.
   box(deckHalf * 2, BODY.underThickness, LENGTH, bodyMaterial, 0, BODY.underThickness / 2, 0)
 
-  // Forward housing: a solid block under the deck behind the cutter — the
-  // 3MF's solid nose, lowered so the silhouette stays long.
-  const noseLen = BODY.noseBlockAftZ - BODY.noseZ
-  box(deckHalf * 2, 9.0, noseLen, bodyMaterial, (BODY.noseZ + BODY.noseBlockAftZ) / 2, 6.5, 0)
-  // Rear housing: a low processing tower at the tail.
-  const tailLen = BODY.tailZ - BODY.tailBlockForeZ
-  box(16, 6.0, tailLen, bodyMaterial, (BODY.tailBlockForeZ + BODY.tailZ) / 2, 9.0, 0)
+  // Raised trim lip around the deck edge — the film's deck reads as a
+  // bordered platform, not a bare slab edge.
+  const lipY = BODY.deckTop + 0.18
+  box(0.5, 0.36, LENGTH, darkMaterial, -deckHalf + 0.05, lipY, 0)
+  box(0.5, 0.36, LENGTH, darkMaterial, deckHalf - 0.05, lipY, 0)
+  box(deckHalf * 2, 0.36, 0.5, darkMaterial, 0, lipY, BODY.noseZ + 0.05)
+  box(deckHalf * 2, 0.36, 0.5, darkMaterial, 0, lipY, BODY.tailZ - 0.05)
 
-  // Flank grilles: dark slats along the deck slab's sides.
+  // Forward housing: a solid block under the deck behind the cutter, with a
+  // dark intake grille on its front face.
+  const noseLen = BODY.noseBlockAftZ - BODY.noseZ
+  box(deckHalf * 2, 9.0, noseLen, bodyMaterial, 0, 6.5, (BODY.noseZ + BODY.noseBlockAftZ) / 2)
+  box(deckHalf * 2 - 2, 4.5, 0.5, darkMaterial, 0, 7.0, BODY.noseZ + 0.4)
+
+  // Rear housing: a low processing tower at the tail, with vent slats.
+  const tailLen = BODY.tailZ - BODY.tailBlockForeZ
+  box(16, 6.0, tailLen, bodyMaterial, 0, 9.0, (BODY.tailBlockForeZ + BODY.tailZ) / 2)
+  box(12, 0.5, 0.4, darkMaterial, 0, 11.2, BODY.tailZ - 0.3)
+
+  // Flank slats along the deck underside.
   for (const side of [-1, 1] as const) {
-    box(1.2, 1.2, LENGTH * 0.6, darkMaterial, side * (deckHalf - 0.2), deckY - 0.8, 2)
+    box(1.2, 1.2, LENGTH * 0.6, darkMaterial, side * (deckHalf - 0.6), deckY - 0.8, 2)
   }
 
   return {
