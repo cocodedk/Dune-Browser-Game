@@ -52,9 +52,10 @@ export function buildMachinery(
     group.add(m)
   }
 
-  // Two processing hoppers, fore and aft.
+  // Two processing hoppers: the feed bin beside the conveyor, and the
+  // discharge bin on the tail tower at the belt's aft end.
   cylinder(2.2, 4.6, 3.6, 6, accentMaterial, 0, DECK + 1.8, 2)
-  cylinder(1.5, 3.2, 3.0, 6, darkMaterial, 0, DECK + 1.5, 10)
+  cylinder(1.5, 3.2, 3.0, 6, darkMaterial, 0, DECK + 1.5, 20)
 
   // Gantry: two posts, a beam, a small winch box hanging from it. Rounded.
   rbox(0.8, 4.0, 0.8, 0.25, darkMaterial, -8, DECK + 2.0, 14)
@@ -62,8 +63,48 @@ export function buildMachinery(
   rbox(17, 0.8, 0.8, 0.25, darkMaterial, 0, DECK + 4.0, 14)
   rbox(1.6, 1.2, 1.6, 0.25, darkMaterial, 0, DECK + 3.4, 14)
 
-  // Conveyor run from the fore hopper toward the tail.
-  rbox(1.6, 1.6, 14, 0.5, accentMaterial, 0, DECK + 0.8, 8)
+  // THE CONVEYOR — a real belt, not a wall (user direction: "the conveyor
+  // belt looks vertical"). A wide flat belt climbing gently from the feed
+  // hopper (z=3) to the discharge bin (z=17), with dark end drums it wraps,
+  // a dark rubber strip, and three truss-leg pairs under it.
+  const beltLen = 14
+  const beltY = DECK + 1.6
+  const beltTilt = -0.09 // negative: the +Z (aft) end rises
+  const beltGeom = roundedBox(4.5, 0.7, beltLen, 0.3)
+  geometries.push(beltGeom)
+  const belt = new Mesh(beltGeom, accentMaterial)
+  belt.position.set(0, beltY, 10)
+  belt.rotation.x = beltTilt
+  belt.castShadow = true
+  belt.receiveShadow = true
+  group.add(belt)
+
+  const strip = new BoxGeometry(3.6, 0.12, beltLen - 0.8)
+  geometries.push(strip)
+  const stripMesh = new Mesh(strip, darkMaterial)
+  stripMesh.position.set(0, beltY + 0.4, 10)
+  stripMesh.rotation.x = beltTilt
+  stripMesh.castShadow = true
+  group.add(stripMesh)
+
+  // End drums the belt wraps, at the belt's own tilted ends. Axis along X
+  // (rotation.z = pi/2) — the FIRST pass left them upright, which is exactly
+  // the "conveyor looks vertical" the user saw.
+  for (const [dz, drumY] of [[-7, beltY - 7 * Math.sin(-beltTilt)], [7, beltY + 7 * Math.sin(-beltTilt)]] as const) {
+    const g = new CylinderGeometry(0.8, 0.8, 5.0, 12)
+    geometries.push(g)
+    const drum = new Mesh(g, darkMaterial)
+    drum.rotation.z = Math.PI / 2
+    drum.position.set(0, drumY, 10 + dz)
+    drum.castShadow = true
+    group.add(drum)
+  }
+
+  // Truss legs from the deck up to the belt underside.
+  for (const [lz, legH] of [[6, 0.9], [10, 1.25], [14, 1.6]] as const) {
+    box(0.5, legH, 0.5, darkMaterial, -2.0, DECK + legH / 2, lz)
+    box(0.5, legH, 0.5, darkMaterial, 2.0, DECK + legH / 2, lz)
+  }
 
   // Vent stacks and a control box on the deck edges (thin in X, so nothing
   // overhangs the hull's flank).

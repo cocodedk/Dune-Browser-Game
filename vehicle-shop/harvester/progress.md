@@ -246,3 +246,20 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 **Open:** cleat scrolling, dust, panel lines, first blind critic panel.
 
 _Status: complete._
+
+### Round 6 — the conveyor is a belt, not a wall (user direction: "concentrate on the conveyor belt. it looks vertical")
+
+Two causes of "vertical": the old conveyor was a 1.6x1.6 thin bar, and the
+new belt's END DRUMS were created upright (the cylinder helper's default
+axis is Y) — 5m vertical poles at the belt's ends, exactly what read as
+vertical. Rebuilt: a wide 4.5m belt climbing gently aft (rotation -0.09),
+a dark rubber strip on top, horizontal end drums the belt wraps, three
+truss-leg pairs, and the discharge bin moved to the tail tower at the
+belt's aft end. The component test caught the poles (machinery min.y
+10.47 — the drum bottoms); fixed at source.
+
+Gates: lint 0, shop tsc 0, **21/21** tests, lengths clean.
+
+**Open:** cleat scrolling, dust, panel lines, first blind critic panel.
+
+_Status: complete._
