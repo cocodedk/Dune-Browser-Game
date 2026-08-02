@@ -68,6 +68,20 @@ control."
   behaviour (fail-first: from a banked/pitched state, N seconds of auto-level bring
   attitude within tolerance), plus a HUD hint that it is active.
 
+### B6 — Side visibility (USER RULING, 2026-08-02 late): FULL APACHE SIDE PANES
+
+"Full apache side panes and thinner frames. cause the two pilots share the same narrow
+front window and they don't sit center to it. so each pilot sees more to the other side
+than its front view." This AMENDS the exterior freeze with ONE authorized exception:
+large flat side transparencies cut into the hull's upper flanks (both sides), with
+THINNER frames than the current forward members. Everything else on the exterior stays
+frozen. From each seat, a level sideways glance must reach the outside through glass;
+the enclosure zero-escape contract extends over the new panes.
+
+ALSO RULED: auto-level must bring the craft to "0 bubble" — exactly level, not merely
+within 3 degrees. (9g's exponential decay does converge to ~0; pin it with a tightened
+assertion: |roll| and |pitch| < 0.1 deg after a 4s hold.)
+
 ### B4 — Correctness. Every critic answers these; each is mechanically asserted where possible.
 
 1. `forwardCone.test.ts` green, UNTOUCHED — the central forward cone hits glazing first.
