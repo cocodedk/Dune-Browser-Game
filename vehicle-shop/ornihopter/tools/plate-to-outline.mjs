@@ -3,13 +3,19 @@
 // geometry code to loft from, and SVG for the blueprint.
 //
 // The kit's parts are ~1.8mm extrusions of a profile someone actually drew, so
-// this recovers that drawing. Two limits worth stating up front:
+// this recovers that drawing. Three limits worth stating up front:
 //   - There is NO absolute scale in the kit. Output is normalised 0..1 along
 //     the long axis and expressed as a fraction of max width, to be scaled to
 //     src/spec.ts's real dimensions by whoever consumes it.
 //   - It only makes sense on plates that are genuine silhouettes. Several kit
 //     parts are internal ribs with joinery slots cut into them, and tracing
 //     those yields the slots, not the craft.
+//   - Several plates lie DIAGONALLY on the print bed (packed at an angle to
+//     fit more parts per sheet). This de-rotates to the plate's own principal
+//     axis (same method as scratchpad/principal.mjs) before scanning stations,
+//     so "the long axis" means the part's true long axis, not the bed's X.
+//     Skipping this once produced a profile (airframe-side.json, pre-fix) whose
+//     offset column swept -1.18..+1.28 instead of a sane sub-1.0 range.
 //
 // Usage: node plate-to-outline.mjs <file.stl> <name> [--stations 120] [--out DIR]
 
@@ -48,15 +54,48 @@ for (const t of tri) for (const p of t) for (let a = 0; a < 3; a++) {
 }
 // Plate plane is the two largest axes; the smallest is the extrusion thickness.
 const axes = [0, 1, 2].map((a) => [a, hi[a] - lo[a]]).sort((x, y) => y[1] - x[1])
-const [U, uLen] = axes[0]
-const [V, vLen] = axes[1]
+const [U] = axes[0]
+const [V] = axes[1]
 const thickness = axes[2][1]
 
+// De-rotate: principal angle of the plate-plane covariance, same formula as
+// scratchpad/principal.mjs. Bed-packing rotation is arbitrary per part, so
+// this has to be measured per file, not assumed to be 0.
+let su = 0, sv = 0, n = 0
+for (const t of tri) for (const p of t) { su += p[U]; sv += p[V]; n++ }
+const mu = su / n, mv = sv / n
+let sxx = 0, syy = 0, sxy = 0
+for (const t of tri) for (const p of t) {
+  const dx = p[U] - mu, dy = p[V] - mv
+  sxx += dx * dx; syy += dy * dy; sxy += dx * dy
+}
+sxx /= n; syy /= n; sxy /= n
+const theta = 0.5 * Math.atan2(2 * sxy, sxx - syy)
+const c = Math.cos(-theta), s = Math.sin(-theta)
+const rot = (p) => {
+  const dx = p[U] - mu, dy = p[V] - mv
+  return [dx * c - dy * s, dx * s + dy * c]
+}
+
+// Rotated triangles (a,b) replace the raw U,V pair everywhere below: a is the
+// plate's true long axis, b its true across-axis, regardless of how it sat on
+// the print bed.
+const rtri = tri.map((t) => t.map(rot))
+let aLo = Infinity, aHi = -Infinity, bLo = Infinity, bHi = -Infinity
+for (const t of rtri) for (const [a, b] of t) {
+  if (a < aLo) aLo = a
+  if (a > aHi) aHi = a
+  if (b < bLo) bLo = b
+  if (b > bHi) bHi = b
+}
+const uLen = aHi - aLo
+const vLen = bHi - bLo
+
 const insideAt = (pu, pv) => {
-  for (const t of tri) {
-    const ax = t[0][U], ay = t[0][V]
-    const bx = t[1][U], by = t[1][V]
-    const cx = t[2][U], cy = t[2][V]
+  for (const t of rtri) {
+    const ax = t[0][0], ay = t[0][1]
+    const bx = t[1][0], by = t[1][1]
+    const cx = t[2][0], cy = t[2][1]
     const d = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
     if (Math.abs(d) < 1e-12) continue
     const w1 = ((by - cy) * (pu - cx) + (cx - bx) * (pv - cy)) / d
@@ -71,19 +110,19 @@ const insideAt = (pu, pv) => {
 // doubles back on itself, which is another reason not to run it on ribs.
 const RESOLUTION = 600
 const stations = []
-for (let s = 0; s < STATIONS; s++) {
-  const frac = s / (STATIONS - 1)
-  const pu = lo[U] + uLen * frac
+for (let sIdx = 0; sIdx < STATIONS; sIdx++) {
+  const frac = sIdx / (STATIONS - 1)
+  const pu = aLo + uLen * frac
   let min = Infinity
   let max = -Infinity
   for (let k = 0; k <= RESOLUTION; k++) {
-    const pv = lo[V] + (vLen * k) / RESOLUTION
+    const pv = bLo + (vLen * k) / RESOLUTION
     if (!insideAt(pu, pv)) continue
     if (pv < min) min = pv
     if (pv > max) max = pv
   }
   if (min === Infinity) continue
-  stations.push({ frac, lower: min - lo[V], upper: max - lo[V] })
+  stations.push({ frac, lower: min - bLo, upper: max - bLo })
 }
 
 const maxWidth = Math.max(...stations.map((s) => s.upper - s.lower))
@@ -95,7 +134,8 @@ const profile = {
   note:
     'Measured off a flat plate in the print kit. NO ABSOLUTE SCALE: the kit states no ' +
     'scale ratio, so span is normalised 0..1 and widths are a fraction of max width. ' +
-    'Scale to src/spec.ts before use.',
+    "De-rotated to the plate's own principal axis before measuring (some plates lie " +
+    'diagonally on the print bed). Scale to src/spec.ts before use.',
   plateMillimetres: { long: uLen, across: vLen, thickness },
   lengthOverMaxWidth: uLen / maxWidth,
   stations: stations.map((s) => ({

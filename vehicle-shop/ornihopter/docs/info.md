@@ -17,7 +17,8 @@ numbers got into this document in the first place.
 | absolute length and span | **MENG 1:72 kit** | licensed, and it states a scale ratio |
 | wing count, part breakdown | **the print kit in this folder** | real part counts; agrees with MENG |
 | wing planform and chord | **the print kit in this folder** | its plates are true 2D profiles |
-| silhouette, surface, proportion | **Master Replicas photos** in `.shots/reference/` | licensed, screen-accurate collectible |
+| any shape/anatomy a flat plate directly shows — gear-leg anatomy and count, nose profile, canopy footprint, boom taper, wing-root construction, hull cross-section | **the print kit's plates** — see [`profiles/kit-dossier.md`](./profiles/kit-dossier.md) | true 2D profiles, immune to the foreshortening that misled this doc before; out-ranks photographs for shape specifically |
+| surface finish, paint, weathering, texture | **Master Replicas photos** in `.shots/reference/` | licensed, screen-accurate collectible; a flat plate can't show finish |
 | anything from actor comparison | **weakest — verify before use** | already proven wrong on chord, below |
 
 **The print kit cannot give absolute scale, and it is important not to ask it to.**
@@ -25,7 +26,19 @@ numbers got into this document in the first place.
 scale" there means full-size for that kit, not 1:1 with the aircraft, and no scale ratio
 appears anywhere in the 3mf. It is also a fan reconstruction, not a licensed product.
 What makes it trustworthy is that it *corroborates* the licensed sources where they
-overlap and overturns only the weakest one.
+overlap and overturns only the weakest one. MENG still owns absolute scale outright; the
+plates now own shape for any feature they cover.
+
+**On "the plates out-rank photos": this was tested, not assumed.** A critic scoring the
+exterior against photographs claimed a blunt nose with three vertical fins, four
+skid-legs, a proud windshield box, and 2×2 wing-root lug clusters. Measuring the kit's
+own plates (de-rotated to each part's true principal axis — several lie diagonally on
+the print bed, which a first pass got wrong; see `kit-dossier.md`'s tooling-fix note)
+confirmed some of these (the lug clusters, a version of the leg count), refuted others
+(the "fins" are gear/ramp mounting bosses 62–85% aft along the profile, nowhere near
+either tip; the nose is a smooth taper, not a face), and settled one the photos genuinely
+couldn't (the canopy footprint tapers to a point at both ends, arguing against a boxy
+proud canopy). Full claim-by-claim numbers are in `profiles/kit-dossier.md`.
 
 ## Confirmed dimensions
 
