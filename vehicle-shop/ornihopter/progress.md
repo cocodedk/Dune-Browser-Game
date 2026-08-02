@@ -551,3 +551,30 @@ gear becomes the kit's segmented insect legs — hips inside the (now drooping) 
 common foot plane, support polygon containing the pod, fail-first stance test, mirror
 re-winding per the wing precedent. After it lands and verifies: re-shoot, then fresh blind
 critics for Q1 and Q3.
+
+### Round 4c — LANDED. Verified. The craft perches.
+
+Commit `564a2e4`. Six segmented legs (hip boss / paired femur rails / knuckle / tibia /
+spade foot, swept tapered plates, flat shading via unshared verts), hips bisected onto the
+real lower flank with a 0.28m embed, all soles on one plane at y=-4.30. The finished stance
+test failed the OLD gear 4 of 7 — feet spread 0.73m (four of six airborne), hips at a
+0.08m bite, seat station outside the support polygon, feet not splayed — and passed after,
+with a separate fault injection (one foot dropped 0.2m) failing three independent
+assertions. The builder also RETRACTED its own first height bar mid-round: it had derived
+"crouched, clearance under 1.72m" from hand-held kit photos, then recognised
+thopter-05.jpg is the production's own ingress board showing crew walking upright under the
+belly, rescaled to ~2.5m and rebuilt the assertion as a headroom floor. That is the
+photographs-are-not-the-object lesson applied by a builder to itself, and it is why the
+report is trusted after verification. Lead reproduced: lint 0, tsc 0, **1413/1413**,
+lengths clean; parked height measures 7.582; side view reads as a perched insect — femur,
+knee, tibia, foot, front pair raked forward, exactly the kit's stance.
+
+Honest gaps taken forward: legs render near-black (~44% of hull luminance) where both kit
+prints show legs in the body's own colour; spec's landedHeight=7.2 is stale either way it
+is read; wing/rootPod.ts carries two comments describing the deleted strut gear. All three
+dispatched together as **Round 4c.2** (workflow `wf_f7860923-e42`, Sonnet, max effort) with
+the lead's ruling recorded: landedHeight means overall parked height and becomes the
+measured 7.582. Accepted as authored (not measured): the middle-leg rake (0.95m, chosen so
+the knee survives the side projection); the lens-shaped femur cutout and heel-spur feet
+deferred — the flat sole is what makes the ground plane provable. After 4c.2: re-shoot and
+the blind Q1/Q3 critics.
