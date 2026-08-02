@@ -247,6 +247,23 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round 13 — the belt is a BAND, not a block (user finding, round 12: "the belt became a block again")
+
+The thin-sheet loop still read as a block: the outer face was a full-height
+red wall covering the whole track, hiding the wheels' middles. Now the belt
+is an OPEN FRAME — bottom strip (ground run, tread shoes on its outer
+edge), top strip (return run), end connectors — with the middle EMPTY, so
+the wheels sit fully visible in open space against the hull. The only
+full-height belt material is a short WRAP SEGMENT at each sprocket (where
+the belt passes over it), carrying the engagement lugs the sprocket's grey
+teeth visibly pass between.
+
+Gates: lint 0, shop tsc 0, **22/22** tests, lengths clean.
+
+**Open:** belt scrolling, dust, panel lines, first blind critic panel.
+
+_Status: complete._
+
 ### Round 12 — wheels ENGAGE the belt; the conveyor elements are back (user finding: "the wheels must engage with the belt and not sink into it. the belt lacks elements of the conveyor belt. where the teeth of the wheels engage with the belt")
 
 Two changes. (1) The belt's runs were 3.85m-deep walls — the wheels read as
