@@ -21,7 +21,7 @@ import { WING, WING_ROOTS } from '../spec'
 import { buildHullGeometry } from './geometry/hullGeometry'
 import { buildHullWeatheringMaps } from './geometry/hullWeathering'
 import { buildCanopy } from './geometry/canopyGeometry'
-import { GEAR_LEG_MOUNTS, buildGearGeometries, footDropFromHip } from './geometry/gearGeometry'
+import { buildLandingGearGeometry } from './geometry/gearGeometry'
 import { buildWingBladeGeometry } from './geometry/wingGeometry'
 import { seatOnHull, wingPivotAt, buildRootPodGeometries } from './geometry/wing/rootPod'
 import { createWingRig, type WingRig } from './WingRig'
@@ -77,17 +77,15 @@ export function createOrnithopter(): CraftModel {
   // it is part of the hull mesh rather than two separate meshes floating at
   // the end of the boom.
 
-  const gear = buildGearGeometries()
-  geometries.push(gear.strut, gear.foot)
-  const footDrop = footDropFromHip()
-  for (const mount of GEAR_LEG_MOUNTS) {
-    const strut = new Mesh(gear.strut, metalMaterial)
-    strut.position.set(mount.x, mount.hipY, mount.z)
-    root.add(strut)
-    const foot = new Mesh(gear.foot, metalMaterial)
-    foot.position.set(mount.x, mount.hipY - footDrop, mount.z)
-    root.add(foot)
-  }
+  // Six segmented insect legs in one mesh, already in craft-local space —
+  // no per-leg transform, because no two legs are the same shape (each one's
+  // length falls out of its own hip height above the shared ground plane;
+  // geometry/gear/stance.ts).
+  const gear = buildLandingGearGeometry()
+  geometries.push(gear)
+  const gearMesh = new Mesh(gear, metalMaterial)
+  gearMesh.name = 'landing-gear'
+  root.add(gearMesh)
 
   // Ball-joint root housings: static, faired into the hull deck at each
   // WING_ROOTS station (geometry/wing/rootPod.ts) — a row along the dorsal
