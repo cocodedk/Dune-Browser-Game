@@ -129,7 +129,7 @@ export function dialFaceMaterial(map: Texture): MeshStandardMaterial {
     map,
     emissiveMap: map,
     emissive: 0xffffff,
-    emissiveIntensity: 0.28,
+    emissiveIntensity: 0.1,
     roughness: 0.55,
     metalness: 0.05,
     side: DoubleSide,
