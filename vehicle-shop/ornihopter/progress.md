@@ -644,3 +644,31 @@ regenerating the de-rotated profiles (the first airframe-side.json extraction is
 CONTAMINATED — the plate lies diagonally and the extractor does not de-rotate; its offsets
 sweep -1.18..+1.28). Round 6 briefs are written from the dossier, not from the critique's
 photo-derived specifics.
+
+### The dossier landed (commit `1329222`) and the user ruled on the gear fork.
+
+Plate verdicts, each cross-checked against the 3MF assembly by triangle-count identity and
+real transforms: nose blunt-face-with-fins REFUTED (bosses mid-body; nose is a bullnose,
+tip ~21% of max depth — current 0.19 nearly right); flush canopy lens CONFIRMED (39.9% of
+pod length, over a shallow hull section); 2x2 mounts CONFIRMED (rows 39.52mm apart =
+~5.30m at craft scale); wing rod arm 16% of span (spec's 0.17 vindicated; the critique's
+"inner third" refuted); boom tip forks into a slotted-paddle tine plus a pointed tine;
+gear = ONE skid-bar leg + ONE pointed ramp brace per side, "crouched" REFUTED (leg ~= pod
+depth). The critique's verified core (form language, flush deck, clustered mounts, tonal
+unity, panel density, cockpit enclosure) stands; its refuted specifics are stripped from
+every brief.
+
+**Round 6a dispatched** (workflow `wf_8aa9dd76-058`, Opus, max effort): machined plan read
+(slab flanks, hard breaks — the measured two-lobe plan and slenderness guards survive),
+flush canopy deck replacing the perched box (canopySectionAt contract preserved for the
+interior), WING_ROOTS re-authored as the measured 2x2 clusters with mount-plate geometry,
+and the two-tine boom fork. Fail-first tests demanded for canopy flushness and mount
+clustering.
+
+**Gear fork RULED BY THE USER (AskUserQuestion): "Film stance, kit anatomy."** The spread
+multi-leg, walk-under-headroom stance from the production ingress board stays; every leg
+is restyled with the kit's measured parts language — castellated hip bracket, scissor
+brace, skid-style feet. Queued as its own round behind 6a (shared Ornithopter.ts wiring
+and the shared dev server keep the sequence rule in force). Queue after 6a, one landing at
+a time: cockpit enclosure (the 3/10 brief), wing arm/tonal round, gear restyle, then
+re-shoot and a fresh critic panel.
