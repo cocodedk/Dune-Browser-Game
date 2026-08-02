@@ -22,6 +22,9 @@ const DARK_COLOR = 0x2e2d29
 const WHEEL_COLOR = 0x6f6757
 /** Rusted-metal accents — boom, hoppers, cutter. */
 const ACCENT_COLOR = 0x6b4f35
+/** The belt's own red — user direction. Muted industrial red so it reads on
+ *  the sand without shouting over the machine. */
+const BELT_COLOR = 0x8f2f2a
 
 export function createHarvester(): HarvesterModel {
   const root = new Group()
@@ -31,9 +34,10 @@ export function createHarvester(): HarvesterModel {
   const darkMaterial = new MeshStandardMaterial({ color: DARK_COLOR, roughness: 0.85, metalness: 0.1, flatShading: true })
   const wheelMaterial = new MeshStandardMaterial({ color: WHEEL_COLOR, roughness: 0.6, metalness: 0.3, flatShading: true })
   const accentMaterial = new MeshStandardMaterial({ color: ACCENT_COLOR, roughness: 0.7, metalness: 0.25, flatShading: true })
+  const beltMaterial = new MeshStandardMaterial({ color: BELT_COLOR, roughness: 0.8, metalness: 0.1, flatShading: true })
 
   const hull = buildHull(bodyMaterial, darkMaterial)
-  const tracks = buildTracks(darkMaterial, wheelMaterial, accentMaterial)
+  const tracks = buildTracks(darkMaterial, wheelMaterial, accentMaterial, beltMaterial)
   const cutter = buildCutter(darkMaterial, accentMaterial)
   const cab = buildCab(bodyMaterial, darkMaterial, accentMaterial)
   const machinery = buildMachinery(darkMaterial, accentMaterial)
@@ -44,7 +48,7 @@ export function createHarvester(): HarvesterModel {
   root.add(cab.group)
   root.add(machinery.group)
 
-  const materials = [bodyMaterial, darkMaterial, wheelMaterial, accentMaterial]
+  const materials = [bodyMaterial, darkMaterial, wheelMaterial, accentMaterial, beltMaterial]
 
   return {
     root,

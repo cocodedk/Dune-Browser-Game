@@ -55,6 +55,7 @@ export function buildTracks(
   darkMaterial: MeshStandardMaterial,
   wheelMaterial: MeshStandardMaterial,
   accentMaterial: MeshStandardMaterial,
+  beltMaterial: MeshStandardMaterial,
 ): Tracks {
   const group = new Group()
   group.name = 'tracks'
@@ -66,8 +67,8 @@ export function buildTracks(
   for (const side of [1, -1] as const) {
     const x = side * TRACK.centreX
 
-    // The belt loop — its own component, one per side.
-    const belt = buildBelt(side, darkMaterial, wheelMaterial)
+    // The belt loop — its own component, one per side, RED.
+    const belt = buildBelt(side, beltMaterial)
     group.add(belt.group)
     belts.push(belt)
 

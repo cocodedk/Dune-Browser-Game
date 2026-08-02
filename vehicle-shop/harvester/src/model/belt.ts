@@ -26,29 +26,29 @@ const GROUSER_LENGTH = GROUSER_SPACING * 0.55
  *  group is positioned at that side's track centreline. */
 export function buildBelt(
   side: 1 | -1,
-  darkMaterial: MeshStandardMaterial,
-  treadMaterial: MeshStandardMaterial,
+  beltMaterial: MeshStandardMaterial,
 ): BeltPart {
   const group = new Group()
   group.name = 'belt'
   group.position.x = side * TRACK.centreX
   const geometries: BufferGeometry[] = []
 
-  // The band itself: tall, dark, edges rounded so it reads as a wrapped
-  // loop rather than a slab.
+  // The band itself: tall, RED (user direction), edges rounded so it reads
+  // as a wrapped loop rather than a slab.
   const band = roundedBox(BELT.width, BELT.height, POD_LENGTH, 0.9)
   geometries.push(band)
-  const bandMesh = new Mesh(band, darkMaterial)
+  const bandMesh = new Mesh(band, beltMaterial)
   bandMesh.position.set(0, BELT.height / 2, 0)
   bandMesh.castShadow = true
   bandMesh.receiveShadow = true
   group.add(bandMesh)
 
-  // Grousers: short tread teeth on the belt's LOWER outer face only.
+  // Grousers: short tread teeth on the belt's LOWER outer face only, same
+  // red family so the belt reads as one part.
   for (let i = 0; i < TRACK.grouserCount; i++) {
     const grouser = new BoxGeometry(0.45, 1.1, GROUSER_LENGTH)
     geometries.push(grouser)
-    const grouserMesh = new Mesh(grouser, treadMaterial)
+    const grouserMesh = new Mesh(grouser, beltMaterial)
     grouserMesh.position.set(
       side * (BELT.width / 2 + 0.25),
       0.55,

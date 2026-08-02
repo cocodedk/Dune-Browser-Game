@@ -49,7 +49,7 @@ describe('hull component', () => {
 describe('tracks component', () => {
   it('has eighteen runners (4 road wheels + 2 sprockets + 3 rollers per side) and a symmetric footprint', () => {
     const m = mats()
-    const { group } = buildTracks(m.dark, m.wheel, m.accent)
+    const { group } = buildTracks(m.dark, m.wheel, m.accent, m.dark)
     let wheels = 0
     group.traverse((child) => {
       if (child.name === 'wheel') wheels++
@@ -126,7 +126,7 @@ describe('whole machine still meets its footprint', () => {
     const m = mats()
     const root = new Group()
     root.add(buildHull(m.body, m.dark).group)
-    root.add(buildTracks(m.dark, m.wheel, m.accent).group)
+    root.add(buildTracks(m.dark, m.wheel, m.accent, m.dark).group)
     root.add(buildCutter(m.dark, m.accent).group)
     root.add(buildCab(m.body, m.dark, m.accent).group)
     root.add(buildMachinery(m.dark, m.accent).group)
