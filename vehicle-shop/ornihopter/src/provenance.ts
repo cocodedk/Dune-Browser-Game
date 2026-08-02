@@ -94,5 +94,14 @@ export const PROVENANCE = {
     'height by 8e-5m — the new skid rails land on the plane exactly where the old ' +
     'spade\'s tapered sole sat 0.08mm above it. A single number that no test consumed ' +
     'went two whole rounds without anyone noticing it had drifted 0.84m; anything ' +
-    'derived from landedHeight should read it from a measurement, not from here.',
+    'derived from landedHeight should read it from a measurement, not from here. ' +
+    'RE-MEASURED AGAIN at 6.706 in round 7 (the leg-splay/skid-length round): the ' +
+    'drift happened AGAIN, and again unrelated to the round that caught it — a stashed ' +
+    'rebuild of the pre-round-7 gear (stance.ts/skid.ts reverted, everything else at ' +
+    'HEAD) measured the identical 6.706, so the 0.041m move away from 6.747 happened ' +
+    'somewhere in 6e/6e.2/6f (wing/canopy work) and simply went unnoticed again. Round ' +
+    '7\'s own gear change (KNEE_RAKE 0.72 -> 0.42, rakeZ widened, skid lengthened) ' +
+    'moves no Y coordinate at all — GROUND_Y, FOOT_TOP, KNEE_DROP and every ' +
+    'skid Y offset are untouched — so it could not have been the cause, and the ' +
+    'stashed measurement proves that rather than assuming it.',
 } as const

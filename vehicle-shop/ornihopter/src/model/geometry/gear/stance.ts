@@ -78,10 +78,11 @@ export interface GearLeg {
  * this craft on 11m of leg, and read as overall parked height it implied
  * 1.81m — under headroom. GROUND_Y is derived from headroom instead, and the
  * parked craft's overall height is then whatever measure() reports: 7.582m
- * when round 4c.2 asked, 6.747m now that round 6a has taken the tent canopy
- * off the deck. That measured number is what OVERALL.landedHeight means, by
- * ruling, rather than a separate figure this stance has to approximate — see
- * spec.ts's PROVENANCE.landedHeight.
+ * at round 4c.2, 6.747m once round 6a took the tent canopy off the deck,
+ * 6.706m at round 7 (drifted in 6e/6e.2/6f, not moved by this round's own
+ * gear change — see spec.ts's PROVENANCE.landedHeight for the proof). That
+ * measured number is what OVERALL.landedHeight means, by ruling, rather
+ * than a separate figure this stance has to approximate.
  */
 export const GROUND_Y = -4.3
 /** Pad thickness at the heel; the ankle sits this far above the ground. */
@@ -97,14 +98,22 @@ const HIP_ANCHOR_DEPTH = 0.28
  *  same reason: comfortably clear of both the keel plate and the chine. */
 const HIP_X_FRACTION = 0.72
 
-/** Knee placement between hip and ankle: most of the outboard reach and most
- *  of the fore/aft rake happen in the femur, less than half the drop does.
- *  That is what makes the femur shallow and the tibia steep — the insect
- *  break the kit shows, rather than two halves of one straight strut. */
+/** Knee placement between hip and ankle: most of the outboard reach happens
+ *  in the femur, less than half the drop does. That is what makes the femur
+ *  shallow and the tibia steep — the insect break the kit shows, rather than
+ *  two halves of one straight strut.
+ *
+ *  KNEE_RAKE REVISED, round 7: 0.72 -> 0.42. At 0.72 the tibia — 56% of the
+ *  drop, and the segment nearest the ground in every reference shot — kept
+ *  barely a quarter of the rake, so its own rake-vs-drop angle measured
+ *  8.5/16.8/13.6 degrees (mid/front/rear): "near-vertical posts", the
+ *  Round 7 critic's finding, even though outboard (X) reach was never
+ *  short. A side view only shows Y and Z, so Z was the axis that mattered.
+ *  At 0.42 the tibia keeps 58% of the rake over 56% of the drop — close to
+ *  proportionate — and both segments read as diagonal. */
 const KNEE_OUT = 0.68
 const KNEE_DROP = 0.44
-const KNEE_RAKE = 0.72
-
+const KNEE_RAKE = 0.42
 
 interface Station {
   readonly metresAft: number
@@ -127,10 +136,20 @@ interface Station {
 // height would have stood the craft up on near-vertical legs; holding the old
 // femur ANGLE instead would have thrown the feet out to +/-5m. These sit
 // between: a 9.2m stance on a 5.4m body.
+//
+// rakeZ RAISED, round 7. The critic read the rendered stance at ~10 degrees
+// off vertical against the kit's ~33 (…kit-2.png); this file's own
+// hip-to-foot Z-vs-drop angle agreed at 15.1/28.2/23.9 (mid/front/rear) —
+// two of three under a 25-degree floor. footX is untouched: outboard (X)
+// reach was already 35-43 degrees, past the kit's own reference, so it was
+// never the short axis. rakeZ rises on all three to clear 25 with margin,
+// near the kit's ~30-33: front -1.7 -> -1.85 (already the least vertical),
+// mid 0.95 -> 2.05 (the flattest leg — the one the critic's ~10 likely
+// names), rear 1.65 -> 2.2.
 const STANCE: readonly Station[] = [
-  { metresAft: GEAR.stationsFromNose[0], footX: 3.9, rakeZ: -1.7 },
-  { metresAft: GEAR.stationsFromNose[1], footX: 4.6, rakeZ: 0.95 },
-  { metresAft: GEAR.stationsFromNose[2], footX: 4.35, rakeZ: 1.65 },
+  { metresAft: GEAR.stationsFromNose[0], footX: 3.9, rakeZ: -1.85 },
+  { metresAft: GEAR.stationsFromNose[1], footX: 4.6, rakeZ: 2.05 },
+  { metresAft: GEAR.stationsFromNose[2], footX: 4.35, rakeZ: 2.2 },
 ]
 
 function buildLeg(station: Station, side: 1 | -1): GearLeg {

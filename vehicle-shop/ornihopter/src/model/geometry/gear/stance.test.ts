@@ -179,4 +179,21 @@ describe('landing gear stance', () => {
       expect(leg.foot.x).toBeGreaterThan(hullHalfWidthAt(leg.foot.z) * 1.2)
     }
   })
+
+  it('rakes each leg at least 25 degrees off vertical, not a near-vertical post', () => {
+    // FAIL-FIRST. Round 7's critic measured the render at ~10 degrees off
+    // vertical against the kit's ~33 (…kit-2.png) — near-vertical posts,
+    // not a landed insect. Angle is hip-to-foot, fore/aft (Z) offset over
+    // drop: a side elevation only shows Y and Z, so outboard (X) — already
+    // 35-43 degrees, past the kit's own reference — was never the short
+    // axis. MEASURED before rakeZ/KNEE_RAKE moved: 28.2/15.1/23.9 degrees
+    // (front/mid/rear) — mid (likely the critic's ~10) and rear under the
+    // floor; front, raking hardest for the support polygon, barely over.
+    for (const leg of GEAR_LEGS) {
+      const drop = leg.hip.y - leg.foot.y
+      const rake = Math.abs(leg.foot.z - leg.hip.z)
+      const degrees = (Math.atan2(rake, drop) * 180) / Math.PI
+      expect(degrees).toBeGreaterThanOrEqual(25)
+    }
+  })
 })

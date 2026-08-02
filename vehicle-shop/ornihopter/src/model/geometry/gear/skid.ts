@@ -35,11 +35,20 @@ export const SKID = {
   /** Sole on the plane, top at FOOT_TOP — the ankle height stance.ts owns. */
   railHalfThick: FOOT_TOP / 2,
   /** How far the rails run aft of the ankle, and forward of it before the toe
-   *  kicks up. -Z is forward, so "forward" is a subtraction. */
-  heelBehind: 0.46,
-  toeBreak: 0.7,
+   *  kicks up. -Z is forward, so "forward" is a subtraction.
+   *
+   *  LENGTHENED, round 7: the Round 7 critic read our SKID_LENGTH (1.58m)
+   *  as far short of the kit's long fore-aft runners (docs/…kit-2.png shows
+   *  a bar running most of a leg's own stride, not a stub under the ankle).
+   *  heelBehind and toeAhead both grow (0.46->0.75, 1.12->1.75) so the
+   *  runner reads as a landing rail rather than a pad; toeBreak grows with
+   *  them (0.7->1.05) so the flat-sole-to-upturned-toe split stays close to
+   *  its old proportion (roughly 2.6:1 either way) instead of stretching
+   *  the flat run alone. */
+  heelBehind: 0.75,
+  toeBreak: 1.05,
   /** Where the upturned tip finishes, and how far it has risen by then. */
-  toeAhead: 1.12,
+  toeAhead: 1.75,
   toeRise: 0.34,
   toeHalfBreadth: 0.3,
   toeHalfThick: 0.055,

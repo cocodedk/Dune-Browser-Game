@@ -22,9 +22,10 @@ export const OVERALL = {
   bodyWidth: 5.4,
   bodyHeight: 4.3,
   /** Overall height parked on the gear, NOT clearance to the hull underside —
-   *  see PROVENANCE.landedHeight. RE-MEASURED round 6d at 6.747; the 7.582 it
-   *  replaces was measured before round 6a deleted the tent canopy. */
-  landedHeight: 6.747,
+   *  see PROVENANCE.landedHeight. RE-MEASURED round 7 at 6.706; the 6.747 it
+   *  replaces was stale since 6e/6e.2/6f, not moved by round 7's own gear
+   *  splay fix (confirmed unchanged against a stashed pre-fix rebuild). */
+  landedHeight: 6.706,
 } as const
 
 /** Longitudinal stations, measured from the nose at z = 0 going aft (+z aft). */
