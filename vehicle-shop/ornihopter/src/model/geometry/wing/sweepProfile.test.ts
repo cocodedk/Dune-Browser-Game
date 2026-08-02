@@ -64,9 +64,13 @@ describe('sweepOffsetAt', () => {
     expect(sweepOffsetAt(0)).toBe(0)
   })
 
-  it('matches the measured fraction, scaled by max chord, past the collar', () => {
-    expect(sweepOffsetAt(0.5)).toBeCloseTo(sweepFractionAt(0.5) * WING_MAX_CHORD, 10)
-    expect(sweepOffsetAt(1)).toBeCloseTo(sweepFractionAt(1) * WING_MAX_CHORD, 10)
+  it('matches the negated measured fraction, scaled by max chord, past the collar', () => {
+    // sweepOffsetAt negates the measured curve once — the sign mapping to
+    // craft z (user's knife rule: dull spine forward, sharp curved edge
+    // aft), not the plate reading itself. sweepFractionAt, asserted
+    // un-negated above, is that plate reading.
+    expect(sweepOffsetAt(0.5)).toBeCloseTo(-sweepFractionAt(0.5) * WING_MAX_CHORD, 10)
+    expect(sweepOffsetAt(1)).toBeCloseTo(-sweepFractionAt(1) * WING_MAX_CHORD, 10)
   })
 
   it('never exceeds the measured curve\'s own magnitude anywhere on the span', () => {

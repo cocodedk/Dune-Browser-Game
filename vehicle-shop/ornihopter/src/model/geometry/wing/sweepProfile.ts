@@ -64,9 +64,28 @@ export function rootBlendAt(spanFraction: number): number {
  * Full centreline offset in metres at `spanFraction`, scaled by the kit's
  * measured max chord (PROVENANCE.wingPlanform), and blended to exactly zero
  * at the pivot ring (see header). Past the collar this is the measured curve,
- * unmodified — including its full +0.233 root value and its crossing to
- * negative across the constant-chord midspan.
+ * negated once — the sign mapping to craft z, not the plate reading itself
+ * (sweepFractionAt above stays a pure, un-negated readout, matching its own
+ * test's pin to spec.ts's PROVENANCE numbers).
+ *
+ * The user's rule, their words: a wing is a knife, dull spine forward,
+ * sharp curved cutting edge aft. LEAD measurement off
+ * docs/profiles/wing-planform.json: the upper plate edge (offset+chord/2)
+ * has stdev 0.0099 over mid-span — the straight spine — the lower edge
+ * (offset-chord/2) has stdev 0.1912 — the curved knife. section.ts's chord
+ * spread puts the rail (spine) at this station's -z and the knife at +z
+ * unconditionally (see its header); left un-negated here, that put the
+ * straight spine's own measured curve on the AFT edge of the assembled wing
+ * and the curved knife's on the NOSE edge — backwards. Negating here swaps
+ * which measured curve rides which edge without touching section.ts's local
+ * rail/knife assignment. See wingChordHandedness.test.ts for the proof.
+ *
+ * Guarded against -0 at the root ring, where `measured` is exactly zero (a
+ * genuine +0, since rootBlendAt(0) is +0) and a bare unary negation would
+ * flip its sign bit: sweepOffsetAt(0) must stay Object.is-equal to +0 for
+ * this file's own test and wingRootAttachment.test.ts's hinge invariant.
  */
 export function sweepOffsetAt(spanFraction: number): number {
-  return rootBlendAt(spanFraction) * sweepFractionAt(spanFraction) * WING_MAX_CHORD
+  const measured = rootBlendAt(spanFraction) * sweepFractionAt(spanFraction) * WING_MAX_CHORD
+  return measured === 0 ? 0 : -measured
 }

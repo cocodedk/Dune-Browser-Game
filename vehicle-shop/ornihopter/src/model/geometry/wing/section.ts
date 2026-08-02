@@ -83,15 +83,21 @@ function lineAt(u: number, u0: number, y0: number, u1: number, y1: number): numb
 /**
  * The blade's eight points, in cycle order, for a section of this chord.
  *
- * z is NEGATED relative to BLADE_U's own 0=leading/1=trailing labelling —
- * the user's finding: every wing blade was mirrored across its own span
- * axis, tip doglegs curling toward the nose instead of trailing aft, with
- * the straight edge that should lead sitting aft instead. This is the
- * master blade, authored once and shared by all eight wings (rodPoints
- * below gets the same flip, so the rod-to-blade flare stays one continuous
- * surface), so the one negation here fixes every wing at once. Negating an
- * axis inverts triangle winding — see wingGeometry.ts's re-wind of the
- * index list for the other half of this fix.
+ * z follows BLADE_U's own labelling directly — 0 (leading) at -z (toward
+ * the nose), 1 (trailing) at +z (aft) — so the rail sits forward and the
+ * knife sits aft, matching ROD_ANGLE's own "+Z (trailing)" convention and
+ * rodPoints' identical, un-negated mapping below.
+ *
+ * Round 6e (commit ea4d2b5) negated this z chasing the user's dogleg
+ * finding and fixed the wrong feature: it put the rail aft and the knife
+ * forward — backwards per the user's own knife rule (dull spine forward,
+ * sharp curved edge aft). The finding actually lives in the PLANFORM bow,
+ * not this per-station cross-section: wing/sweepProfile.ts's sweepOffsetAt
+ * was applying the measured centreline offset with the sign that put the
+ * plate's straight (spine) edge aft and its curved (knife) edge toward the
+ * nose. That single sign lives in sweepOffsetAt now (negated once); this
+ * section's original mapping was correct all along and is reverted here.
+ * See wingChordHandedness.test.ts for the proof both halves now carry.
  */
 function bladePoints(chord: number, camber: number): SectionPoint[] {
   const crest = camber + RAIL_RISE
@@ -109,14 +115,16 @@ function bladePoints(chord: number, camber: number): SectionPoint[] {
     bottomAt(BLADE_U[6]),
     keel,
   ]
-  return ys.map((y, i) => ({ y, z: -(BLADE_U[i] - 0.5) * chord }))
+  return ys.map((y, i) => ({ y, z: (BLADE_U[i] - 0.5) * chord }))
 }
 
 /** The rod's eight points, in cycle order, for a section of this diameter.
- *  z negated to match bladePoints' flip above — same master, same handedness. */
+ *  z un-negated, matching ROD_ANGLE's own "+Z (trailing)" convention and
+ *  bladePoints' mapping above — same master, same handedness, so the flare
+ *  from rod to blade stays one continuous surface. */
 function rodPoints(width: number): SectionPoint[] {
   const r = width / 2
-  return ROD_ANGLE.map((angle) => ({ y: r * Math.sin(angle), z: -r * Math.cos(angle) }))
+  return ROD_ANGLE.map((angle) => ({ y: r * Math.sin(angle), z: r * Math.cos(angle) }))
 }
 
 /**
