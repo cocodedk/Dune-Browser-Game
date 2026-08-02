@@ -707,3 +707,39 @@ read overbright in the new frames (gear round re-tunes). **Round 6b dispatched**
 `wf_e6b57894-981`, Opus, max effort): full cockpit enclosure per the 3/10 critique — brow,
 sills, visible glazing, both correctness holes closed, ONE sun, military-palette
 instruments, articulated stick, seat presence, eye raised into the glazed sightline.
+
+### Round 6b — LANDED. Verified. 17,920 rays, zero escapes.
+
+Commit `4e41c30`. The eye came up 1.27m into the glazed forward bay — and the derivation
+exposed the real root cause of the critic's lower-left desert: at the old floor height,
+THREE cockpit stations had no hull wide enough to stand a floor on at all. The new
+sightlines.ts instrument casts the actual pilot frustum against the actual meshes:
+open-sky coverage went from 64% (yaw 0) and 100% (yaw -60) to ZERO at all seven poses.
+Independent convergence worth recording: the critic estimated 18.3% top-half structure by
+eye, the ray harness measured 16.3% from the meshes — two instruments, one answer, which
+is what makes both trustworthy. The two-suns defect died at cause, not symptom: three.js
+point-light attenuation is 1/d^2 with decay 2, so a light 0.15m off a panel multiplies
+itself x44 before ACES clips it to a white disc — which retroactively explains why Round
+3's 18x intensity cut "barely dimmed the glow". decay 0 removes the term. Two
+watertightness lessons now written at the fix sites: an inset liner leaves its own inset
+open as a sky slot at the top, and quads that merely SHARE an edge are not watertight to
+a grazing ray — overlap them. Military panel landed (bezelled gauges, nav globe,
+annunciators, tapes, articulated stick with coiled cable); glazing opacity 0.60 -> 0.34,
+the sole exterior change, measured: a window darker than the wall beside it is not a
+window. Cockpit mesh budget raised 200 -> 700 with the reasoning inside the test and the
+triangle cap untouched (lead reviewed the diff; draw-call merging is queued for game
+integration, not for the shop). Lead reproduced: lint 0, tsc 0, **1451/1451**, lengths
+clean; the yaw-0 frame reads as thopter-03's cave — grey-green metal, one light, a
+mullioned slot of desert ahead.
+
+Honest gaps taken forward: the forward window is a SLOT by exterior design — the kit's
+flush lens caps how much greenhouse the interior can ever show, a structural tension
+between the kit-authority exterior and the film-board interior reference (accepted for
+now; revisit only if the next critic panel names it); port wall enclosed but dull; forward
+roof liner crushes dark; console's pilot-facing face near-black; no seat shoulder reads at
+yaw 0; gauges legible but unlabelled. **Round 6c dispatched** (workflow `wf_ed829d16-895`,
+Opus, max effort): wing root arms to the dossier's measured rod-and-sleeve anatomy (the
+spec's 0.17 arm fraction was right all along — the geometry never honoured it), all eight
+blades into ONE airframe tonal family (kill the deterministic fore/aft tan-vs-black split,
+cause to be measured, not guessed), bevelled leading edge and scribed centre groove for
+internal form; measured planform untouchable.
