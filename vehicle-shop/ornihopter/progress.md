@@ -150,6 +150,10 @@ byte-identically; guard test red/green on a lighting-K proxy. Bar wording amende
 "at most one" region (zero is stricter than one). 1556/1556.
 
 **Do next, in order (interior campaign):**
+1. **Round 12 — engine + flapping sound — IN FLIGHT** (workflow `wf_066afd26-c83`,
+   Opus, max): beat-locked whoosh (audible spool-down/up per Round 10), turbine layer
+   on throttle, cockpit-muffled variant, pure params layer unit-tested without
+   AudioContext, M mute, gesture-gated autoplay.
 2b. **Round 11 — Apache side panes (USER RULING, exterior-freeze exception): "full
    apache side panes and thiner frames. cause the two pilots share the same narrow
    front window and they don't sit center to it. so each pilot sees more to the other
