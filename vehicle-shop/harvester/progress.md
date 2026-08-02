@@ -247,6 +247,23 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round 10 — the belt is a loop, not a block (user finding: "belt is a block and not a band. the wheels sink into the belt")
+
+The belt was a solid 3.6 x 6.6 x 48 slab; the wheels poked out of its
+faces but their bodies were buried in it. Rebuilt as a real band: a LOWER
+run on the ground (grousers on its outer face), an UPPER run at the top
+(return rollers tuck under it), and END CONNECTORS wrapping the sprockets —
+the middle is OPEN, so the running gear sits in clear space and you can
+see through the loop to the hull behind it. All four pieces + the grousers
+stay in the belt's own red.
+
+Gates: lint 0, shop tsc 0, **22/22** tests, lengths clean.
+
+**Open:** belt scrolling (grousers on the lower run still static), dust,
+panel lines, first blind critic panel.
+
+_Status: complete._
+
 ### Round 9 — a perfect wheel, and a thinner belt (user direction: "perfect the wheel even more. the belt is very thick and angled too. but the wheel first")
 
 WHEEL: the plain cylinder became a lathe-turned tire — rounded shoulders
