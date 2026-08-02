@@ -12,161 +12,167 @@
 import { describe, it, expect } from 'vitest'
 import { TRACK } from '../spec'
 import {
-  BOTTOM_RUN_Y, TOP_RUN_Y, WRAP_RADIUS, WRAP_ARC, WRAP_PITCH,
-  RUN_SPAN, RUN_SPAN_START, RUN_SPAN_END, STRAIGHT_PITCH,
-  zeroBeltPhase, advanceBeltPhase, bottomRunZ, topRunZ, wrapPlacement,
+  BOTTOM_RUN_Y, TOP_RUN_Y, WRAP_RADIUS, WRAP_ARC, STRAIGHT_SPAN,
+  LOOP_LENGTH, LINK_PITCH, LINK_LENGTH, LINK_COUNT, LINK_GAP,
+  TANGENT_FRONT, TANGENT_REAR,
+  advanceBeltPhase, linkLoopPosition, placeAlongLoop, isOnWrap,
 } from './beltPhase'
 
 const S = TRACK.beltLinks.straightPerRun
 const W = TRACK.beltLinks.wrapPerSprocket
-const FRONT = TRACK.sprocketZ[0]
-const REAR = TRACK.sprocketZ[1]
+
+/** Every link's placement at a given phase. */
+function chain(phase: number) {
+  return Array.from({ length: LINK_COUNT }, (_, i) => placeAlongLoop(linkLoopPosition(i, phase)))
+}
 
 describe('belt phase — density and geometry from spec', () => {
-  it('derives its pitches from spec counts, not from local magic numbers', () => {
+  it('derives ONE pitch from the spec counts, not from local magic numbers', () => {
     expect(S).toBe(29)
-    expect(W).toBe(15)
-    expect(RUN_SPAN / STRAIGHT_PITCH).toBeCloseTo(S, 9)
-    expect(WRAP_ARC / WRAP_PITCH).toBeCloseTo(W, 9)
-    expect(WRAP_ARC).toBeCloseTo(Math.PI * WRAP_RADIUS, 9)
-    // Art-director numbers: ~1.41m straight pitch, ~0.76m wrap pitch.
-    expect(STRAIGHT_PITCH).toBeGreaterThan(1.3)
-    expect(STRAIGHT_PITCH).toBeLessThan(1.5)
-    expect(WRAP_PITCH).toBeLessThan(0.85)
+    expect(W).toBe(8)
+    // The chain's length IS the spec's total, and the pitch is the loop over
+    // that total — so changing spec moves the density and nothing else does.
+    expect(LINK_COUNT).toBe(2 * S + 2 * W)
+    expect(LINK_COUNT).toBe(74)
+    expect(LOOP_LENGTH / LINK_PITCH).toBeCloseTo(LINK_COUNT, 9)
+    // One link geometry everywhere: each segment holds its spec count to
+    // within a fraction of a link, at the SAME pitch.
+    expect(STRAIGHT_SPAN / LINK_PITCH).toBeCloseTo(S, 0)
+    expect(WRAP_ARC / LINK_PITCH).toBeCloseTo(W, 0)
+    expect(LINK_LENGTH).toBeCloseTo(LINK_PITCH - LINK_GAP, 9)
   })
 
   it('puts the bottom run ON the ground and wraps the sprocket from outside', () => {
-    // Link centre at half a link-thickness, so the plate's underside is y=0.
     const thickness = TRACK.sprocketY - TRACK.sprocketRadius
     expect(BOTTOM_RUN_Y).toBeCloseTo(thickness / 2, 9)
-    // The wrap radius is exactly what carries the run's centreline around the
-    // sprocket: no step in y at the tangent, and the belt's inner face lands
-    // on the sprocket rim.
+    // No step in y at the tangent, and the belt's inner face lands on the rim.
     expect(TRACK.sprocketY - WRAP_RADIUS).toBeCloseTo(BOTTOM_RUN_Y, 9)
     expect(WRAP_RADIUS - thickness / 2).toBeCloseTo(TRACK.sprocketRadius, 9)
     expect(TOP_RUN_Y).toBeCloseTo(TRACK.sprocketY + WRAP_RADIUS, 9)
   })
 
-  it('overlaps the straight runs into the wrap arcs — the transition gap fix', () => {
-    expect(RUN_SPAN_START).toBeLessThan(FRONT)
-    expect(RUN_SPAN_END).toBeGreaterThan(REAR)
-    // The overlap is small enough that the straight link still sits on the
-    // curve: the arc has barely risen this far past the tangent.
-    const over = FRONT - RUN_SPAN_START
-    const rise = WRAP_RADIUS - Math.sqrt(WRAP_RADIUS * WRAP_RADIUS - over * over)
-    expect(rise).toBeLessThan(0.05)
-    expect(over).toBeGreaterThan(0.2)
+  it('hands nothing over at the tangents — the path is continuous there', () => {
+    // The pass-1 fix for the tangent gap was an overlap. With one pitch the
+    // links FLOW through instead, so the assertion is stronger: position and
+    // heading agree across every segment boundary, including the loop seam.
+    const e = 1e-6
+    for (const boundary of [STRAIGHT_SPAN, STRAIGHT_SPAN + WRAP_ARC, 2 * STRAIGHT_SPAN + WRAP_ARC, LOOP_LENGTH]) {
+      const before = placeAlongLoop(boundary - e)
+      const after = placeAlongLoop((boundary + e) % LOOP_LENGTH)
+      expect(after.y).toBeCloseTo(before.y, 5)
+      expect(after.z).toBeCloseTo(before.z, 5)
+      // Headings compared as direction vectors, so -PI and +PI agree.
+      expect(Math.sin(after.rotX)).toBeCloseTo(Math.sin(before.rotX), 5)
+      expect(Math.cos(after.rotX)).toBeCloseTo(Math.cos(before.rotX), 5)
+    }
+  })
+
+  it('keeps every neighbour exactly one pitch apart, tangents included', () => {
+    // No hole anywhere in the chain: walking the loop, consecutive links are
+    // always LINK_PITCH of arc apart and never further.
+    for (const phase of [0, 0.37, 5.1, 40.9, 52.3, 99.8]) {
+      const us = Array.from({ length: LINK_COUNT }, (_, i) => linkLoopPosition(i, phase)).sort((a, b) => a - b)
+      for (let i = 1; i < LINK_COUNT; i++) {
+        expect(us[i] - us[i - 1]).toBeCloseTo(LINK_PITCH, 6)
+      }
+      // And the pair that straddles u = 0 closes the loop to the same pitch.
+      expect(LOOP_LENGTH - us[LINK_COUNT - 1] + us[0]).toBeCloseTo(LINK_PITCH, 6)
+    }
   })
 })
 
 describe('belt phase — the scroll', () => {
-  it('advances by speed x dt and stays bounded in every segment', () => {
-    let p = zeroBeltPhase()
-    p = advanceBeltPhase(p, 0.6, 0.5)
-    expect(p.run).toBeCloseTo(0.3, 12)
-    expect(p.wrap).toBeCloseTo(0.3, 12)
-    // Many steps: still wrapped into range, never drifting off to infinity.
+  it('advances by speed x dt and stays bounded', () => {
+    expect(advanceBeltPhase(0, 0.6, 0.5)).toBeCloseTo(0.3, 12)
+    let p = 0
     for (let i = 0; i < 500; i++) p = advanceBeltPhase(p, 1.7, 0.25)
-    expect(p.run).toBeGreaterThanOrEqual(0)
-    expect(p.run).toBeLessThan(RUN_SPAN)
-    expect(p.wrap).toBeGreaterThanOrEqual(0)
-    expect(p.wrap).toBeLessThan(WRAP_ARC)
+    expect(p).toBeGreaterThanOrEqual(0)
+    expect(p).toBeLessThan(LOOP_LENGTH)
   })
 
-  it('returns to the same configuration after one whole span of travel', () => {
-    const before = Array.from({ length: S }, (_, i) => bottomRunZ(i, zeroBeltPhase()))
-    const after = Array.from({ length: S }, (_, i) => bottomRunZ(i, advanceBeltPhase(zeroBeltPhase(), RUN_SPAN, 1)))
-    for (let i = 0; i < S; i++) expect(after[i]).toBeCloseTo(before[i], 9)
+  it('returns to the same configuration after one whole lap', () => {
+    const before = chain(0)
+    const after = chain(advanceBeltPhase(0, LOOP_LENGTH, 1))
+    for (let i = 0; i < LINK_COUNT; i++) {
+      expect(after[i].z).toBeCloseTo(before[i].z, 6)
+      expect(after[i].y).toBeCloseTo(before[i].y, 6)
+    }
   })
 
   it('BOTTOM RUN travels toward +Z at forward drive — the sign trap', () => {
-    const a = zeroBeltPhase()
-    const b = advanceBeltPhase(a, 0.6, 0.5)
-    const z0 = bottomRunZ(3, a)
-    const z1 = bottomRunZ(3, b)
-    expect(z1 - z0).toBeCloseTo(0.3, 9)
-    expect(z1).toBeGreaterThan(z0)
+    const a = placeAlongLoop(linkLoopPosition(3, 0))
+    const b = placeAlongLoop(linkLoopPosition(3, advanceBeltPhase(0, 0.6, 0.5)))
+    expect(a.y).toBeCloseTo(BOTTOM_RUN_Y, 9)
+    expect(b.z - a.z).toBeCloseTo(0.3, 9)
+    expect(b.z).toBeGreaterThan(a.z)
   })
 
   it('TOP RUN travels toward -Z at forward drive, by the same distance', () => {
-    const a = zeroBeltPhase()
-    const b = advanceBeltPhase(a, 0.6, 0.5)
-    expect(topRunZ(3, b) - topRunZ(3, a)).toBeCloseTo(-0.3, 9)
+    // Link 40 sits on the top run at zero phase (29 links reach the rear
+    // tangent, 8 more cross the wrap).
+    const a = placeAlongLoop(linkLoopPosition(40, 0))
+    const b = placeAlongLoop(linkLoopPosition(40, advanceBeltPhase(0, 0.6, 0.5)))
+    expect(a.y).toBeCloseTo(TOP_RUN_Y, 9)
+    expect(b.z - a.z).toBeCloseTo(-0.3, 9)
   })
 
   it('mirrors under reverse drive', () => {
-    const a = advanceBeltPhase(zeroBeltPhase(), 5, 1)
-    const b = advanceBeltPhase(a, -0.6, 0.5)
-    expect(bottomRunZ(3, b) - bottomRunZ(3, a)).toBeCloseTo(-0.3, 9)
-    expect(topRunZ(3, b) - topRunZ(3, a)).toBeCloseTo(0.3, 9)
-  })
-
-  it('keeps the runs inside their span and evenly pitched at any phase', () => {
-    const p = advanceBeltPhase(zeroBeltPhase(), 7.31, 1)
-    const zs = Array.from({ length: S }, (_, i) => bottomRunZ(i, p)).sort((m, n) => m - n)
-    expect(zs[0]).toBeGreaterThanOrEqual(RUN_SPAN_START)
-    expect(zs[S - 1]).toBeLessThanOrEqual(RUN_SPAN_END)
-    for (let i = 1; i < S; i++) expect(zs[i] - zs[i - 1]).toBeCloseTo(STRAIGHT_PITCH, 9)
+    const p = advanceBeltPhase(0, 5, 1)
+    const q = advanceBeltPhase(p, -0.6, 0.5)
+    expect(placeAlongLoop(linkLoopPosition(3, q)).z - placeAlongLoop(linkLoopPosition(3, p)).z).toBeCloseTo(-0.3, 9)
+    expect(placeAlongLoop(linkLoopPosition(40, q)).z - placeAlongLoop(linkLoopPosition(40, p)).z).toBeCloseTo(0.3, 9)
   })
 })
 
 describe('belt phase — the wraps', () => {
   it('curves around the OUTSIDE of each sprocket at every phase (round-16 bug)', () => {
-    for (const travel of [0, 0.4, 3.1, 9.7, 11.4]) {
-      const p = advanceBeltPhase(zeroBeltPhase(), travel, 1)
-      for (let i = 0; i < W; i++) {
-        expect(wrapPlacement(i, p, FRONT, -1).z).toBeLessThanOrEqual(FRONT + 1e-9)
-        expect(wrapPlacement(i, p, REAR, 1).z).toBeGreaterThanOrEqual(REAR - 1e-9)
-        for (const zSign of [1, -1] as const) {
-          const at = wrapPlacement(i, p, zSign === 1 ? REAR : FRONT, zSign)
-          expect(at.y).toBeGreaterThanOrEqual(BOTTOM_RUN_Y - 1e-9)
-          expect(at.y).toBeLessThanOrEqual(TOP_RUN_Y + 1e-9)
-        }
+    for (const phase of [0, 0.4, 3.1, 9.7, 41.2, 63.5]) {
+      for (let i = 0; i < LINK_COUNT; i++) {
+        const u = linkLoopPosition(i, phase)
+        if (!isOnWrap(u)) continue
+        const at = placeAlongLoop(u)
+        // Nothing curves back between the sprockets: the belly points at the
+        // nose up front and at the tail aft.
+        expect(at.z <= TANGENT_FRONT + 1e-9 || at.z >= TANGENT_REAR - 1e-9).toBe(true)
+        expect(at.y).toBeGreaterThanOrEqual(BOTTOM_RUN_Y - 1e-9)
+        expect(at.y).toBeLessThanOrEqual(TOP_RUN_Y + 1e-9)
       }
     }
   })
 
-  it('orbits at speed/radius, rear climbing and front descending at forward drive', () => {
-    const a = advanceBeltPhase(zeroBeltPhase(), 2, 1)
-    const b = advanceBeltPhase(a, 0.6, 0.5)
-    const rearA = wrapPlacement(0, a, REAR, 1)
-    const rearB = wrapPlacement(0, b, REAR, 1)
-    const frontA = wrapPlacement(0, a, FRONT, -1)
-    const frontB = wrapPlacement(0, b, FRONT, -1)
-    // Arc travelled is speed x dt, so the angular rate is speed / radius —
-    // the same rate the sprocket itself turns, which is what keeps the
-    // engagement lugs locked to the teeth.
-    expect(rearB.angle - rearA.angle).toBeCloseTo(0.3 / WRAP_RADIUS, 9)
-    expect(frontB.angle - frontA.angle).toBeCloseTo(-0.3 / WRAP_RADIUS, 9)
-    expect(rearB.y).toBeGreaterThan(rearA.y)   // rear wrap carries links UP
-    expect(frontB.y).toBeLessThan(frontA.y)    // front wrap brings them DOWN
+  it('orbits at speed/radius — the rate that keeps the sprocket meshed', () => {
+    // A link mid-way round the rear wrap, stepped by 0.3m of belt travel.
+    const u = STRAIGHT_SPAN + WRAP_ARC / 2
+    const a = placeAlongLoop(u)
+    const b = placeAlongLoop(u + 0.3)
+    const angleA = Math.atan2(a.y - TRACK.sprocketY, a.z - TANGENT_REAR)
+    const angleB = Math.atan2(b.y - TRACK.sprocketY, b.z - TANGENT_REAR)
+    expect(angleB - angleA).toBeCloseTo(0.3 / WRAP_RADIUS, 9)
+    expect(b.y).toBeGreaterThan(a.y) // the rear wrap carries links UP
+    // The front wrap brings them back DOWN.
+    const f = 2 * STRAIGHT_SPAN + WRAP_ARC + WRAP_ARC / 2
+    expect(placeAlongLoop(f + 0.3).y).toBeLessThan(placeAlongLoop(f).y)
   })
 
-  it('points every wrap link along the belt path — the link axis IS the tangent', () => {
-    const p = advanceBeltPhase(zeroBeltPhase(), 1.9, 1)
+  it('points every link along the belt path — the link axis IS the tangent', () => {
     const step = 1e-5
-    const q = advanceBeltPhase(p, step, 1)
-    for (const [sz, zSign] of [[REAR, 1], [FRONT, -1]] as const) {
-      for (let i = 0; i < W; i++) {
-        const at = wrapPlacement(i, p, sz, zSign)
-        const next = wrapPlacement(i, q, sz, zSign)
-        if (Math.abs(next.angle - at.angle) > 0.5) continue // the link that wrapped
-        const dy = (next.y - at.y) / step
-        const dz = (next.z - at.z) / step
-        // A box's long axis is local +Z; rotation.x = t maps it to (-sin t, cos t).
-        expect(-Math.sin(at.rotX)).toBeCloseTo(dy, 3)
-        expect(Math.cos(at.rotX)).toBeCloseTo(dz, 3)
-      }
+    for (let u = 0; u < LOOP_LENGTH; u += 0.37) {
+      const at = placeAlongLoop(u)
+      const next = placeAlongLoop((u + step) % LOOP_LENGTH)
+      const dy = (next.y - at.y) / step
+      const dz = (next.z - at.z) / step
+      expect(-Math.sin(at.rotX)).toBeCloseTo(dy, 3)
+      expect(Math.cos(at.rotX)).toBeCloseTo(dz, 3)
     }
   })
 
-  it('hands off at the tangents with no step in the belt line', () => {
-    const p = zeroBeltPhase()
-    // Wrap link 0 at zero phase sits exactly on a tangent point: the rear one
-    // at the bottom run's height, the front one at the top run's.
-    expect(wrapPlacement(0, p, REAR, 1).y).toBeCloseTo(BOTTOM_RUN_Y, 9)
-    expect(wrapPlacement(0, p, REAR, 1).z).toBeCloseTo(REAR, 9)
-    expect(wrapPlacement(0, p, FRONT, -1).y).toBeCloseTo(TOP_RUN_Y, 9)
-    expect(wrapPlacement(0, p, FRONT, -1).z).toBeCloseTo(FRONT, 9)
+  it('meets each tangent point exactly, with no step in the belt line', () => {
+    expect(placeAlongLoop(0).y).toBeCloseTo(BOTTOM_RUN_Y, 9)
+    expect(placeAlongLoop(0).z).toBeCloseTo(TANGENT_FRONT, 9)
+    expect(placeAlongLoop(STRAIGHT_SPAN).z).toBeCloseTo(TANGENT_REAR, 9)
+    expect(placeAlongLoop(STRAIGHT_SPAN).y).toBeCloseTo(BOTTOM_RUN_Y, 9)
+    expect(placeAlongLoop(STRAIGHT_SPAN + WRAP_ARC).y).toBeCloseTo(TOP_RUN_Y, 9)
+    expect(placeAlongLoop(STRAIGHT_SPAN + WRAP_ARC).z).toBeCloseTo(TANGENT_REAR, 9)
+    expect(placeAlongLoop(2 * STRAIGHT_SPAN + WRAP_ARC).z).toBeCloseTo(TANGENT_FRONT, 9)
   })
 })

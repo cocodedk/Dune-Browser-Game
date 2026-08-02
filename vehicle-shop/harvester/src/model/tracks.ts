@@ -14,12 +14,13 @@
 // edge (-17.0), and every gap between road wheels holds one roller. Every
 // runner rolls from the crawler's signed track speeds at its own radius.
 
-import { BoxGeometry, CylinderGeometry, Group, Mesh, type Object3D, type BufferGeometry, type MeshStandardMaterial } from 'three'
+import { BoxGeometry, Group, Mesh, type Object3D, type BufferGeometry, type MeshStandardMaterial } from 'three'
 import { TRACK, BODY } from '../spec'
 import { wheelAngularSpeed } from '../crawler/kinematics'
 import { roundedBox } from './rounded'
 import { buildWheel, type WheelPart } from './wheel'
 import { buildBelt, type BeltPart } from './belt'
+import { buildSprocket, type SprocketPart } from './sprocket'
 import { WRAP_RADIUS, TOP_RUN_Y, BELT_THICKNESS } from './beltPhase'
 
 export interface Tracks {
@@ -33,19 +34,13 @@ export interface Tracks {
  *  cutter extends past). */
 const POD_LENGTH = BODY.tailZ - BODY.noseZ
 const BELT = TRACK.belt
-const TOOTH_COUNT = 5
-/** Five teeth, 36 degrees apart — the belt puts a lug every 36 degrees too,
- *  starting half a pitch away, so teeth fall between lugs. Both turn at the
- *  same rate (see the sprocket runner below), so they stay meshed. */
-const TOOTH_START = 0
-const TOOTH_STEP = (36 * Math.PI) / 180
-const TOOTH_RADIUS = TRACK.sprocketRadius + 0.55
 
-/** How far each runner protrudes past the belt's outer face — what makes
- *  the wheels visible from the side instead of hidden behind the belt. */
+/** How far each runner protrudes past the belt band — what makes the wheels
+ *  visible from the side instead of hidden behind the belt. The rollers stay
+ *  NARROWER than the belt's plates: they carry the top run from underneath,
+ *  and their support brackets (below) are what makes that read. */
 const ROAD_WHEEL_OVER = 1.1
-const SPROCKET_OVER = 1.0
-const ROLLER_OVER = 0.4
+const ROLLER_OVER = 0.5
 
 interface Runner {
   group: Object3D
@@ -64,13 +59,14 @@ export function buildTracks(
   const geometries: BufferGeometry[] = []
   const wheels: WheelPart[] = []
   const belts: Array<{ part: BeltPart; side: 1 | -1 }> = []
+  const sprockets: SprocketPart[] = []
   const runners: Runner[] = []
 
   for (const side of [1, -1] as const) {
     const x = side * TRACK.centreX
 
     // The belt loop — its own component, one per side, RED.
-    const belt = buildBelt(side, beltMaterial)
+    const belt = buildBelt(side, beltMaterial, darkMaterial)
     group.add(belt.group)
     belts.push({ part: belt, side })
 
@@ -86,54 +82,51 @@ export function buildTracks(
       runners.push({ group: wheel.group, side, radius: TRACK.roadWheelRadius })
     }
 
-    // End sprockets, bigger than the road wheels, with a ring of teeth — the
-    // belt visibly wraps these and the teeth ENGAGE the belt's lugs (built
-    // in belt.ts at the same arc, interleaved). The sprocket is a GROUP at
-    // the axle holding the cylinder plus its teeth, so the update loop rolls
-    // the whole toothed wheel.
+    // End sprockets — the drum and its ring of teeth, model/sprocket.ts.
     for (const sz of TRACK.sprocketZ) {
-      const sprocketGroup = new Group()
-      sprocketGroup.name = 'wheel'
-      sprocketGroup.position.set(x, TRACK.sprocketY, sz)
-      const sprocket = new CylinderGeometry(TRACK.sprocketRadius, TRACK.sprocketRadius, BELT.width + SPROCKET_OVER * 2, 18)
-      geometries.push(sprocket)
-      const mesh = new Mesh(sprocket, wheelMaterial)
-      mesh.rotation.z = Math.PI / 2
-      mesh.castShadow = true
-      sprocketGroup.add(mesh)
-      // Teeth span from just inside the belt's outer face to past the
-      // sprocket face, so they pass THROUGH the belt and meet its lugs. The
-      // X station follows the pod's side — built unsigned, the port pod's
-      // teeth faced the hull and were invisible from outside.
-      const toothLocalX = side * (BELT.width / 2 + 0.55)
-      for (let t = 0; t < TOOTH_COUNT; t++) {
-        const angle = TOOTH_START + t * TOOTH_STEP
-        const tooth = new BoxGeometry(1.5, 0.9, 0.9)
-        geometries.push(tooth)
-        const toothMesh = new Mesh(tooth, darkMaterial)
-        toothMesh.position.set(toothLocalX, TOOTH_RADIUS * Math.sin(angle), TOOTH_RADIUS * Math.cos(angle))
-        toothMesh.rotation.x = angle
-        toothMesh.castShadow = true
-        sprocketGroup.add(toothMesh)
-      }
-      group.add(sprocketGroup)
+      const sprocket = buildSprocket(side, x, sz, wheelMaterial, darkMaterial)
+      group.add(sprocket.group)
+      sprockets.push(sprocket)
       // The sprocket turns at the radius of the BELT it carries, not at its
       // own rim: that is the radius the belt's centreline orbits, so teeth
-      // and lugs advance by the same angle every frame and never slip.
-      runners.push({ group: sprocketGroup, side, radius: WRAP_RADIUS })
+      // and plates advance by the same angle every frame and never slip.
+      runners.push({ group: sprocket.group, side, radius: WRAP_RADIUS })
     }
 
     // Return rollers in the gaps between road wheels, top run — same wheel
     // component at the roller radius. They CARRY the top run: the roller's
     // crown meets the belt's under-face, the mirror of the road wheels
     // standing on the bottom run.
+    //
+    // A roller alone cannot show that from outside: it sits UNDER the belt it
+    // carries, and at every camera angle in the shot list the plates hide the
+    // contact — the crown and the belt's under-face are the same height, so
+    // whichever is nearer occludes the join. What reads instead is the TRACK
+    // FRAME below: see the rails after this loop.
     const topRunUnder = TOP_RUN_Y - BELT_THICKNESS / 2
+    const rollerY = topRunUnder - TRACK.returnRollerRadius
     for (const rz of TRACK.returnRollersZ) {
       const roller = buildWheel(TRACK.returnRollerRadius, BELT.width + ROLLER_OVER * 2, wheelMaterial, darkMaterial, accentMaterial)
-      roller.group.position.set(x, topRunUnder - TRACK.returnRollerRadius, rz)
+      roller.group.position.set(x, rollerY, rz)
       group.add(roller.group)
       wheels.push(roller)
       runners.push({ group: roller.group, side, radius: TRACK.returnRollerRadius })
+    }
+
+    // Track frame: the longitudinal rails every runner hangs from. They fill
+    // the slot between the road wheels' crowns and the top run's under-face —
+    // the open sky that made the top run read as floating — and they are the
+    // one X station that clears the rollers inboard and the belt's plates
+    // outboard. They stop short of the sprocket drums.
+    const railBottom = roadY + TRACK.roadWheelRadius + 0.05
+    const rail = new BoxGeometry(0.45, topRunUnder - railBottom, POD_LENGTH - 14)
+    geometries.push(rail)
+    for (const rs of [1, -1] as const) {
+      const railMesh = new Mesh(rail, darkMaterial)
+      railMesh.name = 'track-frame'
+      railMesh.position.set(x + rs * (BELT.width / 2 + ROLLER_OVER + 0.325), (railBottom + topRunUnder) / 2, 0)
+      railMesh.castShadow = true
+      group.add(railMesh)
     }
 
     // Upper housing over the running gear, with a cap trim and two panel
@@ -176,6 +169,7 @@ export function buildTracks(
     dispose() {
       for (const g of geometries) g.dispose()
       for (const wheel of wheels) wheel.dispose()
+      for (const sprocket of sprockets) sprocket.dispose()
       for (const { part } of belts) part.dispose()
     },
   }

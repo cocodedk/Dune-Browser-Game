@@ -106,9 +106,11 @@ export const TRACK = {
   housing: { yLow: 8.0, yHigh: 11.0, width: 4.6 },
   /** Grouser teeth across the belt's LOWER outer face — tread, not a fence. */
   grouserCount: 24,
-  /** Chain-link density — the I1 art-director numbers (gauntlet loop,
-   *  immediate-improvements §1): 29 links per straight run (pitch ≈ 1.41 m,
-   *  link ≈ 1.1 m, gap ≈ 0.3 m) and 15 wrap links per sprocket with link
-   *  length ≈ arc pitch, so the wrap reads as a continuous curve. */
-  beltLinks: { straightPerRun: 29, wrapPerSprocket: 15 },
+  /** Chain-link density — I1 pass-2 ruling (critic finding: two densities
+   *  left a link-size step at every tangent; user delegated the fix): ONE
+   *  link geometry everywhere, like a real caterpillar chain. 29 links per
+   *  straight run (pitch ≈ 1.44 m, link ≈ 1.14 m, gap ≈ 0.3 m) and 8 wrap
+   *  links per sprocket (arc pitch π·3.65/8 ≈ 1.43 m — the same rhythm),
+   *  each wrap link IDENTICAL to a straight link, the arc faceted. */
+  beltLinks: { straightPerRun: 29, wrapPerSprocket: 8 },
 } as const

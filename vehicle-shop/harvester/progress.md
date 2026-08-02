@@ -251,6 +251,50 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round I1 pass 2 — ONE caterpillar chain. LANDED. Verified. Critic 5/10, two findings refuted on evidence.
+
+Builder: Opus (same owner, pass 2). Ruling executed: one link geometry
+everywhere. The builder went further than ordered, legitimately — with
+matched pitches a TRUE single chain became possible: 74 identical plates
+(2×29 + 2×8, from spec) on ONE loop coordinate at pitch 1.41802 m, links
+FLOWING through the tangents with no handover at all; the pass-1 overlap
+scheme is deleted. Joint plates (dark, lapping each gap) make the ground
+run read pinned; engagement moved to sprocket teeth standing 0.3 m proud
+(belt lugs deleted — with one plate geometry nothing may stand proud of a
+plate); track-frame rails fill the wheel-to-top-run slot — measured 730 →
+129 sky columns (82% closed). belt.test.ts + sprocket.ts split out under
+the 200-line cap. Tests 39 → 40 across 10 files.
+
+**Lead verification:** gates reproduced (lint 0, tsc 0, 40/40, lengths).
+Scroll re-measured at third parameter set (0.9 m/s × 0.6 s): bottom run
++32 px vs 31.6 predicted, top −33 px — within ~1–4%, directions correct.
+
+**Critic (fresh Sonnet): 5/10 — but two of four findings did not survive
+lead adjudication:**
+- "Wheels don't rotate" — REFUTED. A 2.0 m/s × 2.0 s pair shows every
+  bolt circle turned ~76°; tracks.update rotates every runner in the same
+  call that scrolls the belt. The critic's region-mean-diff cannot see a
+  rotationally symmetric disc turn 5.7° (only the bolts change pixels —
+  the ~2% it dismissed as noise WAS the rotation). Lesson: symmetric
+  geometry defeats naive diff; use bolt-scale features or big-dt pairs.
+- "Seal the see-through belly" — OVERRULED as design authority: the open
+  middle is pinned (rounds 10–13; Q1's "a deck you can see under").
+  Legitimate residue routed to I2: rails stop short of the sprocket drums
+  (82 remaining sky columns) and the mid-bay behind reads empty — that is
+  hull.ts work (§2 cross-members + flank panels), per the builder's own
+  boundary note.
+- CONFIRMED by critic and lead's eye: uniform rhythm through all four
+  tangents (the pass-1 size step is GONE), pinned-chain read works.
+- Polish note kept for a hero-shot round: discrete pin caps would sell
+  the chain harder than the continuous backing strip.
+
+Judgement calls accepted by the lead: sprocket teeth now full-circle
+(dip below y=0 at bottom — buried in opaque sand, invisible; round-14
+test remeasured to the runners that ride the belt); pod half-width 4.0 m
+via joint plates (overall 32.0 vs spec 31.6, inside the ±2 m window).
+
+_Status: complete. Checkpoint: awaiting the user's verdict before I2._
+
 ### Round I1 — the belt scrolls: density, transition, scroll. LANDED. Verified. Critic 6/10.
 
 Builder: Opus. The belt is rebuilt on a pure phase module

@@ -4,7 +4,7 @@ What needs work — by priority
 
  - [x] More wrap links — (I1) 10 is too few for a smooth half-circle at radius 3.6m. The gaps between wrap links are visible. Increase to 14-16, with link length matching
        arc pitch (π × 3.6 / N).
- - [x] Link-to-straight-run transition — (I1: gap closed by half-pitch overlap; successor finding — link-SIZE step at tangents, see progress.md I1) there's a visible gap between the last straight link and the first wrap link (the straight run ends at the sprocket tangent,
+ - [x] Link-to-straight-run transition — (I1 p1: gap closed by overlap; I1 p2: ONE uniform pitch, 74 identical plates flowing through the tangents — no handover, size step gone) there's a visible gap between the last straight link and the first wrap link (the straight run ends at the sprocket tangent,
        the wrap starts at the same point, but the link centers don't meet). Overlap the first/last straight link slightly into the wrap arc, or add a transition
        link.
  - [x] Belt scrolling — (I1, verified 3 ways) the links are static while the wheels roll. The tread should visibly translate. Drive the link groups' positions (bottom run shifts along z,
