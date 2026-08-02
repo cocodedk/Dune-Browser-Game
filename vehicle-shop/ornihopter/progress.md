@@ -138,6 +138,12 @@ files mid-round for the length hook — lead docs commits must use pathspec form
 3. **B3 bright-regions triage** (cheap): 8 bright regions >=12px where the bar demands
    one — pre-existing, surfaced by 9f's A/B proof. Suspects: 9d armor speculars,
    overhead strip edges. Fix or re-derive the bar line with evidence, before the panel.
+3b. **Round 12 — engine and flapping SOUND design (USER, 2026-08-02: "design the
+   engine and the flapping sounds. last item for now.")**: wing-beat whoosh synced to
+   beatPhase/beatHz (rises with throttle, silent when parked — meshes with Round 10's
+   spool-down), engine/turbine layer tied to throttle, cockpit-muffled variant for the
+   pilot view. Web Audio, no assets unless ruled otherwise — authored synthesis fits
+   the no-DOM-in-tests rule via a pure parameter layer. Brief written when it comes up.
 4. **Re-shoot + gallery refresh**, then the **Q3 re-panel** against the amended bar
    (B1-B5); the user flies the result as the final acceptance.
 5. Process rounds (cheap, after the above): axis-contract guard; tooling round
