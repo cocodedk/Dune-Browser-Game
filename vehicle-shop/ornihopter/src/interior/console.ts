@@ -7,6 +7,7 @@
 // rather than one number measured at its narrowest corner.
 
 import { Group } from 'three'
+import type { FlightState } from '../contracts'
 import { COCKPIT } from '../spec'
 import { CONSOLE, seatX } from './layout'
 import { RAIL_Y } from './canopyLayout'
@@ -76,6 +77,10 @@ export interface Console {
   group: Group
   dispose(): void
   setThrottle(t: number): void
+  /** Round 9f: hands the whole state to the displays. Kept separate from
+   *  setThrottle, which drives geometry (the quadrant lever) rather than a
+   *  face, so the two cannot start fighting over one number. */
+  update(state: Readonly<FlightState>): void
 }
 
 export function createConsole(): Console {
@@ -127,6 +132,9 @@ export function createConsole(): Console {
     // the ordinary sense for a quadrant-style throttle.
     setThrottle(t) {
       throttlePivot.rotation.x = 0.35 - 0.4 * Math.min(1, Math.max(0, t))
+    },
+    update(state) {
+      instruments.update(state)
     },
   }
 }

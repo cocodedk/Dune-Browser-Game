@@ -9,6 +9,7 @@ import { createOrnithopter } from './model/Ornithopter'
 import { createCockpit } from './interior/Cockpit'
 import { createCameraRig } from './camera/cameraRig'
 import { createHud } from './ui/hud'
+import { createHudSymbology } from './hud/symbology'
 import { createControls } from './input/keyboard'
 import { installDebugHandle } from './debug'
 
@@ -54,6 +55,9 @@ stage.scene.add(craft.root as never)
 
 const rig = createCameraRig(craft.root as never)
 const hud = createHud()
+// Flight symbology, parented to the camera itself — see hud/symbology.ts for
+// why that rather than a DOM overlay or a second render pass.
+const symbology = createHudSymbology(rig.camera)
 const controls = createControls()
 
 const resize = () => {
@@ -61,6 +65,7 @@ const resize = () => {
   const height = window.innerHeight
   stage.resize(width, height)
   rig.resize(width, height)
+  symbology.setAspect(width / Math.max(height, 1))
 }
 window.addEventListener('resize', resize)
 resize()
@@ -131,6 +136,12 @@ function frame(now: number): void {
   // facets read while removing an asymmetry that kept being mistaken for a bug.
   stage.sun.target.position.set(state.position.x, state.position.y, state.position.z)
   stage.sun.position.set(state.position.x - 190, state.position.y + 560, state.position.z + 330)
+
+  // The symbology is the PILOT's instrument, so it is hidden in the external
+  // views — a HUD floating in an orbit shot is a screenshot artefact, not a
+  // cockpit. It still updates, so switching back is never a frame behind.
+  symbology.setVisible(rig.mode === 'pilot')
+  symbology.update(state)
 
   hud.update(state, rig.mode, fps)
   stage.renderer.render(stage.scene, rig.camera)

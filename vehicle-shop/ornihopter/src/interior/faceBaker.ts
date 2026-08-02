@@ -26,8 +26,10 @@ export interface Painter {
   (nx: number, ny: number): RGB
 }
 
-export function bakeFace(size: number, paint: Painter): DataTexture {
-  const data = new Uint8Array(size * size * 4)
+/** Run a painter over an existing buffer. Split out of bakeFace in round 9f so
+ *  a page can be REPAINTED from FlightState without allocating a new texture
+ *  and re-uploading a new GL object every time a number moves. */
+export function paintInto(data: Uint8Array, size: number, paint: Painter): void {
   for (let y = 0; y < size; y++) {
     const ny = 1 - ((y + 0.5) * 2) / size
     for (let x = 0; x < size; x++) {
@@ -40,6 +42,11 @@ export function bakeFace(size: number, paint: Painter): DataTexture {
       data[i + 3] = 255
     }
   }
+}
+
+export function bakeFace(size: number, paint: Painter): DataTexture {
+  const data = new Uint8Array(size * size * 4)
+  paintInto(data, size, paint)
   const texture = new DataTexture(data, size, size, RGBAFormat, UnsignedByteType)
   texture.colorSpace = SRGBColorSpace
   texture.wrapS = ClampToEdgeWrapping

@@ -74,6 +74,7 @@ export function createCockpit(): CockpitModel {
     root,
     update(state: Readonly<FlightState>) {
       dash.setThrottle(state.throttle)
+      dash.update(state)
     },
     dispose() {
       seats.dispose()

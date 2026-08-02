@@ -21,11 +21,13 @@
 // flush on it. apachePanel.test.ts is the measured guard over all of it.
 
 import { Group, type Texture } from 'three'
+import type { FlightState } from '../contracts'
 import { CONSOLE, seatX } from './layout'
 import { box, disposeGroup } from './sceneUtils'
 import { onPanel } from './panelMount'
 import { panelCarrierMaterial } from './materials'
-import { movingMapTexture, systemsPageTexture, ufdStripTexture } from './mfdFaces'
+import { ufdStripTexture } from './mfdFaces'
+import { createLivePages } from './mfdLive'
 import { buildMfdUnit } from './mfdUnit'
 import { buildUpFrontDisplay } from './upFrontDisplay'
 import { gauge, navGlobe, annunciators, tape, guardedToggles } from './panelParts'
@@ -82,6 +84,8 @@ function copilotCluster(textures: Texture[]): Group {
 
 export interface Instruments {
   group: Group
+  /** Round 9f: the two displays follow the craft. See mfdLive.ts for cadence. */
+  update(state: Readonly<FlightState>): void
   dispose(): void
 }
 
@@ -96,14 +100,13 @@ export function buildInstruments(): Instruments {
   // absolute numbers, so it stays in front of the eye if the seat moves again
   // (it moved twice in round 6b while the window was being measured).
   const p = seatX(-1)
-  const map = movingMapTexture()
-  const systems = systemsPageTexture()
+  const pages = createLivePages()
   const strip = ufdStripTexture()
-  textures.push(map, systems, strip)
+  textures.push(strip)
   group.add(
-    buildMfdUnit(p - MFD_PITCH, BAY_U, map),
+    buildMfdUnit(p - MFD_PITCH, BAY_U, pages.map),
     buildUpFrontDisplay(p, BAY_U, strip),
-    buildMfdUnit(p + MFD_PITCH, BAY_U, systems),
+    buildMfdUnit(p + MFD_PITCH, BAY_U, pages.systems),
     standbyCluster(textures, p - 0.9)
   )
 
@@ -118,8 +121,12 @@ export function buildInstruments(): Instruments {
 
   return {
     group,
+    update(state) {
+      pages.update(state)
+    },
     dispose() {
       disposeGroup(group)
+      pages.dispose()
       for (const t of textures) t.dispose()
     },
   }
