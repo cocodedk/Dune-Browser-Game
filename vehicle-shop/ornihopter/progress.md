@@ -90,15 +90,23 @@ structure regions bit-identical — nothing else moved). Copilot station pinned 
 Carries: copilot seat itself needs a steep glance (6b eye/seat geometry); pilot seat
 presence at frame edges still unmet (frustum KNOWN LIMITATION).
 
+**Round 9e — LANDED (commit `1037a7a`). The cockpit is flyable by sight.** Aperture
+rear 2.45->4.6m (glass passes the pilot's head), overhead console off the windscreen.
+Level-gaze exterior 9.7->20.5% raycast / 11.0->21.4% pixels (two instruments, 0.9pp
+apart); +24deg cone 26-red->0-green; FOV hypothesis REFUTED with numbers (wider vFOV
+lowers exterior share; camera untouched); enclosure zero-escape untouched-green;
+structureTopHalf 0.55->0.30 disclosed (0.55 encoded the 6b cave). Exterior freeze
+proven twice over. shoot.mjs pilot pose is pitch 0 now. Lead verified by own eyes:
+upper half of frame is sky under framed canopy at level gaze. COSTED CARRY pinned in
+liveView.test.ts: PILOT_EYE +0.25m -> 26.6% exterior, but it moves the 6b eye
+derivation and 9b/9c subtense numbers — a deliberate lead/user decision, not a default.
+
 **Do next, in order (interior campaign):**
-1. **Round 9e — the LIVE view — IN FLIGHT** (workflow `wf_563c1d86-c59`, Opus, max): open the aperture rearward over the pilot's
-   head (exterior lens runs to 6.9m aft, interior aperture stops at 2.45 — ours to
-   spend), thin the brow, raise the eye if needed; horizon visible dead ahead at level
-   flight; >=20% exterior at pitch 0. forwardCone/enclosure contracts adapt WITH the
-   layout change (they are 6f-era authored bays, not kit measurement) — fail-first.
-3. **Round 9f — flight symbology + live MFDs** (B5): HUD pitch ladder/horizon bar,
-   heading tape/compass, ALTITUDE and SPEED readouts, Apache flavour; MFD nav page
-   gets live heading, systems page live altitude/throttle (DataTexture, no DOM).
+1. **Round 9f — flight symbology + live MFDs — IN FLIGHT** (workflow `wf_3d3cad93-364`,
+   Opus, max): HUD pitch ladder/horizon bar, heading tape/compass, ALTITUDE and SPEED
+   readouts, Apache flavour; MFD nav page gets live heading, systems page live
+   altitude/throttle (DataTexture, no DOM). The tan-on-tan horizon makes symbology
+   the true attitude reference.
 4. **Round 9g — auto-level** (B5): held-key recovery levelling roll+pitch, fail-first
    unit tests in the flight model, HUD active-hint.
 5. **Q3 re-panel** against the amended bar (B1-B5), then close out. (prereq for everything; interior critic's #1 with concrete
