@@ -22,12 +22,14 @@ const PORT = Number(flag('port', 5220))
 
 // azimuth 0 looks up the nose, 90 is the starboard flank, elevation 90 is
 // straight down. Distance is in machine lengths (OVERALL.length = 60m).
-// NEGATIVE azimuths on purpose: the sun sits off the machine's port side
-// (main.ts), so the lit flank is the one to photograph.
+// NEGATIVE azimuths are the port side, where the sun sits (main.ts), so
+// those flanks read lit; positive azimuths are the darker starboard side.
 //
-// More angles than the bar needs: the bar's primary is `hero`; the rest are
-// for the user's eye and the eventual artifact page. Filter with --views.
+// Thirty views: the ten the bar and the user's eye have been using, a 30
+// degree turntable sweep, plan views, high/low dramatic angles and close-
+// ups. Filter with --views.
 const VIEWS = [
+  // The original ten (names stable so --views hero still means hero).
   { name: 'hero', az: -42, el: 22, dist: 1.6 },
   { name: 'hero2', az: -30, el: 12, dist: 1.3 },
   { name: 'side', az: -90, el: 4, dist: 1.7 },
@@ -38,6 +40,29 @@ const VIEWS = [
   { name: 'top', az: 0, el: 88, dist: 1.7 },
   { name: 'tracks', az: -90, el: 3, dist: 0.55 },
   { name: 'boom', az: -18, el: 5, dist: 1.0 },
+  // Turntable sweep, 30 degrees apart at a mid elevation (port = negative).
+  { name: 'turntable-030', az: -30, el: 18, dist: 1.5 },
+  { name: 'turntable-060', az: -60, el: 18, dist: 1.5 },
+  { name: 'turntable-120', az: -120, el: 18, dist: 1.5 },
+  { name: 'turntable-150', az: -150, el: 18, dist: 1.5 },
+  { name: 'turntable-210', az: 150, el: 18, dist: 1.5 },
+  { name: 'turntable-240', az: 120, el: 18, dist: 1.5 },
+  { name: 'turntable-300', az: 60, el: 18, dist: 1.5 },
+  { name: 'turntable-330', az: 30, el: 18, dist: 1.5 },
+  // Plan-ish views from both sides, and high 3/4s.
+  { name: 'plan-port', az: -45, el: 45, dist: 1.6 },
+  { name: 'plan-starboard', az: 135, el: 45, dist: 1.6 },
+  { name: 'high-hero', az: -40, el: 55, dist: 1.7 },
+  { name: 'high-rear', az: -140, el: 55, dist: 1.7 },
+  { name: 'turn-high-030', az: -30, el: 35, dist: 1.4 },
+  { name: 'turn-high-120', az: -120, el: 35, dist: 1.4 },
+  // Low dramatic angles and close-ups.
+  { name: 'low-flank', az: -75, el: 3, dist: 0.7 },
+  { name: 'boomclose', az: -14, el: 4, dist: 0.6 },
+  { name: 'cab', az: -55, el: 8, dist: 0.5 },
+  { name: 'tailclose', az: 180, el: 10, dist: 0.6 },
+  { name: 'deck-top', az: 0, el: 80, dist: 0.9 },
+  { name: 'conveyor', az: -70, el: 14, dist: 0.7 },
 ]
 
 // --views hero,side  -> only those, in that order; absent means all.

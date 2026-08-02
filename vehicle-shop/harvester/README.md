@@ -22,11 +22,11 @@ npm run shop:harvester:shoot    # capture the reference views to .shots/harveste
 npm run shop:harvester:build    # production build of the shop alone
 ```
 
-Ten views by default (`hero`, `hero2`, `side`, `front`, `frontlow`, `rear`,
-`rear34`, `top`, `tracks`, `boom`); take a subset with
+Thirty views by default (the original ten plus a 30-degree turntable
+sweep, plan views, high/low angles and close-ups); take a subset with
 `npm run shop:harvester:shoot -- --views hero,tracks,boom` (comma-separated,
 in the order given). Distances are in machine lengths — `dist` under 1 is a
-close-up.
+close-up. `--views` lists names exactly as in `tools/shoot.mjs`.
 
 Controls: `W`/`S` forward/reverse, `A`/`D` steer, `C` cycles camera, `R`
 resets. The machine is heavy: it takes seconds to reach its crawl, and it
