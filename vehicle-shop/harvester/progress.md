@@ -247,6 +247,22 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round 7 — the fence is gone; the wheels show (user finding: "vertical fence like plates seen from the sides, they kind of cover the wheels")
+
+The fence was the CLEATS: I had made them full belt-height (7.1m) bars,
+18 per side, protruding as far as the wheels — a picket fence that hid the
+running gear. Now: SHORT GROUSER teeth (1.4m) on the belt's lower face
+only — tread at the ground-contact line — and the wheels/sprockets
+protrude 1.0-1.1m past the belt face, so the side view shows the running
+gear standing proud of the dark belt, the classic crawler read. Sprocket
+teeth moved to the sprocket's face so they add no width.
+
+Gates: lint 0, shop tsc 0, **21/21** tests, lengths clean.
+
+**Open:** belt scrolling, dust, panel lines, first blind critic panel.
+
+_Status: complete._
+
 ### Round 6 — the conveyor is a belt, not a wall (user direction: "concentrate on the conveyor belt. it looks vertical")
 
 Two causes of "vertical": the old conveyor was a 1.6x1.6 thin bar, and the

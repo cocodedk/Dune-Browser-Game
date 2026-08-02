@@ -72,14 +72,16 @@ export const CAB = {
   halfDepth: 3.5,
 } as const
 
-/** One track assembly — the "tractor". A tall belt loop with full-height
- *  cleats, big toothed end sprockets, road wheels in the lower run and
- *  return rollers up top. All of it sits on the ground line and runs the
- *  hull's full length at x = +-trackSpan/2. */
+/** One track assembly — the "tractor". A tall belt loop with SHORT GROUSER
+ *  teeth at its lower face (not full-height cleats — those read as a fence
+ *  and hid the wheels), big toothed end sprockets, road wheels in the lower
+ *  run and return rollers up top. Wheels protrude well past the belt so the
+ *  running gear is the thing you see from the side. All of it sits on the
+ *  ground line and runs the hull's full length at x = +-trackSpan/2. */
 export const TRACK = {
   centreX: OVERALL.trackSpan / 2,
   /** The belt loop: the tall dark band wrapping the running gear. */
-  belt: { width: 4.6, height: 7.0, zLow: -24, zHigh: 24 },
+  belt: { width: 3.8, height: 7.0, zLow: -24, zHigh: 24 },
   /** Road wheels: the big lower-run wheels inside the belt. */
   roadWheelRadius: 3.0,
   roadWheelsZ: [-17.5, -10.5, -3.5, 3.5, 10.5, 17.5],
@@ -91,6 +93,6 @@ export const TRACK = {
   returnRollersZ: [-18, -9, 0, 9, 18],
   /** Housing over the running gear, tucked under the deck. */
   housing: { yLow: 7.2, yHigh: 11.0, width: 4.4 },
-  /** Transverse cleats across the belt's outer face — the segmented belt read. */
-  cleatCount: 18,
+  /** Grouser teeth across the belt's LOWER outer face — tread, not a fence. */
+  grouserCount: 18,
 } as const
