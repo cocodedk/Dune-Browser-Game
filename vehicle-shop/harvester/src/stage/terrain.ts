@@ -12,10 +12,30 @@
 import {
   Mesh, MeshStandardMaterial, PlaneGeometry, Group, Object3D, BoxGeometry,
 } from 'three'
+import { buildGroundcar } from './groundcar'
 
 export const AREA_SIZE = 4000
 const SEGMENTS = 200
 const SAND_COLOR = 0xc9a271
+
+/** Where the §7 scale reference vehicle parks — outside the harvester's own
+ *  footprint (OVERALL.width/2 = 15.8) so it reads as "beside", not "under".
+ *  I5 pass 2 (destination 6): x=-20 gave only 4.2m of clearance past the
+ *  footprint edge (15.8) — at capture distance it read as touching the
+ *  machine's own shadow (verified: hero/cab/rear34 all showed it inside or
+ *  grazing the shadow). x=-24 clears the footprint by 8.2m, inside the
+ *  round's own 6-10m target. Exported so groundcar.test.ts can pin the
+ *  placement without duplicating the number. */
+export const GROUNDCAR_POSITION = { x: -24, z: -3 } as const
+
+/** A few of the SAME scale-post design as the 500m grid below, but close
+ *  enough to the machine to actually read against it in a capture — the
+ *  panel's "the 10m posts are far away" finding. */
+const NEAR_POSTS: ReadonlyArray<readonly [number, number]> = [
+  [18, -8],
+  [-18, 10],
+  [20, 22],
+]
 
 /** Dune height at a world XZ. Long-wavelength swells, near-incommensurable
  *  so the pattern never repeats on camera. */
@@ -68,7 +88,26 @@ export function createTerrain(): Terrain {
       posts.add(mast, foot)
     }
   }
+  // A few NEAR posts, same design, close enough to actually read as a scale
+  // reference against the machine (the far 500m grid above cannot).
+  for (const [gx, gz] of NEAR_POSTS) {
+    const ground = heightAt(gx, gz)
+    const mast = new Mesh(mastGeometry, postMaterial)
+    mast.position.set(gx, ground + MAST_HEIGHT / 2, gz)
+    mast.castShadow = true
+    const foot = new Mesh(footGeometry, postMaterial)
+    foot.position.set(gx, ground + 0.45, gz)
+    foot.castShadow = true
+    posts.add(mast, foot)
+  }
   root.add(posts)
+
+  // The parked groundcar (§7): a pure local-frame builder whose meshes all
+  // sit bottom-at-zero, so placing it is just translating to (x, ground, z).
+  const groundcar = buildGroundcar()
+  const carGroundY = heightAt(GROUNDCAR_POSITION.x, GROUNDCAR_POSITION.z)
+  groundcar.group.position.set(GROUNDCAR_POSITION.x, carGroundY, GROUNDCAR_POSITION.z)
+  root.add(groundcar.group)
 
   return {
     root,
@@ -78,6 +117,7 @@ export function createTerrain(): Terrain {
       mastGeometry.dispose()
       footGeometry.dispose()
       postMaterial.dispose()
+      groundcar.dispose()
     },
   }
 }

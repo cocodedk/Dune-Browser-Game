@@ -42,11 +42,11 @@ What needs work — by priority
 
  ### 5. The machinery (functional but flat)
 
- - [ ] More hoppers — the film harvester's deck is cluttered with processing equipment. Add 1-2 more hoppers (different sizes) so the deck reads as a working spice
+ - [x] More hoppers — (I5: 4 vessels, 3 sizes, rims/collars/feet — the "boulders" verdict beaten) the film harvester's deck is cluttered with processing equipment. Add 1-2 more hoppers (different sizes) so the deck reads as a working spice
        bed.
- - [ ] Pipes and conduits — add 2-3 horizontal pipes (dark cylinders along Z) connecting the hoppers. The deck currently reads as scattered boxes with no flow.
- - [ ] Deck railings — add a low railing (thin dark posts + rail) around the deck's open edges so it reads as a walkable platform.
- - [ ] Light masts — add 2 small light towers (thin cylinders with a dark box on top) at the deck corners. Cheap scale cue, big industrial read.
+ - [x] Pipes and conduits — (I5: trunk pipes + gantry drop pipe into the discharge; trunks partly occluded by hoppers) add 2-3 horizontal pipes (dark cylinders along Z) connecting the hoppers. The deck currently reads as scattered boxes with no flow.
+ - [x] Deck railings — (I5: platform + true outer-edge runs, step-aware) add a low railing (thin dark posts + rail) around the deck's open edges so it reads as a walkable platform.
+ - [x] Light masts — (I5: two headed masts at deck corners) add 2 small light towers (thin cylinders with a dark box on top) at the deck corners. Cheap scale cue, big industrial read.
 
  ### 6. Palette and materials
 
@@ -59,9 +59,9 @@ What needs work — by priority
 
  ### 7. Scale and proportion
 
- - [ ] Scale posts near the machine — the 10m posts are far away. Add 2-3 posts or a small vehicle (a 4m groundcar) parked beside the harvester so the eye has an
+ - [x] Scale posts near the machine — (I5: 3 near posts + 4 m groundcar staged 8 m off the track) the 10m posts are far away. Add 2-3 posts or a small vehicle (a 4m groundcar) parked beside the harvester so the eye has an
        immediate size reference.
- - [ ] Crew figure — add a single 1.8m standing figure on the deck near the cab. A human silhouette instantly anchors the machine's scale.
+ - [x] Crew figure — (I5: 1.8 m, accent torso, reads on the lit plate beside the cab; wiring test-pinned) add a single 1.8m standing figure on the deck near the cab. A human silhouette instantly anchors the machine's scale.
  - [ ] Dust at the tracks — the belt runs on sand with no visible dust. Add 2 dust plumes (semi-transparent expanding planes) behind the rear sprockets, driven by
        track speed. The most cinematic missing element.
 

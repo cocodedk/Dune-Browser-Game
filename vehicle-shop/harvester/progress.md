@@ -251,6 +251,34 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round I5 — deck machinery and scale (2 passes). LANDED. The deck is a working spice bed with honest scale cues.
+
+Builder: Sonnet ×2 passes. Pass 1 (critic 3/10): 4 hoppers via one
+buildHopper family (rims/collars), gantry drop pipe + winch spool, trunk
+pipes, platform railings, 2 masts, 1.8 m figure (wired — the critic's
+"never built" was refuted by the lead reading the code), groundcar +
+near posts; the blind panel's ground-clip flag traced to hull's tail
+underframe slab at min.y = 0.00 EXACTLY — touching, not clipping, an
+optical illusion at the raking angle; machinery min.y ≥ 0 pinned anyway.
+Pass 2 (six critic findings, five reproduced): the figure's torso went
+accent-brown and now READS on the lit plate beside the cab (lead-
+verified by fresh crop); the fourth hopper joined the family and all
+four got true outboard feet; railings extended to the TRUE outer deck
+edges, step-aware at the nose plates; the gantry pipe lands inside the
+discharge mouth; the groundcar staged 8.2 m clear. One finding did NOT
+reproduce (the "bare-stick" forward mast had a head all along) — the
+builder said so plainly instead of fabricating a fix, and bumped head
+size 25% as cheap reinforcement. Tests 79 → 85 across 15 files.
+
+Residue for I7: dust plumes (§7's last box). Residue noted for a polish
+pass if the user wants one: the discharge chute reads small (the 60 m
+footprint pin correctly stopped it growing rearward), trunk pipes partly
+hide behind the hoppers they serve.
+
+_Status: complete. The deck now answers the panel's "placeholder
+blocking" verdict: vessels with rims and feet, a visible process line,
+rails on the real edges, and a human being standing on it._
+
 ### Round I4 — the cab. LANDED. Critic 2/10 REFUTED by crop evidence; adjudicated MET with I6 routing.
 
 Builder: Sonnet. The cab consumes the widened spec (11 m), carries ONE
