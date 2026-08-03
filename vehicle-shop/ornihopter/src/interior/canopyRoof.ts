@@ -101,13 +101,64 @@ export function apertureReveal(group: Group, band: Band): void {
         material
       )
     )
-    // A rail standing proud of the reveal, so the window edge reads as a
-    // machined frame member rather than as a cut line.
+    railLoft(group, sign, za, zb)
+  }
+}
+
+/** How far a loft segment's own float (half of ITS share of the band's total
+ *  edge movement, same reasoning as the single-box case one order down) is
+ *  allowed to reach before railStationCount below adds another station.
+ *  Held under railEdge.test.ts's 0.03m tolerance with headroom for the
+ *  curves' own mild non-linearity inside a segment (they are chords, not the
+ *  curve itself). */
+const RAIL_LOFT_MARGIN = 0.02
+
+/**
+ * How many stations a band needs, so no loft segment's own float exceeds
+ * RAIL_LOFT_MARGIN. Driven by the band's own SWING (how far the true edge
+ * actually moves across it), not a blind distance: a raked span gets as many
+ * stations as its rake demands and a flat one gets as few as its own flatness
+ * allows — the aft roof line stops rising entirely past 3.0m aft, and a
+ * band there needs only 2 stations for its still-tapering width, where the
+ * same LENGTH over the raked windscreen shoulder needs 10. A per-band mesh
+ * count, chosen from the geometry, is what keeps this fix inside
+ * Cockpit.test.ts's mesh budget: a flat 0.05m step everywhere (tried first)
+ * measured RIGHT under railEdge.test.ts's tolerance but pushed the cockpit's
+ * own mesh count from 600 to 748, well past its 700 cap — most of the added
+ * mesh count was spent re-proving what a flat band already had no float in.
+ */
+function railStationCount(za: number, zb: number): number {
+  const swingX = Math.abs(apertureHalfWidthAt(zb) - apertureHalfWidthAt(za))
+  const swingY = Math.abs(roofYAt(zb) - roofYAt(za))
+  return Math.max(1, Math.ceil(Math.max(swingX, swingY) / (2 * RAIL_LOFT_MARGIN)))
+}
+
+/**
+ * A rail standing proud of the reveal, so the window edge reads as a machined
+ * frame member rather than as a cut line — LOFTED along that edge rather than
+ * built as one box at the band's midpoint. A single box tracked the true
+ * window edge only at its own centre, so on a raked band its two ends floated
+ * off the glass — two boxes read as "protruding into the transparencies".
+ * Splitting the band into railStationCount stretches and giving each its own
+ * small box, from the SAME two curves (apertureHalfWidthAt, roofYAt) every
+ * other member in this file already reads, keeps every stretch's own float
+ * inside tolerance without changing the rail's cross-section or its
+ * standing-proud read. A flat or short band collapses to one or two
+ * stretches and comes out visually the same as before; every band goes
+ * through the same function, so none can float again.
+ */
+function railLoft(group: Group, sign: Sign, za: number, zb: number): void {
+  const segments = railStationCount(za, zb)
+  for (let i = 0; i < segments; i++) {
+    const sa = za + ((zb - za) * i) / segments
+    const sb = za + ((zb - za) * (i + 1)) / segments
+    const edgeA = apertureHalfWidthAt(sa)
+    const edgeB = apertureHalfWidthAt(sb)
     group.add(
-      box(RAIL_THICKNESS, RAIL_DEPTH, zb - za, gunmetalMaterial(), {
-        x: (sign * (a + b)) / 2,
-        y: (roofYAt(za) + roofYAt(zb)) / 2 - RAIL_DEPTH / 2,
-        z: (za + zb) / 2,
+      box(RAIL_THICKNESS, RAIL_DEPTH, sb - sa, gunmetalMaterial(), {
+        x: (sign * (edgeA + edgeB)) / 2,
+        y: (roofYAt(sa) + roofYAt(sb)) / 2 - RAIL_DEPTH / 2,
+        z: (sa + sb) / 2,
       })
     )
   }
