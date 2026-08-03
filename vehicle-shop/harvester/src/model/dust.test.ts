@@ -1,4 +1,4 @@
-// vehicle-shop/harvester/src/stage/dust.test.ts
+// vehicle-shop/harvester/src/model/dust.test.ts
 // I7 tests-first, pinning the round's correctness question (a) — "parked
 // machine: zero dust, plumes only when the tracks turn" — before any
 // geometry, plus placement (behind the rear sprockets, both sides) and the

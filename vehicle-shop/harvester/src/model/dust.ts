@@ -1,4 +1,4 @@
-// vehicle-shop/harvester/src/stage/dust.ts
+// vehicle-shop/harvester/src/model/dust.ts
 // I7 (immediate-improvements §7 dust + §9): two semi-transparent, expanding
 // dust plumes behind the REAR sprockets (TRACK.sprocketZ[1], both sides),
 // driven by the crawler's signed track speeds through the SAME update path
@@ -22,7 +22,7 @@
 
 import { Group, Sprite, SpriteMaterial } from 'three'
 import { TRACK } from '../spec'
-import { wrapMod } from '../model/beltPhase'
+import { wrapMod } from './beltPhase'
 
 // Lighter than the sand/sky (0xd9b98a) it sits against, not darker or the
 // same tone — real dust backscatters light and reads as a haze LIFTING the
