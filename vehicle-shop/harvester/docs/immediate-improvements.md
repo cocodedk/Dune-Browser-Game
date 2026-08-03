@@ -14,11 +14,11 @@ What needs work — by priority
 
  ### 2. The hull (reads as a box from 3/4 angles)
 
- - [ ] Break the deck surface — the deck is one continuous 19m × 48m slab. Add 3-4 transverse panel seams (thin dark inset strips across the deck) so it reads as a
+ - [x] Break the deck surface — (I2: 5 plates, real recessed gaps + lips; edge-relief legibility carried by I6 textures) the deck is one continuous 19m × 48m slab. Add 3-4 transverse panel seams (thin dark inset strips across the deck) so it reads as a
        plated platform, not a monolith.
- - [ ] Nose housing taper — the nose block is a flat 19m × 8.3m × 9m box. The film harvester's nose tapers toward the cutter. Add a wedge or stepped transition from
+ - [x] Nose housing taper — (I2: stepped tiers + 0.75 m deck step, test-pinned; head-on legibility carried by I7 lighting) the nose block is a flat 19m × 8.3m × 9m box. The film harvester's nose tapers toward the cutter. Add a wedge or stepped transition from
        the deck edge to the cutter arm.
- - [ ] Underframe detail — the underframe is a plain slab. Add 2-3 cross-members (dark boxes) so the open mid-section reads as structure, not empty space.
+ - [x] Underframe detail — (I2: web + ribs + beams implemented and test-pinned; visibility from elevated views geometrically foreclosed by the housing height — see progress I2p3) the underframe is a plain slab. Add 2-3 cross-members (dark boxes) so the open mid-section reads as structure, not empty space.
  - [x] Flank panels — (I2, critic: MET) the hull's flanks (between the deck and underframe) are open. The 3MF showed solid end blocks with open middle. Add side panels (dark, with
        louvre slats) on the solid end regions, leaving the middle open.
 

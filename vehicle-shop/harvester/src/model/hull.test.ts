@@ -14,6 +14,16 @@
 // probe from a single all-or-nothing box into a grid that admits slender
 // spanning beams while still failing on anything that walls the gap off —
 // see the probe test below for exactly how and why.
+//
+// I2 pass 3 (critic 2/10 — taper/beams art-direction errors, not visible
+// from ANY profile/3-4 camera below the housing line) MOVES the flank
+// beams from y~7.45 (pass 2, verified invisible in FINAL materials by a
+// bright-marker diagnostic sweep) to y~11.25-11.55 — the one band that
+// sweep found visible in hero/rear34 — and CAPS their half-width at the
+// deck's own halfWidth (pass 2's beams poked 0.1m past the deck edge, the
+// unattached top.png nub the critic flagged). Deck-plate/seam/lip/taper
+// invariants split out to hullDetail.test.ts to stay under the 200-line
+// cap.
 
 import { describe, it, expect } from 'vitest'
 import { Box3, Vector3, Mesh } from 'three'
@@ -30,18 +40,6 @@ describe('hull component', () => {
     expect(b.min.z).toBeCloseTo(BODY.noseZ, 0)
     expect(b.max.z).toBeCloseTo(BODY.tailZ, 0)
     expect(b.size.y).toBeGreaterThan(10)
-    for (const mat of Object.values(m)) mat.dispose()
-  })
-
-  it('deck seams are inset — no seam geometry above the deck top plane', () => {
-    const m = mats()
-    const { group } = buildHull(m.body, m.dark)
-    const seams = named(group, 'deckSeam')
-    expect(seams.length).toBeGreaterThanOrEqual(3)
-    for (const seam of seams) {
-      const b = bounds(seam)
-      expect(b.max.y).toBeLessThanOrEqual(BODY.deckTop + 1e-6)
-    }
     for (const mat of Object.values(m)) mat.dispose()
   })
 
@@ -115,7 +113,12 @@ describe('hull component', () => {
     for (const mat of Object.values(m)) mat.dispose()
   })
 
-  it('flank beams span the open middle at flank height, clear of deck and underframe', () => {
+  it('daylight beams sit above the housing line and inside the deck\'s own edge, clear of the pods', () => {
+    // Pass-3 relocation (destinations 2+4): verified-visible band is
+    // y~11.25-11.75 (bright-marker sweep against FINAL materials), strictly
+    // ABOVE TRACK.housing.yHigh (the pass-2 placement's occlusion line) and
+    // strictly inside BODY.halfWidth (never poking past the deck's own
+    // edge — the fix for the unattached top.png nub).
     const m = mats()
     const { group } = buildHull(m.body, m.dark)
     const beams = named(group, 'flankBeam')
@@ -123,28 +126,18 @@ describe('hull component', () => {
     const innerFace = TRACK.centreX - TRACK.housing.width / 2
     for (const beam of beams) {
       const b = bounds(beam)
-      // reaches toward both pods without crossing into their housings
+      // reaches toward both pods without crossing into their housings, AND
+      // never pokes past the deck's own edge (the destination-4 fix)
       expect(Math.max(Math.abs(b.min.x), Math.abs(b.max.x))).toBeLessThanOrEqual(innerFace + 1e-6)
+      expect(Math.max(Math.abs(b.min.x), Math.abs(b.max.x))).toBeLessThanOrEqual(BODY.halfWidth + 1e-6)
       expect(b.max.x - b.min.x).toBeGreaterThan(BODY.halfWidth) // spans most of the width, not a stub
-      // floats in the gap: clear of the deck underside above and the
-      // underframe top below
-      expect(b.min.y).toBeGreaterThan(BODY.underThickness)
-      expect(b.max.y).toBeLessThan(BODY.deckTop - BODY.deckThickness)
+      // sits ABOVE the housing top (pass-2's placement was below it, and
+      // measured invisible) and below the un-stepped deck top
+      expect(b.min.y).toBeGreaterThanOrEqual(TRACK.housing.yHigh - 1e-6)
+      expect(b.max.y).toBeLessThan(BODY.deckTop)
       // sits in the open middle only, never over the solid end blocks
       expect(b.min.z).toBeGreaterThanOrEqual(BODY.noseBlockAftZ - 1e-6)
       expect(b.max.z).toBeLessThanOrEqual(BODY.tailBlockForeZ + 1e-6)
-    }
-    for (const mat of Object.values(m)) mat.dispose()
-  })
-
-  it('seam lips stand proud of the deck at each seam, framing the recessed groove', () => {
-    const m = mats()
-    const { group } = buildHull(m.body, m.dark)
-    const lips = named(group, 'deckSeamLip')
-    expect(lips.length).toBeGreaterThanOrEqual(6)
-    for (const lip of lips) {
-      const b = bounds(lip)
-      expect(b.min.y).toBeGreaterThanOrEqual(BODY.deckTop - 1e-6)
     }
     for (const mat of Object.values(m)) mat.dispose()
   })

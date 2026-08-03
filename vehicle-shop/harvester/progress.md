@@ -251,6 +251,41 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round I2 pass 3 — silhouette fixes. LANDED. Critic 3/10. ROUND CLOSED by the three-pass rule.
+
+Builder: Sonnet (fresh). What landed: the foremost deck plate steps down
+0.75 m (test-pinned between housing top and deck top; measured 8 px in
+profile, 26 px head-on by the builder); beams re-derived by a final-
+materials diagnostic sweep proving NOTHING below y≈11.25 is visible from
+hero/rear34 — the housing (yHigh 11.0) stands taller than the deck's
+underside (9.5), a spec-level fact from the round-14 belt geometry that
+FORECLOSES under-deck visibility from elevated views at any beam
+position; seam lips raised to 0.5 after measuring that 0.28 lost to the
+0.36 deck trim everywhere; the stray nub root-caused (beam half-width
+9.6 > deck 9.5) and pinned by a bounds test. hullDetail.ts split out.
+Tests 50 → 51 across 12 files.
+
+**Critic: 3/10** (passes ran 4 → 2 → 3). Taper WEAK (reads as a mount
+block, not a deck tier; head-on unverifiable — frontlow is backlit to
+near-black under the current high port sun). Seam edge-breaks NOT MET at
+silhouette. Under-deck reads as sparse running gear, not engineered
+bracing. Nub: "possibly still there" in top.png — unresolved against the
+builder's bounds test; parked.
+
+**LEAD RULING — round closed under the three-pass rule, stop condition
+(b): further flat-shaded geometry passes cannot buy legibility that
+materials and light are withholding.** The residue routes forward: seam/
+panel contrast → I6 (panel-line DataTextures); readable front faces →
+I7 (lower sun + starboard fill); under-deck struts → RETIRED as a visual
+bar (geometrically foreclosed; the structure exists and is test-pinned).
+The §2 checklist items are ticked as geometric asks DONE, with legibility
+explicitly carried by I6/I7. The user should re-judge the hull AFTER I6.
+
+_Status: closed. Net I2 across three passes: plated deck (5 plates, real
+gaps), stepped nose, underframe web + ribs, louvred end flanks (critic:
+MET), the open-middle identity now grid-pinned, the camera-azimuth bug
+found and fixed, tests 40 → 51._
+
 ### Round I2 pass 2 — hull visibility. LANDED as interim. Critic 2/10; the failures are the ART DIRECTION's, pass 3 dispatched.
 
 Builder: Sonnet (fresh — pass-1 builder's transcript expired). Two things
