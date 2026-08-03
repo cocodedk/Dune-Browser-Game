@@ -28,7 +28,8 @@ import { FLOOR_FRONT_Z, FLOOR_REAR_Z, WALL } from './layout'
 import { RAIL_Y, roofHalfWidthAt, roofYAt } from './canopyLayout'
 import { deckYAt } from '../model/geometry/canopyPlan'
 import { hullInteriorHalfWidthAt, hullSectionBreakpoints, hullZSamples } from './hullSection'
-import { WINDOW_FORE_Z, WINDOW_AFT_Z, flankWindowEdgeAt } from '../model/geometry/flankWindow'
+import { flankWindowEdgeAt } from '../model/geometry/flankWindow'
+import { FLANK_OPENINGS, bayOpening } from '../model/geometry/flankOpenings'
 import { buildFlankPane } from './flankPaneFrame'
 import { box, flatQuad, type Placed } from './sceneUtils'
 import { hullLinerMaterial, armorMaterial, gunmetalMaterial } from './materials'
@@ -74,13 +75,19 @@ interface Profile {
 }
 
 /**
- * ROUND 11, the B6 user ruling. Over the side window's run the liner gains
- * two extra breakpoints — the opening's own sill and header, read from
+ * ROUND 11, the B6 user ruling. Over a side window's run the liner gains two
+ * extra breakpoints — the opening's own sill and header, read from
  * model/geometry/flankWindow.ts so the hole in the cabin and the hole in the
  * skin are the same rectangle — and stops emitting the band between them.
  * Everything else about the wall is unchanged, including the sill rail below
  * it: the glass starts where the armoured tub ends (round 9d), it does not
  * replace it.
+ *
+ * ROUND 15 runs the same code over the quarter opening. One thing differs and
+ * is deliberate: there the hull's upper-flank break falls BELOW the sill
+ * (0.836 against 0.970 at 1.45m aft) instead of inside the opening, so the
+ * splice drops a corner and the chine-to-sill band chords across it — measured
+ * 0.045m, INBOARD, the safe direction (round 4b's bug was liner poking OUT).
  */
 function widthsAt(z: number, windowed: boolean): Profile | null {
   const ys = profileYs(z)
@@ -100,7 +107,7 @@ function widthsAt(z: number, windowed: boolean): Profile | null {
 }
 
 function panels(group: Group, sign: 1 | -1, za: number, zb: number): void {
-  const windowed = za >= WINDOW_FORE_Z - 1e-9 && zb <= WINDOW_AFT_Z + 1e-9
+  const windowed = bayOpening(za, zb) !== null
   const a = widthsAt(za, windowed)
   const b = widthsAt(zb, windowed)
   if (!a || !b || a.ys.length !== b.ys.length) return
@@ -156,10 +163,13 @@ export function buildSideWall(sign: 1 | -1): Group {
   const group = new Group()
   group.name = sign === -1 ? 'wall-pilot' : 'wall-copilot'
 
-  // The window's two ends are sampled EXACTLY, so no band ever straddles the
-  // boundary with one end open and the other closed.
-  const samples = [...hullZSamples(FLOOR_FRONT_Z, FLOOR_REAR_Z, 0.3), WINDOW_FORE_Z, WINDOW_AFT_Z]
-    .sort((p, q) => p - q)
+  // EVERY window's two ends are sampled EXACTLY, so no band ever straddles a
+  // boundary with one end open and the other closed — including the 0.10m
+  // post between the quarter pane and round 11's, which is a band of its own.
+  const samples = [
+    ...hullZSamples(FLOOR_FRONT_Z, FLOOR_REAR_Z, 0.3),
+    ...FLANK_OPENINGS.flatMap((o) => [o.foreZ, o.aftZ]),
+  ].sort((p, q) => p - q)
   for (let i = 0; i < samples.length - 1; i++) panels(group, sign, samples[i], samples[i + 1])
 
   group.add(buildFlankPane(sign))

@@ -24,9 +24,8 @@
 //                flank that round 9a tuned through the deck.
 
 import { Group } from 'three'
-import {
-  WINDOW_FORE_Z, WINDOW_AFT_Z, flankWindowEdgeAt,
-} from '../model/geometry/flankWindow'
+import { flankWindowEdgeAt } from '../model/geometry/flankWindow'
+import { FLANK_OPENINGS, type FlankOpening } from '../model/geometry/flankOpenings'
 import { hullZSamples } from './hullSection'
 import { flatQuad, type Placed } from './sceneUtils'
 import { innerGlazingMaterial, machinedDarkMaterial } from './materials'
@@ -69,10 +68,10 @@ function edgeAt(z: number, grow: number): Edge | null {
   }
 }
 
-/** Sampling across the opening: fine enough that the pane traces the hull's
+/** Sampling across one opening: fine enough that the pane traces the hull's
  *  rake rather than chording across it, ends included exactly. */
-function stations(): number[] {
-  return hullZSamples(WINDOW_FORE_Z, WINDOW_AFT_Z, 0.4)
+function stations(o: FlankOpening): number[] {
+  return hullZSamples(o.foreZ, o.aftZ, 0.4)
 }
 
 function pane(group: Group, sign: Sign, za: number, zb: number): void {
@@ -127,16 +126,21 @@ function jamb(group: Group, sign: Sign, z: number): void {
   )
 }
 
-/** One flank's reveal and glazing. */
+/** One flank's reveals and inner glazing — every opening in it
+ *  (flankOpenings.ts), each fenced on all four edges. ROUND 15 added the
+ *  quarter pane forward of the window post; it is the same four calls, which
+ *  is the point of iterating the list rather than naming a run. */
 export function buildFlankPane(sign: Sign): Group {
   const group = new Group()
   group.name = sign === -1 ? 'flank-pane-pilot' : 'flank-pane-copilot'
-  const zs = stations()
-  for (let i = 0; i < zs.length - 1; i++) {
-    pane(group, sign, zs[i], zs[i + 1])
-    sillAndHeader(group, sign, zs[i], zs[i + 1])
+  for (const o of FLANK_OPENINGS) {
+    const zs = stations(o)
+    for (let i = 0; i < zs.length - 1; i++) {
+      pane(group, sign, zs[i], zs[i + 1])
+      sillAndHeader(group, sign, zs[i], zs[i + 1])
+    }
+    jamb(group, sign, o.foreZ)
+    jamb(group, sign, o.aftZ)
   }
-  jamb(group, sign, WINDOW_FORE_Z)
-  jamb(group, sign, WINDOW_AFT_Z)
   return group
 }

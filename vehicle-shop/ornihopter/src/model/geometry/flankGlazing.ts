@@ -17,13 +17,19 @@
 // blister. The trim strips then lie just outboard of the skin along all four
 // edges and on the hull's own station breaks, THIN on purpose — the user asked
 // for thinner frames in the same breath as the panes.
+//
+// ROUND 15: the same treatment now runs over BOTH openings in each flank
+// (flankOpenings.ts) — same recess, same tint, same trim width, so the quarter
+// pane forward of the window post is the same glazing family rather than a
+// second idea bolted on beside the first.
 
 import {
   BufferGeometry, BufferAttribute, Group, Mesh, Vector3, type Material,
 } from 'three'
+import { flankWindowEdgeAt } from './flankWindow'
 import {
-  WINDOW_FORE_Z, WINDOW_AFT_Z, flankWindowEdgeAt, flankMullionZs,
-} from './flankWindow'
+  FLANK_OPENINGS, openingStations, type FlankOpening,
+} from './flankOpenings'
 
 /** How far inboard of the skin the glass sits. */
 const GLASS_RECESS = 0.05
@@ -60,12 +66,6 @@ function corner(z: number, sign: Sign, t: number, offset: number): Vector3 | nul
   return new Vector3(sign * (x + offset), y, z)
 }
 
-/** Stations the panes and trim are built over: the opening's ends plus the
- *  hull breaks inside it, so a pane edge always lands on real structure. */
-function paneStations(): number[] {
-  return [WINDOW_FORE_Z, ...flankMullionZs(), WINDOW_AFT_Z]
-}
-
 export interface FlankGlazing {
   group: Group
   geometries: BufferGeometry[]
@@ -96,23 +96,26 @@ export function buildFlankGlazing(glass: Material, frame: Material): FlankGlazin
     add(quad(a0, a1, b1, b0), material)
   }
 
-  const stations = paneStations()
-  for (const sign of SIDES) {
+  /** One opening on one flank: plate per bay, sill and header trim over each,
+   *  then jambs at the ends and a mullion on each hull break between. Round
+   *  15's quarter pane has no break inside it, so it comes out as one plate
+   *  between two jambs — the same treatment, fewer members. */
+  const opening = (o: FlankOpening, sign: Sign): void => {
+    const stations = openingStations(o)
     for (let i = 0; i < stations.length - 1; i++) {
       const zA = stations[i]
       const zB = stations[i + 1]
-      // The pane: one flat plate per bay, edge to edge of the opening.
       band(zA, zB, sign, 0, 1, -GLASS_RECESS, glass)
-      // Sill and header trim, lying on the cut edge.
       band(zA, zB, sign, 0, 0.055, TRIM_PROUD, frame)
       band(zA, zB, sign, 0.945, 1, TRIM_PROUD, frame)
     }
-    // Jambs at the two ends, and one mullion per hull break between.
-    for (const z of [WINDOW_FORE_Z, ...flankMullionZs(), WINDOW_AFT_Z]) {
-      const zA = Math.max(WINDOW_FORE_Z, z - TRIM_W / 2)
-      const zB = Math.min(WINDOW_AFT_Z, z + TRIM_W / 2)
+    for (const z of stations) {
+      const zA = Math.max(o.foreZ, z - TRIM_W / 2)
+      const zB = Math.min(o.aftZ, z + TRIM_W / 2)
       band(zA, zB, sign, 0, 1, TRIM_PROUD, frame)
     }
   }
+
+  for (const sign of SIDES) for (const o of FLANK_OPENINGS) opening(o, sign)
   return { group, geometries }
 }

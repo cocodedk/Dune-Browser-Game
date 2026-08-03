@@ -25,7 +25,8 @@
 import { hullHalfWidthAt, hullHalfHeightAt, hullShapeAt, hullKeelYAt } from './hullStations'
 import { buildRing, type Point2 } from './hullCrossSection'
 import { HULL_U_MAX } from './hullUv'
-import { isWindowBay, loftStationZs, stationUFraction } from './flankWindow'
+import { stationUFraction } from './flankWindow'
+import { isWindowBay, loftStationZs } from './flankOpenings'
 import { FLANK_PANELS, bayCanCut, cutFlankBay } from './hullFlankCut'
 
 export interface LoftMesh {
@@ -99,10 +100,11 @@ const ringAt = (z: number): Point2[] =>
 
 /**
  * One ring per station, nose to tail, lofted flat-shaded — with the Apache
- * side windows cut out of the upper flanks over their run (flankWindow.ts).
- * The station list is the authored table PLUS the window's two ends, and u is
- * read from the ORIGINAL bay each station falls in, so the painted panel seams
- * land exactly where they did before the cut existed.
+ * side windows cut out of the upper flanks over each of their runs
+ * (flankOpenings.ts; flankWindow.ts owns the shape of any one of them). The
+ * station list is the authored table PLUS every opening's ends, and u is read
+ * from the ORIGINAL bay each station falls in, so the painted panel seams land
+ * exactly where they did before the cuts existed.
  */
 export function buildHullLoft(): LoftMesh {
   const zs = loftStationZs()

@@ -1,13 +1,18 @@
 // vehicle-shop/ornihopter/src/model/geometry/flankWindow.ts
-// THE ONE PLACE the Apache side panes are described, for the same reason
-// canopyPlan.ts's FRAMED_CANOPY_Z exists: four separate layers have to agree
-// about where the hole in the flank is, and any two of them disagreeing is a
-// visible gap or a ray that leaves the airframe.
+// THE ONE PLACE the SHAPE of an Apache side pane is described, for the same
+// reason canopyPlan.ts's FRAMED_CANOPY_Z exists: four separate layers have to
+// agree about where the hole in the flank is, and any two of them disagreeing
+// is a visible gap or a ray that leaves the airframe.
 //
 //   model/geometry/hullFlankCut.ts   cuts the opening out of the hull skin
 //   model/geometry/flankGlazing.ts   hangs the outer glass and its trim in it
 //   interior/cabinShellWall.ts       opens the cabin liner behind it
 //   interior/flankPaneFrame.ts       fences the reveal and hangs the inner pane
+//
+// ROUND 15 split the bookkeeping out: HOW MANY openings there are and where
+// each one starts and stops now lives in flankOpenings.ts, because the user
+// ordered a second pane per flank. The sill/header rule below is unchanged and
+// is applied to whatever station either file asks about.
 //
 // USER RULING, 2026-08-02 (apache-gauntlet.md B6), and the single authorised
 // exception to the exterior freeze: "full apache side panes and thiner frames.
@@ -96,25 +101,6 @@ export function flankWindowEdgeAt(z: number): WindowEdge | null {
   return low && high ? { low, high } : null
 }
 
-/** True when the bay [za, zb] lies inside the opening's run. */
-export function isWindowBay(za: number, zb: number): boolean {
-  return za >= WINDOW_FORE_Z - 1e-9 && zb <= WINDOW_AFT_Z + 1e-9
-}
-
-/**
- * Loft stations with the opening's two ends inserted. The hull's authored
- * breaks (hullStations.ts) all survive — the cut adds stations, it never
- * removes one, so the machined plan the slenderness and plan guards measure is
- * untouched.
- */
-export function loftStationZs(): number[] {
-  const zs = [...STATION_Z]
-  for (const z of [WINDOW_FORE_Z, WINDOW_AFT_Z]) {
-    if (!zs.some((s) => Math.abs(s - z) < 1e-9)) zs.push(z)
-  }
-  return zs.sort((a, b) => a - b)
-}
-
 /**
  * The u this z would have had in the ORIGINAL station loft: hullUv.ts sizes
  * one texture cell to one authored bay, so an inserted station has to land at
@@ -132,13 +118,8 @@ export function stationUFraction(z: number): number {
   return 1
 }
 
-/** Mullion stations inside the opening: the hull's own breaks, so the members
- *  land on the craft's real structure exactly as the canopy's ribs do. */
-export function flankMullionZs(): number[] {
-  return STATION_Z.filter((z) => z > WINDOW_FORE_Z + 0.3 && z < WINDOW_AFT_Z - 0.3)
-}
-
-/** Sanity for readers: the opening's run in metres aft. */
+/** Sanity for readers: round 11's opening in metres aft. The quarter pane's
+ *  own run is flankOpenings.ts's QUARTER_FORE_Z/QUARTER_AFT_Z. */
 export const WINDOW_SPAN_AFT: readonly [number, number] = [
   WINDOW_FORE_Z + HALF_LENGTH,
   WINDOW_AFT_Z + HALF_LENGTH,

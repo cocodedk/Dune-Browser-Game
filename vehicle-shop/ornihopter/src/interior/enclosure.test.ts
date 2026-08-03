@@ -65,7 +65,8 @@ describe('no ray from the pilot eye leaves the airframe', () => {
 
 describe('the cockpit reads as a cave, not a dash floating in open air', () => {
   it('opaque structure holds a real share of the top half of the forward frame', () => {
-    const c = coverage(sampleFrame(targets, 48, 30, 0, 0))
+    const samples = sampleFrame(targets, 48, 30, 0, 0)
+    const c = coverage(samples)
     // THRESHOLD CHANGED, round 9e: 0.55 -> 0.30. MEASURED across the change,
     // same 48x30 grid, same pose: structureTopHalf 0.721 -> 0.426.
     //
@@ -74,15 +75,28 @@ describe('the cockpit reads as a cave, not a dash floating in open air', () => {
     // could not see out ("just a narrow band of view"). The aperture now spans
     // the eye station (canopyLayout.ts's APERTURE_REAR_Z, 2.45 -> 4.6m aft), so
     // the top of the frame is DELIBERATELY glass; keeping 0.55 would pin the
-    // defect. What must not come back is the round-6b failure this assertion
-    // was really built against — a dash floating in open air with no canopy at
-    // all, which measured 0.163 — so the floor stays well above that, and the
-    // zero-escape contract above still runs at its full ray count. What holds
-    // the remaining 42.6% is the reveal rails down both sides, the mullion arch
-    // at 3.0m aft (canopyLayout.ts's mullionStations(), on the canopy's own
-    // station), the rear arch at 4.3m, the aft header at 4.58m and the wall
-    // tops — frame members, not an absence of hole.
-    expect(c.structureTopHalf).toBeGreaterThan(0.3)
+    // defect.
+    //
+    // ADAPTED AGAIN, round 15: 0.30 -> 0.20. MEASURED across the change on a
+    // stashed rebuild of the pre-round tree, same 48x30 grid, same pose:
+    //   open       0.0%  -> 0.0%
+    //   glazing   34.0%  -> 42.7%
+    //   structure 66.0%  -> 57.3%
+    //   topHalf   34.6%  -> 22.5%
+    // Same shape as round 11's adaptation and for the same reason: every point
+    // this number lost went to GLASS, and open stayed at exactly zero. The
+    // user ordered two more panes ("one left and one right") precisely so the
+    // forward quarter is not liner, and the liner it replaced was in the top
+    // half of the frame.
+    //
+    // The failure this assertion was really built against is round 6b's dash
+    // floating in open air, which measured topHalf 0.163 WITH 64% of the frame
+    // open. So the top half's own zero-escape is now asserted directly rather
+    // than inferred from an opacity share — a frame that opened up instead of
+    // glazing over fails here on the first line, whatever the second says.
+    const top = samples.filter((s) => s.ndcY > 0)
+    expect(`top-half open: ${top.filter((s) => s.hit === 'open').length}`).toBe('top-half open: 0')
+    expect(c.structureTopHalf).toBeGreaterThan(0.2)
   })
 
   it('glazing is a real fraction of the forward frame, not a token pane', () => {
