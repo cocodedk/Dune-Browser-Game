@@ -24,12 +24,12 @@ What needs work — by priority
 
  ### 3. The cutter (the signature — needs to dominate)
 
- - [ ] Larger grinder head — currently 18m × 6m. The film's cutter is the machine's most prominent feature. Make it taller (8m) and add a visible rotating drum (a
+ - [x] Larger grinder head — (I3: 8 m head, 56-pick drum; panel: "eats the ground") currently 18m × 6m. The film's cutter is the machine's most prominent feature. Make it taller (8m) and add a visible rotating drum (a
        cylinder along X at the head front, with teeth around its circumference).
- - [ ] Conveyor from hopper to head — the pipe is a plain dark box. Replace with an angled conveyor (like the deck conveyor — a sloped belt on truss legs) from the
+ - [x] Conveyor from hopper to head — (I3: truss conveyor built; front-view legibility routed to I6/I7) the pipe is a plain dark box. Replace with an angled conveyor (like the deck conveyor — a sloped belt on truss legs) from the
        feed hopper down to the grinder head.
- - [ ] Side plates on the arm — the arm is a plain box with two thin rails. Add side fairings (angled plates) so the arm reads as a structural boom, not a stick.
- - [ ] Hydraulic rams — add 2 dark cylinders angled from the nose housing to the arm (the mechanism that raises/lowers the cutter). Cheap detail, big industrial
+ - [x] Side plates on the arm — (I3: canted fairings + gussets; legibility routed to I6/I7) the arm is a plain box with two thin rails. Add side fairings (angled plates) so the arm reads as a structural boom, not a stick.
+ - [x] Hydraulic rams — (I3: built at nose tier anchors; panel still reads head as floating — ram contrast queued for I6) add 2 dark cylinders angled from the nose housing to the arm (the mechanism that raises/lowers the cutter). Cheap detail, big industrial
        read.
 
  ### 4. The cab (too small and generic)
@@ -76,7 +76,7 @@ What needs work — by priority
 
  - [x] Belt scrolling — (I1) (listed above, restating as motion) the chain links translate along the bottom run and rotate around the sprockets, driven by
        trackLeft/trackRight. This makes the machine look alive when moving.
- - [ ] Cutter drum rotation — the grinder head's drum (if added) rotates at a speed proportional to throttle.
+ - [x] Cutter drum rotation — (I3: speed-driven, feeding direction verified 3 ways) the grinder head's drum (if added) rotates at a speed proportional to throttle.
  - [ ] Cab antenna sway — a subtle rotation on the antenna, driven by speed. Cheap, alive.
  - [ ] Dust emission — particles or billboard plumes behind the tracks, driven by speed.
 

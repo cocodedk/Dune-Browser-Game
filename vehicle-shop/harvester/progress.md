@@ -251,6 +251,51 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round I3 — the cutter. LANDED. Round critic 3/10 (adjudicated). BLIND MILESTONE PANEL: PASSED.
+
+Builder: Opus. The head is now the machine's mouth: 8.00 m tall (spec),
+18 m wide, with a speed-driven DRUM — 56 picks in 7 twisted rings + 2
+helical flights, surface speed 3× crawl (DRUM_GEAR, authored), teeth
+0.33 m off the sand. The feeding-direction sign was derived from first
+principles in a pure helper, pinned by a test with the physical argument
+in its comment, and verified THREE ways: the builder's cross-correlation,
+the lead's own pair at own parameters (front face descends — fresh rows
+at top, bottom sweeping under toward the machine), and the round critic's
+independent patch correlation (6/7 units downward). Also: truss conveyor
+replacing the pipe, canted boom fairings + gussets (the buried rails
+deleted — measured invisible), two rams anchored at the nose tier,
+hopper reshaped to solve the conveyor intersection. Two tooth rows now:
+fixed lip teeth behind the drum's sweep + pick stations on it (both
+within the round-5 half-metre rule, both tested). Harvester.ts gained 4
+wiring lines (cutter.update). Tests 51 → 66. Length 61.07 m (ceiling 62).
+
+**Round critic (fresh Sonnet): 3/10 — heavily adjudicated.** It judged
+from front-flavored frames where the 18m×8m head self-occludes everything
+behind it, and called the conveyor/fairings/rams "not attempted"; the
+lead verified all three exist (same file renders the visibly-new drum)
+and read the side/flank captures: the mechanism is dark-on-dark at
+distance under the high port sun. Its correct core point — THE MECHANISM
+DOES NOT READ — is routed: material role separation for the cutter
+assembly (arm vs head vs drum core vs rams) → I6; nose shadow lift → I7.
+Its correctness finding matched the lead's: drum direction CORRECT.
+
+**BLIND PANEL (3× Opus, one frame each, told nothing): PASSED THE BAR.**
+hero: "a Dune spice harvester… ingests material through a front-mounted
+intake — the only part of the machine aimed at the dirt." turn-high-030:
+"spice harvester from Dune… It drives forward and eats the ground — cut
+at the front, hold in the middle, discharge at the back." rear34 (cutter
+hidden from there): "industrial/mining crawler chassis" — generic pass.
+2/3 named Dune unprompted; 2/3 named the cutter as the mouth; bar met
+exactly. Convergent panel findings → later rounds: cutter reads
+"floating" (rams invisible) → I6; deck reads as placeholder, no crew
+presence, hoppers "read as boulders" → I4/I5; no scale cues → I5; belt
+red "reads as a debug colour" → I6. DEFECT FLAG → I5: rear34 shows a tan
+cylinder at rear-right possibly dipping below the track line — verify
+and pin.
+
+_Status: complete. The machine now answers "what is it" blind. What it
+still lacks is CREW PRESENCE and MATERIAL TRUTH — exactly rounds I4–I7._
+
 ### Round I2 pass 3 — silhouette fixes. LANDED. Critic 3/10. ROUND CLOSED by the three-pass rule.
 
 Builder: Sonnet (fresh). What landed: the foremost deck plate steps down

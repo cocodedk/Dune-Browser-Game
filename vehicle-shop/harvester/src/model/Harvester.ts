@@ -54,6 +54,10 @@ export function createHarvester(): HarvesterModel {
     root,
     update(state: Readonly<CrawlerState>, dt: number): void {
       tracks.update(state.trackLeft, state.trackRight, dt)
+      // The cutter drum feeds off the same two track speeds (I3): their mean
+      // is the forward speed, and it is what the paused debug handle's
+      // drive() actually sets — see forwardSpeedOf() in cutterDetail.ts.
+      cutter.update(state.trackLeft, state.trackRight, dt)
     },
     dispose(): void {
       hull.dispose()
