@@ -21,6 +21,7 @@ import { noseDirection, upDirection, normalise } from '../contracts'
 import { heightAt } from '../stage/terrain'
 import { clampToGround } from './groundCollision'
 import { levelOrientation } from './autoLevel'
+import { wingsStowed } from './wingFold'
 import type { Kinematics } from './kinematics'
 import {
   GEAR_HEIGHT, TOUCHDOWN_SINK_MAX, TOUCHDOWN_TILT_MIN_UP_Y, GROUND_BRAKE,
@@ -78,7 +79,16 @@ function onGround(
   spool: number,
   dt: number
 ): GroundPhase {
-  const leaving = throttle >= TAKEOFF_THROTTLE
+  // A stowed wing cannot make lift, so the throttle is REFUSED rather than
+  // obeyed: the beat stays wound down and the craft stays on its feet until
+  // the pilot unfolds. Chosen over auto-unfolding on throttle because the
+  // fold is the pilot's switch — silently running a 2.6s mechanism nobody
+  // asked for is how a control stops being trusted — and because it keeps
+  // one demand per action. It is not a trap: the fold key is live in exactly
+  // this state (foldAllowed is landed + beat stopped, which is what refusing
+  // the takeoff preserves), so the way out is the same key that got here,
+  // and ui/hud.ts says so on screen.
+  const leaving = throttle >= TAKEOFF_THROTTLE && !wingsStowed(previous)
   const beatAmplitude = leaving
     ? ramp(spool, 1, SPOOL_UP_SECONDS, dt)
     : ramp(spool, 0, SPOOL_DOWN_SECONDS, dt)

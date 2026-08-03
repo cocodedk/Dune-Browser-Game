@@ -146,3 +146,11 @@ export const AUTO_LEVEL_RATE = 1.5
  * flight.
  */
 export const TERMINAL_LEVEL_RATE = 1
+
+/**
+ * Seconds for the wings to sweep from the spread stance to the parked stack
+ * and back. 2.6s sits in the round's 2-3s band and just over SPOOL_DOWN's
+ * 2.5, so a pilot who parks and immediately stows sees the beat die away and
+ * THEN the blades come back — two mechanisms in sequence, not one blur.
+ */
+export const FOLD_SECONDS = 2.6

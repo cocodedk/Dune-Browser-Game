@@ -24,6 +24,7 @@
 
 import { Group, Mesh, type BufferGeometry, type Material } from 'three'
 import { foldAngle, flapAngle, featherAngle, type WingSide } from './wingKinematics'
+import { foldYawAt, foldTiltAt } from './wingFoldPose'
 
 export interface WingAttachment {
   x: number
@@ -44,8 +45,16 @@ export interface WingRig {
    * sit at zero — blades flat and untwisted, the parked pose — and every value
    * between is the same stroke, smaller. Freezing the phase instead would stop
    * the wings wherever the last tick left them, mid-flap.
+   *
+   * @param fold FlightState.foldProgress, 0 spread .. 1 stowed. Above 0 the
+   * beat is BYPASSED, not scaled: wingFoldPose.ts owns both pivots outright,
+   * because a folded wing does not feather and a half-folded one does not
+   * flap around a stowed mean. At exactly 0 this function is the expression it
+   * has always been, evaluated in the same order — see wingFoldRig.test.ts,
+   * which compares a beat sweep against a stashed unfolded baseline bit for
+   * bit.
    */
-  update(beatPhase: number, amplitude?: number): void
+  update(beatPhase: number, amplitude?: number, fold?: number): void
 }
 
 /**
@@ -62,14 +71,14 @@ export function createWingRig(
 ): WingRig {
   const mirror = side === 'right' ? 1 : -1
 
-  const fold = new Group()
-  fold.name = `wing-fold-${side}-${pairIndex}`
-  fold.position.set(attachment.x, attachment.y, attachment.z)
-  fold.rotation.y = mirror * foldAngle(pairIndex)
+  const fold3 = new Group()
+  fold3.name = `wing-fold-${side}-${pairIndex}`
+  fold3.position.set(attachment.x, attachment.y, attachment.z)
+  fold3.rotation.y = mirror * foldAngle(pairIndex)
 
   const flap = new Group()
   flap.name = 'wing-flap'
-  fold.add(flap)
+  fold3.add(flap)
 
   const feather = new Group()
   feather.name = 'wing-feather'
@@ -80,8 +89,15 @@ export function createWingRig(
   feather.add(blade)
 
   return {
-    root: fold,
-    update(beatPhase: number, amplitude = 1): void {
+    root: fold3,
+    update(beatPhase: number, amplitude = 1, fold = 0): void {
+      if (fold > 0) {
+        fold3.rotation.y = mirror * foldYawAt(pairIndex, fold)
+        flap.rotation.z = mirror * foldTiltAt(pairIndex, fold)
+        feather.rotation.x = 0
+        return
+      }
+      fold3.rotation.y = mirror * foldAngle(pairIndex)
       flap.rotation.z = mirror * flapAngle(beatPhase, pairIndex) * amplitude
       feather.rotation.x = featherAngle(beatPhase, pairIndex) * amplitude
     },

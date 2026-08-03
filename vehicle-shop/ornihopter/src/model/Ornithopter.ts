@@ -186,7 +186,7 @@ export function createOrnithopter(): CraftModel {
   return {
     root,
     update(state: Readonly<FlightState>): void {
-      for (const wing of wings) wing.update(state.beatPhase, state.beatAmplitude ?? 1)
+      for (const wing of wings) wing.update(state.beatPhase, state.beatAmplitude ?? 1, state.foldProgress ?? 0)
     },
     dispose(): void {
       for (const geometry of geometries) geometry.dispose()

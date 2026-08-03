@@ -34,6 +34,13 @@ export interface FlightInput {
    *  so every pre-existing FlightInput literal keeps compiling unchanged;
    *  absent means false. See flight/autoLevel.ts. */
   autoLevel?: boolean
+  /** True on the ONE frame the wing-fold key went down — an edge, not a held
+   *  level. Edge because a fold demanded in the air is REFUSED outright
+   *  (flight/wingFold.ts): a latched level would remember the refusal and
+   *  fold the wings at the next landing without being asked. Optional so
+   *  every pre-existing FlightInput literal keeps compiling; absent means
+   *  false. */
+  foldToggle?: boolean
 }
 
 export interface FlightState {
@@ -68,6 +75,20 @@ export interface FlightState {
    *  pose instead of freezing mid-stroke when the beat stops. Optional, so
    *  every pre-existing FlightState literal keeps compiling; absent means 1. */
   beatAmplitude?: number
+  /** Linear 0..1 clock along the wing-fold transition: 0 spread, 1 stowed.
+   *  This is the state machine's own memory (flight/wingFold.ts) — read
+   *  foldProgress, not this, to pose anything. Absent means spread. */
+  foldPhase?: number
+  /** EASED 0..1 fold pose parameter, smoothstep(foldPhase). model/WingRig.ts
+   *  poses both wing pivots from it and bypasses the beat above 0; the HUD
+   *  reads it for the stow hint. Absent means spread. */
+  foldProgress?: number
+  /** Where the fold is heading: 1 stowing, 0 spreading. Absent means 0. */
+  foldTarget?: number
+  /** True on a step where a fold was demanded and REFUSED — airborne, or the
+   *  beat still turning. The HUD flashes on it; nothing else in the model
+   *  reads it. Absent means false. */
+  foldRefused?: boolean
 }
 
 export interface FlightModel {

@@ -9,6 +9,7 @@ import { nextOrientation } from './rotation'
 import { nextKinematics } from './kinematics'
 import { groundPhase } from './landing'
 import { nextBeat } from './wingBeat'
+import { nextFold } from './wingFold'
 import { clamp, clamp01, clampSigned } from './scalarMath'
 import { MAX_DT } from './constants'
 
@@ -19,6 +20,7 @@ function sanitiseInput(input: FlightInput): FlightInput {
     yaw: clampSigned(input.yaw),
     throttle: clamp01(input.throttle),
     autoLevel: input.autoLevel === true,
+    foldToggle: input.foldToggle === true,
   }
 }
 
@@ -32,6 +34,11 @@ export function advance(state: Readonly<FlightState>, rawInput: FlightInput, raw
   // resting on six legs settles onto them, so the landing phase may return an
   // orientation the stick did not ask for. See flight/landing.ts.
   const grounded = groundPhase(state, orientation, kinematics, input.throttle, dt)
+  // Fold reads the PREVIOUS step's landed/beat state, the same `state` the
+  // ground phase resolves from, so the two cannot disagree about whether the
+  // craft is parked; landing.ts in turn reads the previous fold. One tick of
+  // lag either way, and neither can see a half-updated frame.
+  const fold = nextFold(state, input, dt)
   const beat = nextBeat(state.beatPhase, input.throttle, dt, grounded.beatAmplitude)
 
   return {
@@ -46,5 +53,9 @@ export function advance(state: Readonly<FlightState>, rawInput: FlightInput, raw
     autoLevel: input.autoLevel,
     landed: grounded.landed,
     beatAmplitude: grounded.beatAmplitude,
+    foldPhase: fold.foldPhase,
+    foldProgress: fold.foldProgress,
+    foldTarget: fold.foldTarget,
+    foldRefused: fold.foldRefused,
   }
 }

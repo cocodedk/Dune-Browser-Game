@@ -7,10 +7,27 @@ import { noseDirection, normalise, dot } from '../contracts'
 import type { FlightState } from '../contracts'
 import type { CameraMode } from '../camera/cameraRig'
 import { GEAR_HEIGHT } from '../flight/constants'
+import { foldAllowed } from '../flight/wingFold'
 
 export interface Hud {
   update(state: Readonly<FlightState>, mode: CameraMode, fps: number): void
 }
+
+/** One line of stow state. Deliberately a WORD and not a bar: this readout is
+ *  a measuring instrument, and "why did the throttle do nothing" needs an
+ *  answer in the frame, not a gauge to interpret. */
+function foldLine(state: Readonly<FlightState>, refusedFor: number): string {
+  const progress = state.foldProgress ?? 0
+  if (refusedFor > 0) return 'wings      REFUSED - land and let the beat stop'
+  if (progress <= 0) return foldAllowed(state) ? 'wings      spread   (F to fold)' : 'wings      spread'
+  if (progress >= 1) return 'wings      STOWED   (F to unfold - throttle refused)'
+  return `wings      ${(state.foldTarget ?? 0) > 0 ? 'folding' : 'spreading'} ${(progress * 100).toFixed(0)}%`
+}
+
+/** How long a refusal stays on screen. FlightState.foldRefused is true for the
+ *  ONE step that dropped the demand — right, for a pure model, and invisible
+ *  at 60fps — so the readout, which is allowed to have a clock, holds it. */
+const REFUSAL_SECONDS = 2.5
 
 export function createHud(): Hud {
   const readout = document.getElementById('readout')
@@ -26,12 +43,21 @@ export function createHud(): Hud {
       'H + mouse / right-drag   look around',
       'C        cycle camera     R     reset',
       'Space    hold to auto-level (roll/pitch)',
+      'F        fold / unfold wings  (landed, beat 0)',
       'M        mute / unmute sound   (any key starts audio)',
     ].join('\n')
   }
 
+  let refusedFor = 0
+  let lastFrame = performance.now()
+
   return {
     update(state, mode, fps) {
+      const now = performance.now()
+      refusedFor = state.foldRefused === true
+        ? REFUSAL_SECONDS
+        : Math.max(0, refusedFor - (now - lastFrame) / 1000)
+      lastFrame = now
       if (modeEl) modeEl.textContent = `camera: ${mode}\n${fps.toFixed(0)} fps`
       if (!readout) return
 
@@ -55,6 +81,7 @@ export function createHud(): Hud {
         `beat       ${state.beatHz.toFixed(2)} Hz`,
         `pos        ${state.position.x.toFixed(0)}, ${state.position.y.toFixed(0)}, ${state.position.z.toFixed(0)}`,
         `nose-leads ${Number.isNaN(along) ? '  --' : along.toFixed(3)}`,
+        foldLine(state, refusedFor),
       ].join('\n')
     },
   }
