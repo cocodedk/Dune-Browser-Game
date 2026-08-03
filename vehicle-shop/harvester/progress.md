@@ -251,6 +251,44 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round I6 — palette and weathering. LANDED. The blockout became a machine.
+
+Builder: Opus. Eight materials (trim from spec.TRIM_COLOR, plus bodyLow
+for downward grime and tire for the dirt ring — both forced by UV
+physics, reasoning recorded in the materials module), and a pure
+DataTexture pipeline (model/materials/, ornithopter house pattern — no
+canvas, no DOM): scribed plate rectangles and joint bands at the deck's
+REAL seam stations (computed from hullDetail's own constants and
+test-pinned to land in dark texels), grime gathering low, belt wear as
+per-plate maps that TRAVEL with the cycling chain (a position-based
+"dark lower run" would repaint plates as they round the sprockets —
+reasoning logged), hash-dealt plate tints so wear reads used rather
+than rhythmic, wheel contact-ring grime, cab framed light-dark-light.
+Steel deliberately unmapped (square plate maps frame round caps — found
+by capture, not assumed). Line widths measured against
+RoundedBoxGeometry's real corner shoulders. Tests 85 → 112 across 18
+files; zero geometry changes (all bounds/scroll tests untouched).
+
+**Critic (fresh Sonnet): 5/10 — two central claims refuted by lead
+crops, one keeper.** "No cab band or window trim" — REFUTED: the lead's
+crop shows the light-sill / dark-wrap / light-cap framing exactly as
+built (the critic misread which box is the cab; second offence of this
+class, the anchor brief now needs pixel regions). "Trim reads as a
+second body colour across the deck" — misattributed: the deck plating
+is the unchanged BODY tan. CONFIRMED by critic: panel lines follow
+construction (two examples, zero contradictions found), belt stays
+red-family, wheel grime reads. Its tailclose "vertical line artifact"
+is the I5 winch cable doing its job (thin near geometry at fixed screen
+x — noted, not an artifact). ITS KEEPER, carried to the final panel:
+grime DENSITY — the machine reads multi-tone-clean, "showroom, not a
+thing that has been eating sand for years". The lead's own crop
+downgrade: drum-core separation is WEAK at the backlit nose until I7's
+fill light — the builder's walk-back candidates (head cap → accent,
+sill → body) stay on file if the panel calls trim loud.
+
+_Status: complete. Deferred to post-I7 judgment: ram contrast, drum
+core, wheel grime at distance, trim volume, grime density._
+
 ### Round I5 — deck machinery and scale (2 passes). LANDED. The deck is a working spice bed with honest scale cues.
 
 Builder: Sonnet ×2 passes. Pass 1 (critic 3/10): 4 hoppers via one

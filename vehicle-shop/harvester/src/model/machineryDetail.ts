@@ -149,14 +149,19 @@ export function buildOuterRailRun(
   buildRailRun(geometries, group, mat, x, NOSE_PLATE_BOUNDARY_Z, tailBlockForeZ)
 }
 
-/** A thin light mast with a dark head — cheap scale cue at a deck corner. */
+/** A thin light mast at a deck corner — cheap scale cue. I6 material wiring,
+ *  no geometry: the HEAD takes its own material so the assembly can flag it
+ *  with the trim tone. A 0.6 m box on a 4 m pole, dark on a dark deck fixture
+ *  at 12 m up, was a cue nobody could find; the same box in trim is a lamp.
+ *  Defaults to the pole's material, so the machinery bounds tests are
+ *  unaffected. */
 export function buildLightMast(
   geometries: BufferGeometry[], group: Group, mat: MeshStandardMaterial,
-  x: number, z: number,
+  x: number, z: number, headMat: MeshStandardMaterial = mat,
 ): void {
   const height = 4.0
   cyl(geometries, group, 0.15, 0.18, height, 8, mat, x, DECK + height / 2, z, 'lightMastPole')
-  box(geometries, group, 0.6, 0.45, 0.6, mat, x, DECK + height + 0.225, z, 'lightMastHead')
+  box(geometries, group, 0.6, 0.45, 0.6, headMat, x, DECK + height + 0.225, z, 'lightMastHead')
 }
 
 /** The discharge chute (destination 5): the discharge hopper sits right

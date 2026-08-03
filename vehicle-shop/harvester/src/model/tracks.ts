@@ -48,11 +48,19 @@ interface Runner {
   radius: number
 }
 
+/** I6 material wiring, no geometry. `beltMaterial` now also takes a LIST —
+ *  belt.ts deals it round-robin across the chain, which is how the belt gets
+ *  per-link wear despite the links cycling (see materials/palette.ts).
+ *  `tireMaterial` splits the wheels' own tone away from the general steel:
+ *  the tire carries a dirt ring at its CONTACT radius (materials/maps.ts),
+ *  and that map must not land on the housing caps and sprocket drums the
+ *  wheel tone also serves. Defaults to wheelMaterial. */
 export function buildTracks(
   darkMaterial: MeshStandardMaterial,
   wheelMaterial: MeshStandardMaterial,
   accentMaterial: MeshStandardMaterial,
-  beltMaterial: MeshStandardMaterial,
+  beltMaterial: MeshStandardMaterial | readonly MeshStandardMaterial[],
+  tireMaterial: MeshStandardMaterial = wheelMaterial,
 ): Tracks {
   const group = new Group()
   group.name = 'tracks'
@@ -72,10 +80,16 @@ export function buildTracks(
 
     // Road wheels: the one wheel component, at each station. The belt is
     // the medium between wheel and ground, so the centre is the bottom
-    // plate plus the radius.
+    // plate plus the radius. The FACE DISC takes bare steel (I6, and what
+    // wheel.ts always called it) rather than the mapped rust: a cylinder's
+    // cap UV is the disc inscribed in the unit square, so a plate map's
+    // border and scribed line render as a SQUARE frame on a round wheel —
+    // measured in the I6 first-pass capture, unmistakable at the tracks
+    // close-up. Every big cap on this machine — these discs and the sprocket
+    // drums — is on the one material deliberately left unmapped.
     const roadY = TRACK.sprocketY - TRACK.sprocketRadius + TRACK.roadWheelRadius
     for (const wz of TRACK.roadWheelsZ) {
-      const wheel = buildWheel(TRACK.roadWheelRadius, BELT.width + ROAD_WHEEL_OVER * 2, wheelMaterial, darkMaterial, accentMaterial)
+      const wheel = buildWheel(TRACK.roadWheelRadius, BELT.width + ROAD_WHEEL_OVER * 2, tireMaterial, darkMaterial, wheelMaterial)
       wheel.group.position.set(x, roadY, wz)
       group.add(wheel.group)
       wheels.push(wheel)
@@ -106,7 +120,7 @@ export function buildTracks(
     const topRunUnder = TOP_RUN_Y - BELT_THICKNESS / 2
     const rollerY = topRunUnder - TRACK.returnRollerRadius
     for (const rz of TRACK.returnRollersZ) {
-      const roller = buildWheel(TRACK.returnRollerRadius, BELT.width + ROLLER_OVER * 2, wheelMaterial, darkMaterial, accentMaterial)
+      const roller = buildWheel(TRACK.returnRollerRadius, BELT.width + ROLLER_OVER * 2, tireMaterial, darkMaterial, wheelMaterial)
       roller.group.position.set(x, rollerY, rz)
       group.add(roller.group)
       wheels.push(roller)

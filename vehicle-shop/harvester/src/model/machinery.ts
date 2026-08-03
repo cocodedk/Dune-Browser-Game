@@ -25,9 +25,17 @@ export interface MachineryParts {
 
 const DECK = BODY.deckTop
 
+/** I6 material wiring, no geometry: `trimMaterial` (spec.TRIM_COLOR) is an
+ *  EQUIPMENT HIGHLIGHT here, not a body tone — it lands on the rims, collars
+ *  and feet of the two BIGGEST vessels (the feed bin forward and the
+ *  discharge bin on the tail tower) and on the two mast heads. Restrained on
+ *  purpose: the two small vessels keep their I5 dark/accent pairing, so the
+ *  deck reads as a family of equipment with two flagged units, not as a deck
+ *  repainted. Defaults to accent so machinery.test.ts builds what it did. */
 export function buildMachinery(
   darkMaterial: MeshStandardMaterial,
   accentMaterial: MeshStandardMaterial,
+  trimMaterial: MeshStandardMaterial = accentMaterial,
 ): MachineryParts {
   const group = new Group()
   group.name = 'machinery'
@@ -74,8 +82,8 @@ export function buildMachinery(
   // octagon" exactly as the critic named it. Trim now accent (rust brown),
   // matching the family's other dark-bodied vessel is left alone below —
   // this is the one that was actually flagged.
-  buildHopper(geometries, group, accentMaterial, darkMaterial, 0, 2, 2.2, 4.6, 3.6)
-  buildHopper(geometries, group, darkMaterial, darkMaterial, 0, 20, 1.5, 3.2, 3.0)
+  buildHopper(geometries, group, accentMaterial, trimMaterial, 0, 2, 2.2, 4.6, 3.6)
+  buildHopper(geometries, group, darkMaterial, trimMaterial, 0, 20, 1.5, 3.2, 3.0)
   buildHopper(geometries, group, darkMaterial, accentMaterial, 5.5, 8.5, 1.0, 2.0, 2.4)
   buildHopper(geometries, group, accentMaterial, darkMaterial, -5.5, 8.0, 1.3, 2.4, 3.8)
 
@@ -164,8 +172,8 @@ export function buildMachinery(
   buildOuterRailRun(geometries, group, darkMaterial, -(BODY.halfWidth - 0.35), BODY.noseBlockAftZ, BODY.tailBlockForeZ)
 
   // Two light masts at deck corners — cheap scale cue, big industrial read.
-  buildLightMast(geometries, group, darkMaterial, BODY.halfWidth - 1.2, -10.5)
-  buildLightMast(geometries, group, darkMaterial, -(BODY.halfWidth - 1.2), 17.0)
+  buildLightMast(geometries, group, darkMaterial, BODY.halfWidth - 1.2, -10.5, trimMaterial)
+  buildLightMast(geometries, group, darkMaterial, -(BODY.halfWidth - 1.2), 17.0, trimMaterial)
 
   // The discharge chute (destination 5): a dark angled apron off the
   // discharge hopper's own base, dipping toward the tail housing's rounded

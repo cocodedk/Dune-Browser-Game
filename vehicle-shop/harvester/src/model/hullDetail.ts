@@ -54,8 +54,11 @@ export function rbox(
 export const NOSE_DECK_STEPS: readonly number[] = [11.25]
 export const deckTopAt = (i: number): number => (i < NOSE_DECK_STEPS.length ? NOSE_DECK_STEPS[i] : BODY.deckTop)
 
-const SEAM_COUNT = 4
-const SEAM_WIDTH = 0.7
+/** Exported (I6) so materials/deckSeams.ts can compute the deck's real plate
+ *  stations from the same two numbers the geometry is built from, instead of
+ *  re-asserting 48/5 as a literal the way machineryDetail.ts had to. */
+export const SEAM_COUNT = 4
+export const SEAM_WIDTH = 0.7
 const SEAM_RECESS = 0.6
 // Pass-3 (destination 3): lips widened/heightened so they read as nubs on
 // the profile's TOP EDGE (silhouetted against the sky) — the pass-2
@@ -86,11 +89,20 @@ export interface DeckResult {
 /** Deck plates (each may sit at its own stepped top), transverse seams with
  *  proud flanking lips, and the deck's own edge trim, which rides each
  *  plate's own top so the trim line steps with the taper instead of
- *  floating above (or burying into) a lowered plate. */
+ *  floating above (or burying into) a lowered plate.
+ *
+ *  I6 material wiring, no geometry: the seam LIPS and the edge trim take the
+ *  sixth tone. The pass-3 note above explains why they are the only channel
+ *  that can carry the deck's plate breaks at all — they are the parts that
+ *  reach the skyline — and they spent five rounds the same near-black as the
+ *  recessed seam they flank, so the proud nub and the sunk gap were one dark
+ *  smear. Light lip / dark seam / light lip is the read the geometry was
+ *  always shaped for. The seam INSET stays dark: it is the shadow. */
 export function buildDeck(
   geometries: BufferGeometry[], group: Group,
   bodyMaterial: MeshStandardMaterial, darkMaterial: MeshStandardMaterial,
-  length: number, noseZ: number, deckHalf: number
+  length: number, noseZ: number, deckHalf: number,
+  trimMaterial: MeshStandardMaterial = darkMaterial,
 ): DeckResult {
   const segLen = length / (SEAM_COUNT + 1)
   const halfGap = SEAM_WIDTH / 2
@@ -115,8 +127,8 @@ export function buildDeck(
     // level seam (topA === topB, the common case) it reproduces the
     // original symmetric nub.
     const lipOffset = halfGap + SEAM_LIP_WIDTH / 2
-    box(geometries, group, deckHalf * 2, SEAM_LIP_HEIGHT, SEAM_LIP_WIDTH, darkMaterial, 0, topA + SEAM_LIP_HEIGHT / 2, seamZ - lipOffset, 'deckSeamLip')
-    box(geometries, group, deckHalf * 2, SEAM_LIP_HEIGHT, SEAM_LIP_WIDTH, darkMaterial, 0, topB + SEAM_LIP_HEIGHT / 2, seamZ + lipOffset, 'deckSeamLip')
+    box(geometries, group, deckHalf * 2, SEAM_LIP_HEIGHT, SEAM_LIP_WIDTH, trimMaterial, 0, topA + SEAM_LIP_HEIGHT / 2, seamZ - lipOffset, 'deckSeamLip')
+    box(geometries, group, deckHalf * 2, SEAM_LIP_HEIGHT, SEAM_LIP_WIDTH, trimMaterial, 0, topB + SEAM_LIP_HEIGHT / 2, seamZ + lipOffset, 'deckSeamLip')
   }
 
   // Edge trim, per plate, riding that plate's own top.
@@ -124,11 +136,11 @@ export function buildDeck(
     const start = noseZ + i * segLen
     const end = noseZ + (i + 1) * segLen
     const ly = deckTopAt(i) + 0.18
-    box(geometries, group, 0.5, 0.36, end - start, darkMaterial, -deckHalf + 0.05, ly, (start + end) / 2, 'deckTrim')
-    box(geometries, group, 0.5, 0.36, end - start, darkMaterial, deckHalf - 0.05, ly, (start + end) / 2, 'deckTrim')
+    box(geometries, group, 0.5, 0.36, end - start, trimMaterial, -deckHalf + 0.05, ly, (start + end) / 2, 'deckTrim')
+    box(geometries, group, 0.5, 0.36, end - start, trimMaterial, deckHalf - 0.05, ly, (start + end) / 2, 'deckTrim')
   }
-  box(geometries, group, deckHalf * 2, 0.36, 0.5, darkMaterial, 0, deckTopAt(0) + 0.18, noseZ + 0.05, 'deckTrim')
-  box(geometries, group, deckHalf * 2, 0.36, 0.5, darkMaterial, 0, deckTopAt(SEAM_COUNT) + 0.18, noseZ + length - 0.05, 'deckTrim')
+  box(geometries, group, deckHalf * 2, 0.36, 0.5, trimMaterial, 0, deckTopAt(0) + 0.18, noseZ + 0.05, 'deckTrim')
+  box(geometries, group, deckHalf * 2, 0.36, 0.5, trimMaterial, 0, deckTopAt(SEAM_COUNT) + 0.18, noseZ + length - 0.05, 'deckTrim')
 
   return { segLen }
 }

@@ -66,7 +66,21 @@ export interface HullParts {
   dispose(): void
 }
 
-export function buildHull(bodyMaterial: MeshStandardMaterial, darkMaterial: MeshStandardMaterial): HullParts {
+/** I6 material wiring, no geometry: `trimMaterial` is the sixth tone
+ *  (spec.TRIM_COLOR) and lands on the deck's own edge trim, the proud seam
+ *  lips and the nose tier-break strip — the three runs whose job was already
+ *  to draw an edge and which were dark-on-dark against everything around
+ *  them. `bodyLowMaterial` is the same tan carrying the downward grime map,
+ *  for the surfaces whose visible face is VERTICAL (nose tiers, underframe);
+ *  see materials/plateTexel.ts for why that has to be a second material and
+ *  not a second gradient. Both default to the old materials so the bounding
+ *  tests construct the identical geometry with four throwaway materials. */
+export function buildHull(
+  bodyMaterial: MeshStandardMaterial,
+  darkMaterial: MeshStandardMaterial,
+  trimMaterial: MeshStandardMaterial = darkMaterial,
+  bodyLowMaterial: MeshStandardMaterial = bodyMaterial,
+): HullParts {
   const group = new Group()
   group.name = 'hull'
   const geometries: BufferGeometry[] = []
@@ -77,16 +91,16 @@ export function buildHull(bodyMaterial: MeshStandardMaterial, darkMaterial: Mesh
 
   const deckHalf = BODY.halfWidth
 
-  buildDeck(geometries, group, bodyMaterial, darkMaterial, LENGTH, BODY.noseZ, deckHalf)
+  buildDeck(geometries, group, bodyMaterial, darkMaterial, LENGTH, BODY.noseZ, deckHalf, trimMaterial)
 
   // Underframe: the end regions keep the ORIGINAL full thickness (matching
   // the solid nose/tail blocks above, so no new gap opens under the
   // flank panels there); only the OPEN MIDDLE thins to a web, its
   // cross-members reaching the full envelope so they read as bracing.
   const midLen = BODY.tailBlockForeZ - BODY.noseBlockAftZ
-  rb(deckHalf * 2, BODY.underThickness, BODY.noseBlockAftZ - BODY.noseZ, 0.6, bodyMaterial, 0, BODY.underThickness / 2, (BODY.noseZ + BODY.noseBlockAftZ) / 2)
-  rb(deckHalf * 2, BODY.underThickness, BODY.tailZ - BODY.tailBlockForeZ, 0.6, bodyMaterial, 0, BODY.underThickness / 2, (BODY.tailBlockForeZ + BODY.tailZ) / 2)
-  rb(deckHalf * 2, WEB_THICKNESS, midLen, 0.3, bodyMaterial, 0, WEB_THICKNESS / 2, (BODY.noseBlockAftZ + BODY.tailBlockForeZ) / 2)
+  rb(deckHalf * 2, BODY.underThickness, BODY.noseBlockAftZ - BODY.noseZ, 0.6, bodyLowMaterial, 0, BODY.underThickness / 2, (BODY.noseZ + BODY.noseBlockAftZ) / 2)
+  rb(deckHalf * 2, BODY.underThickness, BODY.tailZ - BODY.tailBlockForeZ, 0.6, bodyLowMaterial, 0, BODY.underThickness / 2, (BODY.tailBlockForeZ + BODY.tailZ) / 2)
+  rb(deckHalf * 2, WEB_THICKNESS, midLen, 0.3, bodyLowMaterial, 0, WEB_THICKNESS / 2, (BODY.noseBlockAftZ + BODY.tailBlockForeZ) / 2)
   for (const cz of CROSS_MEMBER_Z) {
     b(deckHalf * 2, BODY.underThickness, CROSS_MEMBER_DEPTH, darkMaterial, 0, BODY.underThickness / 2, cz, 'crossMember')
   }
@@ -98,14 +112,14 @@ export function buildHull(bodyMaterial: MeshStandardMaterial, darkMaterial: Mesh
   // Forward housing: two stepped tiers dropping toward the cutter, with the
   // intake grille refitted onto the lower front tier's face.
   const noseStepZ = BODY.noseBlockAftZ - NOSE_REAR_LEN
-  rb(deckHalf * 2, NOSE_REAR_TOP - 2, NOSE_REAR_LEN, 1.0, bodyMaterial, 0, (2 + NOSE_REAR_TOP) / 2, (noseStepZ + BODY.noseBlockAftZ) / 2, 'noseTierRear')
-  rb(NOSE_FRONT_HALFWIDTH * 2, NOSE_FRONT_TOP - 2, noseStepZ - BODY.noseZ, 0.8, bodyMaterial, 0, (2 + NOSE_FRONT_TOP) / 2, (BODY.noseZ + noseStepZ) / 2, 'noseTierFront')
+  rb(deckHalf * 2, NOSE_REAR_TOP - 2, NOSE_REAR_LEN, 1.0, bodyLowMaterial, 0, (2 + NOSE_REAR_TOP) / 2, (noseStepZ + BODY.noseBlockAftZ) / 2, 'noseTierRear')
+  rb(NOSE_FRONT_HALFWIDTH * 2, NOSE_FRONT_TOP - 2, noseStepZ - BODY.noseZ, 0.8, bodyLowMaterial, 0, (2 + NOSE_FRONT_TOP) / 2, (BODY.noseZ + noseStepZ) / 2, 'noseTierFront')
   b(NOSE_FRONT_HALFWIDTH * 2 - 2, 4.0, 0.5, darkMaterial, 0, 4.5, BODY.noseZ + 0.4, 'noseGrille')
   // Tier-break trim: a dark strip on the rear tier's exposed shoulder, so
   // the width step (rear wider than the tapered front) reads as more than a
   // silhouette change. Pass-2 report: "boom"/"front" sit near the TAIL
   // looking toward the nose (verified empirically), not dead ahead of it.
-  b(deckHalf * 2, 0.3, 0.3, darkMaterial, 0, NOSE_FRONT_TOP, noseStepZ, 'noseTierTrim')
+  b(deckHalf * 2, 0.3, 0.3, trimMaterial, 0, NOSE_FRONT_TOP, noseStepZ, 'noseTierTrim')
 
   // Rear housing: a low processing tower at the tail, with vent slats.
   const tailLen = BODY.tailZ - BODY.tailBlockForeZ

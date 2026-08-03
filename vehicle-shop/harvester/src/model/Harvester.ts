@@ -1,54 +1,44 @@
 // vehicle-shop/harvester/src/model/Harvester.ts
-// ASSEMBLY — the only file that knows all five components. It owns the
-// materials, adds the components in a fixed order, drives the wheels from
-// the crawler state, and disposes everything. Each component is a pure
-// builder ({ group, dispose }) reading spec.ts, so this file has nothing to
-// get wrong beyond wiring — and the component test suite verifies each
-// part's bounding invariants independently.
+// ASSEMBLY — the only file that knows all five components. It adds them in a
+// fixed order, drives the wheels from the crawler state, and disposes
+// everything. Each component is a pure builder ({ group, dispose }) reading
+// spec.ts, so this file has nothing to get wrong beyond wiring — and the
+// component test suite verifies each part's bounding invariants independently.
+//
+// Round I6 moved the palette out to ./materials: the five bare hex constants
+// that used to live here became a set with authored weathering maps, a sixth
+// `trim` tone (spec.TRIM_COLOR) and per-link belt wear, which is more than an
+// assembly file should own. Every component below takes its extra material
+// roles as OPTIONAL trailing parameters defaulting to the old ones, so the
+// bounding tests still construct each part with four throwaway materials and
+// measure exactly the geometry they measured before.
 
-import { Group, MeshStandardMaterial } from 'three'
+import { Group } from 'three'
 import type { HarvesterModel, CrawlerState } from '../contracts'
+import { createHarvesterMaterials } from './materials'
 import { buildHull } from './hull'
 import { buildTracks } from './tracks'
 import { buildCutter } from './cutter'
 import { buildCab } from './cab'
 import { buildMachinery } from './machinery'
 
-/** Sand body — the film's desert-industrial platform tone. */
-const BODY_COLOR = 0xb8a87f
-/** Near-black pods, housings and machinery. */
-const DARK_COLOR = 0x2e2d29
-/** Wheels and trim caps — the machine's only bright hardware. */
-const WHEEL_COLOR = 0x6f6757
-/** Rusted-metal accents — boom, hoppers, cutter. */
-const ACCENT_COLOR = 0x6b4f35
-/** The belt's own red — user direction. Muted industrial red so it reads on
- *  the sand without shouting over the machine. */
-const BELT_COLOR = 0x8f2f2a
-
 export function createHarvester(): HarvesterModel {
   const root = new Group()
   root.name = 'harvester'
 
-  const bodyMaterial = new MeshStandardMaterial({ color: BODY_COLOR, roughness: 0.9, metalness: 0.05, flatShading: true })
-  const darkMaterial = new MeshStandardMaterial({ color: DARK_COLOR, roughness: 0.85, metalness: 0.1, flatShading: true })
-  const wheelMaterial = new MeshStandardMaterial({ color: WHEEL_COLOR, roughness: 0.6, metalness: 0.3, flatShading: true })
-  const accentMaterial = new MeshStandardMaterial({ color: ACCENT_COLOR, roughness: 0.7, metalness: 0.25, flatShading: true })
-  const beltMaterial = new MeshStandardMaterial({ color: BELT_COLOR, roughness: 0.8, metalness: 0.1, flatShading: true })
+  const m = createHarvesterMaterials()
 
-  const hull = buildHull(bodyMaterial, darkMaterial)
-  const tracks = buildTracks(darkMaterial, wheelMaterial, accentMaterial, beltMaterial)
-  const cutter = buildCutter(darkMaterial, accentMaterial)
-  const cab = buildCab(bodyMaterial, darkMaterial, accentMaterial)
-  const machinery = buildMachinery(darkMaterial, accentMaterial)
+  const hull = buildHull(m.body, m.dark, m.trim, m.bodyLow)
+  const tracks = buildTracks(m.dark, m.wheel, m.accent, m.belt, m.tire)
+  const cutter = buildCutter(m.dark, m.accent, m.trim, m.wheel)
+  const cab = buildCab(m.body, m.dark, m.accent, m.trim)
+  const machinery = buildMachinery(m.dark, m.accent, m.trim)
 
   root.add(hull.group)
   root.add(tracks.group)
   root.add(cutter.group)
   root.add(cab.group)
   root.add(machinery.group)
-
-  const materials = [bodyMaterial, darkMaterial, wheelMaterial, accentMaterial, beltMaterial]
 
   return {
     root,
@@ -65,7 +55,7 @@ export function createHarvester(): HarvesterModel {
       cutter.dispose()
       cab.dispose()
       machinery.dispose()
-      for (const material of materials) material.dispose()
+      m.dispose()
       root.clear()
     },
   }

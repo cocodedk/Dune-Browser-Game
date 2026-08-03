@@ -17,6 +17,7 @@
 import { Group, type MeshStandardMaterial } from 'three'
 import { TRACK } from '../spec'
 import { buildLink, type LinkPart } from './link'
+import { beltTintIndex } from './materials/palette'
 import {
   BELT_THICKNESS, LINK_COUNT, LINK_LENGTH, LINK_PITCH,
   advanceBeltPhase, linkLoopPosition, placeAlongLoop,
@@ -29,9 +30,22 @@ export interface BeltPart {
   dispose(): void
 }
 
+/** I6 material wiring, no geometry: `beltMaterial` may be a LIST of wear
+ *  tints, dealt round-robin across the chain.
+ *
+ *  WHY A LIST AND NOT A POSITION RULE. The round's destination was "grime the
+ *  ground run, lighten the top run", and that is unbuildable here — and would
+ *  be wrong if it were buildable. The links CYCLE: this is one closed chain,
+ *  and place() below moves every plate through the bottom run, the wrap and
+ *  the top run every lap. A material chosen by where a link currently IS
+ *  would have to be reassigned every frame, and a plate would visibly change
+ *  colour as it rounded a sprocket — the machine would look like it was
+ *  repainting itself. Wear belongs to the PLATE, so it travels with the
+ *  plate: one shared wear map, a few tints, dealt once at build time. The
+ *  chain reads used and unevenly worn at every phase, from every angle. */
 export function buildBelt(
   side: 1 | -1,
-  beltMaterial: MeshStandardMaterial,
+  beltMaterial: MeshStandardMaterial | readonly MeshStandardMaterial[],
   jointMaterial: MeshStandardMaterial,
 ): BeltPart {
   const group = new Group()
@@ -42,8 +56,11 @@ export function buildBelt(
   /** Metres of belt travel, modulo the loop. The entire animation. */
   let phase = 0
 
+  const tints = Array.isArray(beltMaterial) ? beltMaterial : [beltMaterial as MeshStandardMaterial]
+
   for (let i = 0; i < LINK_COUNT; i++) {
-    const link = buildLink(side, BELT_THICKNESS, LINK_LENGTH, LINK_PITCH, beltMaterial, jointMaterial)
+    const tint = tints[beltTintIndex(i, tints.length)]
+    const link = buildLink(side, BELT_THICKNESS, LINK_LENGTH, LINK_PITCH, tint, jointMaterial)
     link.group.name = 'belt-link'
     group.add(link.group)
     links.push(link)

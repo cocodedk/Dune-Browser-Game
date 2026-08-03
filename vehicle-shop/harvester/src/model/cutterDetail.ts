@@ -77,16 +77,14 @@ export const DRUM = {
   flightPerSide: 9,
 } as const
 
-/** Surface speed multiple over the machine's own crawl. A drum that turned
- *  at 1x would merely roll along the bed; a cutter has to outrun the
- *  advance to break material off it. */
+/** Surface speed multiple over the machine's crawl: a drum turning at 1x
+ *  would merely roll along the bed; a cutter must outrun the advance. */
 export const DRUM_GEAR = 3
 
-/** The machine has no throttle in CrawlerState that the paused debug handle
- *  can drive, and drive() sets the two TRACK speeds only (state.speed stays
- *  0). Their mean IS the forward speed by construction — kinematics builds
- *  trackLeft/Right as speed +- steer*STEER_DIFF — so reading the mean is
- *  both the correct forward speed and the one that moves under drive(). */
+/** The machine has no throttle in CrawlerState the paused debug handle can
+ *  drive — drive() sets the two TRACK speeds only, state.speed stays 0 — and
+ *  their mean IS the forward speed by construction, since kinematics builds
+ *  trackLeft/Right as speed +- steer*STEER_DIFF. */
 export function forwardSpeedOf(trackLeft: number, trackRight: number): number {
   return (trackLeft + trackRight) / 2
 }
@@ -124,8 +122,10 @@ export interface CutterSubAssembly {
 /** The drum: a barrel along X, seven twisted rings of picks around it, two
  *  opposite-hand helical flights that sweep what it cuts toward the centre
  *  throat, and an end disc each side. The GROUP sits on the axis, so the
- *  caller spins the whole thing with group.rotation.x. */
-export function buildDrum(dark: MeshStandardMaterial, accent: MeshStandardMaterial): CutterSubAssembly {
+ *  caller spins the whole thing with group.rotation.x. The materials are
+ *  ROLES, renamed at I6: `core` is barrel and flights (the assembly hands it
+ *  steel), `picks` teeth and discs (dark) — dark teeth on a light roller. */
+export function buildDrum(core: MeshStandardMaterial, picks: MeshStandardMaterial): CutterSubAssembly {
   const group = new Group()
   group.name = 'cutterDrum'
   group.position.set(0, DRUM.axisY, DRUM.axisZ)
@@ -142,12 +142,12 @@ export function buildDrum(dark: MeshStandardMaterial, accent: MeshStandardMateri
 
   const barrel = new CylinderGeometry(DRUM.radius, DRUM.radius, DRUM.length, 16)
   geometries.push(barrel)
-  add(barrel, dark, 'drumBarrel').rotation.z = Math.PI / 2
+  add(barrel, core, 'drumBarrel').rotation.z = Math.PI / 2
 
   const disc = new CylinderGeometry(DRUM.radius + 0.2, DRUM.radius + 0.2, 0.25, 16)
   geometries.push(disc)
   for (const side of [1, -1] as const) {
-    const mesh = add(disc, accent, 'drumDisc')
+    const mesh = add(disc, picks, 'drumDisc')
     mesh.rotation.z = Math.PI / 2
     mesh.position.x = side * (DRUM.length / 2 - 0.15)
   }
@@ -158,7 +158,7 @@ export function buildDrum(dark: MeshStandardMaterial, accent: MeshStandardMateri
   DRUM.stations.forEach((x, station) => {
     for (let ring = 0; ring < DRUM.picksAround; ring++) {
       const a = pickAngle(ring, station)
-      const mesh = add(pick, accent, 'drumPick')
+      const mesh = add(pick, picks, 'drumPick')
       mesh.position.set(x, pickR * Math.cos(a), pickR * Math.sin(a))
       mesh.rotation.x = a
     }
@@ -170,7 +170,7 @@ export function buildDrum(dark: MeshStandardMaterial, accent: MeshStandardMateri
   for (const side of [1, -1] as const) {
     for (let k = 0; k < DRUM.flightPerSide; k++) {
       const a = side * (0.4 + k * 0.34)
-      const mesh = add(flight, dark, 'drumFlight')
+      const mesh = add(flight, core, 'drumFlight')
       mesh.position.set(side * (0.6 + k * 0.85), flightR * Math.cos(a), flightR * Math.sin(a))
       mesh.rotation.x = a
     }

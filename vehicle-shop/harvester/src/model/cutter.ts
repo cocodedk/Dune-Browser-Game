@@ -41,9 +41,18 @@ const RAM_TOP = { y: 8.2, z: -24.2 }
 const RAM_FOOT = { y: ARM.top + 0.1, z: -29.0 }
 const RAM_X = 5.5
 
+/** I6 material wiring, no geometry. The I3 panel read the head as "floating,
+ *  disconnected"; the cause was tonal, since boom, fairings, head, rams and
+ *  drum all came from the same two tones. Roles now: the head takes a TRIM
+ *  cap outlining its mass, the drum a steel core with dark picks, and the
+ *  RAMS go bright (steel barrel, trim rod) against the dark fairings: two
+ *  pale diagonals from nose to boom are what make the raise/lower mechanism,
+ *  and the head's ATTACHMENT, visible. New roles default to the old ones. */
 export function buildCutter(
   darkMaterial: MeshStandardMaterial,
   accentMaterial: MeshStandardMaterial,
+  trimMaterial: MeshStandardMaterial = accentMaterial,
+  steelMaterial: MeshStandardMaterial = darkMaterial,
 ): CutterParts {
   const group = new Group()
   group.name = 'cutter'
@@ -102,7 +111,7 @@ export function buildCutter(
   const headZ = HEAD.frontZ + HEAD.depth / 2
   const headY = HEAD.bottomY + HEAD.height / 2
   rb(HEAD.halfWidth * 2, HEAD.height, HEAD.depth, 0.8, darkMaterial, 0, headY, headZ, 'cutterHead')
-  b(HEAD.halfWidth * 2 + 0.4, 0.4, HEAD.depth + 0.2, accentMaterial, 0, headY + HEAD.height / 2 + 0.1, headZ, 'cutterHeadTrim')
+  b(HEAD.halfWidth * 2 + 0.4, 0.4, HEAD.depth + 0.2, trimMaterial, 0, headY + HEAD.height / 2 + 0.1, headZ, 'cutterHeadTrim')
   b(HEAD.halfWidth * 2 - 5, 2.4, 0.5, darkMaterial, 0, DRUM.axisY + 0.9, HEAD.frontZ + 0.2, 'cutterThroat')
   for (const side of [1, -1] as const) {
     for (const rz of [headZ - 1.2, headZ + 1.2] as const) {
@@ -112,12 +121,12 @@ export function buildCutter(
     rb(0.7, 4.4, 4.2, 0.3, darkMaterial, side * 8.75, 3.05, DRUM.axisZ + 0.3, 'cutterCheek')
   }
   // Shroud over the drum, canted down toward the sand at its leading edge.
-  const shroud = plate(16.8, 0.7, 4.4, 0.25, accentMaterial, 'cutterShroud')
+  const shroud = plate(16.8, 0.7, 4.4, 0.25, steelMaterial, 'cutterShroud')
   shroud.position.set(0, 5.7, DRUM.axisZ + 0.35)
   shroud.rotation.x = -0.18
 
   // ---- the drum, and the fixed lip teeth behind its sweep -----------------
-  const drum = buildDrum(darkMaterial, accentMaterial)
+  const drum = buildDrum(steelMaterial, darkMaterial)
   group.add(drum.group)
   for (const tx of DRUM.stations) {
     b(1.9, 1.9, 2.6, accentMaterial, tx, 1.25, HEAD.frontZ + 1.3, 'cutterTooth')
@@ -134,8 +143,8 @@ export function buildCutter(
   for (const side of [1, -1] as const) {
     const [barrelY, barrelZ] = at(0.32)
     const [rodY, rodZ] = at(0.72)
-    cyl(0.55, ramLen * 0.64, 10, darkMaterial, side * RAM_X, barrelY, barrelZ, ramRot, 'cutterRam')
-    cyl(0.3, ramLen * 0.56, 8, accentMaterial, side * RAM_X, rodY, rodZ, ramRot, 'cutterRamRod')
+    cyl(0.55, ramLen * 0.64, 10, steelMaterial, side * RAM_X, barrelY, barrelZ, ramRot, 'cutterRam')
+    cyl(0.3, ramLen * 0.56, 8, trimMaterial, side * RAM_X, rodY, rodZ, ramRot, 'cutterRamRod')
     b(1.1, 1.0, 1.0, darkMaterial, side * RAM_X, RAM_TOP.y, RAM_TOP.z, 'cutterRamAnchor')
     b(1.0, 0.9, 0.9, darkMaterial, side * RAM_X, RAM_FOOT.y, RAM_FOOT.z, 'cutterRamFoot')
   }

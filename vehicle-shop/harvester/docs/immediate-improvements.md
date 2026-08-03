@@ -50,12 +50,12 @@ What needs work — by priority
 
  ### 6. Palette and materials
 
- - [ ] Tonal hierarchy — currently 5 flat-shaded materials with no texture. The body (0xb8a87f) and accent (0x6b4f35) are close in tone; the dark (0x2e2d29) is
+ - [x] Tonal hierarchy — (I6: trim landed; cab framing verified by lead crop) currently 5 flat-shaded materials with no texture. The body (0xb8a87f) and accent (0x6b4f35) are close in tone; the dark (0x2e2d29) is
        near-black. Add a 6th material: a lighter "trim" (0xd4c8a0) for deck edges, cab window frames, and equipment highlights.
- - [ ] Panel-line texture — paint panel lines, welds and weathering into DataTexture maps (the ornithopter's hullWeathering.ts pattern). This is the single biggest
+ - [x] Panel-line texture — (I6: DataTexture plate maps on real seam stations; critic: authored, not noise) paint panel lines, welds and weathering into DataTexture maps (the ornithopter's hullWeathering.ts pattern). This is the single biggest
        visual upgrade for the body — it turns flat-shaded boxes into a machine.
- - [ ] Belt wear — the red belt is a flat colour. Add a darker grime DataTexture on the lower run links (dust accumulation) and lighten the top run (less contact).
- - [ ] Wheel grime — the wheel tires are clean grey. Add a dark dirt ring at the tire's outer radius (where it contacts the belt).
+ - [x] Belt wear — (I6: per-plate wear travelling with the cycling chain; debug-red gone, still red-family) the red belt is a flat colour. Add a darker grime DataTexture on the lower run links (dust accumulation) and lighten the top run (less contact).
+ - [x] Wheel grime — (I6: contact-crown dirt ring, one texture for all wheels; distance read waits on I7 light) the wheel tires are clean grey. Add a dark dirt ring at the tire's outer radius (where it contacts the belt).
 
  ### 7. Scale and proportion
 

@@ -22,10 +22,20 @@ export interface CabParts {
   dispose(): void
 }
 
+/** I6 material wiring, no geometry: `trimMaterial` (spec.TRIM_COLOR) takes the
+ *  cab's SILL and its ROOF CAP — the two bands that already sandwich the dark
+ *  wrap glass. Together they are the window frame the round asks for, without
+ *  a new mesh: the sill spans deck+0..deck+1.4 and the glass starts at
+ *  deck+1.3; the cap spans roof-0.5..roof and the glass ends at roof-0.3. A
+ *  light band immediately above and below a dark band is a framed window from
+ *  any distance, and it is what tells the eye this box is the command station
+ *  and not another deck fixture — the I4 panel's finding. Defaults to accent
+ *  so the cab's bounding tests build the same geometry as before. */
 export function buildCab(
   bodyMaterial: MeshStandardMaterial,
   darkMaterial: MeshStandardMaterial,
   accentMaterial: MeshStandardMaterial,
+  trimMaterial: MeshStandardMaterial = accentMaterial,
 ): CabParts {
   const group = new Group()
   group.name = 'cab'
@@ -64,7 +74,7 @@ export function buildCab(
 
   // Lower body, then the upper band holding the glass — the two-step read.
   // Rounded: the cab is a heavy industrial mass, not a crate.
-  rbox(halfW * 2, 1.4, halfD * 2, 0.6, bodyMaterial, 0, cabBottom + 0.7, zCenter)
+  rbox(halfW * 2, 1.4, halfD * 2, 0.6, trimMaterial, 0, cabBottom + 0.7, zCenter)
   const wallHalfD = halfD - 0.3
   rbox(halfW * 2 + 0.3, roofTop - cabBottom - 1.4, wallHalfD * 2, 0.5, bodyMaterial, 0, (roofTop + cabBottom + 1.4) / 2, zCenter)
 
@@ -81,7 +91,7 @@ export function buildCab(
     box(0.2, glassH, sideDepth, darkMaterial, side * (wallHalfW + 0.1), glassY, wallFrontZ + sideDepth / 2, 'cabGlassSide')
   }
 
-  rbox(halfW * 2 + 0.6, 0.5, halfD * 2 + 0.6, 0.2, bodyMaterial, 0, roofTop - 0.25, zCenter)
+  rbox(halfW * 2 + 0.6, 0.5, halfD * 2 + 0.6, 0.2, trimMaterial, 0, roofTop - 0.25, zCenter)
 
   // ROOF DETAIL — an equipment box so the flat roof doesn't read empty.
   // Offset from the antenna (x=2.5) so the two never intersect.
