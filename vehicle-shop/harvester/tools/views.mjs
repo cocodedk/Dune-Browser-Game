@@ -4,8 +4,9 @@
 // distance in both. Split out of shoot.mjs (round I0) to keep that file
 // under the 200-line cap once motion mode landed.
 //
-// azimuth 0 looks up the nose, 90 is the starboard flank, elevation 90 is
-// straight down. Distance is in machine lengths (OVERALL.length = 60m).
+// azimuth 0 sits ahead of the nose looking back at the machine, 180 sits
+// behind the tail, 90 is the starboard flank, elevation 90 is straight down.
+// Distance is in machine lengths (OVERALL.length = 60m).
 // NEGATIVE azimuths are the port side, where the sun sits (main.ts), so
 // those flanks read lit; positive azimuths are the darker starboard side.
 //

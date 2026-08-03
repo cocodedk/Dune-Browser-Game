@@ -19,8 +19,9 @@ export interface CameraRig {
   setMode(mode: CameraMode): void
   /**
    * Park the camera on a sphere around the machine, for reference-matched
-   * captures. azimuth 0 looks up the nose, 90 is the starboard flank;
-   * elevation 90 is directly overhead. distance is in machine lengths.
+   * captures. azimuth 0 sits ahead of the nose looking back at the machine,
+   * 180 sits behind the tail, and 90 is the starboard flank; elevation 90 is
+   * directly overhead. distance is in machine lengths.
    */
   setViewpoint(azimuthDeg: number, elevationDeg: number, distance: number): void
   update(state: Readonly<CrawlerState>, elapsed: number): void
@@ -76,7 +77,11 @@ export function createCameraRig(targetRef: { getWorldPosition(v: Vector3): Vecto
         const az = (free.azimuth * Math.PI) / 180
         const el = (free.elevation * Math.PI) / 180
         const r = OVERALL.length * free.distance
-        scratch.set(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az))
+        // Negated z: azimuth 0 must sit ahead of the nose (-Z, machine
+        // unrotated), not behind the tail. Mirroring the eye across the X
+        // axis flips z only, so the ±90 flank placements (x) are untouched —
+        // az -90 keeps parking the camera on the lit port side (x < 0).
+        scratch.set(Math.cos(el) * Math.sin(az), Math.sin(el), -Math.cos(el) * Math.cos(az))
         scratch.applyQuaternion(targetRef.getWorldQuaternion(freeRotation))
         camera.position.set(
           target.x + scratch.x * r,
