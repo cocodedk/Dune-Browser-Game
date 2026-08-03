@@ -156,6 +156,37 @@ silently-advancing clock, M mute. 17 new pure-layer tests (1573/1573); live node
 readbacks proven at parked-idle vs full climb. THE TIMBRE VERDICT BELONGS TO THE
 USER'S EAR — no agent listened.
 
+## QUEUE COMPLETE, 2026-08-03 ~10:20 — the /loop ran "til the end of it" and got there.
+
+Four rounds landed, verified and pushed this morning, in order:
+
+**13b (`d012dba`) — the whine is strain, not siren.** Capped 2116->1580Hz via a
+C1 softKnee; found and fixed the real defect (whine louder than the engine bed at
+EVERY throttle). USER'S EAR STILL OWES THE ACCEPTANCE at full throttle.
+
+**15 (`8718ee2`) — quarter lights.** Both quarter panels glazed (second user-authorized
+exception); horizon row 21%->50% daylight in three runs; the builder corrected the
+lead's metric (frames cannot measure bearings — +/-12deg cones can, and they were 0.0%
+red at yaw -25/-30); 12,348 new enclosure rays, zero escapes.
+
+**14 (`27f5b1c`) — the wing fold switch.** F stows all eight blades along the boom
+(landed + beat 0 only; mid-flight refused; takeoff-while-stowed refused with reasoning).
+Fold angles GRID-SEARCHED (flat -90 collides with a gear hip at every tilt); worst
+path clearance 0.1575m vs 0.1 bar; unfold bit-equal to spread; the stowed side view is
+the film's parked silhouette, lead-verified by eye.
+
+**16 (`f6cbb02`) — rails on the pane edge.** The two boxes floating in the glazing
+since 6b were midpoint-boxed side rails; now lofted along the edge curves, 6/6 bands
+within 0.019m; forwardCone/liveView bit-identical; builder self-caught a mesh-budget
+regression and fixed the cause, not the threshold.
+
+Totals: **1669/1669 tests** (1476 at session start yesterday), gallery refreshed
+(https://claude.ai/code/artifact/887f2ab2-70fe-4f50-b72f-6bf1ca8e481e), PR #18 carries
+everything. OPEN ITEMS, all user-acceptance or user-decision: the whine at full
+throttle (ear), the fold in person (F on the sand), the critic panel's remaining
+fidelity wishlist (display emission, glass Fresnel, combiner symbology, control props
+— documented in the final-panel entry, priced at 3-4 rounds, NOT scheduled).
+
 ## PAUSED HERE, 2026-08-03 ~00:30 — user's order: "pause the work when the current
 ## run is finished. it is time for sleep." Read this block first in a fresh session.
 
