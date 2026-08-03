@@ -22,6 +22,11 @@
 
 export { PROVENANCE } from './provenance'
 
+/** I6 palette delta (immediate-improvements §6): the SIXTH material — a
+ *  lighter trim tone for deck edges, cab window frames and equipment
+ *  highlights, so the body/accent/dark triad gains a legible top note. */
+export const TRIM_COLOR = 0xd4c8a0
+
 export const OVERALL = {
   /** Full footprint: cutter tip (-36) to the tail face (+24). The hull alone
    *  (measured from the 3MF) is 48m; the film's cutter reaches 12m past it. */
