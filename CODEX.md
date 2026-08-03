@@ -45,6 +45,10 @@ src/
 - `src/ui/`: React panels and Zustand store, no scene creation logic
 - `src/EventBus.ts`: the contract boundary between the renderer and React
 - `src/data/`: static authored content only
+- `vehicle-shop/<name>/`: standalone asset-workshop sub-apps — vehicles today, but the
+  pattern hosts any asset type. Game code imports only a shop's public surface
+  (`src/model/**`, `contracts.ts`, `spec.ts`) via the `@shop` alias, never a bare path;
+  ESLint enforces the fence. See `docs/PRD/dune92/04-asset-pipeline.md`.
 
 ## Working Rules
 
@@ -79,23 +83,34 @@ src/
 ```bash
 npm run lint
 npx tsc --noEmit
+npm run shop:check
 npm run build
 npm run test:unit
 npm test
+
+# scaffold a new asset workshop — not part of the verification gate above
+npm run shop:new -- <name>
 ```
 
 ### What They Mean
 
 - `npm run build` runs TypeScript, Vite production build, and bundle-budget enforcement
-- `npm run test:unit` runs Vitest unit tests (fast, no browser, pure functions)
+- `npm run test:unit` runs Vitest unit tests (fast, no browser, pure functions); this
+  includes every `vehicle-shop/**/*.test.ts`, not just `src/`
 - `npm test` runs Playwright E2E tests against `vite preview`
+- `npm run shop:check` type-checks every shop under `vehicle-shop/` against its own
+  `tsconfig.json` — a separate TS program the root `tsc -b` never sees
+- `npm run shop:new -- <name>` scaffolds a new `vehicle-shop/<name>/` dev harness (public
+  surface, a passing seam test, registered npm scripts) — see
+  `docs/PRD/dune92/04-asset-pipeline.md`
 - The pre-commit hook runs:
   1. file-length enforcement
   2. lint
   3. type-check
-  4. build
-  5. Vitest unit tests
-  6. Playwright E2E tests
+  4. shop type-check
+  5. build
+  6. Vitest unit tests
+  7. Playwright E2E tests
 
 ## Enforced Safeguards
 
@@ -103,7 +118,8 @@ npm test
 
 - `.githooks/pre-commit` is intentionally stricter than the old docs implied
 - It blocks commits if staged source-like files exceed `200` lines
-- It also blocks commits on lint, type, build, Vitest, or Playwright failures
+- It also blocks commits on lint, type, shop type-check, build, Vitest, or Playwright
+  failures
 
 ### Bundle Budgets
 
@@ -115,6 +131,7 @@ Current budget classes:
 - `three-addons-*.js`: `200_000` bytes
 - `react-vendor-*.js`: `250_000` bytes
 - `game-*.js`: `200_000` bytes
+- `vehicle-*.js`: `150_000` bytes — one chunk per `vehicle-shop/<name>/` release
 - fallback `*.js`: `500_000` bytes
 
 Do not "fix" a budget failure by only raising the threshold unless there is a clear, justified reason.
@@ -170,5 +187,8 @@ sh .githooks/pre-commit
 - `.githooks/pre-commit`: enforced local quality gate
 - `scripts/check-file-length.sh`: `200`-line enforcement
 - `scripts/check-bundle-size.mjs`: bundle budget enforcement
+- `scripts/check-shops.mjs`: shop type-check enforcement (`npm run shop:check`)
+- `scripts/new-shop.mjs`: scaffolds a new `vehicle-shop/<name>/` (`npm run shop:new`)
+- `docs/PRD/dune92/04-asset-pipeline.md`: the shop-to-game asset release pipeline
 - `vite.config.ts`: chunking rules
 - `playwright.config.ts`: browser test setup

@@ -71,3 +71,18 @@ partially done: procedural ornithopter, dioramas and per-character portrait
 direction exist; generated portraits, painted backdrops and audio do not.
 
 See [HANDOFF.md](HANDOFF.md) for verified state, known issues and next steps.
+
+## Asset pipeline
+
+Standalone asset workshops (`vehicle-shop/<name>/`) now release into the game through a
+fenced seam — scaffold, gauntlet in the shop, adapter in the game, measure, look gate. See
+[04-asset-pipeline.md](04-asset-pipeline.md) for the full lifecycle and the ESLint-enforced
+fence.
+
+Both vehicles are released through the seam: `src/game-render/machines/Harvester.ts`
+wraps the shop harvester via `@shop/harvester` (measured: 60 fps held, chunk 23.8 KB of
+150 KB), and `src/game-render/modes/flight/Ornithopter.ts` wraps the shop craft via
+`@shop/ornihopter`, replacing the Stage-22 procedural ornithopter (measured: cost-neutral,
+130 vs 106 draw calls, −3k triangles). Open items: the user's look-gate verdict on each
+(env-map opt-in for the harvester, gear-up-in-cruise for the thopter are the candidate
+follow-ups), and a shop-side test pinning `CRUISE_BEAT_HZ` to `flight/constants.ts`.
