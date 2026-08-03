@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "playwright test",
     "test:unit": "vitest run",
+    "shop:check": "node scripts/check-shops.mjs",
     "shop:thopter": "vite vehicle-shop/ornihopter",
     "shop:thopter:build": "vite build vehicle-shop/ornihopter",
     "shop:thopter:check": "tsc -p vehicle-shop/ornihopter --noEmit",

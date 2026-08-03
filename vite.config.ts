@@ -1,10 +1,16 @@
 /// <reference types="vitest/config" />
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
   base: './',
+  resolve: {
+    // Shop release seam: game imports the shop public surface only, and
+    // ESLint (eslint.config.js) enforces that boundary at lint time.
+    alias: { '@shop': fileURLToPath(new URL('./vehicle-shop', import.meta.url)) },
+  },
   test: {
     environment: 'node',
     // vehicle-shop/ holds standalone rigs for building one vehicle at a time
@@ -27,6 +33,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // Each shop asset ships as its own budgeted chunk (scripts/check-bundle-size.mjs).
+          if (id.includes('/vehicle-shop/')) {
+            return `vehicle-${id.split('/vehicle-shop/')[1].split('/')[0]}`
+          }
+
           if (!id.includes('node_modules')) {
             return undefined
           }

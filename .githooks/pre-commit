@@ -5,7 +5,7 @@ set -eu
 scripts/check-file-length.sh
 
 # Fast smoke check: lint + type-check + build
-SMOKE_CMD="npm run lint && npx tsc --noEmit && npm run build"
+SMOKE_CMD="npm run lint && npx tsc --noEmit && npm run shop:check && npm run build"
 TEST_CMD="npm test"
 
 eval "$SMOKE_CMD"
