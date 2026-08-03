@@ -62,23 +62,23 @@ What needs work — by priority
  - [x] Scale posts near the machine — (I5: 3 near posts + 4 m groundcar staged 8 m off the track) the 10m posts are far away. Add 2-3 posts or a small vehicle (a 4m groundcar) parked beside the harvester so the eye has an
        immediate size reference.
  - [x] Crew figure — (I5: 1.8 m, accent torso, reads on the lit plate beside the cab; wiring test-pinned) add a single 1.8m standing figure on the deck near the cab. A human silhouette instantly anchors the machine's scale.
- - [ ] Dust at the tracks — the belt runs on sand with no visible dust. Add 2 dust plumes (semi-transparent expanding planes) behind the rear sprockets, driven by
+ - [x] Dust at the tracks — (I7: two speed-driven plumes behind the rear sprockets; zero at rest, test-pinned) the belt runs on sand with no visible dust. Add 2 dust plumes (semi-transparent expanding planes) behind the rear sprockets, driven by
        track speed. The most cinematic missing element.
 
  ### 8. Lighting and atmosphere
 
- - [ ] Lower the sun — the sun is high (560m up, 190m lateral). A lower sun (300m up) gives longer shadows across the deck and the track housing, making the facets
+ - [x] Lower the sun — (I7: 300 m, constant test-pinned) the sun is high (560m up, 190m lateral). A lower sun (300m up) gives longer shadows across the deck and the track housing, making the facets
        and panel lines read.
- - [ ] Add a fill light — a second low-intensity warm light from the opposite side, so the starboard flank isn't flat black on the turntable's starboard views.
- - [ ] Fog density — the fog (400m near, 3400m far) barely affects a 60m machine at 90m camera distance. Tighten to 200m / 1500m for a hazier desert read.
+ - [x] Add a fill light — (I7: warm starboard fill 0.55; starboard flank measured legible, restraint kept) a second low-intensity warm light from the opposite side, so the starboard flank isn't flat black on the turntable's starboard views.
+ - [x] Fog density — (I7: 200/1500, test-pinned) the fog (400m near, 3400m far) barely affects a 60m machine at 90m camera distance. Tighten to 200m / 1500m for a hazier desert read.
 
  ### 9. Motion
 
  - [x] Belt scrolling — (I1) (listed above, restating as motion) the chain links translate along the bottom run and rotate around the sprockets, driven by
        trackLeft/trackRight. This makes the machine look alive when moving.
  - [x] Cutter drum rotation — (I3: speed-driven, feeding direction verified 3 ways) the grinder head's drum (if added) rotates at a speed proportional to throttle.
- - [ ] Cab antenna sway — a subtle rotation on the antenna, driven by speed. Cheap, alive.
- - [ ] Dust emission — particles or billboard plumes behind the tracks, driven by speed.
+ - [x] Cab antenna sway — (I7: speed-driven, zero at rest, bounded; code-verified) a subtle rotation on the antenna, driven by speed. Cheap, alive.
+ - [x] Dust emission — (I7: deterministic, dt-driven, byte-identical harness preserved) particles or billboard plumes behind the tracks, driven by speed.
 
  ### 10. Tests and gates
 

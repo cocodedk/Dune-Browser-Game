@@ -12,8 +12,9 @@
 // uses for `flankPanel`/`crossMember`.
 
 import { describe, it, expect } from 'vitest'
-import { buildCab } from './cab'
+import { buildCab, advanceAntennaPhase, antennaSwayAngle, ANTENNA_SWAY_MAX, ANTENNA_SWAY_RATE } from './cab'
 import { BODY, CAB } from '../spec'
+import { MAX_SPEED } from '../crawler/constants'
 import { mats, bounds, named } from './testSupport'
 
 describe('cab component', () => {
@@ -138,6 +139,50 @@ describe('cab component', () => {
     // there.
     expect(b.max.z).toBeLessThanOrEqual(-3)
     group.clear()
+    for (const mat of Object.values(m)) mat.dispose()
+  })
+
+  // I7 (immediate-improvements §9): antenna sway, driven by speed — "cheap,
+  // alive, invisible when parked". Pure-maths claims first, then the wired
+  // pivot.
+  it('antenna sway is zero at rest, at any phase', () => {
+    for (const phase of [0, Math.PI / 2, Math.PI, 4.2]) {
+      expect(antennaSwayAngle(phase, 0, 0)).toBe(0)
+    }
+  })
+
+  it('antenna sway is bounded at, and beyond, max speed', () => {
+    // sin(pi/2) = 1, so this phase reads the amplitude directly.
+    expect(antennaSwayAngle(Math.PI / 2, MAX_SPEED, MAX_SPEED)).toBeCloseTo(ANTENNA_SWAY_MAX, 6)
+    // Driving past the machine's own max speed must not sway further.
+    expect(antennaSwayAngle(Math.PI / 2, MAX_SPEED * 4, MAX_SPEED * 4)).toBeCloseTo(ANTENNA_SWAY_MAX, 6)
+  })
+
+  it('antenna phase advances only by dt, never by speed', () => {
+    expect(advanceAntennaPhase(0.5, 0)).toBe(0.5)
+    expect(advanceAntennaPhase(0, 1)).toBeGreaterThan(0)
+  })
+
+  it('the wired antenna pivot stays at zero while parked, for any duration', () => {
+    const m = mats()
+    const cab = buildCab(m.body, m.dark, m.accent)
+    const pivot = named(cab.group, 'antennaPivot')[0]
+    for (let i = 0; i < 5; i++) cab.update(0, 0, 0.37)
+    expect(pivot.rotation.z).toBe(0)
+    cab.group.clear()
+    for (const mat of Object.values(m)) mat.dispose()
+  })
+
+  it('the wired antenna pivot sways, bounded, once driving', () => {
+    const m = mats()
+    const cab = buildCab(m.body, m.dark, m.accent)
+    const pivot = named(cab.group, 'antennaPivot')[0]
+    // dt chosen so the phase lands exactly at pi/2 from its phase-0 start —
+    // sin(pi/2) = 1, reading the peak amplitude directly, no guessing.
+    const dtToPeak = (Math.PI / 2) / ANTENNA_SWAY_RATE
+    cab.update(MAX_SPEED, MAX_SPEED, dtToPeak)
+    expect(pivot.rotation.z).toBeCloseTo(ANTENNA_SWAY_MAX, 6)
+    cab.group.clear()
     for (const mat of Object.values(m)) mat.dispose()
   })
 })

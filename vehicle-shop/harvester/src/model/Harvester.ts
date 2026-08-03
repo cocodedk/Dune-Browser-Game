@@ -21,6 +21,7 @@ import { buildTracks } from './tracks'
 import { buildCutter } from './cutter'
 import { buildCab } from './cab'
 import { buildMachinery } from './machinery'
+import { buildDustPlumes } from '../stage/dust'
 
 export function createHarvester(): HarvesterModel {
   const root = new Group()
@@ -33,12 +34,18 @@ export function createHarvester(): HarvesterModel {
   const cutter = buildCutter(m.dark, m.accent, m.trim, m.wheel)
   const cab = buildCab(m.body, m.dark, m.accent, m.trim)
   const machinery = buildMachinery(m.dark, m.accent, m.trim)
+  // I7 (immediate-improvements §7 dust): two plumes behind the rear
+  // sprockets, parented here so they inherit the machine's own pose exactly
+  // like every other component — see stage/dust.ts for why they are
+  // deterministic and exactly zero while parked.
+  const dust = buildDustPlumes()
 
   root.add(hull.group)
   root.add(tracks.group)
   root.add(cutter.group)
   root.add(cab.group)
   root.add(machinery.group)
+  root.add(dust.group)
 
   return {
     root,
@@ -48,6 +55,11 @@ export function createHarvester(): HarvesterModel {
       // is the forward speed, and it is what the paused debug handle's
       // drive() actually sets — see forwardSpeedOf() in cutterDetail.ts.
       cutter.update(state.trackLeft, state.trackRight, dt)
+      // I7: the antenna's sway (cab) and the dust plumes (stage) read the
+      // same two signed track speeds through this one update path, so the
+      // I0 harness's drive()/tick() drives them exactly like the belt scroll.
+      cab.update(state.trackLeft, state.trackRight, dt)
+      dust.update(state.trackLeft, state.trackRight, dt)
     },
     dispose(): void {
       hull.dispose()
@@ -55,6 +67,7 @@ export function createHarvester(): HarvesterModel {
       cutter.dispose()
       cab.dispose()
       machinery.dispose()
+      dust.dispose()
       m.dispose()
       root.clear()
     },

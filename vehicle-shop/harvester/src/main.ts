@@ -2,7 +2,7 @@
 // Boot and frame loop for the standalone harvester test area.
 
 import type { Object3D } from 'three'
-import { createStage } from './stage/scene'
+import { createStage, SUN_OFFSET, FILL_OFFSET } from './stage/scene'
 import { createTerrain } from './stage/terrain'
 import { createCrawler } from './crawler/crawler'
 import { createHarvester } from './model/Harvester'
@@ -82,9 +82,18 @@ function frame(now: number): void {
   rig.update(state, elapsed)
 
   // Keep the sun's shadow frustum over the machine; it is a 520m box around
-  // the light target and the test area is 4km across.
+  // the light target and the test area is 4km across. The fill light has no
+  // shadow to keep in frame, but it follows the machine for the same reason
+  // the sun does: a fixed-in-world light would drift out of a useful angle
+  // as soon as the machine drives away from the origin.
   stage.sun.target.position.set(state.position.x, state.position.y, state.position.z)
-  stage.sun.position.set(state.position.x - 190, state.position.y + 560, state.position.z + 330)
+  stage.sun.position.set(
+    state.position.x + SUN_OFFSET.x, state.position.y + SUN_OFFSET.y, state.position.z + SUN_OFFSET.z,
+  )
+  stage.fill.target.position.set(state.position.x, state.position.y, state.position.z)
+  stage.fill.position.set(
+    state.position.x + FILL_OFFSET.x, state.position.y + FILL_OFFSET.y, state.position.z + FILL_OFFSET.z,
+  )
 
   hud.update(state, rig.mode, fps)
   stage.renderer.render(stage.scene, rig.camera)

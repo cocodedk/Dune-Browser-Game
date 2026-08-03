@@ -12,13 +12,50 @@
 // for. The old front-glass slant is dropped: a rotated plane's corners
 // don't sit flush with an unrotated side panel, and a flush corner is what
 // makes the wrap read continuous instead of two panes with a gap.
+//
+// I7 (immediate-improvements §9): the antenna gained a subtle SWAY driven
+// by speed. See antennaSwayAngle below for why it is exactly zero at rest
+// and bounded no matter how hard the machine drives.
 
 import { BoxGeometry, CylinderGeometry, Group, Mesh, type BufferGeometry, type MeshStandardMaterial } from 'three'
 import { BODY, CAB } from '../spec'
 import { roundedBox } from './rounded'
+import { wrapMod } from './beltPhase'
+import { forwardSpeedOf } from './cutterDetail'
+import { MAX_SPEED } from '../crawler/constants'
+
+/** Cheap and alive, never busy: a phase that advances at a FIXED rate (so
+ *  the sway has a natural rhythm) but an AMPLITUDE of 0 at rest and capped
+ *  at ANTENNA_SWAY_MAX regardless of how far past MAX_SPEED the two tracks
+ *  are driven — "subtle... bounded at max speed", the round's own words. */
+export const ANTENNA_SWAY_MAX = 0.1
+export const ANTENNA_SWAY_RATE = 2 * Math.PI * 0.6 // ~0.6 Hz, rad/s
+const ANTENNA_SWAY_CYCLE = 2 * Math.PI
+
+/** Advances only by dt — no wall clock, no speed dependence of its own — so
+ *  a paused debug tick(dt) is exactly reproducible like every other phase
+ *  in this shop. */
+export function advanceAntennaPhase(phase: number, dt: number): number {
+  return wrapMod(phase + ANTENNA_SWAY_RATE * dt, ANTENNA_SWAY_CYCLE)
+}
+
+/** forwardSpeedOf is the same helper the cutter's drum reads (cutterDetail
+ *  .ts): the mean of the two signed track speeds, which is exactly what the
+ *  paused debug handle's drive() sets. Zero at rest by construction (both
+ *  track speeds 0 -> amplitude 0, whatever the phase); the min() caps the
+ *  amplitude at ANTENNA_SWAY_MAX past MAX_SPEED instead of growing further. */
+export function antennaSwayAngle(phase: number, trackLeft: number, trackRight: number): number {
+  const speed = Math.abs(forwardSpeedOf(trackLeft, trackRight))
+  if (speed <= 0) return 0
+  const amplitude = ANTENNA_SWAY_MAX * Math.min(speed / MAX_SPEED, 1)
+  return amplitude * Math.sin(phase)
+}
 
 export interface CabParts {
   group: Group
+  /** Sway the antenna from the crawler's signed track speeds — zero at
+   *  rest, bounded at max speed. */
+  update(trackLeft: number, trackRight: number, dt: number): void
   dispose(): void
 }
 
@@ -106,17 +143,32 @@ export function buildCab(
     box(1.2, 0.12, 0.15, darkMaterial, 0, y, ladderZ, 'ladderRung')
   }
 
-  // A small antenna poking above the roof — cheap scale cue. Kept short so
-  // the machine's overall height stays inside OVERALL.height + 2.
-  const antenna = new CylinderGeometry(0.08, 0.08, 1.6, 6)
+  // A small antenna poking above the roof — cheap scale cue, and (I7) a
+  // subtle sway with speed. Pivoted at its ROOF-LEVEL base, not its own
+  // centre, so update() bends it like a whip antenna rather than spinning
+  // it around its own middle. The pivot's world position (and so the
+  // mesh's, before any sway) is identical to the old single-mesh version:
+  // base at roofTop + 0.4 - height/2, mesh offset back up by height/2.
+  const antennaHeight = 1.6
+  const antennaPivot = new Group()
+  antennaPivot.name = 'antennaPivot'
+  antennaPivot.position.set(2.5, roofTop + 0.4 - antennaHeight / 2, zCenter - 1)
+  group.add(antennaPivot)
+  const antenna = new CylinderGeometry(0.08, 0.08, antennaHeight, 6)
   geometries.push(antenna)
   const antennaMesh = new Mesh(antenna, accentMaterial)
-  antennaMesh.position.set(2.5, roofTop + 0.4, zCenter - 1)
+  antennaMesh.position.set(0, antennaHeight / 2, 0)
   antennaMesh.castShadow = true
-  group.add(antennaMesh)
+  antennaPivot.add(antennaMesh)
+
+  let antennaPhase = 0
 
   return {
     group,
+    update(trackLeft, trackRight, dt) {
+      antennaPhase = advanceAntennaPhase(antennaPhase, dt)
+      antennaPivot.rotation.z = antennaSwayAngle(antennaPhase, trackLeft, trackRight)
+    },
     dispose() {
       for (const g of geometries) g.dispose()
     },
