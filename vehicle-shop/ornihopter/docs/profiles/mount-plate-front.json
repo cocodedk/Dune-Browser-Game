@@ -1,0 +1,602 @@
+{
+  "source": "Wing_support_front.stl",
+  "note": "Measured off a flat plate in the print kit. NO ABSOLUTE SCALE: the kit states no scale ratio, so span is normalised 0..1 and widths are a fraction of max width. De-rotated to the plate's own principal axis before measuring (some plates lie diagonally on the print bed). Scale to src/spec.ts before use.",
+  "plateMillimetres": {
+    "long": 38.72295966747159,
+    "across": 21.549755198465853,
+    "thickness": 1.811216354370115
+  },
+  "lengthOverMaxWidth": 1.8815806199473755,
+  "stations": [
+    {
+      "span": 0.0084,
+      "chord": 0.03665,
+      "offset": -0.37863
+    },
+    {
+      "span": 0.01681,
+      "chord": 0.07504,
+      "offset": -0.35768
+    },
+    {
+      "span": 0.02521,
+      "chord": 0.11344,
+      "offset": -0.335
+    },
+    {
+      "span": 0.03361,
+      "chord": 0.14136,
+      "offset": -0.31929
+    },
+    {
+      "span": 0.04202,
+      "chord": 0.17452,
+      "offset": -0.32016
+    },
+    {
+      "span": 0.05042,
+      "chord": 0.31588,
+      "offset": -0.38037
+    },
+    {
+      "span": 0.05882,
+      "chord": 0.82373,
+      "offset": -0.13692
+    },
+    {
+      "span": 0.06723,
+      "chord": 0.85515,
+      "offset": -0.12296
+    },
+    {
+      "span": 0.07563,
+      "chord": 0.88482,
+      "offset": -0.10987
+    },
+    {
+      "span": 0.08403,
+      "chord": 0.91274,
+      "offset": -0.0959
+    },
+    {
+      "span": 0.09244,
+      "chord": 0.94241,
+      "offset": -0.08282
+    },
+    {
+      "span": 0.10084,
+      "chord": 0.75218,
+      "offset": 0.04022
+    },
+    {
+      "span": 0.10924,
+      "chord": 0.84991,
+      "offset": 0.0123
+    },
+    {
+      "span": 0.11765,
+      "chord": 0.95113,
+      "offset": -0.0261
+    },
+    {
+      "span": 0.12605,
+      "chord": 1,
+      "offset": -0.04355
+    },
+    {
+      "span": 0.13445,
+      "chord": 0.99651,
+      "offset": -0.03831
+    },
+    {
+      "span": 0.14286,
+      "chord": 0.98953,
+      "offset": -0.03482
+    },
+    {
+      "span": 0.15126,
+      "chord": 0.98429,
+      "offset": -0.03046
+    },
+    {
+      "span": 0.15966,
+      "chord": 0.97731,
+      "offset": -0.02697
+    },
+    {
+      "span": 0.16807,
+      "chord": 0.8185,
+      "offset": 0.05418
+    },
+    {
+      "span": 0.17647,
+      "chord": 0.81675,
+      "offset": 0.05506
+    },
+    {
+      "span": 0.18487,
+      "chord": 0.81501,
+      "offset": 0.05767
+    },
+    {
+      "span": 0.19328,
+      "chord": 0.81326,
+      "offset": 0.05855
+    },
+    {
+      "span": 0.20168,
+      "chord": 0.81152,
+      "offset": 0.06116
+    },
+    {
+      "span": 0.21008,
+      "chord": 0.80803,
+      "offset": 0.06291
+    },
+    {
+      "span": 0.21849,
+      "chord": 0.80628,
+      "offset": 0.06378
+    },
+    {
+      "span": 0.22689,
+      "chord": 0.80454,
+      "offset": 0.0664
+    },
+    {
+      "span": 0.23529,
+      "chord": 0.80279,
+      "offset": 0.06727
+    },
+    {
+      "span": 0.2437,
+      "chord": 0.80105,
+      "offset": 0.06989
+    },
+    {
+      "span": 0.2521,
+      "chord": 0.79756,
+      "offset": 0.07163
+    },
+    {
+      "span": 0.2605,
+      "chord": 0.79756,
+      "offset": 0.07338
+    },
+    {
+      "span": 0.26891,
+      "chord": 0.79407,
+      "offset": 0.07512
+    },
+    {
+      "span": 0.27731,
+      "chord": 0.79232,
+      "offset": 0.076
+    },
+    {
+      "span": 0.28571,
+      "chord": 0.79058,
+      "offset": 0.07862
+    },
+    {
+      "span": 0.29412,
+      "chord": 0.78709,
+      "offset": 0.08036
+    },
+    {
+      "span": 0.30252,
+      "chord": 0.79756,
+      "offset": 0.07687
+    },
+    {
+      "span": 0.31092,
+      "chord": 0.79756,
+      "offset": 0.07687
+    },
+    {
+      "span": 0.31933,
+      "chord": 0.7993,
+      "offset": 0.07774
+    },
+    {
+      "span": 0.32773,
+      "chord": 0.7993,
+      "offset": 0.07774
+    },
+    {
+      "span": 0.33613,
+      "chord": 0.7993,
+      "offset": 0.07774
+    },
+    {
+      "span": 0.34454,
+      "chord": 0.80105,
+      "offset": 0.07862
+    },
+    {
+      "span": 0.35294,
+      "chord": 0.80105,
+      "offset": 0.07862
+    },
+    {
+      "span": 0.36134,
+      "chord": 0.80279,
+      "offset": 0.07949
+    },
+    {
+      "span": 0.36975,
+      "chord": 0.80279,
+      "offset": 0.07949
+    },
+    {
+      "span": 0.37815,
+      "chord": 0.67888,
+      "offset": 0.14319
+    },
+    {
+      "span": 0.38655,
+      "chord": 0.67888,
+      "offset": 0.14319
+    },
+    {
+      "span": 0.39496,
+      "chord": 0.67888,
+      "offset": 0.14319
+    },
+    {
+      "span": 0.40336,
+      "chord": 0.68063,
+      "offset": 0.14406
+    },
+    {
+      "span": 0.41176,
+      "chord": 0.68063,
+      "offset": 0.14406
+    },
+    {
+      "span": 0.42017,
+      "chord": 0.68237,
+      "offset": 0.14493
+    },
+    {
+      "span": 0.42857,
+      "chord": 0.80803,
+      "offset": 0.08211
+    },
+    {
+      "span": 0.43697,
+      "chord": 0.80977,
+      "offset": 0.08298
+    },
+    {
+      "span": 0.44538,
+      "chord": 0.80977,
+      "offset": 0.08298
+    },
+    {
+      "span": 0.45378,
+      "chord": 0.80977,
+      "offset": 0.08298
+    },
+    {
+      "span": 0.46218,
+      "chord": 0.81152,
+      "offset": 0.08385
+    },
+    {
+      "span": 0.47059,
+      "chord": 0.81152,
+      "offset": 0.08385
+    },
+    {
+      "span": 0.47899,
+      "chord": 0.40663,
+      "offset": -0.11859
+    },
+    {
+      "span": 0.48739,
+      "chord": 0.40663,
+      "offset": -0.11859
+    },
+    {
+      "span": 0.4958,
+      "chord": 0.40663,
+      "offset": -0.11859
+    },
+    {
+      "span": 0.5042,
+      "chord": 0.40663,
+      "offset": -0.11859
+    },
+    {
+      "span": 0.51261,
+      "chord": 0.40663,
+      "offset": -0.11859
+    },
+    {
+      "span": 0.52101,
+      "chord": 0.40663,
+      "offset": -0.11859
+    },
+    {
+      "span": 0.52941,
+      "chord": 0.81152,
+      "offset": 0.08385
+    },
+    {
+      "span": 0.53782,
+      "chord": 0.81152,
+      "offset": 0.08385
+    },
+    {
+      "span": 0.54622,
+      "chord": 0.80977,
+      "offset": 0.08298
+    },
+    {
+      "span": 0.55462,
+      "chord": 0.80977,
+      "offset": 0.08298
+    },
+    {
+      "span": 0.56303,
+      "chord": 0.80977,
+      "offset": 0.08298
+    },
+    {
+      "span": 0.57143,
+      "chord": 0.80803,
+      "offset": 0.08211
+    },
+    {
+      "span": 0.57983,
+      "chord": 0.68237,
+      "offset": 0.14493
+    },
+    {
+      "span": 0.58824,
+      "chord": 0.68063,
+      "offset": 0.14406
+    },
+    {
+      "span": 0.59664,
+      "chord": 0.68063,
+      "offset": 0.14406
+    },
+    {
+      "span": 0.60504,
+      "chord": 0.67888,
+      "offset": 0.14319
+    },
+    {
+      "span": 0.61345,
+      "chord": 0.67888,
+      "offset": 0.14319
+    },
+    {
+      "span": 0.62185,
+      "chord": 0.67888,
+      "offset": 0.14319
+    },
+    {
+      "span": 0.63025,
+      "chord": 0.80279,
+      "offset": 0.07949
+    },
+    {
+      "span": 0.63866,
+      "chord": 0.80279,
+      "offset": 0.07949
+    },
+    {
+      "span": 0.64706,
+      "chord": 0.80105,
+      "offset": 0.07862
+    },
+    {
+      "span": 0.65546,
+      "chord": 0.80105,
+      "offset": 0.07862
+    },
+    {
+      "span": 0.66387,
+      "chord": 0.7993,
+      "offset": 0.07774
+    },
+    {
+      "span": 0.67227,
+      "chord": 0.7993,
+      "offset": 0.07774
+    },
+    {
+      "span": 0.68067,
+      "chord": 0.7993,
+      "offset": 0.07774
+    },
+    {
+      "span": 0.68908,
+      "chord": 0.79756,
+      "offset": 0.07687
+    },
+    {
+      "span": 0.69748,
+      "chord": 0.79756,
+      "offset": 0.07687
+    },
+    {
+      "span": 0.70588,
+      "chord": 0.78709,
+      "offset": 0.08036
+    },
+    {
+      "span": 0.71429,
+      "chord": 0.79058,
+      "offset": 0.07862
+    },
+    {
+      "span": 0.72269,
+      "chord": 0.79232,
+      "offset": 0.07774
+    },
+    {
+      "span": 0.73109,
+      "chord": 0.79407,
+      "offset": 0.07512
+    },
+    {
+      "span": 0.7395,
+      "chord": 0.79756,
+      "offset": 0.07338
+    },
+    {
+      "span": 0.7479,
+      "chord": 0.79756,
+      "offset": 0.07163
+    },
+    {
+      "span": 0.7563,
+      "chord": 0.80105,
+      "offset": 0.06989
+    },
+    {
+      "span": 0.76471,
+      "chord": 0.80105,
+      "offset": 0.06814
+    },
+    {
+      "span": 0.77311,
+      "chord": 0.80454,
+      "offset": 0.0664
+    },
+    {
+      "span": 0.78151,
+      "chord": 0.80803,
+      "offset": 0.06465
+    },
+    {
+      "span": 0.78992,
+      "chord": 0.80803,
+      "offset": 0.06291
+    },
+    {
+      "span": 0.79832,
+      "chord": 0.81152,
+      "offset": 0.06116
+    },
+    {
+      "span": 0.80672,
+      "chord": 0.81152,
+      "offset": 0.05942
+    },
+    {
+      "span": 0.81513,
+      "chord": 0.81501,
+      "offset": 0.05767
+    },
+    {
+      "span": 0.82353,
+      "chord": 0.81501,
+      "offset": 0.05593
+    },
+    {
+      "span": 0.83193,
+      "chord": 0.8185,
+      "offset": 0.05418
+    },
+    {
+      "span": 0.84034,
+      "chord": 0.97906,
+      "offset": -0.0261
+    },
+    {
+      "span": 0.84874,
+      "chord": 0.98429,
+      "offset": -0.03046
+    },
+    {
+      "span": 0.85714,
+      "chord": 0.99127,
+      "offset": -0.03395
+    },
+    {
+      "span": 0.86555,
+      "chord": 0.99651,
+      "offset": -0.03831
+    },
+    {
+      "span": 0.87395,
+      "chord": 1,
+      "offset": -0.04355
+    },
+    {
+      "span": 0.88235,
+      "chord": 0.95113,
+      "offset": -0.0261
+    },
+    {
+      "span": 0.89076,
+      "chord": 0.84991,
+      "offset": 0.0123
+    },
+    {
+      "span": 0.89916,
+      "chord": 0.75044,
+      "offset": 0.04109
+    },
+    {
+      "span": 0.90756,
+      "chord": 0.94241,
+      "offset": -0.08282
+    },
+    {
+      "span": 0.91597,
+      "chord": 0.91274,
+      "offset": -0.0959
+    },
+    {
+      "span": 0.92437,
+      "chord": 0.88307,
+      "offset": -0.10899
+    },
+    {
+      "span": 0.93277,
+      "chord": 0.8534,
+      "offset": -0.12383
+    },
+    {
+      "span": 0.94118,
+      "chord": 0.82373,
+      "offset": -0.13692
+    },
+    {
+      "span": 0.94958,
+      "chord": 0.31588,
+      "offset": -0.38037
+    },
+    {
+      "span": 0.95798,
+      "chord": 0.17452,
+      "offset": -0.31842
+    },
+    {
+      "span": 0.96639,
+      "chord": 0.14136,
+      "offset": -0.31755
+    },
+    {
+      "span": 0.97479,
+      "chord": 0.11344,
+      "offset": -0.335
+    },
+    {
+      "span": 0.98319,
+      "chord": 0.07504,
+      "offset": -0.35594
+    },
+    {
+      "span": 0.9916,
+      "chord": 0.03665,
+      "offset": -0.37863
+    }
+  ]
+}

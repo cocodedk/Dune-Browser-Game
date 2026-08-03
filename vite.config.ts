@@ -7,7 +7,11 @@ export default defineConfig({
   base: './',
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    // vehicle-shop/ holds standalone rigs for building one vehicle at a time
+    // before it is folded into the game. Its pure modules (flight dynamics,
+    // control mapping) carry the same unit-test obligation as src/, so the
+    // suite has to see them — without this line they are silently untested.
+    include: ['src/**/*.test.ts', 'vehicle-shop/**/*.test.ts'],
     passWithNoTests: true,
     // Cap worker count and recycle workers. On 2026-07-24 unbounded vitest
     // workers grew to 2.6-4 GiB RSS each and drove the machine low enough for

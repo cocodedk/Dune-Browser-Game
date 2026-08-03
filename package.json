@@ -8,7 +8,11 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "playwright test",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "shop:thopter": "vite vehicle-shop/ornihopter",
+    "shop:thopter:build": "vite build vehicle-shop/ornihopter",
+    "shop:thopter:check": "tsc -p vehicle-shop/ornihopter --noEmit",
+    "shop:thopter:shoot": "node vehicle-shop/ornihopter/tools/shoot.mjs"
   },
   "dependencies": {
     "@types/three": "^0.185.1",

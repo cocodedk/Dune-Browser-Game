@@ -1,0 +1,161 @@
+// vehicle-shop/ornihopter/src/main.ts
+// Boot and frame loop for the standalone ornithopter test area.
+
+import type { Object3D } from 'three'
+import { createStage } from './stage/scene'
+import { createTerrain } from './stage/terrain'
+import { createFlightModel } from './flight/flightModel'
+import { createOrnithopter } from './model/Ornithopter'
+import { createCockpit } from './interior/Cockpit'
+import { createCameraRig } from './camera/cameraRig'
+import { createHud } from './ui/hud'
+import { createHudSymbology } from './hud/symbology'
+import { createControls } from './input/keyboard'
+import { createThopterAudio } from './sound/audio'
+import { installDebugHandle } from './debug'
+
+const container = document.getElementById('app')
+if (!container) throw new Error('#app missing')
+
+const stage = createStage(container)
+const terrain = createTerrain()
+stage.scene.add(terrain.root)
+
+const flight = createFlightModel()
+const craft = createOrnithopter()
+const cockpit = createCockpit()
+craft.root.add(cockpit.root as never)
+stage.scene.add(craft.root as never)
+
+// Opt the craft into the shadow map. stage/scene.ts enables shadowMap and sets
+// sun.castShadow, but three.js still requires every mesh to opt in — and none
+// did, so a 2048px shadow map was being computed and thrown away every frame.
+// A blind critic reported "no cast shadow from the craft in any frame, flat
+// shadowless lighting scene-wide" and was exactly right. Done here rather than
+// in the geometry modules because it applies to the whole craft and belongs to
+// whoever owns the scene, not to whoever authored a given part.
+;(craft.root as unknown as Object3D).traverse((child: Object3D) => {
+  const mesh = child as Object3D & {
+    isMesh?: boolean
+    material?: { transparent?: boolean; opacity?: number } | Array<{ transparent?: boolean; opacity?: number }>
+  }
+  if (!mesh.isMesh) return
+
+  // Transparent surfaces must NOT cast. three.js's shadow map ignores opacity,
+  // so canopy glazing was casting a fully opaque shadow and sealing the cabin
+  // in darkness — direct sun could not reach the cockpit at all, whatever the
+  // material said. The cockpit builder hit this from the inside and had to add
+  // fill lights to work around it. Opting everything in with one blunt
+  // traverse was my shortcut, and this is what it cost.
+  const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : []
+  const seeThrough = materials.some((m) => m.transparent === true && (m.opacity ?? 1) < 0.95)
+
+  mesh.castShadow = !seeThrough
+  mesh.receiveShadow = true
+})
+
+const rig = createCameraRig(craft.root as never)
+const hud = createHud()
+// Flight symbology, parented to the camera itself — see hud/symbology.ts for
+// why that rather than a DOM overlay or a second render pass.
+const symbology = createHudSymbology(rig.camera)
+const controls = createControls()
+// The craft's voice. Silent until the visitor's first keypress or click — see
+// sound/audio.ts on why the AudioContext cannot be created any earlier.
+const audio = createThopterAudio(rig.mode)
+
+const resize = () => {
+  const width = window.innerWidth
+  const height = window.innerHeight
+  stage.resize(width, height)
+  rig.resize(width, height)
+  symbology.setAspect(width / Math.max(height, 1))
+}
+window.addEventListener('resize', resize)
+resize()
+
+const debug = installDebugHandle({ flight, rig, craft })
+
+let last = performance.now()
+let elapsed = 0
+let fps = 60
+
+function frame(now: number): void {
+  requestAnimationFrame(frame)
+
+  // Clamped so a background tab that stalls for two seconds does not resume by
+  // integrating one enormous step and flinging the craft out of the area.
+  const dt = Math.min((now - last) / 1000, 0.1)
+  last = now
+  fps += ((dt > 0 ? 1 / dt : 60) - fps) * 0.08
+
+  if (controls.takeCameraCycle()) rig.cycle()
+  if (controls.takeReset()) flight.reset()
+  if (controls.takeMuteToggle()) audio.toggleMute()
+  // A head pose held by the capture harness (debug.look) wins until the pilot
+  // actually reaches for the head-look control themselves, at which point the
+  // live input takes it back. Without the hand-back a headless capture would
+  // silently lock the head for the rest of the session.
+  const aim = controls.head()
+  const held = debug.heldLook()
+  const live = aim.yaw !== 0 || aim.pitch !== 0
+  rig.lookAround(held && !live ? held.yaw : aim.yaw, held && !live ? held.pitch : aim.pitch)
+
+  // When the capture harness has paused us, the scene still renders — but the
+  // sim, the clock and the craft transform are left exactly where pose() put
+  // them, so two captures of the same pose are identical frames.
+  const frozen = debug.isPaused()
+  if (!frozen) {
+    elapsed += dt
+    flight.step(controls.read(), dt)
+  }
+  const state = flight.state
+
+  if (!frozen) {
+    craft.root.position.set(state.position.x, state.position.y, state.position.z)
+    craft.root.quaternion.set(
+      state.orientation.x,
+      state.orientation.y,
+      state.orientation.z,
+      state.orientation.w
+    )
+    craft.update(state)
+  }
+  cockpit.update(state)
+  rig.update(state, elapsed)
+
+  // Keep the sun's shadow frustum over the craft; it is a 220m box around the
+  // light target, and the test area is 4km across.
+  //
+  // The lateral offset used to be -520 against +340 of height, which put the
+  // sun well off the craft's port side. Two blind critics independently read
+  // the resulting shading as a defect — "one side's blades render bright and
+  // the other's near-black; under one sun, mirrored wings should shade
+  // mirrored". They were wrong about the cause and I nearly changed correct
+  // geometry on their agreement. wingSymmetry.test.ts measures the world-space
+  // blade normals and they mirror exactly at every beat phase. "Mirrored wings
+  // shade mirrored" only holds when the light lies in the symmetry plane, and
+  // that sun did not: mirrored normals have opposite X components, so a light
+  // with a large X component lights them differently, correctly. Bringing the
+  // sun closer to the centreline and higher keeps the relief that makes the
+  // facets read while removing an asymmetry that kept being mistaken for a bug.
+  stage.sun.target.position.set(state.position.x, state.position.y, state.position.z)
+  stage.sun.position.set(state.position.x - 190, state.position.y + 560, state.position.z + 330)
+
+  // The symbology is the PILOT's instrument, so it is hidden in the external
+  // views — a HUD floating in an orbit shot is a screenshot artefact, not a
+  // cockpit. It still updates, so switching back is never a frame behind.
+  symbology.setVisible(rig.mode === 'pilot')
+  symbology.update(state)
+
+  // The mix reads the same beatPhase the wings do, so a stroke is heard on the
+  // frame it is seen. dt is passed even when the sim is frozen: the camera can
+  // still be cycled from the capture harness, and the cabin crossfade has to
+  // follow it.
+  audio.update(state, rig.mode, dt)
+
+  hud.update(state, rig.mode, fps)
+  stage.renderer.render(stage.scene, rig.camera)
+}
+
+requestAnimationFrame(frame)
