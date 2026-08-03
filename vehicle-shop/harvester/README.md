@@ -22,7 +22,7 @@ npm run shop:harvester:shoot    # capture the reference views to .shots/harveste
 npm run shop:harvester:build    # production build of the shop alone
 ```
 
-Thirty views by default (the original ten plus a 30-degree turntable
+Thirty-one views by default (the original ten plus a 30-degree turntable
 sweep, plan views, high/low angles and close-ups); take a subset with
 `npm run shop:harvester:shoot -- --views hero,tracks,boom` (comma-separated,
 in the order given). Distances are in machine lengths — `dist` under 1 is a

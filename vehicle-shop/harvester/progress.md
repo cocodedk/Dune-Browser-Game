@@ -251,6 +251,39 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round I4 — the cab. LANDED. Critic 2/10 REFUTED by crop evidence; adjudicated MET with I6 routing.
+
+Builder: Sonnet. The cab consumes the widened spec (11 m), carries ONE
+continuous dark wrap band across the full front and halfway down the
+sides (the old slanted pane + mullions deleted — a rotated plane can't
+meet a flat side pane at the corner), a roof equipment box offset from
+the antenna, and a 4-rung rear ladder whose bottom rung sits 0.3 m above
+the deck. Tests 66 → 72, all width/glass/ladder claims pinned to spec.
+
+**Harness finding (builder), fixed in-round:** the named `cab` view was
+tuned under the old mirrored camera and framed the TRACK — every cab
+point projected above the frame's top edge. A views.mjs micro-round
+retuned `cab` (az −65, el 10, dist 0.9) and added `cab-rear` (az −140,
+el 20, dist 1.0) — thirty-one views now. Verified by projection math AND
+capture, twice (builder + fixer).
+
+**Critic (fresh Sonnet): 2/10 — REFUTED on the two central claims.** It
+reported wrap glass and ladder "entirely absent"; the lead's own PIL
+crops of the SAME frames show the dark band wrapping the cab's front
+and turning down its side (cab.png crop) and the ladder rungs stacked on
+the rear face reaching the deck line (cab-rear.png crop). The critic's
+own description of "the cab" — tube frame + pyramid on a tan surface —
+matches the DECK FIXTURES, not the cab: it zoomed the wrong box, then
+dismissed the real band as "hull-length trim". Lesson for every future
+critic brief: pin the target's exact pixel region, not just the frame.
+**Its one fair point stands and is routed:** at distance the cab does
+not DIFFERENTIATE from neighbouring deck fixtures — no material break
+flags it as the command station. §6 already assigns the trim colour to
+"cab window frames": I6 carries it.
+
+_Status: complete. Crewed-read still depends on I5's figure + I6's trim
+separation; the geometry is in place and pinned._
+
 ### Round I3 — the cutter. LANDED. Round critic 3/10 (adjudicated). BLIND MILESTONE PANEL: PASSED.
 
 Builder: Opus. The head is now the machine's mouth: 8.00 m tall (spec),

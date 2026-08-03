@@ -34,11 +34,11 @@ What needs work — by priority
 
  ### 4. The cab (too small and generic)
 
- - [ ] Make it wider — 7m wide on a 31.6m machine is too small. Widen to 10-12m so it reads as a control station, not a shed.
- - [ ] Full-width windshield — the glass band is 7.5m wide with 2 mullions. Make it a full-width wrap (dark glass across the front and halfway down the sides) so the
+ - [x] Make it wider — (I4: 11 m from spec, test-pinned) 7m wide on a 31.6m machine is too small. Widen to 10-12m so it reads as a control station, not a shed.
+ - [x] Full-width windshield — (I4: continuous wrap band, front + half-sides, verified by crop; distance pop routed to I6 trim) the glass band is 7.5m wide with 2 mullions. Make it a full-width wrap (dark glass across the front and halfway down the sides) so the
        cab reads as a cockpit, not a box with a slot.
- - [ ] Roof detail — add a roof rack or equipment box (dark) on the cab roof. The flat roof reads as empty.
- - [ ] Stairs/access — add a short ladder or steps on the cab's rear face (3-4 thin dark boxes) so it reads as a place a person enters.
+ - [x] Roof detail — (I4: roof box + rack, critic-confirmed grounded) add a roof rack or equipment box (dark) on the cab roof. The flat roof reads as empty.
+ - [x] Stairs/access — (I4: 4-rung rear ladder, bottom rung 0.3 m above deck, test-pinned; reads at zoom) add a short ladder or steps on the cab's rear face (3-4 thin dark boxes) so it reads as a place a person enters.
 
  ### 5. The machinery (functional but flat)
 

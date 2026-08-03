@@ -10,7 +10,7 @@
 // NEGATIVE azimuths are the port side, where the sun sits (main.ts), so
 // those flanks read lit; positive azimuths are the darker starboard side.
 //
-// Thirty views: the ten the bar and the user's eye have been using, a 30
+// Thirty-one views: the ten the bar and the user's eye have been using, a 30
 // degree turntable sweep, plan views, high/low dramatic angles and close-
 // ups. Filter with --views.
 export const VIEWS = [
@@ -44,7 +44,8 @@ export const VIEWS = [
   // Low dramatic angles and close-ups.
   { name: 'low-flank', az: -75, el: 3, dist: 0.7 },
   { name: 'boomclose', az: -14, el: 4, dist: 0.6 },
-  { name: 'cab', az: -55, el: 8, dist: 0.5 },
+  { name: 'cab', az: -65, el: 10, dist: 0.9 },
+  { name: 'cab-rear', az: -140, el: 20, dist: 1.0 },
   { name: 'tailclose', az: 180, el: 10, dist: 0.6 },
   { name: 'deck-top', az: 0, el: 80, dist: 0.9 },
   { name: 'conveyor', az: -70, el: 14, dist: 0.7 },
