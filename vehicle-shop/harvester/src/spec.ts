@@ -70,11 +70,14 @@ export const BOOM = {
   drumRadius: 1.5,
 } as const
 
-/** The raised control cab on the forward deck. No interior by design. */
+/** The raised control cab on the forward deck. No interior by design.
+ *  I4 art-director delta: halfWidth 3.5 -> 5.5 (7 m -> 11 m) — a control
+ *  station commanding a 31.6 m machine, not a shed (immediate-improvements
+ *  §4; the blind panel read "no visible cab" at 7 m). */
 export const CAB = {
   zCenter: -8,
   topY: 15,
-  halfWidth: 3.5,
+  halfWidth: 5.5,
   halfDepth: 3.5,
 } as const
 
