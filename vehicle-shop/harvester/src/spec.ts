@@ -63,6 +63,11 @@ export const BOOM = {
   y: 3.0,
   halfWidth: 7,
   cutterHalfWidth: 9,
+  /** I3 art-director numbers (immediate-improvements §3): the grinder head
+   *  grows to 8 m tall, with a visible rotating DRUM along X at its front
+   *  face — the machine's mouth, its most prominent feature. */
+  headHeight: 8,
+  drumRadius: 1.5,
 } as const
 
 /** The raised control cab on the forward deck. No interior by design. */
