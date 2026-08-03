@@ -251,6 +251,38 @@ unchanged — rounding preserves bounds), lengths clean, shop build OK.
 
 _Status: complete._
 
+### Round I2 pass 2 — hull visibility. LANDED as interim. Critic 2/10; the failures are the ART DIRECTION's, pass 3 dispatched.
+
+Builder: Sonnet (fresh — pass-1 builder's transcript expired). Two things
+of lasting value landed: **the camera-azimuth bug discovery** (front-
+flavored views photographed the tail; fixed + regression-pinned in its
+own commit — the ornithopter-backwards lesson, in the camera) and the
+probe-grid redesign (open-middle guard now a 1m-grid: every z keeps a
+clear band, total hit fraction < 20% — admits slender beams, still fails
+a wall). Also: seams deepened 0.15→0.6m with lips, width-taper tied to
+BOOM.halfWidth, nose-block gap VERIFIED as shading (front tier top y=8.000
+= housing yLow exactly). Tests 44 → 46 (then 50 with the camera fix).
+
+**Critic (fresh Sonnet, correctly-oriented captures): 2/10.** Taper NOT
+MET — the side profile's top edge runs flat into a blunt cutoff; both
+passes' tiers sit below y=11 where the FULL-LENGTH pods/housings occlude
+them from every profile camera. Beams NOT VISIBLE — the "through the
+wheel gaps" sightline doesn't survive final dark materials. Seams WEAK —
+read as painted lines; no silhouette relief. Lead verified the critique
+is NOT stale (server restarted, frames byte-identical) and rules the
+taper/beam failures art-direction errors: the destinations named views
+that could not geometrically show them.
+
+**Pass-3 destinations (art-corrected):** taper = step the foremost DECK
+plates down toward the nose so the TOP silhouette descends in notches
+(reads in profile above the housing line, and head-on above the cutter);
+beams = placed in the daylight band under the deck as seen in hero/
+rear34, verified by dark-pixel counts in FINAL materials; seams = lips
+that notch the profile edge. Three-pass rule: if the score does not move
+this pass, I2 stops and goes to the user.
+
+_Status: interim committed; pass 3 in flight._
+
 ### Round I2 pass 1 — hull structure. LANDED. Verified. Critic 4/10; pass 2 queued on the user's verdict.
 
 Builder: Sonnet, with honest self-flags that the critic largely confirmed.

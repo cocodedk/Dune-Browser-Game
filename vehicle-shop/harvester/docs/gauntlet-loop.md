@@ -20,10 +20,10 @@ numbering, which reached 16).
   PNGs. Never the builder's report, reasoning, or self-score. Sonnet for the
   per-round check, a 3×Opus blind panel at the two milestones (after I3,
   after I7).
-- **Final judge — the user.** The loop PAUSES after every verified round for
-  the user's judgement before the next round starts. The user's eye outranks
-  any critic — a user finding becomes the next pass's destination, applied
-  as stated, not re-derived.
+- **Final judge — the user.** The user's eye outranks any critic — a user
+  finding becomes the next pass's destination, applied as stated, not
+  re-derived. Per-round pausing: see step 8 (suspended 2026-08-03 by user
+  order "continue til the end of it").
 
 **Cost, said up front:** eight rounds with per-round critics and two panels
 is realistically 600k–1.2M tokens. The doc is priority-ordered; stopping
@@ -231,15 +231,16 @@ turntable set. Bar: Q1 ≥ 7/10, Q2 pass, zero correctness findings.
    landed after the capture, re-capture before acting — never fix from a
    stale critique.
 7. Verdict: bar met → tick the boxes in `immediate-improvements.md`, commit
-   (real hook), log the round in `progress.md` including the score, the
-   numbers, and **what did not reproduce**. Bar missed → feed the critic's
+   (real hook) and PUSH (user standing order, 2026-08-03), log the round in
+   `progress.md` including the score, the numbers, and **what did not
+   reproduce**. Bar missed → feed the critic's
    single biggest gap back to the SAME builder, same ownership, next pass.
    Three passes without the score moving → stop, bring the gap to the user.
-8. **User checkpoint — every round, no exceptions.** Present the landed
-   round to the user: what changed, the critic's score and named gap, where
-   the fresh captures are (`.shots/harvester/`), and what did not reproduce.
-   Then STOP. The next round does not start until the user has judged; their
-   verdict either releases the next round or becomes the destination of
-   another pass on this one.
+8. **User checkpoint — SUSPENDED by user order (2026-08-03: "continue til
+   the end of it").** The loop runs round to round without pausing; the
+   lead makes the art rulings and still presents each landed round's
+   summary in the session. The user may interrupt at any time and their
+   finding outranks any critic. (Original rule, restorable on request:
+   present the landed round, then STOP until the user judges.)
 9. Stop conditions, named honestly in the log: bar met · gains no longer
    worth the tokens · the next gap needs a human (art) decision.
