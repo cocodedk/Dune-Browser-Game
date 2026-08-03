@@ -7,6 +7,7 @@ import { describe, it, expect } from 'vitest'
 import { createSoundClock, advanceSound } from './params'
 import type { SoundClock } from './params'
 import { DT, steady, settle, gainsOf } from './testHelpers'
+import { ENGINE } from './tuning'
 
 describe('a parked craft is silent', () => {
   it('emits zero on every gain when the beat has spooled out and the throttle is shut', () => {
@@ -75,6 +76,52 @@ describe('the turbine tracks the throttle', () => {
     expect(full.strokeAttack).toBeLessThan(idle.strokeAttack)
     // Faster beat, shorter tail — strokes must not smear into each other.
     expect(full.strokeDecay).toBeLessThan(1 / 4)
+  })
+})
+
+describe('Round 13b: the whine is capped and softened at the top end', () => {
+  it('caps the whine frequency in a firm upper-mid register, not treble', () => {
+    const full = settle('chase', steady(1, 4))
+    expect(full.whineHz).toBeLessThanOrEqual(ENGINE.whineHzCap)
+  })
+
+  it('already sat under the grind at full throttle — unchanged by the cap', () => {
+    const full = settle('chase', steady(1, 4))
+    expect(full.whineGain).toBeLessThan(full.engineGain)
+  })
+
+  it('now sits under the bed too — an overtone, not a lead voice', () => {
+    const full = settle('chase', steady(1, 4))
+    expect(full.whineGain).toBeLessThan(full.bedGain)
+  })
+
+  it('leaves low/mid throttle bit-identical — the knee sits above both', () => {
+    // Round 12's pre-knee formula, inlined so this pins the OLD curve
+    // independently of tuning.ts and fails if the knee ever creeps down.
+    const oldWhineHz = (t: number) => (38 + 54 * t) * (16 + 7 * t)
+    for (const t of [0, 0.2, 0.45, 0.5]) {
+      const params = settle('chase', steady(t, 1.5 + 2.5 * t))
+      expect(params.whineHz).toBe(oldWhineHz(t))
+    }
+  })
+
+  it('bends toward the cap with no derivative spike across the knee', () => {
+    const SAMPLES = 50
+    const hz: number[] = []
+    for (let i = 0; i < SAMPLES; i++) {
+      const throttle = i / (SAMPLES - 1)
+      hz.push(settle('chase', steady(throttle, 1.5 + 2.5 * throttle)).whineHz)
+    }
+    const slope: number[] = []
+    for (let i = 0; i < hz.length - 1; i++) slope.push(hz[i + 1] - hz[i])
+    let maxJump = 0
+    for (let i = 0; i < slope.length - 1; i++) {
+      maxJump = Math.max(maxJump, Math.abs(slope[i + 1] - slope[i]))
+    }
+    const maxSlope = Math.max(...slope.map(Math.abs))
+    // A hard clamp would dump nearly the whole peak slope into ONE step; a
+    // soft knee spreads the bend over many steps instead.
+    expect(maxJump).toBeLessThan(maxSlope * 0.3)
   })
 })
 

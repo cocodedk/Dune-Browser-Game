@@ -8,6 +8,7 @@
 // returns.
 
 import { STROKE, BODY, ENGINE, CABIN, INPUT_LIMITS } from './tuning'
+import { softKnee } from './softKnee'
 
 const TWO_PI = Math.PI * 2
 
@@ -74,8 +75,8 @@ export const SOUND_BOUNDS: Record<NumericParam, readonly [number, number]> = {
   engineGain: [0, ENGINE.gainMax],
   engineHz: [ENGINE.hzMin, ENGINE.hzMax],
   engineLowpassHz: [ENGINE.lowpassMin, ENGINE.lowpassMax],
-  whineGain: [0, ENGINE.whineGainMax],
-  whineHz: [ENGINE.hzMin * ENGINE.whineRatioMin, ENGINE.hzMax * ENGINE.whineRatioMax],
+  whineGain: [0, ENGINE.whineGainCap],
+  whineHz: [ENGINE.hzMin * ENGINE.whineRatioMin, ENGINE.whineHzCap],
   bedGain: [0, ENGINE.bedGainMax],
   cabinCutoffHz: [CABIN.cockpitCutoffHz, CABIN.exteriorCutoffHz],
   cabinGain: [0, CABIN.exteriorGain],
@@ -181,6 +182,9 @@ function engineParams(
   const run = clamp(throttle / ENGINE.runThrottle, 0, 1)
   const hz = lerp(ENGINE.hzMin, ENGINE.hzMax, throttle)
   const ratio = lerp(ENGINE.whineRatioMin, ENGINE.whineRatioMax, throttle)
+  // Round 13b: soft-knee both toward a firm ceiling — tuning.ts explains why.
+  const whineHz = softKnee(hz * ratio, ENGINE.whineHzKnee, ENGINE.whineHzCap)
+  const whineGain = softKnee(lerp(ENGINE.whineGainMin, ENGINE.whineGainMax, throttle), ENGINE.whineGainKnee, ENGINE.whineGainCap)
   return {
     engineGain: clamp(run * lerp(ENGINE.gainIdle, ENGINE.gainMax, throttle), 0, ENGINE.gainMax),
     engineHz: clamp(hz, ENGINE.hzMin, ENGINE.hzMax),
@@ -189,8 +193,8 @@ function engineParams(
       ENGINE.lowpassMin,
       ENGINE.lowpassMax
     ),
-    whineGain: clamp(run * lerp(ENGINE.whineGainMin, ENGINE.whineGainMax, throttle), 0, ENGINE.whineGainMax),
-    whineHz: clamp(hz * ratio, SOUND_BOUNDS.whineHz[0], SOUND_BOUNDS.whineHz[1]),
+    whineGain: clamp(run * whineGain, 0, ENGINE.whineGainCap),
+    whineHz: clamp(whineHz, SOUND_BOUNDS.whineHz[0], SOUND_BOUNDS.whineHz[1]),
     bedGain: clamp(run * lerp(ENGINE.bedGainMin, ENGINE.bedGainMax, throttle), 0, ENGINE.bedGainMax),
   }
 }

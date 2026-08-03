@@ -55,11 +55,23 @@ export const ENGINE = {
   /** Low-pass over the saw pair — this is what keeps it a grind, not a buzz. */
   lowpassMin: 420,
   lowpassMax: 1150,
-  /** The whine partial, as a multiple of the fundamental. */
+  /** The whine partial, as a multiple of the fundamental. Round 13b: the raw
+   *  product (hz * ratio) still reaches 2116 Hz at full throttle — inside the
+   *  2-5 kHz band where ear-canal resonance peaks, so a near-pure sine there
+   *  reads as a siren rather than a turbine. softKnee() in params.ts leaves
+   *  this untouched below whineHzKnee and bends it toward whineHzCap above —
+   *  ~1.58 kHz at throttle 1, a firm upper-mid register, not treble. */
   whineRatioMin: 16,
   whineRatioMax: 23,
+  whineHzKnee: 1300,
+  whineHzCap: 1600,
   whineGainMin: 0.012,
   whineGainMax: 0.05,
+  /** Same softKnee shape for the whine's own gain: uncapped it reaches 0.05
+   *  at full throttle, 56% louder than the combustor bed below (0.032) — a
+   *  lead voice, not an overtone. Bent down to land under both bed and grind. */
+  whineGainKnee: 0.027,
+  whineGainCap: 0.0305,
   /** Filtered-noise combustor bed under everything. */
   bedGainMin: 0.008,
   bedGainMax: 0.032,
