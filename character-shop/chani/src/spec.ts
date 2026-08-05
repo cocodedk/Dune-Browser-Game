@@ -30,6 +30,9 @@ export const PALETTE = {
   accent: 0x9b8a70,
   // Dark curly hair, worn loose past the shoulders.
   hair: 0x1d1712,
+  // R2 delta — full-ibad eye: one flat spice-blue for the whole visible
+  // eye, no white. Material nuance and glow are R3 scope.
+  eyes: 0x33689e,
 } as const
 
 // Costume destination for builders and critics — P1/P2 Fremen stillsuit,

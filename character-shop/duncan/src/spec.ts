@@ -29,6 +29,9 @@ export const PALETTE = {
   accent: 0x3a2f26,
   // Long dark hair and full beard.
   hair: 0x201812,
+  // R2 delta — natural eyes: dark warm iris tone, deep-set; no bright
+  // sclera at this round (sclera and material nuance are R3).
+  eyes: 0x2e2218,
 } as const
 
 // Costume destination — Atreides duty fatigues with a leather chest rig
