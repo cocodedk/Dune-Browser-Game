@@ -1,15 +1,20 @@
 // scripts/new-shop-templates.mjs
-// Doc and entry-point templates for `npm run shop:new`. Code templates
-// (contracts.ts, spec.ts, etc.) live in ./new-shop-templates-src.mjs — split
-// so both files stay under the 200-line cap.
+// Doc and entry-point templates for `npm run shop:new` (vehicle-shop/) and
+// `npm run cast:new` (character-shop/). Shared across both roots through a
+// small render context (name, Name, root, scriptPrefix, alias, kindLabel).
+// Code templates are kind-specific: vehicle in ./new-shop-templates-src.mjs,
+// character (HUMANOID) in ./new-shop-templates-cast.mjs and
+// ./new-shop-templates-cast-model.mjs — split so every file stays under the
+// 200-line cap.
 
-export function renderIndexHtml(name, Name) {
+export function renderIndexHtml(ctx) {
+  const { Name, kindLabel } = ctx
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${Name} — vehicle shop</title>
+    <title>${Name} — ${kindLabel} shop</title>
     <style>
       :root { color-scheme: dark; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -25,10 +30,14 @@ export function renderIndexHtml(name, Name) {
 `
 }
 
-export function renderReadme(name, Name) {
-  return `# ${Name} — vehicle shop
+export function renderReadme(ctx) {
+  const { name, Name, root, scriptPrefix, alias, kindLabel } = ctx
+  const adapter = kindLabel === 'character'
+    ? '`src/game-render/modes/conversation/drawFigure.ts` (and friends) is the release point — see `character-shop/docs/gauntlet-loop.md`.'
+    : '`src/game-render/machines/Harvester.ts` is the reference release adapter.'
+  return `# ${Name} — ${kindLabel} shop
 
-Scaffolded by \`npm run shop:new -- ${name}\`. Build and gauntlet-test
+Scaffolded by \`npm run ${scriptPrefix}:new -- ${name}\`. Build and gauntlet-test
 ${name} here, separately from the game and from every other shop, in
 three.js — see \`docs/PRD/dune92/04-asset-pipeline.md\` for the pipeline
 this shop is part of.
@@ -36,26 +45,26 @@ this shop is part of.
 ## Public surface
 
 The game may import only \`src/model/**\`, \`src/contracts.ts\` and
-\`src/spec.ts\`, and only via the \`@shop\` alias — never a bare path into
+\`src/spec.ts\`, and only via the \`${alias}\` alias — never a bare path into
 this directory. ESLint enforces the fence (see \`eslint.config.js\`);
-\`src/game-render/machines/Harvester.ts\` is the reference release adapter.
+${adapter}
 Everything else here (\`main.ts\`, the dev harness, test-only helpers) is
 harness, free to churn.
 
 ## Run it
 
 \`\`\`bash
-npm run shop:${name}          # dev server for the test area
-npm run shop:${name}:check    # type-check (tsc -p vehicle-shop/${name})
-npm run shop:${name}:build    # production build of the shop alone
+npm run ${scriptPrefix}:${name}          # dev server for the test area
+npm run ${scriptPrefix}:${name}:check    # type-check (tsc -p ${root}/${name})
+npm run ${scriptPrefix}:${name}:build    # production build of the shop alone
 \`\`\`
 
 ## Verifying
 
 \`\`\`bash
 npm run lint                     # from the repo root
-npm run shop:${name}:check
-npx vitest run vehicle-shop/${name}
+npm run ${scriptPrefix}:${name}:check
+npx vitest run ${root}/${name}
 bash scripts/check-file-length.sh
 \`\`\`
 
@@ -68,10 +77,18 @@ Markdown is exempt.
 `
 }
 
-export function renderProgress(name, Name) {
+export function renderProgress(ctx) {
+  const { name, Name, root, scriptPrefix, kindLabel } = ctx
+  const mirror = kindLabel === 'character'
+    ? "Mirror another character-shop build's structure and " +
+      '`character-shop/docs/gauntlet-loop.md`\'s per-round bar (R0-R4: ' +
+      'silhouette, likeness, costume, eyes/pose)'
+    : "Mirror the harvester/ornithopter shops' structure (reads as the " +
+      'thing; blind identification; acts like the thing; correctness of ' +
+      'the numbers)'
   return `# ${Name} Gauntlet Loop — the bar, and the live log
 
-Standalone rig at \`vehicle-shop/${name}/\`. Run it with \`npm run shop:${name}\`.
+Standalone rig at \`${root}/${name}/\`. Run it with \`npm run ${scriptPrefix}:${name}\`.
 
 ## STATUS
 
@@ -80,9 +97,8 @@ Scaffolded, not yet built. No rounds landed.
 ## The bar
 
 Define the quality bar here before the first round: what "looks right" and
-"acts right" mean for this asset. Mirror the harvester/ornithopter shops'
-structure (reads as the thing; blind identification; acts like the thing;
-correctness of the numbers) once there is a reference to judge against.
+"acts right" mean for this asset. ${mirror}
+once there is a reference to judge against.
 
 ## Rounds
 

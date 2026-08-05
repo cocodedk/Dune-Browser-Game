@@ -16,7 +16,7 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client"],
-    "paths": { "@shop/*": ["./vehicle-shop/*"] }
+    "paths": { "@shop/*": ["./vehicle-shop/*"], "@cast/*": ["./character-shop/*"] }
   },
   "include": ["src"]
 }

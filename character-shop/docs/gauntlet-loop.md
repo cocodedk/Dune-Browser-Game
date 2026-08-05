@@ -21,7 +21,7 @@ loop contract for all of them. Per-character round logs live in each sub-project
   reasoning. Sonnet per round; 3×Opus panels at each character's two milestones.
 - **Final judge — the user.** His eye outranks any critic; a user finding is applied as
   stated, never re-derived. Checkpoint: the loop pauses for his verdict at each
-  character's FINAL panel (R4). He may interrupt anywhere.
+  character's FINAL panel (R3). He may interrupt anywhere.
 
 **Cost, said up front:** hero grade runs ≈300–700k tokens per character; the full
 20-character roster is realistically 6–12M tokens. The roster below is value-ordered in
@@ -40,11 +40,12 @@ waves. Stopping after any verified round leaves the tree green — stop anywhere
   convention). `seam.test.ts` guards it from day one: the nose tip is the frontmost head
   geometry at −Z, and the eye line sits at the spec'd fraction of spec'd height. The
   ornithopter flew backwards for four rounds; no character will face backwards for one.
-- Public model contract (per-shop `contracts.ts`): `CharacterModel { root: Object3DLike,
-  update(state: Readonly<FigureState>, dt: number): void, dispose(): void }` with
-  `FigureState` carrying at least `idlePhase` and `talking: boolean`. The model never
-  writes its root transform. The dialogue bust is a CAMERA FRAMING of the full body,
-  never a separate asset.
+- **Characters are STATIC (user directive, 2026-08-05: "I am not interested in animated
+  characters. just they look correct.").** No idle, no talking, no animation contract of
+  any kind. Public model contract (per-shop `contracts.ts`):
+  `CharacterModel { root: Object3DLike, dispose(): void }`. The model never writes its
+  root transform. Any motion in evidence renders is CAMERA-ONLY (the harness turntable).
+  The dialogue bust is a CAMERA FRAMING of the full body, never a separate asset.
 
 ## Authority
 
@@ -163,7 +164,7 @@ from one shop root to two:
 **Bar:** mechanical — all gates green before and after; fence red-tested from `src/`
 against a `@cast` harness path and green-tested against a public-surface path.
 
-## Per-character loop (R0–R4)
+## Per-character loop (R0–R3)
 
 - **R0 — spec and references (lead + user).** `cast:new`, then the lead authors
   `spec.ts` (actor height from provenance, proportion bands, costume palette, ibad
@@ -176,22 +177,20 @@ against a `@cast` harness path and green-tested against a public-surface path.
   face forms, hair mass, authored feature placement. 3×Opus blind panel on bust framing:
   "Who is this?" Bar: at least two of three name the character or give an unambiguous
   descriptor; zero correctness findings (normals, symmetry, eye line).
-- **R3 — costume and materials (Opus).** Stillsuit/garment detail, `DataTexture`
-  weathering, palette from spec. Correctness: suit worn over a body, tubes route
-  (nose to catchpocket), grime where wear happens — authored, not sprayed.
-- **R4 — eyes, pose, idle (Sonnet). Milestone: final panel + USER VERDICT.** Ibad eyes
-  per spec, idle breathe/weight-shift via `update(state, dt)` (deterministic, zero when
-  `idlePhase` frozen), talking flag hook. 3×Opus panel: blind turntable ID ·
+- **R3 — costume, materials, eyes (Opus). Milestone: FINAL panel + USER VERDICT.**
+  Stillsuit/garment detail, `DataTexture` weathering, palette from spec, ibad eyes per
+  spec. Correctness: suit worn over a body, tubes route (nose to catchpocket), grime
+  where wear happens — authored, not sprayed. 3×Opus panel: blind turntable ID ·
   side-by-side against `docs/reference/` stills if present · full correctness sweep.
   Bar: **≥9/10 (AAA), zero correctness findings.** Then STOP for the user.
 
-## Release rounds (per wave, after its characters pass R4)
+## Release rounds (per wave, after its characters pass R3)
 
 The game's conversation figure renderer (`src/game-render/modes/conversation/
 drawFigure.ts` and friends) is the existing consumer and therefore the release point,
 exactly as `machines/Harvester.ts` was: it becomes an adapter that mounts the shop model
 by character id and frames the bust; the 2D drawn figure stays as the fallback for
-unreleased characters. Scale, lighting policy and `FigureState` synthesis live game-side.
+unreleased characters. Scale and lighting policy live game-side; the mounted model is static.
 Measure gate: `renderInfo` draw calls in conversation mode, `character-<name>` chunk
 within budget. Look gate: the user, in the game's own dialogue lighting. Location-scene
 and deck-crew placements are later applications of the same released models.
@@ -210,7 +209,7 @@ and deck-crew placements are later applications of the same released models.
 7. Bar met → log in the shop's `progress.md` (score, numbers, what did not reproduce),
    commit with the real hook. Bar missed → feed the single biggest gap to the SAME
    builder. Three passes without movement → stop, bring the gap to the user.
-8. R4 panels: STOP for the user's verdict before the next wave slot starts.
+8. Final (R3) panels: STOP for the user's verdict before the next wave slot starts.
 9. Stop conditions, named honestly: bar met · the next gap needs a human decision ·
    gains not worth the tokens — but under the AAA directive only the USER may invoke
    this third one; the lead's job is to keep looping or escalate, never to settle.

@@ -8,16 +8,21 @@ export default defineConfig({
   base: './',
   resolve: {
     // Shop release seam: game imports the shop public surface only, and
-    // ESLint (eslint.config.js) enforces that boundary at lint time.
-    alias: { '@shop': fileURLToPath(new URL('./vehicle-shop', import.meta.url)) },
+    // ESLint (eslint.config.js) enforces that boundary at lint time. Two
+    // roots, one seam each — vehicle-shop/ for machines, character-shop/
+    // for the cast (docs/PRD/dune92/04-asset-pipeline.md).
+    alias: {
+      '@shop': fileURLToPath(new URL('./vehicle-shop', import.meta.url)),
+      '@cast': fileURLToPath(new URL('./character-shop', import.meta.url)),
+    },
   },
   test: {
     environment: 'node',
-    // vehicle-shop/ holds standalone rigs for building one vehicle at a time
-    // before it is folded into the game. Its pure modules (flight dynamics,
-    // control mapping) carry the same unit-test obligation as src/, so the
-    // suite has to see them — without this line they are silently untested.
-    include: ['src/**/*.test.ts', 'vehicle-shop/**/*.test.ts'],
+    // vehicle-shop/ and character-shop/ hold standalone rigs for building
+    // one asset at a time before it is folded into the game. Their pure
+    // modules carry the same unit-test obligation as src/, so the suite has
+    // to see them — without this line they are silently untested.
+    include: ['src/**/*.test.ts', 'vehicle-shop/**/*.test.ts', 'character-shop/**/*.test.ts'],
     passWithNoTests: true,
     // Cap worker count and recycle workers. On 2026-07-24 unbounded vitest
     // workers grew to 2.6-4 GiB RSS each and drove the machine low enough for
@@ -36,6 +41,10 @@ export default defineConfig({
           // Each shop asset ships as its own budgeted chunk (scripts/check-bundle-size.mjs).
           if (id.includes('/vehicle-shop/')) {
             return `vehicle-${id.split('/vehicle-shop/')[1].split('/')[0]}`
+          }
+
+          if (id.includes('/character-shop/')) {
+            return `character-${id.split('/character-shop/')[1].split('/')[0]}`
           }
 
           if (!id.includes('node_modules')) {
