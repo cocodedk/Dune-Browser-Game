@@ -1,68 +1,68 @@
 // character-shop/chani/src/model/Chani.ts
-// Placeholder builder: an armature-named group tree (root/pelvis/spine/
-// chest/head/armL/armR/legL/legR), one placeholder box per group, sized to
-// PROPORTIONS so the scaffold builds, stands to spec height, and the seam
-// test is green immediately. Replace each box with real geometry in
-// place — the group names and nesting are the armature later rounds build
-// onto; do not rename them. Static: no update() — see contracts.ts.
+// R1 "body and silhouette": a full-body massed figure — authored body forms
+// (torso.ts, head.ts, hair.ts, costume.ts, arms.ts, legs.ts), replacing the
+// R0 placeholder boxes. The armature group tree (root/pelvis/spine/chest/
+// head/armL/armR/legL/legR) and every joint offset are UNCHANGED from the
+// placeholder: later rounds and the release adapter (character-shop/docs/
+// gauntlet-loop.md) depend on these names and this nesting, not on what
+// fills them. Static: no update() — see contracts.ts.
 
-import { Group, Mesh, BoxGeometry, MeshStandardMaterial } from 'three'
+import { Group, type Mesh } from 'three'
 import type { CharacterModel } from '../contracts'
-import { PROPORTIONS, PALETTE } from '../spec'
+import { PROPORTIONS } from '../spec'
+import { deriveProportions } from './proportions'
+import { createMaterials } from './materials'
+import { buildTorso } from './torso'
+import { buildHead } from './head'
+import { buildHair } from './hair'
+import { buildCollar } from './costume'
+import { buildArms } from './arms'
+import { buildLegs } from './legs'
 
-function limb(width: number, height: number, depth: number): Mesh {
-  const geometry = new BoxGeometry(width, height, depth)
-  const material = new MeshStandardMaterial({ color: PALETTE.skin })
-  return new Mesh(geometry, material)
+function group(name: string, parent: Group, x: number, y: number, z = 0): Group {
+  const g = new Group()
+  g.name = name
+  g.position.set(x, y, z)
+  parent.add(g)
+  return g
 }
 
 export function createChani(): CharacterModel {
-  const { heightM, headHeightFraction, shoulderHalfWidth, hipHalfWidth } = PROPORTIONS
-  const headH = heightM * (headHeightFraction.min + headHeightFraction.max) / 2
-  const bodyH = heightM - headH
-  const legH = bodyH * 0.58
-  const pelvisH = bodyH * 0.09
-  const spineH = bodyH * 0.17
-  const chestH = bodyH * 0.16
-
-  const meshes: Mesh[] = []
-  // joint: where this group sits in its parent's local frame.
-  // boxOffset: where the placeholder box sits inside this group's own frame.
-  function part(
-    parent: Group, name: string, w: number, h: number, d: number,
-    jointX: number, jointY: number, boxOffsetY: number,
-  ): Group {
-    const group = new Group()
-    group.name = name
-    group.position.set(jointX, jointY, 0)
-    parent.add(group)
-    const mesh = limb(w, h, d)
-    mesh.position.y = boxOffsetY
-    group.add(mesh)
-    meshes.push(mesh)
-    return group
-  }
+  const p = deriveProportions()
+  const mat = createMaterials()
 
   const root = new Group()
   root.name = 'root'
 
-  const pelvis = part(root, 'pelvis', hipHalfWidth * 2.2, pelvisH, hipHalfWidth * 1.4, 0, legH, pelvisH / 2)
-  part(pelvis, 'legL', hipHalfWidth * 0.7, legH, hipHalfWidth * 0.7, -hipHalfWidth, 0, -legH / 2)
-  part(pelvis, 'legR', hipHalfWidth * 0.7, legH, hipHalfWidth * 0.7, hipHalfWidth, 0, -legH / 2)
+  const pelvis = group('pelvis', root, 0, p.legH)
+  const legL = group('legL', pelvis, -PROPORTIONS.hipHalfWidth, 0)
+  const legR = group('legR', pelvis, PROPORTIONS.hipHalfWidth, 0)
+  const spine = group('spine', pelvis, 0, p.pelvisH)
+  const chest = group('chest', spine, 0, p.spineH)
+  // Shoulder joints sit 14% of the chest below its top. R1 pass 3 lowered
+  // them from the placeholder's chestH: at chestH the joint was level with
+  // the trapezius, which left ~46mm between shoulder and chin and no neck
+  // to speak of. The armature NAMES and NESTING — what later rounds and the
+  // release adapter bind to — are untouched.
+  const shoulderY = p.chestH * 0.86
+  const armL = group('armL', chest, -PROPORTIONS.shoulderHalfWidth, shoulderY)
+  const armR = group('armR', chest, PROPORTIONS.shoulderHalfWidth, shoulderY)
+  const head = group('head', chest, 0, p.chestH + p.neckH)
 
-  const spine = part(pelvis, 'spine', hipHalfWidth * 1.6, spineH, hipHalfWidth, 0, pelvisH, spineH / 2)
-  const chest = part(spine, 'chest', shoulderHalfWidth * 2.2, chestH, shoulderHalfWidth * 1.3, 0, spineH, chestH / 2)
-  part(chest, 'armL', shoulderHalfWidth * 0.55, chestH, shoulderHalfWidth * 0.55, -shoulderHalfWidth, chestH, -chestH / 2)
-  part(chest, 'armR', shoulderHalfWidth * 0.55, chestH, shoulderHalfWidth * 0.55, shoulderHalfWidth, chestH, -chestH / 2)
-  part(chest, 'head', shoulderHalfWidth * 1.3, headH, shoulderHalfWidth * 1.3, 0, chestH, headH / 2)
+  const meshes: Mesh[] = [
+    ...buildTorso({ pelvis, chest }, p, mat),
+    ...buildHead(head, p, mat),
+    ...buildHair(head, p, mat),
+    ...buildCollar(chest, p, mat),
+    ...buildArms({ armL, armR }, p, mat),
+    ...buildLegs({ legL, legR }, p, mat),
+  ]
 
   return {
     root,
     dispose(): void {
-      for (const mesh of meshes) {
-        mesh.geometry.dispose()
-        ;(mesh.material as MeshStandardMaterial).dispose()
-      }
+      for (const mesh of meshes) mesh.geometry.dispose()
+      for (const material of mat.all) material.dispose()
       root.clear()
     },
   }

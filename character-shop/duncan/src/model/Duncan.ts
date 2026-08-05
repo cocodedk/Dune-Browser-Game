@@ -1,68 +1,60 @@
 // character-shop/duncan/src/model/Duncan.ts
-// Placeholder builder: an armature-named group tree (root/pelvis/spine/
-// chest/head/armL/armR/legL/legR), one placeholder box per group, sized to
-// PROPORTIONS so the scaffold builds, stands to spec height, and the seam
-// test is green immediately. Replace each box with real geometry in
-// place — the group names and nesting are the armature later rounds build
-// onto; do not rename them. Static: no update() — see contracts.ts.
+// Full-body assembly: root/pelvis/spine/chest/head/armL/armR/legL/legR, the
+// armature contracts.ts and seam.test.ts require. Every part builder owns
+// its own geometry; this file only wires them onto the armature, collects
+// their geometries into one disposal bin and disposes the four shared
+// materials once. Static: no update() — see contracts.ts.
+//
+// Pass 4 (progress.md) is a topology change, not a tuning pass: the figure
+// is now SIX lofted surfaces (torso, two arms, two legs, head parts) with
+// meso masses laid on them, where it used to be twenty-odd cylinders,
+// capsules and spheres stacked end to end. The armature groups survive
+// unchanged — they are the joint pivots, and the seam rests on them — but
+// each continuous region is one mesh, so it can no longer step at a seam or
+// cap itself with a disc.
 
-import { Group, Mesh, BoxGeometry, MeshStandardMaterial } from 'three'
+import { Group } from 'three'
+import type { BufferGeometry } from 'three'
 import type { CharacterModel } from '../contracts'
-import { PROPORTIONS, PALETTE } from '../spec'
-
-function limb(width: number, height: number, depth: number): Mesh {
-  const geometry = new BoxGeometry(width, height, depth)
-  const material = new MeshStandardMaterial({ color: PALETTE.skin })
-  return new Mesh(geometry, material)
-}
+import { buildMaterials, disposeMaterials } from './materials'
+import { buildTorso } from './torso'
+import { buildRig } from './rig'
+import { buildArm } from './arm'
+import { buildLeg } from './leg'
+import { buildHead } from './head'
+import { JOINTS } from './bodyPlan'
 
 export function createDuncan(): CharacterModel {
-  const { heightM, headHeightFraction, shoulderHalfWidth, hipHalfWidth } = PROPORTIONS
-  const headH = heightM * (headHeightFraction.min + headHeightFraction.max) / 2
-  const bodyH = heightM - headH
-  const legH = bodyH * 0.58
-  const pelvisH = bodyH * 0.09
-  const spineH = bodyH * 0.17
-  const chestH = bodyH * 0.16
-
-  const meshes: Mesh[] = []
-  // joint: where this group sits in its parent's local frame.
-  // boxOffset: where the placeholder box sits inside this group's own frame.
-  function part(
-    parent: Group, name: string, w: number, h: number, d: number,
-    jointX: number, jointY: number, boxOffsetY: number,
-  ): Group {
-    const group = new Group()
-    group.name = name
-    group.position.set(jointX, jointY, 0)
-    parent.add(group)
-    const mesh = limb(w, h, d)
-    mesh.position.y = boxOffsetY
-    group.add(mesh)
-    meshes.push(mesh)
-    return group
-  }
+  const materials = buildMaterials()
+  const geometries: BufferGeometry[] = []
 
   const root = new Group()
   root.name = 'root'
 
-  const pelvis = part(root, 'pelvis', hipHalfWidth * 2.2, pelvisH, hipHalfWidth * 1.4, 0, legH, pelvisH / 2)
-  part(pelvis, 'legL', hipHalfWidth * 0.7, legH, hipHalfWidth * 0.7, -hipHalfWidth, 0, -legH / 2)
-  part(pelvis, 'legR', hipHalfWidth * 0.7, legH, hipHalfWidth * 0.7, hipHalfWidth, 0, -legH / 2)
+  const { pelvis, chest } = buildTorso(geometries, materials, root)
+  // The rig hangs off the pelvis with the torso surface it is sampled from,
+  // not off the chest: one parent for one costume, one frame for both.
+  buildRig(geometries, materials, pelvis)
 
-  const spine = part(pelvis, 'spine', hipHalfWidth * 1.6, spineH, hipHalfWidth, 0, pelvisH, spineH / 2)
-  const chest = part(spine, 'chest', shoulderHalfWidth * 2.2, chestH, shoulderHalfWidth * 1.3, 0, spineH, chestH / 2)
-  part(chest, 'armL', shoulderHalfWidth * 0.55, chestH, shoulderHalfWidth * 0.55, -shoulderHalfWidth, chestH, -chestH / 2)
-  part(chest, 'armR', shoulderHalfWidth * 0.55, chestH, shoulderHalfWidth * 0.55, shoulderHalfWidth, chestH, -chestH / 2)
-  part(chest, 'head', shoulderHalfWidth * 1.3, headH, shoulderHalfWidth * 1.3, 0, chestH, headH / 2)
+  for (const side of [-1, 1] as const) {
+    const leg = buildLeg(geometries, materials, side)
+    leg.position.set(JOINTS.hipX * side, 0, 0)
+    pelvis.add(leg)
+
+    const arm = buildArm(geometries, materials, side)
+    arm.position.set(JOINTS.shoulderX * side, JOINTS.shoulderY - JOINTS.chestY, JOINTS.shoulderZ)
+    chest.add(arm)
+  }
+
+  const head = buildHead(geometries, materials)
+  head.position.set(0, JOINTS.headY - JOINTS.chestY, 0)
+  chest.add(head)
 
   return {
     root,
     dispose(): void {
-      for (const mesh of meshes) {
-        mesh.geometry.dispose()
-        ;(mesh.material as MeshStandardMaterial).dispose()
-      }
+      for (const geometry of geometries) geometry.dispose()
+      disposeMaterials(materials)
       root.clear()
     },
   }
