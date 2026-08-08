@@ -12,6 +12,7 @@ import { Box3, Color, MeshBasicMaterial, Vector3 } from 'three'
 import type { Mesh, Object3D, PerspectiveCamera, Scene } from 'three'
 import { PROPORTIONS } from './spec'
 import type { CharacterModel } from './contracts'
+import type { LightRig } from './lighting'
 
 export interface FigureMeasurement {
   height: number
@@ -33,6 +34,11 @@ export interface DebugHandle {
    *  true silhouette, not just a dark render. false: restores the figure's
    *  own materials and the scene background. */
   setSilhouette(on: boolean): void
+  /** Swap between lighting.ts's two rigs and their backdrops. Call it AFTER
+   *  viewpoint() for the same framing: the portrait rig's three beams are
+   *  offsets from the camera's own azimuth, so it needs to know where the
+   *  camera just went. */
+  setPortrait(on: boolean): void
   measure(): FigureMeasurement
 }
 
@@ -42,10 +48,16 @@ declare global {
   }
 }
 
-export function installDebugHandle(scene: Scene, camera: PerspectiveCamera, model: CharacterModel): DebugHandle {
+export function installDebugHandle(
+  scene: Scene, camera: PerspectiveCamera, model: CharacterModel, lights: LightRig,
+): DebugHandle {
   const root = model.root as unknown as Object3D
   const black = new MeshBasicMaterial({ color: 0x000000 })
   const originals = new Map<Mesh, Mesh['material']>()
+  // The framing viewpoint() last placed, so setPortrait() can hang the
+  // three-point rig off the camera instead of off the world.
+  let framing = { az: 0, targetY: PROPORTIONS.heightM * 0.5 }
+  let silhouette = false
   // Captured EAGERLY, at handle-creation time — not lazily inside
   // setSilhouette(true). Pass 2 bug (progress.md): shoot.mjs calls
   // setSilhouette(false) for every non-silhouette view, including the
@@ -54,7 +66,13 @@ export function installDebugHandle(scene: Scene, camera: PerspectiveCamera, mode
   // point, so the very first "false" call clobbered main.ts's dark-neutral
   // background to null (the renderer's own default clear colour, black) —
   // every colour render silently lost the lighting fix to this.
-  const originalBackground: Scene['background'] = scene.background
+  //
+  // R2 keeps the eager capture and makes it a VARIABLE rather than a
+  // constant, because setPortrait() now legitimately changes what "the
+  // scene's own background" means. The invariant the bug taught is
+  // unchanged and is the only thing that matters: this is never null and is
+  // never read before it has been written.
+  let baseBackground: Scene['background'] = scene.background
 
   const handle: DebugHandle = {
     viewpoint(azimuthDeg, elevationDeg, distanceHeights, targetYFraction) {
@@ -68,8 +86,15 @@ export function installDebugHandle(scene: Scene, camera: PerspectiveCamera, mode
         -Math.cos(el) * Math.cos(az) * r,
       )
       camera.lookAt(0, targetY, 0)
+      framing = { az: azimuthDeg, targetY }
+    },
+    setPortrait(on) {
+      lights.apply(on, framing.az, framing.targetY)
+      baseBackground = lights.backdrop(on)
+      if (!silhouette) scene.background = baseBackground
     },
     setSilhouette(on) {
+      silhouette = on
       if (on) {
         scene.background = new Color(0xffffff)
         root.traverse((child) => {
@@ -79,7 +104,7 @@ export function installDebugHandle(scene: Scene, camera: PerspectiveCamera, mode
           mesh.material = black
         })
       } else {
-        scene.background = originalBackground
+        scene.background = baseBackground
         for (const [mesh, material] of originals) mesh.material = material
       }
     },

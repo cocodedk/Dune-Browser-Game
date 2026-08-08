@@ -24,6 +24,14 @@ export interface Ring {
   y: number
   /** Half-width in X. The silhouette tests measure this. */
   rx: number
+  /** Cross-section centre in X. Zero for everything on the centre line;
+   *  R2 added it so an EYE could be authored as a station table like
+   *  everything else — an almond's widest slice sits inboard of its lower
+   *  lid and outboard of its upper-lid peak, and without a per-ring X
+   *  centre a stack of ellipses can only ever be a symmetric lens. The
+   *  hair curls use it to snake. Mirroring a mass is negating this, which
+   *  leaves the winding alone — scaling X by -1 would invert it. */
+  xc?: number
   /** Half-depth toward the FRONT (-Z) from zc. */
   rzF: number
   /** Half-depth toward the BACK (+Z) from zc. */
@@ -69,7 +77,7 @@ function ringPoint(r: Ring, theta: number, out: number[]): void {
   let z = (r.zc ?? 0) - rz * swell(cos, p)
   if (r.lobe) z -= r.lobe * gauss(a - LOBE_AT)
   if (r.lobeB) z += r.lobeB * gauss(Math.PI - a - LOBE_AT)
-  out.push(r.rx * swell(Math.sin(theta), p), r.y, z)
+  out.push((r.xc ?? 0) + r.rx * swell(Math.sin(theta), p), r.y, z)
 }
 
 /** Loft a stack of elliptical rings, bottom row first, and cap both ends.
@@ -99,9 +107,9 @@ export function loft(
   const first = rings[0]
   const last = rings[rings.length - 1]
   const bottomHub = positions.length / 3
-  positions.push(0, first.y, first.zc ?? 0)
+  positions.push(first.xc ?? 0, first.y, first.zc ?? 0)
   const topHub = bottomHub + 1
-  positions.push(0, last.y, last.zc ?? 0)
+  positions.push(last.xc ?? 0, last.y, last.zc ?? 0)
   const topRow = (rings.length - 1) * segments
   for (let j = 0; j < segments; j++) {
     const jn = (j + 1) % segments

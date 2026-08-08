@@ -69,34 +69,19 @@ function torsoRings(p: Proportions): Ring[] {
   ]
 }
 
-/** Chest-local. Rises from inside the trapezius to inside the skull, so
- *  neither end cap is ever visible, and sits BACK of centre (zc) because a
- *  throat lives behind the chin, not under it. */
-function neckRings(p: Proportions): Ring[] {
-  const c = p.chestH
-  return [
-    // Widened ~12% over pass 3a (104/116mm across at the exposed rings) and
-    // flared harder at the base: a 100mm neck on 390mm shoulders is the peg
-    // read, whatever the jawline does. The jaw still overhangs the throat by
-    // ~42mm in profile, which is the undercut.
-    { y: c * 0.74, rx: 0.108, zc: 0.014, rzF: 0.076, rzB: 0.086 },
-    { y: c * 0.92, rx: 0.086, zc: 0.016, rzF: 0.058, rzB: 0.074 },
-    { y: c + p.neckH * 0.30, rx: 0.068, zc: 0.020, rzF: 0.048, rzB: 0.066 },
-    { y: c + p.neckH * 0.95, rx: 0.058, zc: 0.024, rzF: 0.044, rzB: 0.058 },
-    { y: c + p.neckH + p.headH * 0.24, rx: 0.050, zc: 0.026, rzF: 0.041, rzB: 0.051 },
-  ]
-}
-
+// R2 moved the NECK out of this file. It was its own loft here, rising
+// from inside the trapezius into the skull, and a separate loft cannot
+// taper into a jaw: its ellipse was 6mm wider than any chin the R2 brief
+// allows, so it poked out through the mandible at every angle. The neck is
+// now rows of the head's own control profile (face/station.ts), which is
+// the same thing the accepted house pattern does. Nothing below the
+// clavicle changed — torsoRings above is R1's, untouched, and the collar
+// still hides this mass's top cap.
 export function buildTorso(
   groups: { pelvis: Group; chest: Group }, p: Proportions, mat: ChaniMaterials,
 ): Mesh[] {
   const torso = loft(torsoRings(p), mat.fabric, 28)
   torso.name = 'torsoMass'
   groups.pelvis.add(torso)
-
-  const neck = loft(neckRings(p), mat.skin, 20)
-  neck.name = 'neck'
-  groups.chest.add(neck)
-
-  return [torso, neck]
+  return [torso]
 }

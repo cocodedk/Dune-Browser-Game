@@ -57,13 +57,20 @@ export function roundedBox(
 
 /** A meso mass — a unit sphere scaled per-axis and BAKED into the geometry
  *  (not mesh.scale), so a later Box3 measures the true size directly with no
- *  scale factor for a test to carry. 18x12 segments: these sit ON a 32-sided
- *  loft and must not be the faceted thing beside a smooth one. */
+ *  scale factor for a test to carry. 18x12 segments by default: these sit ON
+ *  a 32-sided loft and must not be the faceted thing beside a smooth one.
+ *
+ *  `segments` exists for the ONE case where the default is not enough. The
+ *  eyeball sits in a 108-segment skull and shows through a 30mm aperture at
+ *  head framing, where 12 rings across a 20mm globe are visible facets — and
+ *  a faceted eye is the one place on this face where a polygon edge reads as
+ *  a defect rather than as stylisation. */
 export function blob(
   bin: Bin, parent: Object3D, radiusX: number, radiusY: number, radiusZ: number,
   material: MeshStandardMaterial, x: number, y: number, z: number, name = '',
+  segments: [number, number] = [18, 12],
 ): Mesh {
-  const geometry = new SphereGeometry(1, 18, 12)
+  const geometry = new SphereGeometry(1, segments[0], segments[1])
   geometry.scale(radiusX, radiusY, radiusZ)
   return land(bin, parent, geometry, material, x, y, z, name)
 }

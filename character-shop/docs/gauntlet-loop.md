@@ -1,5 +1,11 @@
 # Gauntlet Loop — character-shop: the cast
 
+> **ENDED 2026-08-08 by user verdict.** Wave 1 (chani, stilgar, duncan) is
+> settled as-is — "no more work is needed on these figures." All later waves
+> are cancelled: the user generates future cast figures as **2D photo-style
+> images** (ChatGPT) instead of 3D models. This document stays as the record
+> of the loop that built wave 1; nothing below dispatches new work.
+
 Every named character in the game gets a hero-grade full-body 3D model, built in a
 standalone workshop and released into the game through the asset-pipeline seam — the same
 path both vehicles took (`docs/PRD/dune92/04-asset-pipeline.md`). This document is the

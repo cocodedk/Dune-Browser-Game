@@ -15,7 +15,14 @@ export interface DuncanMaterials {
   fabric: MeshStandardMaterial
   accent: MeshStandardMaterial
   hair: MeshStandardMaterial
+  eyes: MeshStandardMaterial
 }
+
+// R2 adds the fifth: PALETTE.eyes, spec's natural dark warm iris. It is
+// slightly less rough than skin so the one small wet-looking thing on the
+// face is the eye — but it is still flat colour, because material nuance
+// belongs to R3 and IBAD is false, so there is no sclera to light up.
+const EYE_ROUGHNESS = 0.45
 
 export function buildMaterials(): DuncanMaterials {
   return {
@@ -23,6 +30,7 @@ export function buildMaterials(): DuncanMaterials {
     fabric: new MeshStandardMaterial({ color: PALETTE.fabric, roughness: ROUGHNESS, metalness: 0 }),
     accent: new MeshStandardMaterial({ color: PALETTE.accent, roughness: ROUGHNESS, metalness: 0 }),
     hair: new MeshStandardMaterial({ color: PALETTE.hair, roughness: ROUGHNESS, metalness: 0 }),
+    eyes: new MeshStandardMaterial({ color: PALETTE.eyes, roughness: EYE_ROUGHNESS, metalness: 0 }),
   }
 }
 

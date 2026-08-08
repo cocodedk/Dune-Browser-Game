@@ -26,19 +26,46 @@ const BUST_TARGET_Y = 0.94
 // body) and the rig's front bulk stay inside the frame.
 const THREEQUARTER_DIST = FULL_BODY_DIST * 1.08
 
+// R2's two head framings. The head is 251mm crown to chin and sits centred
+// on 0.928 of stature; at a 50-degree vertical FOV a distance of 0.20
+// heights frames 0.36m of subject, so chin to topknot fills the frame with
+// a little air. Both carry `portrait`, which swaps in lighting.ts's
+// three-point rig and its mid-grey backdrop — the bust does too, and those
+// three framings are the ONLY ones that do. The six survey views and the
+// silhouette keep R1's lighting and backdrop untouched, so their evidence
+// stays comparable round to round.
+const HEAD_DIST = 0.20
+const HEAD_TARGET_Y = 0.928
+
 export const VIEWS = [
   { name: 'front', az: 0, el: 4, dist: FULL_BODY_DIST, targetY: FULL_BODY_TARGET_Y },
   { name: 'back', az: 180, el: 4, dist: FULL_BODY_DIST, targetY: FULL_BODY_TARGET_Y },
   { name: 'left', az: -90, el: 4, dist: FULL_BODY_DIST, targetY: FULL_BODY_TARGET_Y },
   { name: 'right', az: 90, el: 4, dist: FULL_BODY_DIST, targetY: FULL_BODY_TARGET_Y },
   { name: 'threequarter', az: -40, el: 10, dist: THREEQUARTER_DIST, targetY: FULL_BODY_TARGET_Y },
-  { name: 'bust', az: -25, el: 10, dist: BUST_DIST, targetY: BUST_TARGET_Y },
+  { name: 'bust', az: -25, el: 10, dist: BUST_DIST, targetY: BUST_TARGET_Y, portrait: true },
+  { name: 'headfront', az: 0, el: 3, dist: HEAD_DIST, targetY: HEAD_TARGET_Y, portrait: true },
+  { name: 'headthreequarter', az: -35, el: 6, dist: HEAD_DIST, targetY: HEAD_TARGET_Y, portrait: true },
   // silhouette shares 'threequarter's placement exactly — see the header.
   { name: 'silhouette', az: -40, el: 10, dist: THREEQUARTER_DIST, targetY: FULL_BODY_TARGET_Y, silhouette: true },
 ]
 
+/** The three-point numbers, mirrored from lighting.ts so shoot.mjs can write
+ *  them into .shots/manifest.json without importing TypeScript into node.
+ *  If lighting.ts's PORTRAIT changes, change this too — the manifest is
+ *  evidence, and evidence that lies about its own lighting is worse than no
+ *  manifest at all. */
+export const PORTRAIT_RIG = {
+  note: 'azimuths are OFFSETS from the camera; see src/lighting.ts',
+  key: { az: 45, el: 30, intensity: 1.15 },
+  fill: { az: -60, el: 12, intensity: 0.38 },
+  rim: { az: 180, el: 42, intensity: 1.05 },
+  ambient: 0.24,
+  backdrop: '0x8a8a8a',
+}
+
 /** --views front,bust  -> only those, in that order; empty/absent means all
- *  seven. Throws on an unknown name rather than silently shooting one fewer
+ *  nine. Throws on an unknown name rather than silently shooting one fewer
  *  view than asked for. */
 export function filterViews(rawFilter) {
   if (!rawFilter) return VIEWS

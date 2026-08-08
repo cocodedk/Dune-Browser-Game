@@ -26,12 +26,16 @@ export async function ensureDevServer(port) {
     return { kill: () => {} }
   }
 
+  // detached so the spawn gets its own process group: `npx vite` is a
+  // launcher with a real vite child under it, and SIGTERM to npx alone
+  // leaves that child holding the port.
   const server = spawn('npx', ['vite', 'character-shop/stilgar', '--port', String(port), '--strictPort'], {
     stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true,
   })
   const kill = () => {
     try {
-      server.kill('SIGTERM')
+      process.kill(-server.pid, 'SIGTERM')
     } catch {
       /* already gone */
     }

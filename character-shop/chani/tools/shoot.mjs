@@ -1,10 +1,15 @@
 // character-shop/chani/tools/shoot.mjs
-// Capture Chani at the seven named views the R1 harness contract requires,
-// at fixed poses so a critic judges frames, not a description of frames,
-// and two runs of the same view are the same image. VIEWS and the dev-
-// server bring-up live in ./views.mjs and ./devServer.mjs — the harvester
-// shop's tools/ split, adapted (character-shop/docs/gauntlet-loop.md: never
-// imported across shops, this copy is chani's own).
+// Capture Chani at the nine named views the harness contract requires —
+// R1's seven plus R2's two head framings — at fixed poses, so a critic
+// judges frames rather than a description of frames and two runs of the
+// same view are the same image. VIEWS, the per-view lighting rig and the
+// dev-server bring-up live in ./views.mjs and ./devServer.mjs — the
+// harvester shop's tools/ split, adapted (character-shop/docs/
+// gauntlet-loop.md: never imported across shops, this copy is chani's own).
+//
+// The rig numbers used for every frame are recorded in .shots/manifest.json
+// alongside the view table, so a capture is reproducible from the manifest
+// alone.
 //
 // Usage:
 //   node character-shop/chani/tools/shoot.mjs [--out .shots] [--views front,bust]
@@ -49,15 +54,21 @@ await page.waitForFunction(() => Boolean(window.__CHANI__), null, { timeout: 300
 await page.waitForTimeout(400)
 
 const measurement = await page.evaluate(() => window.__CHANI__.measure())
-const manifest = { width: WIDTH, height: HEIGHT, measurement, views: [], errors }
+// The rig numbers come back from the BROWSER (src/lighting.ts RIGS), not
+// from a node-side copy that could drift out of step with what actually
+// lit the frame. views.mjs names which rig each view uses.
+const rigs = await page.evaluate(() => window.__CHANI__.rigs())
+const manifest = { width: WIDTH, height: HEIGHT, measurement, rigs, views: [], errors }
 
 for (const view of views) {
   await page.evaluate(
-    ([az, el, dist, targetY, silhouette]) => {
-      window.__CHANI__.viewpoint(az, el, dist, targetY)
+    ([az, el, dist, targetY, silhouette, rig, fov]) => {
+      window.__CHANI__.setRig(rig, az)
+      window.__CHANI__.viewpoint(az, el, dist, targetY, fov)
       window.__CHANI__.setSilhouette(Boolean(silhouette))
     },
-    [view.az, view.el, view.dist, view.targetY, Boolean(view.silhouette)],
+    [view.az, view.el, view.dist, view.targetY, Boolean(view.silhouette),
+      view.rig ?? 'full', view.fov ?? 50],
   )
   await page.waitForTimeout(200)
   const file = join(OUT, `${view.name}.png`)
@@ -66,11 +77,20 @@ for (const view of views) {
 }
 
 await browser.close()
-kill()
 await writeFile(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2))
+
+// EXPLICIT TEARDOWN, THEN AN EXPLICIT EXIT. Both halves are load-bearing.
+// `npx vite` spawns a SHELL that spawns node, so SIGTERM to the child kills
+// npx and orphans vite holding the port; killing the whole process GROUP is
+// what actually frees it. And even with the port free, node would not exit:
+// the spawned child's piped stdio streams stay referenced on the event loop,
+// so this script ran to completion and then hung forever. Every caller was
+// wrapping it in `timeout`, which is a workaround for a bug, and a
+// `timeout`-killed capture cannot be told from a crashed one.
+kill()
 if (errors.length) {
   console.error('page errors:', errors)
-  process.exitCode = 1
-} else {
-  console.log(`captured ${manifest.views.length} views to ${OUT}`)
+  process.exit(1)
 }
+console.log(`captured ${manifest.views.length} views to ${OUT}`)
+process.exit(0)

@@ -2,14 +2,14 @@
 
 Standalone rig at `character-shop/duncan/`. Run it with `npm run cast:duncan`.
 
-## STATUS — session handoff
+## STATUS — SETTLED
 
-R1 (body and silhouette) FROZEN at pass 5 by lead decision 2026-08-05. Pass 5
-was a measured tuning pass landed AFTER the last critic (4/10 on pass 4) and
-is unscored — the lead verified its numbers and silhouette directly: the
-"slender, sex-ambiguous" blind read is gone (A-pose 25°, breadth 1.155 m,
-V-ratio 1.32, glute projection 59 mm, three direction changes on the back
-edge). The user judges next.
+Settled 2026-08-08 by user verdict: "no more work is needed on these figures."
+Final state: R2 pass 3, lead-verified (41 tests green, evidence deterministic)
+— the scar reads as a scar, the jaw shows through the beard, and blind judges
+ranked "Jason Momoa as Duncan Idaho" first in both tests. His 3×Opus panel
+died with the weekly-limit cut and was never re-run. The user generates future
+cast figures as 2D photo-style images (ChatGPT); the 3D loops end here.
 
 ## The bar
 
@@ -41,3 +41,22 @@ tuning could fix an 11.6-unit head. Report the render, not the table's intent.
 **Tests:** 18 green (seam guards, widths in anatomical bands, 3D joint
 continuity incl. crotch, envelope with head-band check). Shots: `.shots/`
 seven views, deterministic.
+
+### R2 — head and likeness (3 passes so far)
+
+Spec delta committed first (137fb0a): `PALETTE.eyes` natural dark, lifted to
+0x453425 after pass 1 (near-black rendered as empty slits in shadowed sockets).
+Portrait rig + `headfront`/`headthreequarter` as per the wave.
+
+| pass | builder | verdict | headline |
+|---|---|---|---|
+| 1 | Opus | Sonnet 6/10 · blind ranks MOMOA'S DUNCAN #1 (~50%, Drogo 2nd) | full face sculpt; builder DISPROVED the lead's brief ("left = +X" was wrong — left is −X, arm.ts precedent + cross product; scar side approved at −X); scar read as "modeling error, not a mark" |
+| 2 | Opus | Sonnet 6/10 · blind ranks Momoa's Duncan #1 (moderate) | eyes rebuilt as convex globes with real lids (9mm aperture vs flat pills), mouth resolved (24mm visible lip), hairline shaped, cranium+neck broadened; found+guarded its own bare-scalp defect; scar still "two pieces" — gap floor catches the key |
+| 3 | Opus | running | scar as a MARK (raised tissue line through the gap, self-shadowing walls), jaw through the beard + hair/beard silhouette separation, brows follow the ridge, topknot-base show-throughs (lead-found in back.png) |
+
+**What did not reproduce:** pass-1's "58.4mm neck sliver" (pass 2 measured
+43.4mm in the same window — builder over-report); the p2 critic's "hair-volume
+asymmetry" (lead checked back.png: one CENTERED tail — perspective in angled
+views). **Guard re-ruler, declared:** scar notch 1D column sweep → 2D cell
+sweep (column sweep blind to thin diagonal grooves; same geometry 2.0mm by the
+old ruler, 5.3mm by the new).

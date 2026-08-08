@@ -22,8 +22,12 @@
 import { BufferAttribute, BufferGeometry, Mesh } from 'three'
 import type { MeshStandardMaterial, Object3D } from 'three'
 import { profileAt } from './stations'
-import type { Profile, Station } from './stations'
+import type { Station } from './stations'
 import type { Bin } from './primitives'
+import { DOME_STEPS, domeRings, push, ring } from './sculpt'
+import type { Sculptor } from './sculpt'
+
+export type { Sculptor, SurfacePoint } from './sculpt'
 
 export interface LoftOptions {
   /** Rings sampled along the path. More = smoother curvature, not more form. */
@@ -39,18 +43,8 @@ export interface LoftOptions {
   topCapRise?: number
   /** Stature-metre tables minus the owning group's own world height. */
   originY?: number
-}
-
-const DOME_STEPS = 4
-
-function ring(p: Profile, y: number, scale: number, radial: number, out: number[]): void {
-  for (let i = 0; i < radial; i++) {
-    const theta = (i / radial) * Math.PI * 2
-    const c = Math.cos(theta)
-    const s = Math.sin(theta)
-    const rz = (p.rb * (1 + c) + p.rf * (1 - c)) / 2
-    out.push(p.cx + p.rx * scale * s, y, p.cz + rz * scale * c)
-  }
+  /** Carves features into the surface — see Sculptor above. */
+  sculpt?: Sculptor
 }
 
 function stitch(rings: number, radial: number, index: number[]): void {
@@ -66,17 +60,6 @@ function stitch(rings: number, radial: number, index: number[]): void {
   }
 }
 
-/** Rings for one rounded end: a quarter-ellipse of height `h`, shrinking the
- *  section to nothing at the apex. The apex vertex itself is pushed by the
- *  caller so the fan can be wound per end. */
-function domeRings(p: Profile, y0: number, h: number, radial: number, out: number[]): number {
-  for (let k = 1; k < DOME_STEPS; k++) {
-    const phi = (k / DOME_STEPS) * (Math.PI / 2)
-    ring(p, y0 + h * Math.sin(phi), Math.cos(phi), radial, out)
-  }
-  return DOME_STEPS - 1
-}
-
 export function loft(
   bin: Bin, parent: Object3D, stations: Station[], material: MeshStandardMaterial,
   name: string, options: LoftOptions = {},
@@ -86,6 +69,7 @@ export function loft(
   const originY = options.originY ?? 0
   const domeBottomH = options.domeBottomH ?? 0
   const domeTopH = options.domeTopH ?? 0
+  const sculpt = options.sculpt
   const position: number[] = []
   const index: number[] = []
 
@@ -100,24 +84,29 @@ export function loft(
   if (domeBottomH > 0) {
     for (let k = DOME_STEPS - 1; k >= 1; k--) {
       const phi = (k / DOME_STEPS) * (Math.PI / 2)
-      ring(first, firstY - domeBottomH * Math.sin(phi), Math.cos(phi), radial, position)
+      ring(first, firstY - domeBottomH * Math.sin(phi), Math.cos(phi), radial, position, sculpt)
       rings++
     }
   }
   for (let r = 0; r < ringCount; r++) {
     const p = profileAt(stations, (r / (ringCount - 1)) * (stations.length - 1))
-    ring(p, p.y - originY, 1, radial, position)
+    ring(p, p.y - originY, 1, radial, position, sculpt)
     rings++
   }
-  if (domeTopH > 0) rings += domeRings(last, lastY, domeTopH, radial, position)
+  if (domeTopH > 0) rings += domeRings(last, lastY, domeTopH, radial, position, sculpt)
   stitch(rings, radial, index)
 
   // Both ends close on a single apex: the dome's pole, or a flat cap's
   // centre. Winding is mirrored between them so both faces point outward.
+  //
+  // The apexes are sculpted too, with a null outward direction: a field that
+  // pushes radially has nothing to push along on the axis, and a field that
+  // pushes along an axis (the chin, the crown) still lands. Without this the
+  // pole stays put while the ring beside it moves, and the surface pinches.
   const bottomApex = rings * radial
-  position.push(first.cx, firstY - domeBottomH, first.cz)
+  push(position, first.cx, firstY - domeBottomH, first.cz, 0, 0, sculpt)
   const topApex = bottomApex + 1
-  position.push(last.cx, lastY + (domeTopH || options.topCapRise || 0), last.cz)
+  push(position, last.cx, lastY + (domeTopH || options.topCapRise || 0), last.cz, 0, 0, sculpt)
   const top = (rings - 1) * radial
   for (let i = 0; i < radial; i++) {
     const next = (i + 1) % radial

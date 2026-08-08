@@ -17,6 +17,8 @@ import { buildShoulderWrap, buildTubeAndPocket } from './geometry/costume'
 import { buildHead } from './geometry/head'
 import { buildHood } from './geometry/hood'
 import { buildBeard } from './geometry/beard'
+import { buildEyes } from './geometry/eyes'
+import { buildBrows } from './geometry/brows'
 import { buildArm } from './geometry/arm'
 import { buildLeg } from './geometry/leg'
 
@@ -48,6 +50,8 @@ export function createStilgar(): CharacterModel {
   buildShoulderWrap(disposables, chest, materials.accent)
   buildTubeAndPocket(disposables, chest, materials.accent)
   buildHead(disposables, head, materials.skin)
+  buildEyes(disposables, head, materials.eyes)
+  buildBrows(disposables, head, materials.hair)
   buildBeard(disposables, head, materials.hair)
   buildHood(disposables, head, materials.accent)
   buildArm(disposables, armL, 'L', materials.fabric, materials.skin)

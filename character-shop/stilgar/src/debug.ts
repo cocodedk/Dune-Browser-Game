@@ -10,6 +10,8 @@ import type { Object3D, Mesh, Material, Scene, PerspectiveCamera } from 'three'
 import type { CharacterModel } from './contracts'
 import { PROPORTIONS } from './spec'
 import { namedOrThrow, directMeshBBox, halfWidthX } from './model/measure'
+import { RIGS, type LightingControl, type RigName, type RigSpec } from './lighting'
+import { headLandmarks, type HeadLandmarks } from './model/headReport'
 
 export interface StilgarMeasurement {
   heightM: number
@@ -17,6 +19,10 @@ export interface StilgarMeasurement {
   hipHalfWidth: number
   triangles: number
   meshes: number
+  /** Every face landmark this round is judged on, read off the built mesh —
+   *  so the manifest beside the PNGs carries the numbers rather than a
+   *  builder's report carrying them alone. */
+  head: HeadLandmarks
 }
 
 export interface CaptureHandle {
@@ -25,6 +31,13 @@ export interface CaptureHandle {
    *  back (the face-toward -Z convention), 180 behind, elevation 90 is
    *  straight down. distance is in figure heights. */
   viewpoint(azimuthDeg: number, elevationDeg: number, distance: number, targetYFrac: number): void
+  /** Swap the whole light rig and its backdrop — 'default' for the five
+   *  full-body views and the silhouette, 'portrait' for bust and head
+   *  framings. See lighting.ts. */
+  setRig(name: RigName): void
+  /** The rig table itself, so tools/shoot.mjs records the numbers actually
+   *  in the scene rather than a copy that can drift from it. */
+  rigs(): Record<RigName, RigSpec>
   /** All meshes -> one shared unlit black material on a white background
    *  (on), or their original materials back (off). */
   setSilhouette(on: boolean): void
@@ -41,15 +54,15 @@ interface Deps {
   camera: PerspectiveCamera
   model: CharacterModel
   scene: Scene
+  lighting: LightingControl
 }
 
-export function installCaptureHandle({ camera, model, scene }: Deps): CaptureHandle {
+export function installCaptureHandle({ camera, model, scene, lighting }: Deps): CaptureHandle {
   const root = model.root as unknown as Object3D
   const target = new Vector3()
   const eye = new Vector3()
   const silhouetteMaterial = new MeshBasicMaterial({ color: 0x000000 })
   const originalMaterials = new Map<Mesh, Material | Material[]>()
-  let originalBackground: Scene['background'] = null
 
   return {
     viewpoint(azimuthDeg, elevationDeg, distance, targetYFrac) {
@@ -61,6 +74,12 @@ export function installCaptureHandle({ camera, model, scene }: Deps): CaptureHan
       eye.set(Math.cos(el) * Math.sin(az), Math.sin(el), -Math.cos(el) * Math.cos(az)).multiplyScalar(r).add(target)
       camera.position.copy(eye)
       camera.lookAt(target)
+    },
+    setRig(name) {
+      lighting.setRig(name)
+    },
+    rigs() {
+      return RIGS
     },
     setSilhouette(on) {
       root.traverse((child) => {
@@ -74,12 +93,10 @@ export function installCaptureHandle({ camera, model, scene }: Deps): CaptureHan
           if (original) mesh.material = original
         }
       })
-      if (on) {
-        originalBackground = scene.background
-        scene.background = new Color(0xffffff)
-      } else {
-        scene.background = originalBackground
-      }
+      // Restore the ACTIVE rig's backdrop rather than a cached colour: a rig
+      // switch while the silhouette is on would otherwise put the wrong
+      // background back.
+      scene.background = new Color(on ? 0xffffff : lighting.backdrop())
     },
     measure() {
       root.updateMatrixWorld(true)
@@ -100,6 +117,7 @@ export function installCaptureHandle({ camera, model, scene }: Deps): CaptureHan
         hipHalfWidth: halfWidthX(directMeshBBox(namedOrThrow(root, 'pelvis'))),
         triangles,
         meshes,
+        head: headLandmarks(root),
       }
     },
   }

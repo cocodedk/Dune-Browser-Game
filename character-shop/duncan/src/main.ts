@@ -7,9 +7,10 @@
 // loop just re-renders the unchanging scene. Any motion added to this
 // harness later must stay camera-only.
 
-import { Scene, PerspectiveCamera, WebGLRenderer, AmbientLight, DirectionalLight, Color } from 'three'
+import { Scene, PerspectiveCamera, WebGLRenderer, Color } from 'three'
 import { createDuncan } from './model/Duncan'
 import { installDebugHandle } from './debug'
+import { installLights, SURVEY } from './lighting'
 
 const container = document.getElementById('app')
 if (!container) throw new Error('#app missing')
@@ -19,7 +20,7 @@ const scene = new Scene()
 // and read as invisible against a default WebGL clear — a lighter dark
 // neutral (the chani shop's landed fix, adopted here for the same reason)
 // keeps the harness moody while every material stays legible.
-scene.background = new Color(0x3a3530)
+scene.background = new Color(SURVEY.backdrop)
 const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100)
 camera.position.set(0, 1.4, 3)
 camera.lookAt(0, 1, 0)
@@ -28,21 +29,16 @@ const renderer = new WebGLRenderer({ antialias: true })
 renderer.setSize(window.innerWidth, window.innerHeight)
 container.appendChild(renderer.domElement)
 
-scene.add(new AmbientLight(0xffffff, 0.65))
-// Key light on the figure's front-left ("negative azimuth is the lit side",
-// vehicle-shop/harvester/tools/views.mjs, mirrored by chani's own debug
-// harness), plus a low fill from the back-right so no view renders flat black.
-const sun = new DirectionalLight(0xffffff, 0.9)
-sun.position.set(-4, 7, -4)
-scene.add(sun)
-const fill = new DirectionalLight(0xffffff, 0.25)
-fill.position.set(4, 5, 4)
-scene.add(fill)
+// Both rigs live in lighting.ts: the survey rig this harness boots into is
+// R1's own key/fill re-expressed, and the portrait rig the bust and head
+// framings switch to is the lead's prescribed three-point setup.
+const lights = installLights(scene)
+lights.apply(false, 0, 0)
 
 const model = createDuncan()
 scene.add(model.root as never)
 
-installDebugHandle(scene, camera, model)
+installDebugHandle(scene, camera, model, lights)
 
 function resize(): void {
   const width = window.innerWidth

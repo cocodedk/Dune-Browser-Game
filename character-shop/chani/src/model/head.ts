@@ -1,64 +1,56 @@
 // character-shop/chani/src/model/head.ts
-// ONE closed lofted solid from the chin to just under the crown, with the
-// cranium carried BACKWARD (rzB roughly 1.7x rzF) so the head has a real
-// front-to-back axis: pass 2's revolved skull was as deep as it was wide and
-// as full in front as behind, which is why the profile read as a disc. The
-// last 16mm of stature is the hair crown (hair.ts) sitting on this skull,
-// not the skull itself — that is how a head works, and it keeps the total
-// inside the seam test's 1% budget.
+// THE HEAD IS ONE SCULPT. Neck, jaw, chin, cheeks, temples, forehead and
+// cranium are a single closed surface swept through face/station.ts, and
+// every feature — brow ridge, sockets, lids, cheekbones, jawline, nose,
+// lips, chin — is a DISPLACEMENT of that surface (face/warp.ts,
+// face/mouth.ts), summed as smooth fields so neighbouring forms blend into
+// one another. There is no seam to see because there is no second mesh.
 //
-// Likeness — brow, cheekbones, lids, mouth — is R2's job. This round authors
-// only what the SILHOUETTE needs: skull mass, jaw taper, a nose that is the
-// frontmost geometry on the figure's head (the -Z facing guard), and ears,
-// which cost four lines and are the difference between a profile that reads
-// as a head and one that reads as an egg.
+// R1 built this head as a loft plus a nose blob plus two ear blobs and the
+// critic read a blank egg with a bump. Every primitive-assembly pass in
+// this shop's history regressed and was rejected; the accepted pattern is
+// carve-into-the-loft, and that is what this is.
+//
+// Three things are separate meshes, and each has a reason that is not
+// convenience: the EYES are flat PALETTE.eyes and cannot share the skin
+// material; the BROWS are hair; the EARS are flaps that leave the surface
+// entirely. All three are authored station tables, not primitives.
 
 import type { Group, Mesh } from 'three'
-import type { Proportions } from './proportions'
 import type { ChaniMaterials } from './materials'
-import { blob } from './primitives'
-import { loft, type Ring } from './loft'
+import { surfaceMesh } from './face/mesh'
+import { headSurface } from './face/surface'
+import { buildEyes } from './face/eyes'
+import { buildBrows } from './face/brows'
+import { buildEars } from './face/ears'
 
-/** Head-local: Y=0 is the chin, +Z is the back of the skull. */
-function headRings(p: Proportions): Ring[] {
-  const hh = p.headH
-  const sk = p.skullR
-  const jw = p.jawR
-  return [
-    { y: 0, rx: jw * 0.54, zc: -0.008, rzF: 0.036, rzB: 0.048 },
-    { y: hh * 0.13, rx: jw * 0.99, zc: -0.004, rzF: 0.052, rzB: 0.070 },
-    { y: hh * 0.27, rx: sk * 0.85, zc: 0, rzF: 0.062, rzB: 0.086 },
-    { y: hh * 0.41, rx: sk * 0.96, zc: 0.004, rzF: 0.066, rzB: 0.098 },
-    { y: hh * 0.50, rx: sk, zc: 0.006, rzF: 0.064, rzB: 0.106 },
-    { y: hh * 0.60, rx: sk, zc: 0.006, rzF: 0.062, rzB: 0.110 },
-    { y: hh * 0.72, rx: sk * 0.97, zc: 0.008, rzF: 0.054, rzB: 0.108 },
-    { y: hh * 0.85, rx: sk * 0.84, zc: 0.010, rzF: 0.040, rzB: 0.092 },
-    { y: hh * 0.93, rx: sk * 0.58, zc: 0.012, rzF: 0.026, rzB: 0.062 },
-  ]
-}
+/** 112 columns and 174 rows. The columns are biased toward the face
+ *  (face/surface.ts BIAS), so the nose and lips get roughly three times
+ *  the sampling density of the back of the skull, where nothing happens.
+ *
+ *  Neither count is decoration, and pass 2 raised both after MEASURING the
+ *  ones they replaced. At 54 rows the mesh sampled the face every 5.1mm
+ *  and a 7mm lip rendered as nothing. At 128 rows the spacing at the upper
+ *  lip measured 2.06mm against pass 1's authored 1.9mm cupid's bow, and
+ *  the bow rendered as nothing for exactly the same reason one round
+ *  later: a relief wavelength finer than the local ring spacing is
+ *  averaged away by computeVertexNormals before a pixel is drawn. 174 rows
+ *  over the row spacing face/station.ts now authors puts a mesh row every
+ *  ~0.75mm through the vermillions and the nose tip.
+ *
+ *  The COLUMN count had the same disease and nobody had measured it: at 76
+ *  columns the widest x-gap across the front of the face measured 2.40mm,
+ *  so a 34mm nose got five samples a side and rendered as a soft crease on
+ *  a flat plane — which is what the critic called it. 112 columns at BIAS
+ *  0.60 measure 1.42mm, which is what lets nose.ts author a dorsum with
+ *  SIDE PLANES rather than a mound. */
+const U_SEGS = 112
+const V_SEGS = 174
 
-export function buildHead(head: Group, p: Proportions, mat: ChaniMaterials): Mesh[] {
-  const skull = loft(headRings(p), mat.skin, 24)
+export function buildHead(head: Group, mat: ChaniMaterials): Mesh[] {
+  const skull = surfaceMesh(headSurface, mat.skin, { uSegs: U_SEGS, vSegs: V_SEGS })
   skull.name = 'skull'
   head.add(skull)
 
-  // Nose: sunk into the interpolated face surface at its own height so its
-  // back half is inside the skull, tip ~27mm proud — the frontmost point of
-  // the whole figure's head, which depth.test.ts asserts.
-  const noseY = p.headH * 0.44
-  const faceZ = -0.061
-  const nose = blob(p.noseR, { x: 0.72, y: 1.5, z: 1.2 }, mat.skin, 12)
-  nose.position.set(0, noseY, faceZ - p.noseR * 0.3)
-  nose.name = 'nose'
-  head.add(nose)
-
-  const ears = [-1, 1].map((side) => {
-    const ear = blob(p.noseR * 0.92, { x: 0.35, y: 1.5, z: 0.9 }, mat.skin, 10)
-    ear.position.set(side * p.skullR * 0.97, p.headH * 0.47, 0.016)
-    ear.name = side < 0 ? 'earL' : 'earR'
-    head.add(ear)
-    return ear
-  })
-
-  return [skull, nose, ...ears]
+  return [skull, ...buildEyes(head, mat), ...buildBrows(head, mat), ...buildEars(head, mat)]
 }

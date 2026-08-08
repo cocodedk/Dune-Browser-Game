@@ -27,6 +27,13 @@ removes the chore instead of scheduling it.
 Everything else, including the full verification sequence and the bundle budgets, is in
 `CODEX.md`.
 
+## Communication style
+
+Use plain language per **ISO 24495-1:2023** in all communication with the user:
+lead with what the reader needs first, keep sentences short, prefer everyday
+words, explain any term the reader may not know, and structure messages so the
+main point is findable at a glance.
+
 ## Where the work is tracked
 
 [`docs/PRD/dune92/03-stage-index.md`](./docs/PRD/dune92/03-stage-index.md) is the live

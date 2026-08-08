@@ -34,7 +34,11 @@ export interface Station {
 
 export type Profile = Required<Station>
 
-function spline(p0: number, p1: number, p2: number, p3: number, t: number): number {
+/** Catmull-Rom through p1 and p2. Exported because the FACE fields
+ *  (faceFields.ts) interpolate their own authored tables — a nose bridge's
+ *  amplitude down the profile, a lip column's width — with exactly the same
+ *  curve the station tables use, so a rib and a ring ease alike. */
+export function spline(p0: number, p1: number, p2: number, p3: number, t: number): number {
   const t2 = t * t
   const t3 = t2 * t
   return 0.5 * (

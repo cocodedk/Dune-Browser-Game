@@ -8,7 +8,10 @@
 import { Box3, Vector3, Color, MeshBasicMaterial } from 'three'
 import type { PerspectiveCamera, Scene, Object3D, Mesh, Material } from 'three'
 import type { CharacterModel } from './contracts'
+import type { LightRig, RigNumbers } from './lighting'
+import { RIGS } from './lighting'
 import { PROPORTIONS } from './spec'
+import { headReport, type HeadReport } from './headReport'
 
 export interface ChaniMeasurement {
   height: number
@@ -16,6 +19,9 @@ export interface ChaniMeasurement {
   hipSpan: number
   meshes: number
   triangles: number
+  /** R2's own head numbers, so a capture carries the measurements that
+   *  describe it. See headReport.ts — all read off the built vertices. */
+  head: HeadReport | null
 }
 
 export interface DebugHandle {
@@ -26,8 +32,24 @@ export interface DebugHandle {
    *  -90/+90 are the figure's own left/right flanks. targetY is a FRACTION
    *  of heightM (0 = ground, 1 = crown), same units as `distance`, so a
    *  view is defined purely in figure-relative terms, never raw metres. */
-  viewpoint(azimuthDeg: number, elevationDeg: number, distance: number, targetY: number): void
+  /** `fovDeg` is the camera's VERTICAL field of view; it defaults to the
+   *  harness's own 50, which every R1 view uses. Head framings pass a
+   *  long lens and stand further back for the same crop: 50 degrees at
+   *  0.37m is a 24mm lens at arm's length, and it stretched the first
+   *  head capture into a caricature — long jaw, ballooned nose. */
+  viewpoint(
+    azimuthDeg: number, elevationDeg: number, distance: number, targetY: number,
+    fovDeg?: number,
+  ): void
+  /** Apply a named lighting rig (lighting.ts RIGS) oriented for a view at
+   *  `azimuthDeg`. Bust and head framings take the 3-point rig and its
+   *  mid-grey backdrop; every other view keeps R1's. */
+  setRig(name: string, azimuthDeg: number): void
   setSilhouette(on: boolean): void
+  /** The rig table itself, so tools/shoot.mjs can record the numbers the
+   *  BROWSER used into .shots/manifest.json rather than a node-side copy
+   *  of them that could drift. */
+  rigs(): Record<string, RigNumbers>
   measure(): ChaniMeasurement
 }
 
@@ -35,6 +57,7 @@ interface Deps {
   camera: PerspectiveCamera
   scene: Scene
   model: CharacterModel
+  lights: LightRig
 }
 
 function worldXOf(root: Object3D, name: string): number {
@@ -45,14 +68,19 @@ function worldXOf(root: Object3D, name: string): number {
   return v.x
 }
 
-export function installDebugHandle({ camera, scene, model }: Deps): DebugHandle {
+export function installDebugHandle({ camera, scene, model, lights }: Deps): DebugHandle {
   const root = model.root as unknown as Object3D
-  const originalBackground = scene.background
   const originalMaterials = new Map<Mesh, Material | Material[]>()
   const black = new MeshBasicMaterial({ color: 0x000000 })
+  // The rig owns the backdrop, so the silhouette override has to restore
+  // whatever the CURRENT rig wants — not a background captured at install
+  // time, which would repaint a bust framing in R1's dark neutral.
+  let rigBackground = 0x3a3530
 
   const handle: DebugHandle = {
-    viewpoint(azimuthDeg, elevationDeg, distance, targetY) {
+    viewpoint(azimuthDeg, elevationDeg, distance, targetY, fovDeg = 50) {
+      camera.fov = fovDeg
+      camera.updateProjectionMatrix()
       const az = (azimuthDeg * Math.PI) / 180
       const el = (elevationDeg * Math.PI) / 180
       const r = PROPORTIONS.heightM * distance
@@ -63,6 +91,9 @@ export function installDebugHandle({ camera, scene, model }: Deps): DebugHandle 
         target.z - Math.cos(el) * Math.cos(az) * r,
       )
       camera.lookAt(target)
+    },
+    setRig(name, azimuthDeg) {
+      rigBackground = lights.apply(name, azimuthDeg)
     },
     setSilhouette(on) {
       root.traverse((child) => {
@@ -77,8 +108,9 @@ export function installDebugHandle({ camera, scene, model }: Deps): DebugHandle 
           if (original) m.material = original
         }
       })
-      scene.background = on ? new Color(0xffffff) : originalBackground
+      scene.background = new Color(on ? 0xffffff : rigBackground)
     },
+    rigs: () => RIGS,
     measure() {
       root.updateMatrixWorld(true)
       const size = new Box3().setFromObject(root).getSize(new Vector3())
@@ -97,7 +129,10 @@ export function installDebugHandle({ camera, scene, model }: Deps): DebugHandle 
       })
       const shoulderSpan = Math.abs(worldXOf(root, 'armR') - worldXOf(root, 'armL'))
       const hipSpan = Math.abs(worldXOf(root, 'legR') - worldXOf(root, 'legL'))
-      return { height: size.y, shoulderSpan, hipSpan, meshes: meshCount, triangles }
+      return {
+        height: size.y, shoulderSpan, hipSpan, meshes: meshCount, triangles,
+        head: headReport(root),
+      }
     },
   }
 

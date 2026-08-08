@@ -11,6 +11,8 @@ import { Vector3 } from 'three'
 import type { Object3D, Mesh } from 'three'
 import { createChani } from './model/Chani'
 import { deriveProportions } from './model/proportions'
+import { CURL_NAMES } from './model/hairCurls'
+import { NOSE_TIP_Y } from './model/face/plan'
 
 interface Extent {
   minX: number
@@ -102,14 +104,36 @@ describe('R1 depth: the profile reads as a body, not a cutout', () => {
     figure.dispose()
   })
 
+  // R2 carved the nose INTO the head sculpt, so there is no 'nose' mesh
+  // left to compare a bounding box against, and the head group now also
+  // carries hair that falls onto the CHEST — which is legitimately
+  // forward of the face plane, so "frontmost thing in the head group" is
+  // no longer the right question. Said precisely, and stronger than the
+  // R1 version because it now checks every mesh instead of one: the
+  // frontmost vertex of the skull IS the nose tip, on the centre line at
+  // nose-tip height, and nothing else anywhere on the FACE (above the
+  // jawline) out-runs it. A head turned round, or a brow or a lock of hair
+  // hanging over the face, still fails.
   it('the nose is the frontmost geometry on the head', () => {
     const figure = createChani()
     const root = figure.root as unknown as Object3D
     root.updateMatrixWorld(true)
     const head = root.getObjectByName('head')
     if (!head) throw new Error('head group missing')
+    const skull = head.getObjectByName('skull') as unknown as Mesh
     const v = new Vector3()
-    let headMin = Infinity
+    const tip = new Vector3(0, 0, Infinity)
+    const skullPos = skull.geometry.attributes.position
+    for (let i = 0; i < skullPos.count; i++) {
+      v.fromBufferAttribute(skullPos, i)
+      skull.localToWorld(v)
+      head.worldToLocal(v)
+      if (v.z < tip.z) tip.copy(v)
+    }
+    expect(tip.z).toBeLessThan(0)
+    expect(Math.abs(tip.x)).toBeLessThan(0.006)
+    expect(Math.abs(tip.y - NOSE_TIP_Y)).toBeLessThan(0.010)
+
     head.traverse((child) => {
       const mesh = child as Mesh
       if (!mesh.isMesh || !mesh.geometry) return
@@ -117,11 +141,10 @@ describe('R1 depth: the profile reads as a body, not a cutout', () => {
       for (let i = 0; i < position.count; i++) {
         v.fromBufferAttribute(position, i)
         mesh.localToWorld(v)
-        headMin = Math.min(headMin, v.z)
+        head.worldToLocal(v)
+        if (v.y > 0.020) expect(v.z, mesh.name).toBeGreaterThan(tip.z - 1e-6)
       }
     })
-    const nose = extentInYBand(root, 'nose', 0, 2)
-    expect(nose.minZ).toBeLessThan(headMin + 1e-6)
     figure.dispose()
   })
 
@@ -139,8 +162,19 @@ describe('R1 depth: the profile reads as a body, not a cutout', () => {
   it('every mass is wound outward', () => {
     const figure = createChani()
     const root = figure.root as unknown as Object3D
-    const names = ['torsoMass', 'neck', 'skull', 'hairCrown', 'collar', 'bootL', 'bootR',
-      'armMassL', 'armMassR', 'legMassL', 'legMassR']
+    // 'neck' is gone: R2 folded it into the head's own control profile
+    // (model/face/station.ts) so the jaw could taper over it. Everything
+    // R2 added is closed and therefore listed here — the eyes, the ears
+    // and all fourteen curl masses included.
+    const names = ['torsoMass', 'skull', 'hairCrown', 'collar', 'bootL', 'bootR',
+      'armMassL', 'armMassR', 'legMassL', 'legMassR', 'eyeL', 'eyeR', 'earL', 'earR',
+      // Pass 3's lids are swept tubes, open at both ends and buried in the
+      // socket at both corners. The divergence term is then the true volume
+      // minus two small end cones — far too small to reach zero, so the SIGN
+      // still holds, and the sign is what says the winding faces out. It is
+      // the one check that would have caught R1's inside-out limbs.
+      'lidUpperL', 'lidUpperR', 'lidLowerL', 'lidLowerR',
+      ...CURL_NAMES.flatMap((c) => [`hairCurl${c}L`, `hairCurl${c}R`])]
     for (const name of names) {
       expect(signedVolume(root, name), name).toBeGreaterThan(0)
     }

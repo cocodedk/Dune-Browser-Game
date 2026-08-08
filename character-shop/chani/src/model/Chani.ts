@@ -51,8 +51,8 @@ export function createChani(): CharacterModel {
 
   const meshes: Mesh[] = [
     ...buildTorso({ pelvis, chest }, p, mat),
-    ...buildHead(head, p, mat),
-    ...buildHair(head, p, mat),
+    ...buildHead(head, mat),
+    ...buildHair(head, mat),
     ...buildCollar(chest, p, mat),
     ...buildArms({ armL, armR }, p, mat),
     ...buildLegs({ legL, legR }, p, mat),

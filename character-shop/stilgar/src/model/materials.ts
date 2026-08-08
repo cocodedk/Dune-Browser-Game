@@ -13,6 +13,7 @@ export interface StilgarMaterials {
   fabric: MeshStandardMaterial
   accent: MeshStandardMaterial
   hair: MeshStandardMaterial
+  eyes: MeshStandardMaterial
 }
 
 /** roughness 0.9 across the board: skin, worn fabric and hair all read as
@@ -31,6 +32,11 @@ export function createMaterials(): StilgarMaterials {
     fabric: new MeshStandardMaterial({ color: PALETTE.fabric, roughness: 0.92, metalness: 0 }),
     accent: new MeshStandardMaterial({ color: PALETTE.accent, roughness: 0.92, metalness: 0 }),
     hair: new MeshStandardMaterial({ color: PALETTE.hair, roughness: 0.88, metalness: 0 }),
+    // Full ibad: one flat PALETTE.eyes across the whole visible eye, no
+    // white anywhere. Deliberately the SAME roughness family as the skin —
+    // this round owns the eye's FORM, and R3 owns the wet/glow nuance that
+    // would otherwise be authored here by accident.
+    eyes: new MeshStandardMaterial({ color: PALETTE.eyes, roughness: 0.9, metalness: 0 }),
   }
 }
 
@@ -39,4 +45,5 @@ export function disposeMaterials(materials: StilgarMaterials): void {
   materials.fabric.dispose()
   materials.accent.dispose()
   materials.hair.dispose()
+  materials.eyes.dispose()
 }

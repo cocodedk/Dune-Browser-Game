@@ -2,17 +2,15 @@
 
 Standalone rig at `character-shop/stilgar/`. Run it with `npm run cast:stilgar`.
 
-## STATUS — session handoff
+## STATUS — SETTLED
 
-R1 (body and silhouette) FROZEN at pass 3 by lead decision 2026-08-05. The
-pass-3 sculpt transformed the failed head assembly: the bust now reads as a
-hooded, bearded man (lead-verified; unscored by a critic — frozen alongside
-the other wave-1 shops for the user's verdict). Logged residuals: the wrap's
-rim edges read as a raised cord at bust framing (builder attempted, unsolved);
-the catchpocket tube placement reads odd at bust framing; eye geometry and
-ibad colour are R2/R3 scope; beard internal form is value-crushed by
-PALETTE.hair 0x241c14 (a spec.ts decision, lead/user-owned); arms/legs remain
-pass-2 cylinders with visible joint seams (deliberately untouched this pass).
+Settled 2026-08-08 by user verdict: "no more work is needed on these figures."
+Final state: R2 pass 4, interrupted mid-rebuild by the 2026-08-07 weekly-limit
+cut — eyes seated in lidded sockets (the panel's top defect, fixed), mouth
+region half-rebuilt, tests green (25), evidence deterministic. The 3×Opus
+panel had passed identification 3/3 ("Stilgar") and failed correctness 0/3;
+the fix list stops here. The user generates future cast figures as 2D
+photo-style images (ChatGPT); the 3D loops end here.
 
 ## The bar
 
@@ -45,3 +43,27 @@ reading as separate objects. Cloth needs thickness at every cut edge.
 **Tests:** 9 green. Shots: `.shots/` seven views, deterministic.
 Measured: height −0.20% vs spec, shoulders +2.84%, hips exact, nose frontmost
 (−0.1254 ahead of beard −0.1202 and hood −0.1100), mirror error exactly 0.
+
+### R2 — head and likeness (4 passes; milestone = 3×Opus blind bust panel)
+
+Spec delta committed first (137fb0a): `PALETTE.eyes 0x33689e`, full-ibad flat blue.
+R2 adds the prescribed portrait rig (3-point, mid-grey backdrop, recorded in the
+manifest) and two head framings, `headfront`/`headthreequarter`.
+
+| pass | builder | verdict | headline |
+|---|---|---|---|
+| 1 | Opus | Sonnet 4/10 · blind names STILGAR high | face carved (20mm brow, ibad eye masses, philtrum, squared beard, hood-cord artifact solved) but structure did not read from DEAD FRONT — "brow is a decal" |
+| 2 | Opus | Sonnet 4/10 · blind names Stilgar moderate | root cause: forms finer than mesh sampling get normal-averaged away (1.9mm lid vs 4.1mm rings) — sample-density warp landed; sub-brow now renders 10/255; both mesh defects closed; NEW defect: lead's "dorsum ridge" direction produced a hawk nose |
+| 3 | Opus | Sonnet 4/10 (biggest-gap ruled NOT reproduced) · blind names Stilgar high | nose rebuilt broad (dorsum plane 0→15mm; socket field was carving the midline — medial gate fix); brow BAR built above the shadow (N·L derivation); hood aperture 124→154mm; wedge proved watertight, was beard hair on the nose wing |
+| — | 3×Opus PANEL | **ID PASS 3/3 — "Stilgar" 65–70%. CORRECTNESS FAIL 0/3** | measured consensus: eyes 1.69–1.7 aperture-widths apart (canon ~1.0), unsocketed proud lenses, far brow through the 3/4 silhouette, mouth/moustache boolean chaos, hood shard+rim gap+pinhole+seam, barbed brow tips, black under-nose, no neck, ripple bands = artifact. Asymmetry claims DISPROVED (mirror IoU 0.9969). No actor likeness discernible in flat-shaded geometry — 3/3 said so |
+| 4 | Opus | running | the panel's consensus list, verbatim |
+
+**What did not reproduce:** the p3 Sonnet scorer's "nose still thin and hooked"
+(contradicted by 15mm measured dorsum plane, the lead's read, and the panel);
+p1 panel judge's brow/eye asymmetry (yawed-bust perspective — two judges measured
+mirror-clean). **Method lessons:** Sonnet critics score direction, Opus panels
+find truth — R2 exits are panel-only; panel paths must be NEUTRAL (the shop name
+in the path leaked the blind, disclosed by judge 3); relief must survive the
+worst-lit framing; cross-field interference (socket bell carving the nose) is
+real — gate displacement fields medially. Debt: 97 non-manifold hood-weld edges
+(p4 clears), +73% triangles from the sampling fix (50.7k→87.9k, lead-accepted).

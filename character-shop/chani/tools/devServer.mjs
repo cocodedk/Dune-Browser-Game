@@ -20,15 +20,25 @@ export async function ensureDevServer(port) {
     return { kill: () => {} }
   }
 
+  // `detached` puts npx and the vite it execs into their own process GROUP.
+  // Without it, SIGTERM to the npx wrapper leaves vite alive holding
+  // --strictPort, so the NEXT capture attaches to a stale server built from
+  // the previous source tree — a silent way to judge the wrong geometry.
   const server = spawn('npx', ['vite', 'character-shop/chani', '--port', String(port), '--strictPort'], {
     stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true,
   })
   const kill = () => {
     try {
-      server.kill('SIGTERM')
+      process.kill(-server.pid, 'SIGTERM')
     } catch {
       /* already gone */
     }
+    // The piped stdio streams keep the event loop alive on their own, which
+    // is the other half of why shoot.mjs never exited.
+    server.stdout.destroy()
+    server.stderr.destroy()
+    server.unref()
   }
   process.on('exit', kill)
 

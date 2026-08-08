@@ -1,5 +1,6 @@
 // character-shop/duncan/tools/shoot.mjs
-// Capture Duncan at the seven named views the R1 harness contract requires,
+// Capture Duncan at the nine named views the harness contract requires —
+// R1's seven, plus R2's headfront and headthreequarter,
 // at fixed poses so a critic judges frames, not a description of frames,
 // and two runs of the same view are the same image. VIEWS and the dev-
 // server bring-up live in ./views.mjs and ./devServer.mjs — adapted from
@@ -14,7 +15,7 @@ import { chromium } from '@playwright/test'
 import { mkdir, writeFile, rm } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { filterViews } from './views.mjs'
+import { filterViews, PORTRAIT_RIG } from './views.mjs'
 import { ensureDevServer } from './devServer.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -51,15 +52,19 @@ await page.waitForFunction(() => Boolean(window.__DUNCAN__), null, { timeout: 30
 await page.waitForTimeout(400)
 
 const measurement = await page.evaluate(() => window.__DUNCAN__.measure())
-const manifest = { width: WIDTH, height: HEIGHT, measurement, views: [], errors }
+const manifest = { width: WIDTH, height: HEIGHT, measurement, portraitRig: PORTRAIT_RIG, views: [], errors }
 
 for (const view of views) {
+  // Order is load-bearing: viewpoint() first, because the portrait rig's
+  // three beams are placed relative to the camera's own azimuth and
+  // setPortrait() reads the framing viewpoint() just recorded.
   await page.evaluate(
-    ([az, el, dist, targetY, silhouette]) => {
+    ([az, el, dist, targetY, portrait, silhouette]) => {
       window.__DUNCAN__.viewpoint(az, el, dist, targetY)
+      window.__DUNCAN__.setPortrait(Boolean(portrait))
       window.__DUNCAN__.setSilhouette(Boolean(silhouette))
     },
-    [view.az, view.el, view.dist, view.targetY, Boolean(view.silhouette)],
+    [view.az, view.el, view.dist, view.targetY, Boolean(view.portrait), Boolean(view.silhouette)],
   )
   await page.waitForTimeout(200)
   const file = join(OUT, `${view.name}.png`)

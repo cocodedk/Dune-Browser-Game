@@ -113,7 +113,10 @@ export const crownLocal = hoodTopLocal - 0.0125
 // about where the jaw ends.
 export const chinLocal = 2 * eyeLineLocal - crownLocal
 // Widest point of the face — the zygomatic arch, at the eye line. Heavy-
-// boned (spec.ts: "Broad, heavy-boned head"), so a full 0.160 m across.
-export const faceHalfWidth = 0.080
+// boned (spec.ts: "Broad, heavy-boned head"), so a full 0.169 m across.
+// R2 pass 2 took it from 0.160: the lower face gained real gonial width and
+// the arch has to stay the widest row above it, or the head reads as a pear.
+// Still inside face.test.ts's breadth-over-visible-mass band (0.58-0.74).
+export const faceHalfWidth = 0.0846
 
 export const neckR = 0.0495

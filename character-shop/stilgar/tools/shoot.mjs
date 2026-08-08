@@ -1,12 +1,14 @@
 // character-shop/stilgar/tools/shoot.mjs
 // Capture Stilgar from the seven named views R1's harness requires
 // (character-shop/docs/gauntlet-loop.md): front, back, left, right,
-// threequarter, bust, silhouette. VIEWS and the dev-server bring-up live in
-// ./views.mjs and ./devServer.mjs — adapted from vehicle-shop/harvester/
-// tools/ (read as reference, never imported: shops stay standalone, no
-// cross-shop imports). No randomness anywhere: every view is a fixed
-// az/el/dist/targetYFrac triple through debug.ts's viewpoint(), so two runs
-// produce byte-identical PNGs.
+// threequarter, bust, silhouette — plus R2's two head-height likeness
+// framings, headfront and headthreequarter. VIEWS and the dev-server
+// bring-up live in ./views.mjs and ./devServer.mjs — adapted from
+// vehicle-shop/harvester/tools/ (read as reference, never imported: shops
+// stay standalone, no cross-shop imports). No randomness anywhere: every
+// view is a fixed az/el/dist/targetYFrac triple plus a named light rig, so
+// two runs produce byte-identical PNGs. The rig table itself is read back
+// out of the page and written into the manifest.
 //
 // Usage:
 //   node character-shop/stilgar/tools/shoot.mjs [--out character-shop/stilgar/.shots] [--width 1200] [--height 1500] [--views front,bust]
@@ -47,11 +49,16 @@ await page.waitForTimeout(400)
 
 // Measured independently of camera pose — geometry only.
 const measurement = await page.evaluate(() => window.__STILGAR__.measure())
+// Read the rig table out of the running scene rather than re-declaring it
+// here: a copy in the harness is a number that can drift from the number
+// actually lighting the PNG.
+const rigs = await page.evaluate(() => window.__STILGAR__.rigs())
 
-const manifest = { width: WIDTH, height: HEIGHT, measurement, views: [], errors }
+const manifest = { width: WIDTH, height: HEIGHT, measurement, rigs, views: [], errors }
 
 const views = filterViews(flag('views', ''))
 for (const view of views) {
+  await page.evaluate((name) => window.__STILGAR__.setRig(name), view.rig ?? 'default')
   if (view.silhouette) {
     await page.evaluate(() => window.__STILGAR__.setSilhouette(true))
   }
@@ -62,18 +69,19 @@ for (const view of views) {
   await page.waitForTimeout(320)
   const file = join(OUT, `${view.name}.png`)
   await page.screenshot({ path: file })
-  manifest.views.push({ ...view, file })
+  manifest.views.push({ ...view, rig: view.rig ?? 'default', file })
   if (view.silhouette) {
     await page.evaluate(() => window.__STILGAR__.setSilhouette(false))
   }
 }
 
 await browser.close()
-kill()
 await writeFile(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2))
-if (errors.length) {
-  console.error('page errors:', errors)
-  process.exitCode = 1
-} else {
-  console.log(`captured ${manifest.views.length} views to ${OUT}`)
-}
+if (errors.length) console.error('page errors:', errors)
+else console.log(`captured ${manifest.views.length} views to ${OUT}`)
+
+// The spawned vite child's pipes keep this process's event loop alive for
+// ever, so every caller has had to wrap the script in `timeout`. Tear the
+// server down and leave deliberately, with the exit code the capture earned.
+kill()
+process.exit(errors.length ? 1 : 0)
