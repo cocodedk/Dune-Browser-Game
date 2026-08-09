@@ -1,11 +1,13 @@
 // scripts/new-shop-templates.mjs
-// Doc and entry-point templates for `npm run shop:new` (vehicle-shop/) and
-// `npm run cast:new` (character-shop/). Shared across both roots through a
-// small render context (name, Name, root, scriptPrefix, alias, kindLabel).
-// Code templates are kind-specific: vehicle in ./new-shop-templates-src.mjs,
+// Doc and entry-point templates for `npm run shop:new` (vehicle-shop/),
+// `npm run cast:new` (character-shop/) and `npm run land:new`
+// (landscape-shop/). Shared across all three roots through a small render
+// context (name, Name, root, scriptPrefix, alias, kindLabel). Code
+// templates are kind-specific: vehicle in ./new-shop-templates-src.mjs,
 // character (HUMANOID) in ./new-shop-templates-cast.mjs and
-// ./new-shop-templates-cast-model.mjs — split so every file stays under the
-// 200-line cap.
+// ./new-shop-templates-cast-model.mjs, landscape (STATIC SCENERY) in
+// ./new-shop-templates-land.mjs and ./new-shop-templates-land-model.mjs —
+// split so every file stays under the 200-line cap.
 
 export function renderIndexHtml(ctx) {
   const { Name, kindLabel } = ctx
@@ -34,6 +36,8 @@ export function renderReadme(ctx) {
   const { name, Name, root, scriptPrefix, alias, kindLabel } = ctx
   const adapter = kindLabel === 'character'
     ? '`src/game-render/modes/conversation/drawFigure.ts` (and friends) is the release point — see `character-shop/docs/gauntlet-loop.md`.'
+    : kindLabel === 'landscape'
+    ? '`src/game-render/modes/location/LocationMode.ts` (sietch) or `src/game-render/modes/flight/FlightMode.ts` (cliff) is the release point, per the roster — see `landscape-shop/docs/gauntlet-loop.md`.'
     : '`src/game-render/machines/Harvester.ts` is the reference release adapter.'
   return `# ${Name} — ${kindLabel} shop
 
@@ -83,6 +87,10 @@ export function renderProgress(ctx) {
     ? "Mirror another character-shop build's structure and " +
       '`character-shop/docs/gauntlet-loop.md`\'s per-round bar (R0-R4: ' +
       'silhouette, likeness, costume, eyes/pose)'
+    : kindLabel === 'landscape'
+    ? "Mirror `landscape-shop/docs/gauntlet-loop.md`'s per-round bar " +
+      '(R0 spec, R1 massing/silhouette, R2 surface/materials, R3 ' +
+      'dressing + final panel, ≥8/10 zero correctness findings)'
     : "Mirror the harvester/ornithopter shops' structure (reads as the " +
       'thing; blind identification; acts like the thing; correctness of ' +
       'the numbers)'

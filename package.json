@@ -28,7 +28,8 @@
     "cast:stilgar:check": "tsc -p character-shop/stilgar --noEmit",
     "cast:duncan": "vite character-shop/duncan",
     "cast:duncan:build": "vite build character-shop/duncan",
-    "cast:duncan:check": "tsc -p character-shop/duncan --noEmit"
+    "cast:duncan:check": "tsc -p character-shop/duncan --noEmit",
+    "land:new": "node scripts/new-shop.mjs --root landscape-shop"
   },
   "dependencies": {
     "@types/three": "^0.185.1",

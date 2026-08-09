@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 // scripts/check-shops.mjs
-// Type-checks every standalone shop under vehicle-shop/ and character-shop/
-// — each shop has its own tsconfig.json (a separate program from the root
-// src/ build), so the root `tsc -b` never sees these files and a shop-only
-// break would otherwise slip past `npm run build`. Both roots are optional:
-// a root that has not been scaffolded into yet (or at all) is tolerated,
-// not an error.
+// Type-checks every standalone shop under vehicle-shop/, character-shop/
+// and landscape-shop/ — each shop has its own tsconfig.json (a separate
+// program from the root src/ build), so the root `tsc -b` never sees these
+// files and a shop-only break would otherwise slip past `npm run build`.
+// All roots are optional: a root that has not been scaffolded into yet (or
+// at all), or a directory inside one with no tsconfig.json (e.g. an empty
+// placeholder like landscape-shop/cliff/), is tolerated, not an error.
 
 import { readdir, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
 
-const roots = ['vehicle-shop', 'character-shop']
+const roots = ['vehicle-shop', 'character-shop', 'landscape-shop']
 const failures = []
 
 for (const root of roots) {

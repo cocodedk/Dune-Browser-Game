@@ -8,21 +8,29 @@ export default defineConfig({
   base: './',
   resolve: {
     // Shop release seam: game imports the shop public surface only, and
-    // ESLint (eslint.config.js) enforces that boundary at lint time. Two
+    // ESLint (eslint.config.js) enforces that boundary at lint time. Three
     // roots, one seam each — vehicle-shop/ for machines, character-shop/
-    // for the cast (docs/PRD/dune92/04-asset-pipeline.md).
+    // for the cast, landscape-shop/ for static terrain sets
+    // (docs/PRD/dune92/04-asset-pipeline.md).
     alias: {
       '@shop': fileURLToPath(new URL('./vehicle-shop', import.meta.url)),
       '@cast': fileURLToPath(new URL('./character-shop', import.meta.url)),
+      '@land': fileURLToPath(new URL('./landscape-shop', import.meta.url)),
     },
   },
   test: {
     environment: 'node',
-    // vehicle-shop/ and character-shop/ hold standalone rigs for building
-    // one asset at a time before it is folded into the game. Their pure
-    // modules carry the same unit-test obligation as src/, so the suite has
-    // to see them — without this line they are silently untested.
-    include: ['src/**/*.test.ts', 'vehicle-shop/**/*.test.ts', 'character-shop/**/*.test.ts'],
+    // vehicle-shop/, character-shop/ and landscape-shop/ hold standalone
+    // rigs for building one asset at a time before it is folded into the
+    // game. Their pure modules carry the same unit-test obligation as
+    // src/, so the suite has to see them — without this line they are
+    // silently untested.
+    include: [
+      'src/**/*.test.ts',
+      'vehicle-shop/**/*.test.ts',
+      'character-shop/**/*.test.ts',
+      'landscape-shop/**/*.test.ts',
+    ],
     passWithNoTests: true,
     // Cap worker count and recycle workers. On 2026-07-24 unbounded vitest
     // workers grew to 2.6-4 GiB RSS each and drove the machine low enough for
@@ -45,6 +53,10 @@ export default defineConfig({
 
           if (id.includes('/character-shop/')) {
             return `character-${id.split('/character-shop/')[1].split('/')[0]}`
+          }
+
+          if (id.includes('/landscape-shop/')) {
+            return `landscape-${id.split('/landscape-shop/')[1].split('/')[0]}`
           }
 
           if (!id.includes('node_modules')) {

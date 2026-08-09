@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 // scripts/new-shop.mjs
 // Scaffolds a new standalone shop dev harness: `npm run shop:new -- <name>`
-// under vehicle-shop/ (default), or `npm run cast:new -- <name>` under
-// character-shop/ (--root character-shop). Generates the minimal public
-// surface (model/, contracts.ts, spec.ts, provenance.ts) plus a passing
-// seam test and a three.js dev harness, then registers the shop's npm
-// scripts. Doc templates live in ./new-shop-templates.mjs (shared,
+// under vehicle-shop/ (default), `npm run cast:new -- <name>` under
+// character-shop/ (--root character-shop), or `npm run land:new -- <name>`
+// under landscape-shop/ (--root landscape-shop). Generates the minimal
+// public surface (model/, contracts.ts, spec.ts, provenance.ts) plus a
+// passing seam test and a three.js dev harness, then registers the shop's
+// npm scripts. Doc templates live in ./new-shop-templates.mjs (shared,
 // kind-aware); vehicle code templates in ./new-shop-templates-src.mjs;
 // character (HUMANOID) code templates in ./new-shop-templates-cast.mjs and
-// ./new-shop-templates-cast-model.mjs — split so every file stays under
+// ./new-shop-templates-cast-model.mjs; landscape (STATIC SCENERY) code
+// templates in ./new-shop-templates-land.mjs and
+// ./new-shop-templates-land-model.mjs — split so every file stays under
 // the 200-line cap.
 
 import { existsSync, mkdirSync, writeFileSync, copyFileSync } from 'node:fs'
@@ -22,13 +25,18 @@ import {
   renderCastContracts, renderCastSpec, renderCastProvenance, renderCastMain,
 } from './new-shop-templates-cast.mjs'
 import { renderCastModel, renderCastSeamTest } from './new-shop-templates-cast-model.mjs'
+import {
+  renderLandContracts, renderLandSpec, renderLandProvenance, renderLandMain,
+} from './new-shop-templates-land.mjs'
+import { renderLandModel, renderLandSeamTest } from './new-shop-templates-land-model.mjs'
 
 const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
 // Each root's identity: the npm script prefix, its @alias, and the label
-// used in generated docs. Adding a third root means adding one entry here.
+// used in generated docs. Adding a fourth root means adding one entry here.
 const ROOTS = {
   'vehicle-shop': { scriptPrefix: 'shop', alias: '@shop', kindLabel: 'vehicle' },
   'character-shop': { scriptPrefix: 'cast', alias: '@cast', kindLabel: 'character' },
+  'landscape-shop': { scriptPrefix: 'land', alias: '@land', kindLabel: 'landscape' },
 }
 
 function toPascalCase(name) {
@@ -54,7 +62,7 @@ function parseArgs(argv) {
 }
 
 const { name, root } = parseArgs(process.argv.slice(2))
-if (!name) fail('Usage: npm run shop:new -- <name>  (or: npm run cast:new -- <name>)')
+if (!name) fail('Usage: npm run shop:new -- <name>  (or: npm run cast:new -- <name>, npm run land:new -- <name>)')
 if (!NAME_PATTERN.test(name)) fail(`Shop name "${name}" must match ${NAME_PATTERN}`)
 if (!ROOTS[root]) fail(`--root must be one of: ${Object.keys(ROOTS).join(', ')}`)
 
@@ -88,6 +96,15 @@ const code = kindLabel === 'character'
       'src/provenance.ts': renderCastProvenance(name, Name),
       'src/seam.test.ts': renderCastSeamTest(name, Name),
       [`src/model/${Name}.ts`]: renderCastModel(name, Name),
+    }
+  : kindLabel === 'landscape'
+  ? {
+      'src/main.ts': renderLandMain(name, Name),
+      'src/contracts.ts': renderLandContracts(name),
+      'src/spec.ts': renderLandSpec(name),
+      'src/provenance.ts': renderLandProvenance(name),
+      'src/seam.test.ts': renderLandSeamTest(name, Name),
+      [`src/model/${Name}.ts`]: renderLandModel(name, Name),
     }
   : {
       'src/main.ts': renderMain(name, Name),

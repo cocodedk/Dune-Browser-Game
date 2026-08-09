@@ -87,10 +87,13 @@ being copied** — the game imports the shop's own source through one narrow, en
 
 - `vehicle-shop/` is a historical name from the first shop it held. It hosts any asset
   type — buildings, props — not only vehicles; nothing about the pipeline is
-  vehicle-specific. **Characters are the exception**: they live under a second root,
-  `character-shop/<name>/` (alias `@cast`, chunks `character-<name>`, scaffold
-  `cast:new`), with the same fence semantics plus one stricter rule — character shops may
-  not import each other. Loop contract: `character-shop/docs/gauntlet-loop.md`.
+  vehicle-specific. **Characters and landscape sets are the exceptions**: they live under
+  their own roots, `character-shop/<name>/` (alias `@cast`, chunks `character-<name>`,
+  scaffold `cast:new`) and `landscape-shop/<name>/` (alias `@land`, chunks
+  `landscape-<name>`, scaffold `land:new`, STATIC scenery — no per-frame drive), with the
+  same fence semantics plus one stricter rule each — no shop of either root may import
+  another shop of its own root. Loop contracts: `character-shop/docs/gauntlet-loop.md`
+  and `landscape-shop/docs/gauntlet-loop.md`.
 - Every public-surface file must compile under **both** the root `tsconfig.json` (which
   declares the `@shop/*` path and includes `src/`) and the shop's own `tsconfig.json`
   (which does not know about `@shop` at all, and includes only its own `src/`). `npm run

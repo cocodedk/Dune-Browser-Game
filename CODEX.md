@@ -53,6 +53,10 @@ src/
   named character, imported only via `@cast` under the same public-surface fence.
   Characters may not import each other, the vehicle root, or game src; loop contract in
   `character-shop/docs/gauntlet-loop.md`.
+- `landscape-shop/<name>/`: the same workshop pattern, third root — one sub-project per
+  static terrain set (no animation contract), imported only via `@land` under the same
+  public-surface fence. Landscape sets may not import each other, the other two roots, or
+  game src; loop contract in `landscape-shop/docs/gauntlet-loop.md`.
 
 ## Working Rules
 
@@ -100,17 +104,21 @@ npm run shop:new -- <name>
 
 - `npm run build` runs TypeScript, Vite production build, and bundle-budget enforcement
 - `npm run test:unit` runs Vitest unit tests (fast, no browser, pure functions); this
-  includes every `vehicle-shop/**/*.test.ts` and `character-shop/**/*.test.ts`, not just
-  `src/`
+  includes every `vehicle-shop/**/*.test.ts`, `character-shop/**/*.test.ts` and
+  `landscape-shop/**/*.test.ts`, not just `src/`
 - `npm test` runs Playwright E2E tests against `vite preview`
-- `npm run shop:check` type-checks every shop under `vehicle-shop/` AND `character-shop/`
-  against its own `tsconfig.json` — separate TS programs the root `tsc -b` never sees
+- `npm run shop:check` type-checks every shop under `vehicle-shop/`, `character-shop/` AND
+  `landscape-shop/` against its own `tsconfig.json` — separate TS programs the root
+  `tsc -b` never sees
 - `npm run shop:new -- <name>` scaffolds a new `vehicle-shop/<name>/` dev harness (public
   surface, a passing seam test, registered npm scripts) — see
   `docs/PRD/dune92/04-asset-pipeline.md`
 - `npm run cast:new -- <name>` scaffolds a `character-shop/<name>/` with the humanoid
   seed instead: proportion spec, armature group tree, and a seam test already guarding
   face-toward-−Z, height-within-1%, and the eye line
+- `npm run land:new -- <name>` scaffolds a `landscape-shop/<name>/` with the static
+  scenery seed instead: footprint spec, a massing/skirt/entrance placeholder, and a seam
+  test already guarding footprint-within-1%, front-toward-−Z, and base-at-zero
 - The pre-commit hook runs:
   1. file-length enforcement
   2. lint
@@ -141,6 +149,7 @@ Current budget classes:
 - `game-*.js`: `200_000` bytes
 - `vehicle-*.js`: `150_000` bytes — one chunk per `vehicle-shop/<name>/` release
 - `character-*.js`: `150_000` bytes — one chunk per `character-shop/<name>/` release
+- `landscape-*.js`: `150_000` bytes — one chunk per `landscape-shop/<name>/` release
 - fallback `*.js`: `500_000` bytes
 
 Do not "fix" a budget failure by only raising the threshold unless there is a clear, justified reason.
