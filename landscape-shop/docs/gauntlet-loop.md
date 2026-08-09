@@ -57,17 +57,25 @@ contract. Per-asset round logs live in each sub-project's `progress.md`.
   ortho box), the shop harness replicates it exactly, and critics judge only through it.
   Geometry the rig cannot see is waste; geometry it sees badly is a finding.
 
-## Sourced assets (user directive, 2026-08-09)
+## Sourced assets (user directives, 2026-08-09)
 
-Free GLB models from **https://threejsassets.com/assets/free** (that site only) may be
-used and **reshaped** instead of building every form procedurally. Rules:
+GLB models from **https://threejsassets.com/** (that site only) may be used and
+**reshaped** instead of building every form procedurally. The account holds a
+**Lifetime all-access license** (purchased 2026-08-09), so premium assets are as
+available as free ones. Rules:
 
-- License check first: the free tier ships inside commercial projects; the raw files may
-  not be redistributed as assets. Record the source URL and license line in the shop's
+- **The repo is PUBLIC; raw feedstock is never committed.** The license (free tier and
+  Lifetime Commercial License v1 alike) forbids redistributing raw GLB/component files.
+  Feedstock lives gitignored in `landscape-shop/<shop>/feedstock/` and
+  `landscape-shop/feedstock-packs/` (Desert Kingdom: `glb/individual/*.glb`,
+  `palettes.json`). What ships — and what gets committed — is only the **reshaped
+  derivative actually used by the set** (baked, re-tinted, merged geometry data), which
+  the license covers as use/modification in a finished project. A 1:1 conversion dump
+  of an untouched asset is repackaging — not allowed.
+- Record each used asset's source URL and the license line in the shop's
   `provenance.ts`.
-- The GLB lives inside the shop; the game still imports only the public surface. Primary
-  structure (the massif shell, the cave hall) stays procedural — it is what the seam
-  test measures and what the 150 KB chunk budget protects. Sourced GLBs are for
+- Primary structure (the massif shell, the cave hall) stays procedural — it is what the
+  seam test measures and what the 150 KB chunk budget protects. Sourced GLBs are for
   **dressing and reshaping feedstock**: boulders, debris, palms, a carved doorway to
   retopo against.
 - These are tiny low-poly kit pieces (reference point: Mossy Boulder, 5 KB GLB, 432

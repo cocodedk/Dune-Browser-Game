@@ -11,12 +11,35 @@ export const FOOTPRINT = {
   // -Z (the mouth is the front face); the interior recedes toward z = 0.
   // A great communal cavern, not a corridor: wide enough that the walls
   // frame the view at the rig, tall enough to vault out of frame.
+  // depthM includes 4 m of gallery-recess allowance beyond the ~48 m hall
+  // shell: R1.1 proved that reveals thin enough to fit a 48 m box are
+  // invisible at the rig's 35 m viewing distance — carved must be DEEP.
+  // heightM raised 16 -> 22 after four critic passes: with 4.4 m gallery
+  // doors, a 16 m apex yields a ~3.6x door-to-vault ratio that reads as a
+  // modest chamber; ~5x is where "vast hall" starts. The rig's enclosure
+  // margins only improve with height.
   widthM: 36,
-  depthM: 48,
-  heightM: 16,
+  depthM: 52,
+  heightM: 22,
   // Interior set: the floor IS the base surface at y = 0; a thin slab
   // below keeps the seam guard meaningful without a seating skirt.
   skirtDepthM: 1,
+} as const
+
+// Gallery openings on the back wall. Numbers chosen against the CAMERA_RIG
+// viewing distance (~35 m to the back wall): anything shallower than ~2 m
+// of reveal subtends too few pixels to read as a cut. Interiors stay
+// UNLIT — depth reads as darkness falling off inside the socket.
+// Placement is deliberately UNEVEN: hand-hewn galleries are not a metered
+// colonnade. Same rule for the vault itself: springline heights and the
+// crown line must differ left-to-right along the depth — a symmetric
+// ellipsoid extrusion reads as architecture, not carved rock (both R1
+// critics failed it on exactly this).
+export const GALLERIES = {
+  count: 3,
+  widthM: 3.6,
+  heightM: 4.4,
+  recessM: 2.5,
 } as const
 
 // The one framing the game will show: LocationMode mounts the set behind

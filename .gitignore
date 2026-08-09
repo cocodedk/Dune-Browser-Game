@@ -41,3 +41,9 @@ blob-report/
 
 # Visual-review screenshots (scripts/shoot.mjs)
 .shots/
+
+# Licensed asset feedstock (threejsassets.com) — the license forbids
+# redistributing raw GLB/component files, and this repo is PUBLIC. Only
+# reshaped, baked derivatives that ship in the game may be committed.
+landscape-shop/*/feedstock/
+landscape-shop/feedstock-packs/

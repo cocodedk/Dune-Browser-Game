@@ -1,62 +1,86 @@
 // landscape-shop/sietch/src/model/Sietch.ts
-// Placeholder builder: a rock-toned box massing at the footprint, a skirt
-// seating below y = 0, and an entrance marker flush with the -Z front
-// face, sized to FOOTPRINT so the scaffold builds, matches spec, and the
-// seam test is green immediately. Replace each box with real geometry in
-// place — keep the 'massing', 'skirt' and 'entrance' names; the seam test
-// keys off them. Static: no update() — see contracts.ts.
+// R1 — massing and silhouette (landscape-shop/docs/gauntlet-loop.md):
+// primary forms of a carved Fremen cavern hall, through CAMERA_RIG.
+// Assembles the vault shell (envelope.ts), the far wall and its galleries
+// (backWall.ts), the floor and its habitation cues (floor.ts) and the
+// mouth collar (entrance.ts) from one shared PALETTE material set
+// (materials.ts). Static: no update() — see contracts.ts. Group names
+// 'massing', 'skirt', 'entrance' are the seam test's contract; keep them.
 
 import { Group, Mesh, BoxGeometry, MeshStandardMaterial } from 'three'
+import type { Object3D } from 'three'
 import type { LandscapeModel } from '../contracts'
-import { FOOTPRINT, PALETTE } from '../spec'
+import { FOOTPRINT } from '../spec'
+import { buildPalette } from './materials'
+import { buildEnvelope } from './envelope'
+import { buildBackWall } from './backWall'
+import { buildFloor } from './floor'
+import { buildEntrance } from './entrance'
+import { buildGalleryTier } from './galleryTier'
+import { vaultScaleAt } from './vaultScale'
 
-function block(width: number, height: number, depth: number): Mesh {
-  const geometry = new BoxGeometry(width, height, depth)
-  const material = new MeshStandardMaterial({ color: PALETTE.rock })
-  return new Mesh(geometry, material)
+// Pulled 1cm below y=0: a skirt top exactly coplanar with floor.ts's floor
+// plane z-fights at grazing angles (visible as vertical streaks in
+// drift-right.png before this fix). The bottom stays at exactly
+// -skirtDepthM, so the seam test's min-y band is unaffected.
+const SKIRT_TOP_GAP_M = 0.01
+
+// R1.3 root-cause fix: the skirt used to be a CONSTANT-width box, but the
+// vault it sits under tapers (vaultScaleAt) — narrowest at the back wall
+// (z=0). Everywhere the vault is narrower than the box, the skirt's own
+// top-outer edge peeked out past the tapered wall and read, at CAMERA_RIG's
+// grazing angle, as "a thin diagonal hairline... a stray edge/backface/
+// helper line" (fresh critic, R1.3 clay pass). Sizing the skirt to the
+// vault's own narrowest point (its global minimum scale, at the back wall)
+// guarantees it never pokes past the wall at ANY depth — measured off the
+// same function the wall itself sweeps by, never a hardcoded guess.
+const SKIRT_SCALE = vaultScaleAt(0)
+
+function buildSkirt(materials: ReturnType<typeof buildPalette>): Mesh {
+  const { widthM, depthM, skirtDepthM } = FOOTPRINT
+  const height = skirtDepthM - SKIRT_TOP_GAP_M
+  const geometry = new BoxGeometry(widthM * SKIRT_SCALE, height, depthM)
+  const mesh = new Mesh(geometry, materials.rockShadow)
+  mesh.name = 'skirt'
+  mesh.position.set(0, -skirtDepthM + height / 2, -depthM / 2)
+  return mesh
 }
 
 export function createSietch(): LandscapeModel {
-  const { widthM, depthM, heightM, skirtDepthM } = FOOTPRINT
+  const materials = buildPalette()
 
   const root = new Group()
   root.name = 'sietch'
-  const meshes: Mesh[] = []
 
-  // Massing: the main rock body, base at y = 0, top at y = heightM, spans
-  // the full footprint from z = 0 (back) to z = -depthM (front).
-  const massing = block(widthM, heightM, depthM)
+  const massing = new Group()
   massing.name = 'massing'
-  massing.position.set(0, heightM / 2, -depthM / 2)
+  const envelope = buildEnvelope(materials)
+  massing.add(envelope.mesh)
+  massing.add(buildBackWall(envelope.halfWidth, envelope.heightM, materials))
   root.add(massing)
-  meshes.push(massing)
 
-  // Skirt: seats below y = 0 for procedural terrain, never floating.
-  const skirt = block(widthM, skirtDepthM, depthM)
-  skirt.name = 'skirt'
-  skirt.position.set(0, -skirtDepthM / 2, -depthM / 2)
-  root.add(skirt)
-  meshes.push(skirt)
+  root.add(buildFloor(materials))
+  root.add(buildSkirt(materials))
+  root.add(buildEntrance(envelope.halfWidth, envelope.heightM, materials))
+  root.add(buildGalleryTier(materials))
 
-  // Entrance marker: thin block flush with the front (-Z) face, inside
-  // the massing's own bounds — documents and measures the "front toward
-  // -Z" convention (landscape-shop/docs/gauntlet-loop.md) without
-  // growing the overall footprint past what spec.ts declares.
-  const entranceWidth = widthM * 0.3
-  const entranceHeight = heightM * 0.5
-  const entranceDepth = Math.min(0.1, depthM)
-  const entrance = block(entranceWidth, entranceHeight, entranceDepth)
-  entrance.name = 'entrance'
-  entrance.position.set(0, entranceHeight / 2, -depthM + entranceDepth / 2)
-  root.add(entrance)
-  meshes.push(entrance)
+  const meshes: Mesh[] = []
+  root.traverse((child) => {
+    const m = child as Object3D & { isMesh?: boolean }
+    if (m.isMesh) meshes.push(child as unknown as Mesh)
+  })
 
   return {
     root,
     dispose(): void {
+      const disposedMaterials = new Set<MeshStandardMaterial>()
       for (const mesh of meshes) {
         mesh.geometry.dispose()
-        ;(mesh.material as MeshStandardMaterial).dispose()
+        const material = mesh.material as MeshStandardMaterial
+        if (!disposedMaterials.has(material)) {
+          material.dispose()
+          disposedMaterials.add(material)
+        }
       }
       root.clear()
     },
