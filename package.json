@@ -29,7 +29,13 @@
     "cast:duncan": "vite character-shop/duncan",
     "cast:duncan:build": "vite build character-shop/duncan",
     "cast:duncan:check": "tsc -p character-shop/duncan --noEmit",
-    "land:new": "node scripts/new-shop.mjs --root landscape-shop"
+    "land:new": "node scripts/new-shop.mjs --root landscape-shop",
+    "land:cliff": "vite landscape-shop/cliff",
+    "land:cliff:build": "vite build landscape-shop/cliff",
+    "land:cliff:check": "tsc -p landscape-shop/cliff --noEmit",
+    "land:sietch": "vite landscape-shop/sietch",
+    "land:sietch:build": "vite build landscape-shop/sietch",
+    "land:sietch:check": "tsc -p landscape-shop/sietch --noEmit"
   },
   "dependencies": {
     "@types/three": "^0.185.1",
