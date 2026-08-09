@@ -23,9 +23,19 @@ export const PROVENANCE = {
     'neutral basalt-sandstone) with the sand apron pulled toward the ' +
     'game\'s own dune palette so the seated base blends where it meets ' +
     'SandMaterial terrain.',
-  sourcedAssets: 'Sanctioned feedstock (free tier, threejsassets.com, ' +
-    'Free Commercial License, no redistribution of raw files): ' +
-    'sandstone-boulder, cutting-rock-face, rockfall-debris, ' +
-    'rubble-scatter, mossy-boulder (de-mossed). Each use records its ' +
-    'asset URL here when it lands.',
+  sourcedAssets: 'USED (R1.3 bake): mesa_outcrop and sandstone_boulder, ' +
+    'Desert Kingdom pack, threejsassets.com, Lifetime Commercial License ' +
+    'v1 (purchased 2026-08-09). Raw GLBs live gitignored under ' +
+    'landscape-shop/feedstock-packs/ and are never committed - the ' +
+    'license forbids redistributing raw files. What ships is ' +
+    'src/model/massifBake.json, a reshaped derivative: 24 instances ' +
+    'taper-enveloped, non-uniformly scaled, sheared, mirrored, rotated, ' +
+    'noise-displaced, scarp-clamped, leaned, merged and welded into one ' +
+    'formation specific to this set; byte-deterministic from ' +
+    'tools/bakeMassif.mjs for anyone who owns the same pack. Considered ' +
+    'and skipped: cutting-rock-face (Draco - WASM in the bake), ' +
+    'rock_arch (arch aperture reads as ruin). Measured shape note: ' +
+    'mesa_outcrop is a mushroom-capped hoodoo (summit flare 1.34 vs ' +
+    '0.85 column), not the pack blurb\'s stepped-back butte - hence the ' +
+    'bake\'s taper envelope.',
 } as const

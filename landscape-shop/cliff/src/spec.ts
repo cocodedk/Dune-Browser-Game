@@ -43,9 +43,12 @@ export const CAMERA_RIGS = {
     fovDeg: 50,
   },
   landing: {
-    // Short final: entrance framing as the craft comes down.
-    positionM: [30, 30, -260],
-    lookAtM: [0, 30, 0],
+    // Short final: entrance framing as the craft comes down. Aimed at the
+    // FRONT face (z = -depthM), not the massif center — the first rig
+    // authored here looked at [0,30,0], which put the aim point on the
+    // back plane and framed nothing but wall from 40 m out.
+    positionM: [40, 28, -300],
+    lookAtM: [0, 10, -220],
     fovDeg: 50,
   },
 } as const

@@ -1,62 +1,66 @@
 // landscape-shop/cliff/src/model/Cliff.ts
-// Placeholder builder: a rock-toned box massing at the footprint, a skirt
-// seating below y = 0, and an entrance marker flush with the -Z front
-// face, sized to FOOTPRINT so the scaffold builds, matches spec, and the
-// seam test is green immediately. Replace each box with real geometry in
-// place — keep the 'massing', 'skirt' and 'entrance' names; the seam test
-// keys off them. Static: no update() — see contracts.ts.
+// Composes the set: 'massing' (baked massif + the procedural gate prow that
+// grows out of it), 'skirt' (rock + sand apron below y = 0), 'entrance' (the
+// carved socket) — names kept for the seam test and the loop contract.
+//
+// R1.3 changed TECHNIQUE, not just numbers. The primary masses are no longer
+// hand-guessed profiles: they are reshaped licensed feedstock, ten instances
+// of two artist-authored rock forms composited offline into one derived
+// geometry (tools/bakeMassif.mjs → model/massifBake.json → model/massif.ts).
+// Two earlier procedural passes read as dunes and then as a ruin; the
+// feedstock's own stacked-strata shape language is what those were missing.
+//
+// Every world-space extreme is hit by construction, not by luck:
+//   x: +-300           bake normalize      -> FOOTPRINT.widthM
+//   y: 190 .. -40      bake crest, skirt   -> heightM + skirtDepthM
+//   z: 0 .. socket.frontZ                  -> FOOTPRINT.depthM
+// The socket's inner lip is the single frontmost point of the whole set:
+// gateWall.ts's surface sinks monotonically away from the mouth, so nothing
+// else can get in front of it (seam.test.ts's -Z convention check).
 
-import { Group, Mesh, BoxGeometry, MeshStandardMaterial } from 'three'
+import { Group, Mesh } from 'three'
 import type { LandscapeModel } from '../contracts'
-import { FOOTPRINT, PALETTE } from '../spec'
-
-function block(width: number, height: number, depth: number): Mesh {
-  const geometry = new BoxGeometry(width, height, depth)
-  const material = new MeshStandardMaterial({ color: PALETTE.rock })
-  return new Mesh(geometry, material)
-}
+import { FOOTPRINT } from '../spec'
+import { buildMassif } from './massif'
+import { buildGateWall } from './gateWall'
+import { buildSkirtApron } from './skirtApron'
+import { buildSocket } from './socket'
 
 export function createCliff(): LandscapeModel {
-  const { widthM, depthM, heightM, skirtDepthM } = FOOTPRINT
-
   const root = new Group()
   root.name = 'cliff'
   const meshes: Mesh[] = []
+  const track = (mesh: Mesh): Mesh => {
+    meshes.push(mesh)
+    return mesh
+  }
 
-  // Massing: the main rock body, base at y = 0, top at y = heightM, spans
-  // the full footprint from z = 0 (back) to z = -depthM (front).
-  const massing = block(widthM, heightM, depthM)
+  const massing = new Group()
   massing.name = 'massing'
-  massing.position.set(0, heightM / 2, -depthM / 2)
+  const gateWall = buildGateWall()
+  massing.add(track(buildMassif()))
+  massing.add(track(gateWall.mesh))
   root.add(massing)
-  meshes.push(massing)
 
-  // Skirt: seats below y = 0 for procedural terrain, never floating.
-  const skirt = block(widthM, skirtDepthM, depthM)
-  skirt.name = 'skirt'
-  skirt.position.set(0, -skirtDepthM / 2, -depthM / 2)
-  root.add(skirt)
-  meshes.push(skirt)
-
-  // Entrance marker: thin block flush with the front (-Z) face, inside
-  // the massing's own bounds — documents and measures the "front toward
-  // -Z" convention (landscape-shop/docs/gauntlet-loop.md) without
-  // growing the overall footprint past what spec.ts declares.
-  const entranceWidth = widthM * 0.3
-  const entranceHeight = heightM * 0.5
-  const entranceDepth = Math.min(0.1, depthM)
-  const entrance = block(entranceWidth, entranceHeight, entranceDepth)
+  const socket = buildSocket(gateWall.minZ)
+  const entrance = new Group()
   entrance.name = 'entrance'
-  entrance.position.set(0, entranceHeight / 2, -depthM + entranceDepth / 2)
+  for (const mesh of socket.meshes) entrance.add(track(mesh))
   root.add(entrance)
-  meshes.push(entrance)
+
+  const skirt = new Group()
+  skirt.name = 'skirt'
+  for (const mesh of buildSkirtApron(FOOTPRINT.skirtDepthM, socket.frontZ)) {
+    skirt.add(track(mesh))
+  }
+  root.add(skirt)
 
   return {
     root,
     dispose(): void {
       for (const mesh of meshes) {
         mesh.geometry.dispose()
-        ;(mesh.material as MeshStandardMaterial).dispose()
+        ;(mesh.material as { dispose(): void }).dispose()
       }
       root.clear()
     },

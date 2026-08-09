@@ -3,37 +3,15 @@
 // landscape-shop/docs/gauntlet-loop.md: "seam.test.ts guards from day
 // one: footprint within 1% of spec.ts, front-toward-Z, base-at-zero, and
 // dispose() completeness." Measured off the real geometry — never
-// asserted from spec.ts alone.
+// asserted from spec.ts alone. R1's massing-specific guards moved to
+// massingR1.test.ts once this file passed the 200-line rule.
 
 import { describe, it, expect } from 'vitest'
-import { Box3, Vector3 } from 'three'
-import type { Object3D, Mesh, MeshStandardMaterial } from 'three'
+import { Vector3 } from 'three'
+import type { Object3D, MeshStandardMaterial } from 'three'
 import { createCliff } from './model/Cliff'
 import { FOOTPRINT } from './spec'
-
-function withinOnePercent(actual: number, expected: number): boolean {
-  return Math.abs(actual - expected) <= expected * 0.01
-}
-
-function boundsOf(part: Object3D): Box3 {
-  part.updateMatrixWorld(true)
-  return new Box3().setFromObject(part)
-}
-
-function entranceOf(root: Object3D): Object3D {
-  const entrance = root.getObjectByName('entrance')
-  if (!entrance) throw new Error('entrance marker missing from the set')
-  return entrance
-}
-
-function meshesOf(root: Object3D): Mesh[] {
-  const meshes: Mesh[] = []
-  root.traverse((child) => {
-    const mesh = child as Mesh
-    if (mesh.isMesh) meshes.push(mesh)
-  })
-  return meshes
-}
+import { withinOnePercent, boundsOf, entranceOf, meshesOf } from './testHelpers'
 
 describe('seam: the set matches its footprint and faces its own -Z', () => {
   it('width and depth are within 1% of FOOTPRINT', () => {
