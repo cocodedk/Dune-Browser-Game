@@ -50,3 +50,25 @@ reproduce.
 - **Did not reproduce:** nothing this round.
 - Remaining WP00 scope: baseline saves + browser captures (serial, one tab,
   closed after each), then the evidence-auditor critic.
+
+## Round 2 — WP00 baseline captures (2026-08-10/11)
+
+- **8 states captured** at `fad8653` under `baseline/captures/` (PNG +
+  full-save `.raw.json` each, indexed in `captures.md` with exact steps and
+  debug-helper labeling): opening, pledge, legacy payout (day 4), tribute/quota
+  day 12 (patience 3→2), day-20 full-assignment quota state, an **organic
+  `loss_patience` ending at day 28**, a debug-forced `win_military`, and a
+  proven-blocked `survive_20_min`.
+- **Blocked, with proof:** raids (`raidInterval('act1')` returns `null` —
+  `resolve.ts:137` — and Act 2 was never organically reachable); the
+  `survive_20_min` ending (`goalType` fixed, `setTime(1201)` leaves
+  `goalAchieved` false).
+- **Findings for later packages:** saves live in IndexedDB and `main.tsx:6`
+  auto-loads before mount; "Play Again" reloads into the same ended run (save
+  never cleared); with all 8 sietches pledged and harvesting, 0 of 3 quota
+  cycles ever settled in full — the opening balance cannot clear Q1 (the pack's
+  premise, now measured); `villages[].owner` vs `regions[].owner` are separate
+  arrays with faction narration on the one the economy never reads.
+- Lead spot-verified: capture files, raid gate, auto-load, GoalExecutor
+  narration, and the loss-ending raw artifact — all reproduced.
+- Next: evidence-auditor critic over the whole WP00 package.
