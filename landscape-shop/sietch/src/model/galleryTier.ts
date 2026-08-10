@@ -32,6 +32,26 @@ import { FOOTPRINT } from '../spec'
 import { vaultScaleAt } from './vaultScale'
 import type { PaletteMaterials } from './materials'
 
+// R3 FINAL: the termination pier is the single biggest flat box in the
+// set (4.1 x 6.3 m), and materials.stone's one shared chisel map
+// (surface/chisel.ts) tiles 3x3 across ANY box's default 0..1 UVs — on a
+// mass this large that tiling is legible as a diamond-quilted grid (a
+// fresh critic: "reads as retail furniture"). The material is shared by
+// six meshes and surface.test.ts pins the hall family at exactly six, so
+// a dedicated untiled material is not an option — this shrinks the UVs
+// this ONE box samples down to a near-point instead, which re-maps it to
+// a near-flat slice of the same chisel field (no new material, no tiling
+// legible at rig distance) rather than re-texturing it.
+const PIER_UV_SHRINK = 0.02
+
+function detileUV(geometry: BoxGeometry): void {
+  const uv = geometry.attributes.uv
+  for (let i = 0; i < uv.count; i++) {
+    uv.setXY(i, 0.5 + (uv.getX(i) - 0.5) * PIER_UV_SHRINK, 0.5 + (uv.getY(i) - 0.5) * PIER_UV_SHRINK)
+  }
+  uv.needsUpdate = true
+}
+
 export const TIER_TOP_Y_M = 5.5
 const TIER_THICKNESS_M = 0.7
 const TIER_DEPTH_M = 2.6 // walkway width, inward from the wall
@@ -119,10 +139,9 @@ function buildTierTermination(materials: PaletteMaterials): Mesh {
   const z1 = z0 - TERMINATION_DEPTH_M
   const outerX = wallXAt(z0) // conservative: the shallower (nearer) end
   const innerX = outerX - TERMINATION_REACH_M
-  const mesh = new Mesh(
-    new BoxGeometry(TERMINATION_REACH_M, TERMINATION_TOP_Y_M, TERMINATION_DEPTH_M),
-    materials.stone,
-  )
+  const geometry = new BoxGeometry(TERMINATION_REACH_M, TERMINATION_TOP_Y_M, TERMINATION_DEPTH_M)
+  detileUV(geometry)
+  const mesh = new Mesh(geometry, materials.stone)
   mesh.name = 'galleryTierTerminationPier'
   mesh.position.set(innerX + TERMINATION_REACH_M / 2, TERMINATION_TOP_Y_M / 2, (z0 + z1) / 2)
   return mesh

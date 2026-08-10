@@ -19,7 +19,7 @@ import { SPRING_FADE_M, springHeightAt } from './carvedProfile'
 import { blockToneAt } from './leftBlocks'
 import { smokeStainAt } from './smoke'
 import { handPolishAt } from './handWear'
-import { basinWetAt, footPathAt, hearthScorchAt, levellingCutAt } from './floorWear'
+import { basinWetAt, footPathAt, hearthAshTaperAt, hearthScorchAt, levellingCutAt } from './floorWear'
 import { dressingDepthAt, dressingShadeAt } from './wallFace'
 import { clamp01, mix, smoothstep } from './curves'
 
@@ -125,7 +125,7 @@ const WET_ROUGH = 0.26
  *  the levelling cuts the tools left and the wear the feet added. */
 export function sampleFloor(x: number, z: number): RockSample {
   const cut = levellingCutAt(z) / LEVELLING_CUT_DEPTH_M
-  const path = footPathAt(x, z)
+  const path = footPathAt(x, z) * hearthAshTaperAt(x, z)
   const scorch = hearthScorchAt(x, z)
   const wet = basinWetAt(x, z)
 

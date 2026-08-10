@@ -24,10 +24,8 @@ import { FOOTPRINT, DRESSING } from '../spec'
 import { buildRuledTube } from './loftGeometry'
 import { vaultScaleAt } from './vaultScale'
 import { RING_COUNT } from './surface/carvedProfile'
+import { buildHearthStone } from './hearthStone'
 import type { PaletteMaterials } from './materials'
-
-const HEARTH_RADIUS_M = 2.2
-const HEARTH_LIP_HEIGHT_M = 0.35
 
 const BASIN_RADIUS_M = 3
 const BASIN_DEPTH_M = 0.35
@@ -45,17 +43,6 @@ const BASIN_DEPTH_M = 0.35
 // carvedProfile.ts gates its displacement to zero at the floor corners
 // precisely so this margin survives the carving.
 const FLOOR_EDGE_INSET_M = 0.04
-
-function hearthLip(materials: PaletteMaterials): Mesh {
-  const [x, , z] = DRESSING.hearthAtM
-  const mesh = new Mesh(
-    new CylinderGeometry(HEARTH_RADIUS_M, HEARTH_RADIUS_M * 1.1, HEARTH_LIP_HEIGHT_M, 16),
-    materials.stoneWorn,
-  )
-  mesh.name = 'hearthLip'
-  mesh.position.set(x, HEARTH_LIP_HEIGHT_M / 2, z)
-  return mesh
-}
 
 function basinDepression(materials: PaletteMaterials): Mesh {
   const [x, , z] = DRESSING.basinAtM
@@ -99,7 +86,9 @@ export function buildFloor(materials: PaletteMaterials): Group {
   group.name = 'floor'
 
   group.add(taperedFloorStrip(materials))
-  group.add(hearthLip(materials))
+  // R3 FINAL: the lip is now an irregular hand-set hearth stone
+  // (hearthStone.ts), not a lathed disc — see that module for why.
+  group.add(buildHearthStone(materials))
   group.add(basinDepression(materials))
 
   return group

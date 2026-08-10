@@ -12,6 +12,7 @@
 // (Sietch.ts) — so they read as real relief even head-on.
 
 import { Group, Mesh, BoxGeometry } from 'three'
+import { chamferedBoxGeometry, type CornerNicks } from './chamferedBox'
 import type { PaletteMaterials } from './materials'
 
 // >= 0.4m: must catch the hearth light as a visible rim (R1.2 spec).
@@ -35,6 +36,27 @@ export interface GalleryLayout {
   height: number
 }
 
+// R3 FINAL: hand-set nicks on the two floor-level openings only — a fresh
+// critic named THEM, by shape ("perfect rectangles, hard 90-degree
+// corners"), never galleryRightHigh (its own carved surround has its own
+// guard, dressing.test.ts, and this round does not touch it). Corners are
+// the JAMB/LINTEL pair that meets at the opening's own top edge — the
+// pair a hard rectangle actually reads against the dark socket behind it.
+// Sizes are 0.05-0.15 m, and no two match: a matched pair of nicks is
+// just a smaller rectangle, not an eroded one.
+const RECESS_NICKS: Record<string, { jambLeft: CornerNicks; jambRight: CornerNicks; lintel: CornerNicks }> = {
+  galleryLeftA: {
+    jambLeft: { tr: 0.09 },
+    jambRight: { tl: 0.13 },
+    lintel: { bl: 0.07, br: 0.11 },
+  },
+  galleryLeftB: {
+    jambLeft: { tr: 0.14 },
+    jambRight: { tl: 0.06 },
+    lintel: { bl: 0.12, br: 0.05 },
+  },
+}
+
 /** The rectangle backWall.ts cuts from its cap Shape: the clear opening
  *  plus the jamb margin on all four sides, so the jamb pieces below fill
  *  exactly to the cut edge with no sliver of solid cap left showing. */
@@ -50,10 +72,11 @@ export function cutBounds(layout: GalleryLayout): { x0: number; x1: number; y0: 
 
 function framePiece(
   name: string, cx: number, cy: number, w: number, h: number,
-  capZ: number, recessM: number, materials: PaletteMaterials,
+  capZ: number, recessM: number, materials: PaletteMaterials, nicks?: CornerNicks,
 ): Mesh {
   const depth = PROUD_OFFSET_M + recessM
-  const mesh = new Mesh(new BoxGeometry(w, h, depth), materials.stoneShadow)
+  const geometry = nicks ? chamferedBoxGeometry(w, h, depth, nicks) : new BoxGeometry(w, h, depth)
+  const mesh = new Mesh(geometry, materials.stoneShadow)
   mesh.name = name
   mesh.position.set(cx, cy, capZ - PROUD_OFFSET_M + depth / 2)
   return mesh
@@ -73,9 +96,10 @@ export function buildGalleryRecess(
   // the lintel/sill.
   const jambHeight = bounds.y1 - bounds.y0
   const jambY = (bounds.y0 + bounds.y1) / 2
-  group.add(framePiece(`${name}JambLeft`, x - width / 2 - JAMB_THICKNESS_M / 2, jambY, JAMB_THICKNESS_M, jambHeight, capZ, recessM, materials))
-  group.add(framePiece(`${name}JambRight`, x + width / 2 + JAMB_THICKNESS_M / 2, jambY, JAMB_THICKNESS_M, jambHeight, capZ, recessM, materials))
-  group.add(framePiece(`${name}Lintel`, x, baseY + height + JAMB_THICKNESS_M / 2, width, JAMB_THICKNESS_M, capZ, recessM, materials))
+  const nicks = RECESS_NICKS[name]
+  group.add(framePiece(`${name}JambLeft`, x - width / 2 - JAMB_THICKNESS_M / 2, jambY, JAMB_THICKNESS_M, jambHeight, capZ, recessM, materials, nicks?.jambLeft))
+  group.add(framePiece(`${name}JambRight`, x + width / 2 + JAMB_THICKNESS_M / 2, jambY, JAMB_THICKNESS_M, jambHeight, capZ, recessM, materials, nicks?.jambRight))
+  group.add(framePiece(`${name}Lintel`, x, baseY + height + JAMB_THICKNESS_M / 2, width, JAMB_THICKNESS_M, capZ, recessM, materials, nicks?.lintel))
 
   // No sill for a floor-level opening (bounds.y0 is clamped up near
   // baseY, leaving nothing to fill) — the hall floor itself is the

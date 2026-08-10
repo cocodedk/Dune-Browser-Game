@@ -17,6 +17,7 @@ import { buildBackWall } from './backWall'
 import { buildFloor } from './floor'
 import { buildEntrance } from './entrance'
 import { buildGalleryTier } from './galleryTier'
+import { buildDressing } from './dressing/Dressing'
 import { vaultScaleAt } from './vaultScale'
 
 // Pulled 1cm below y=0: a skirt top exactly coplanar with floor.ts's floor
@@ -62,6 +63,10 @@ export function createSietch(): LandscapeModel {
   root.add(buildSkirt(materials))
   root.add(buildEntrance(materials))
   root.add(buildGalleryTier(materials))
+  // R3: the objects of habitation, in three named clusters. Its own three
+  // materials (dressing/dressingMaterials.ts) are freed by the sweep
+  // below, which disposes whatever material it finds on a mesh.
+  root.add(buildDressing(materials).group)
 
   const meshes: Mesh[] = []
   root.traverse((child) => {

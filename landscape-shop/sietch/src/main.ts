@@ -70,13 +70,27 @@ container.appendChild(renderer.domElement)
 const ambient = new AmbientLight(0x201812, 0.18)
 scene.add(ambient)
 
-// Physically-correct candela units: reaching a ~36 x 22 x 52m hall from one
-// point needs three orders of magnitude more than a "6" that reads fine in
-// pre-r155 arbitrary units — measured by capturing rig.png and adjusting
-// until the vault silhouette was actually visible, not assumed.
-const hearth = new PointLight(DRESSING.hearthColor, 900, 60, 1.7)
+// Physically-correct candela units, held at R3's own numbers — see the
+// R2->R3 note below on why 340/60/1.4. R3 FINAL TRIED lowering DECAY
+// further (1.4->1.2) against the same 35 m anchor for a fresh critic's
+// "the hearth's light behaves like a stage spotlight... rather than a
+// fire radiating warmth", and MEASURED it wrong: nearly the whole hall
+// sits closer than the 35 m anchor, so flattening the curve to hold that
+// one far point dimmed everything nearer it too (rig.png hall-mean outside
+// the hearth zone, 67.8 -> 57.9, an 14.6% drop against the 5% budget).
+// Lowering HEIGHT alone (toward the embers) cost 4.8% for no clipping
+// gain, because a closer source is BRIGHTER directly beneath it, not
+// dimmer. The light stays exactly as R3 left it; the fix that actually
+// answers the critic is the floor's own — surface/floorWear.ts's
+// hearthAshTaperAt, pulling the desire-line polish (the specular lane a
+// nearby light needs to paint a wedge) back near the hearth.
+const HEARTH_LIGHT_INTENSITY = 340
+const HEARTH_LIGHT_RANGE_M = 60
+const HEARTH_LIGHT_DECAY = 1.4
+const HEARTH_LIGHT_HEIGHT_M = 2
+const hearth = new PointLight(DRESSING.hearthColor, HEARTH_LIGHT_INTENSITY, HEARTH_LIGHT_RANGE_M, HEARTH_LIGHT_DECAY)
 hearth.position.set(...(DRESSING.hearthAtM as [number, number, number]))
-hearth.position.y = 2
+hearth.position.y = HEARTH_LIGHT_HEIGHT_M
 scene.add(hearth)
 
 // ~30 degrees off CAMERA_RIG's view axis (R1.2 — was near-coaxial, which

@@ -64,6 +64,25 @@ export const DRESSING = {
   hearthColor: 0xffb05c,
 } as const
 
+// The authored lighting the game adapter must recreate — the fence only
+// admits the public surface, so the harness's ratified numbers live here.
+// One hearth PointLight (castShadow OFF: cube-shadow artifact, see
+// main.ts) at DRESSING.hearthAtM with its y raised to heightM below,
+// plus a near-black warm ambient. The renderer is expected to run
+// ACESFilmicToneMapping at exposure 1.0 (the game's Renderer already
+// does). Camera drift for parallax is CAMERA motion only, within the
+// tested +-driftM envelope (enclosure is raycast-guarded to hold there).
+export const LIGHTING = {
+  hearth: {
+    intensity: 340,
+    rangeM: 60,
+    decay: 1.4,
+    heightM: 2,
+  },
+  ambient: { color: 0x201812, intensity: 0.18 },
+  driftM: { x: 3, y: 1.2 },
+} as const
+
 // Carved warm rock under firelight — continuous with the painted
 // diorama's palette (locationDefs.ts sietch entry) so the released set
 // reads as the same place, sharper.

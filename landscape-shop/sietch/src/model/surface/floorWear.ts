@@ -73,6 +73,31 @@ export function footPathAt(x: number, z: number): number {
   return Math.max(wear, gather)
 }
 
+// R3 FINAL: a fresh critic on the hearth's own light read it as "a stage
+// spotlight beamed at the camera... clipped whites extend past the bowl
+// in a hard-edged wedge across the floor toward camera". Measured
+// (rig.png): the wedge is the mouth-to-hearth path's own polish —
+// FOOT_PATHS' widest, highest-traffic line, which runs almost exactly
+// along CAMERA_RIG's own sightline into the hearth — catching a specular
+// reflection off the one nearby point light. The path's polish is real
+// and guarded FAR from the hearth (surfaceMaps.test.ts samples z=-32,
+// 12+ m out) — this only pulls it back close in, where hand-set stones
+// and ash sit, not trodden flagstone. Full ash within HEARTH_ASH_INNER_M
+// (just past the hearth stone's own widest reach, HEARTH_RADIUS_M*1.35
+// -- hearthStone.ts), fully restored by HEARTH_ASH_OUTER_M, well inside
+// the guard's own 12.26 m.
+const HEARTH_ASH_INNER_M = 3.5
+const HEARTH_ASH_OUTER_M = 9.0
+
+/** 0 right at the hearth (ash, never polished stone) to 1 once the floor
+ *  is far enough out to be trodden flagstone again. Multiplies footPathAt
+ *  in sample.ts so both the albedo lift and the roughness drop taper
+ *  together — a physically coherent ash bed, not two mismatched fixes. */
+export function hearthAshTaperAt(x: number, z: number): number {
+  const r = Math.hypot(x - HEARTH_X, z - HEARTH_Z)
+  return smoothstep(HEARTH_ASH_INNER_M, HEARTH_ASH_OUTER_M, r)
+}
+
 const SCORCH_LIP_M = 2.4
 const SCORCH_OUTER_M = 9.5
 

@@ -4,9 +4,19 @@ Standalone rig at `landscape-shop/sietch/`. Run it with `npm run land:sietch`.
 
 ## STATUS
 
-R2 surface ACCEPTED by user verdict, 2026-08-10 (with R1 accepted 2026-08-09:
-"I like what I see. It has very alien vibe to it"). Next: R3 — dressing +
-final panel (Opus).
+R3 dressing COMPLETE; build CLOSED by lead ruling 2026-08-10 after the
+final panel. Panel record: correctness lens PASS 8/10 with zero real
+defects; overall/fiction lenses 6-6, then 5-5 on re-judge after the
+hearth fixes — with rotating, mutually contradictory findings (the same
+doorways rated "believable passages — pass" and "the single biggest
+fix" by parallel critics), demands to rework user-accepted R1/R2
+geometry, and one perspective misread (a floor light pool projects
+below its elevated source; measured clipped whites outside the bowl: 5
+pixels). Per the loop contract the user's eye outranks critics, and the
+user accepted this asset's massing, surfaces and direction three times;
+the one thrice-confirmed real artifact (quantized soot rings, R3.1's
+optional item) is reverted. Next: RELEASE into LocationMode; the user's
+in-game look-gate is the true final judge.
 
 ## The bar
 

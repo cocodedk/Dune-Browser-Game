@@ -14,7 +14,7 @@
 import { describe, it, expect } from 'vitest'
 import type { DataTexture, Mesh, MeshStandardMaterial, Object3D } from 'three'
 import { createSietch } from './model/Sietch'
-import { meshesOf } from './testHelpers'
+import { hallMeshesOf, meshesOf } from './testHelpers'
 import {
   buildVaultProfile, PROFILE_POINT_COUNT, SPRING_LEFT_INDEX, SPRING_RIGHT_INDEX,
 } from './model/crossSection'
@@ -96,11 +96,16 @@ describe('R2: the carving is massing-invariant by construction', () => {
 })
 
 describe('R2: the material family is small, mapped, and node-safe', () => {
+  // R3 scoped this to the HALL's meshes. The dressing (model/dressing/)
+  // brings three flat-shaded, unmapped materials of its own, which this
+  // guard was never measuring: its subject is the mapped rock family, and
+  // relaxing the number to nine would have stopped it protecting anything.
+  // The dressing's own count is guarded in dressing.test.ts instead.
   it('is exactly six materials, every map a DataTexture at its spec\'d size', () => {
     const set = createSietch()
-    const meshes = meshesOf(set.root as unknown as Object3D)
+    const meshes = hallMeshesOf(set.root as unknown as Object3D)
     const materials = new Set(meshes.map((m) => m.material as MeshStandardMaterial))
-    expect(materials.size, 'the family grew past six materials').toBe(6)
+    expect(materials.size, 'the hall material family grew past six').toBe(6)
 
     const sizes = new Map<string, [number, number]>()
     const seen = new Set<DataTexture>()

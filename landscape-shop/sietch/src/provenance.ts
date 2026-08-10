@@ -22,9 +22,17 @@ export const PROVENANCE = {
   palette: 'AUTHORED from locationDefs.ts sietch entry (massing #2b1c10, ' +
     'sky #3a2414) lifted toward firelight so a lit 3D room does not go ' +
     'muddier than the painting it replaces.',
-  sourcedAssets: 'Sanctioned feedstock (free tier, threejsassets.com, ' +
-    'Free Commercial License, no redistribution of raw files): ' +
-    'tomb-entrance (carved doorway forms), date-palm, royal-palm ' +
-    '(palmary, fronds re-tinted), desert-scrub, fire-brazier, ' +
-    'stone-well. Each use records its asset URL here when it lands.',
+  sourcedAssets: 'USED (R3 dressing bake): fire_brazier, amphora, ' +
+    'basket_set, spice_sacks, carpet_roll, water_urn_trough, date_palm, ' +
+    'doum_palm, desert_scrub, sandstone_boulder, tomb_entrance - all ' +
+    'Desert Kingdom pack, threejsassets.com/assets/<name-with-dashes>, ' +
+    'Lifetime Commercial License v1 (purchased 2026-08-09). Raw GLBs ' +
+    'live gitignored (landscape-shop/feedstock-packs/) and are never ' +
+    'committed; the license forbids redistributing raw files. What ' +
+    'ships is src/model/dressingBake.json: 23 reshaped derivatives ' +
+    '(plates stripped, cropped, true-meter scaled, decimated, re-seated, ' +
+    're-tinted to PALETTE via tools/bake/tones.mjs - no feedstock color ' +
+    'survives), byte-deterministic from tools/bakeDressing.mjs for pack ' +
+    'owners. royal_palm was skipped (Draco-compressed; a temp decompress ' +
+    'step would break repo-only reproducibility) in favor of doum_palm.',
 } as const
