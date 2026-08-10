@@ -11,6 +11,7 @@
 import type { Mesh } from 'three'
 import { buildGridGeometry, flatShade, largestComponentMask, meshFrom, type GridColumns } from './grid'
 import { rockFrontAt } from './massif'
+import { latticeNode } from './prowLattice'
 import { prowRelief, smoothstep, PROW_FRONT_Z } from './prowRelief'
 import { COURSE_M } from './strata'
 import { PALETTE } from '../spec'
@@ -66,6 +67,30 @@ export function socketRadius(x: number, y: number): number {
   return Math.hypot(x / SOCKET.halfWidthM, (y - SOCKET.centreYM) / SOCKET.halfHeightM)
 }
 
+/** How free a lattice node at (x, y) is to leave its ruling — see
+ *  model/prowLattice.ts for what it is for. Pinned in three places, each one
+ *  a joint that would otherwise open:
+ *
+ *  THE HOLE'S EDGE. The socket hole is punched on UNJITTERED quad midpoints,
+ *  so the ring of quads either side of socketRadius 1 has to stay where the
+ *  punch thought it was. Only that ring: model/gateLip.ts's annulus covers
+ *  the prow outward to socketRadius 1.68 at its widest wobble, which leaves
+ *  half a mouth-radius of overlap over a node that can move 1.1 m. A first
+ *  pass pinned everything inside 2.7 and measured the result on the shot —
+ *  that is a 95 m swath across the middle of the landing frame, which left
+ *  the wall the panel actually complained about still ruled into a grid.
+ *
+ *  THE FOOT. model/skirtApron.ts seats against y = 0 and the drift is painted
+ *  in world height; a bottom row that wandered in y would ripple both.
+ *
+ *  THE PANEL EDGE. The outermost columns and the top row hold the lattice's
+ *  own rectangle, which is what keeps the prow's bounding box — and with it
+ *  the footprint guard — exactly where it was. */
+function jitterHold(x: number, y: number): number {
+  const edge = smoothstep(0, 7, HALF_WIDTH_M - Math.abs(x)) * smoothstep(0, 7, TOP_M - y)
+  return smoothstep(1.15, 1.75, socketRadius(x, y)) * smoothstep(0.6, 5.5, y) * edge
+}
+
 /** The prow's surface at (x, y). Defined everywhere, not just on the grid, so
  *  the socket lip can lie exactly on it. */
 export function gateWallZ(x: number, y: number): number {
@@ -112,7 +137,14 @@ export function buildGateWall(): GateWall {
   // islands without moving a single vertex of the real surface.
   const onMainSurface = largestComponentMask(COLUMNS - 1, ROWS, (c, r) => hasRock(xs, ys, c, r))
 
-  const columns: GridColumns = xs.map((x) => ys.map((y) => ({ x, y, z: gateWallZ(x, y) })))
+  // The lattice is sampled OFF its own rulings (model/prowLattice.ts): the
+  // node moves first, then the surface is read at where it ended up, so the
+  // prow is the same shape sampled by an irregular net instead of a grid.
+  const pitch = { x: (2 * HALF_WIDTH_M) / (COLUMNS - 1), y: TOP_M / ROWS }
+  const columns: GridColumns = xs.map((x, c) => ys.map((y, r) => {
+    const at = latticeNode(c, r, x, y, pitch, jitterHold(x, y))
+    return { x: at.x, y: at.y, z: gateWallZ(at.x, at.y) }
+  }))
   const lattice = buildGridGeometry(columns, {
     skipQuad(c, r) {
       const x = (xs[c] + xs[c + 1]) / 2

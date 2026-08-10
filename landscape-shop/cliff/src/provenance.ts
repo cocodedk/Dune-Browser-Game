@@ -28,7 +28,7 @@ export const PROVENANCE = {
     'v1 (purchased 2026-08-09). Raw GLBs live gitignored under ' +
     'landscape-shop/feedstock-packs/ and are never committed - the ' +
     'license forbids redistributing raw files. What ships is ' +
-    'src/model/massifBake.json, a reshaped derivative: 24 instances ' +
+    'src/model/massifBake.json, a reshaped derivative: 29 instances ' +
     'taper-enveloped, non-uniformly scaled, sheared, mirrored, rotated, ' +
     'noise-displaced, scarp-clamped, leaned, merged and welded into one ' +
     'formation specific to this set; byte-deterministic from ' +
@@ -38,4 +38,20 @@ export const PROVENANCE = {
     'mesa_outcrop is a mushroom-capped hoodoo (summit flare 1.34 vs ' +
     '0.85 column), not the pack blurb\'s stepped-back butte - hence the ' +
     'bake\'s taper envelope.',
+  dressingR3: 'USED (R3 dressing bake): sand_drift, spice_sacks, ' +
+    'basket_set, carpet_roll (Desert Kingdom pack) plus ' +
+    'sandstone-boulder, rockfall-debris, rubble-scatter (cliff ' +
+    'feedstock) - threejsassets.com, Lifetime Commercial License v1 ' +
+    '(purchased 2026-08-09). The last three ship Draco-compressed; they ' +
+    'are decompressed once, offline, via gltf-transform into the ' +
+    'gitignored feedstock/plain/ (tools/bake/glb.mjs refuses Draco by ' +
+    'design - no WASM in the bake). Only POSITIONS are read: no source ' +
+    'color, material or UV survives; model/dressTone.ts paints every ' +
+    'face from PALETTE. What ships is src/model/dressingBake.json ' +
+    '(38.2 KB): sixteen pieces cluster-decimated, scaled, rotated, ' +
+    'mirrored, tapered, noise-displaced, merged and welded into three ' +
+    'family geometries that exist in no asset pack; byte-deterministic ' +
+    'from tools/bakeDressing.mjs for pack owners. Considered and ' +
+    'rejected: hardpan_tile (cracks magnify to 10 m shards at forecourt ' +
+    'scale), obelisk, camel, nomad_tent (off-theme).',
 } as const

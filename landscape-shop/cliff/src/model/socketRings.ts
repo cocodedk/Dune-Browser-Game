@@ -46,6 +46,34 @@ export function rectPoint(
   return [k * c, shape.centreY + k * s]
 }
 
+/** THE APERTURE IS CARVED, NOT MACHINED. rectPoint draws a clean rectangle,
+ *  and the R3 panel read the result exactly as drawn: a "boxy lit patch"
+ *  inside the mouth with a dead-straight jamb each side and a dead-straight
+ *  lintel. Measured off the landing frame, that rectangle projects 146 px
+ *  wide by 118 px tall — the longest ruled lines anywhere in the shot.
+ *
+ *  This modulates the aperture's radius per angle by three harmonics with no
+ *  common factor, so the opening keeps its spec measure on average and loses
+ *  its ruled edges. Whole multiples of the angle only, so the ring still
+ *  closes on itself; model/socket.ts gives the mouth and the back of the
+ *  shaft the SAME modulation, so the tube between them stays coherent. */
+const APERTURE_BREAK = 0.19
+
+export function apertureBreak(angle: number): number {
+  return 1 + (APERTURE_BREAK / 2) * (Math.sin(3 * angle + 1.4)
+    + 0.6 * Math.sin(5 * angle - 0.7) + 0.4 * Math.sin(7 * angle + 2.9))
+}
+
+/** How far the BACK of the shaft is pushed out of that outline. Outward only
+ *  — the tube may widen into rock nobody sees, never narrow into the sight
+ *  line — so the crease the cap draws against the walls wanders with depth
+ *  as well as with angle. */
+const BACK_FLARE_M = 1.6
+
+export function backFlare(angle: number): number {
+  return BACK_FLARE_M * (0.5 + 0.5 * Math.sin(3 * angle + 0.8) * Math.cos(2 * angle - 2.4))
+}
+
 /** Radially pushes (x, y) out until it clears gateWall.ts's punched hole by
  *  SOCKET_CLEARANCE, leaving clear points untouched. */
 export function pushOutsideSocket(x: number, y: number): [number, number] {

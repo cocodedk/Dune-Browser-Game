@@ -13,6 +13,7 @@ import type { Group, Mesh, Object3D } from 'three'
 import { paintFaces, paintVertices, useVertexColors, type HaloAt } from './paintRock'
 import { planeForTriangle, HERO_PLANE, COURSE_M } from './strata'
 import { socketRadius } from './gateWall'
+import { paintDressing } from './dressTone'
 
 /** Rock the sietch's own traffic has darkened. socketRadius is 1 exactly on
  *  the aperture's edge, so the halo runs from the rim out to about twice the
@@ -72,6 +73,13 @@ export function surfaceCliff(root: Group): void {
     paintVertices(mesh.geometry, HERO_PLANE)
     useVertexColors(mesh)
   }
+
+  // R3's dressing is the one part of the set this file does not paint itself.
+  // Its three families want three different rules — flat rock, smooth sand and
+  // an UNLIT stack of cargo inside the mouth — and folding them in here would
+  // put this file past the 200-line rule. It stays the single integration
+  // point: nothing else calls model/dressTone.ts.
+  paintDressing(root)
 }
 
 function find(root: Object3D, name: string): Mesh {

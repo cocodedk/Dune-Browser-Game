@@ -4,10 +4,21 @@ Standalone rig at `landscape-shop/cliff/`. Run it with `npm run land:cliff`.
 
 ## STATUS
 
-R2 surface ACCEPTED by user verdict, 2026-08-10 (R1 massing likewise
-user-settled after the five-pass critic plateau). Next: R3 — dressing and
-the final panel (Opus). Lead rulings on R2.1: both metric replacements
-ratified (a guard that can no longer discriminate is dead weight).
+R3 COMPLETE, build closing 2026-08-10. R3 dressing (16 licensed pieces:
+sand banks framing a swept 70 m approach notch, waymark stones, scar
+debris reinforcement, sill cargo — the worn-path strip was attempted
+four measured ways and correctly abandoned for the notch design; lead
+ratified). Final panel 6/4/5 → R3.1 falsified the briefed root cause
+with a clay-control render (the "checkerboard" was facet tilt on ruled
+grid lines, not paint) and fixed it with pinned node jitter; R3.2
+closed the measured saddle sky-gap (2,317 open px → 0, guard locked
+0.35 → 0.70 discriminating), subdivided oversize facets, collapsed the
+westBastion needles (aspect 284 → 8.4). 42 guards green, 23,652/25,000
+triangles, bakes byte-deterministic. Next: RELEASE into FlightMode
+(with quantized bake encoding for the 150 KB chunk budget); the user's
+in-game look-gate is the final judge. Lead rulings on R2.1: both metric
+replacements ratified (a guard that can no longer discriminate is dead
+weight).
 
 ## The bar
 

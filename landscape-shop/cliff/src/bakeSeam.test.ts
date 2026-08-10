@@ -127,13 +127,25 @@ describe('seam: the formation reads as one silhouette, no saddle drops to open s
   // "the tallest thing anywhere in the formation".
   const WINDOW_M = 60
 
-  it('no saddle drops below 35% of its lower flanking peak', () => {
+  it('no saddle drops below 70% of its lower flanking peak', () => {
     const crest = crestByColumn(MASSIF_BAKE.positions, BAND_MIN_X, BAND_MAX_X, BIN_M)
     const worst = worstSaddleRatio(crest, WINDOW_M / BIN_M)
     // R1.4 state (pre-fix) measured 27.6% here, the hero/westBastion saddle
-    // reading as sky. R1.5's westBastion reshape (instances.mjs) measures
-    // 56.5%; 35% leaves real margin on both sides of that swing.
-    expect(worst).toBeGreaterThanOrEqual(0.35)
+    // reading as sky; R1.5's westBastion reshape got it to 56.5% and the bar
+    // was set at 35%.
+    //
+    // R3.2 RAISED IT 0.35 -> 0.70, to lock a closed col rather than a bridged
+    // crest. The R3.1 approach shot still showed sky ABOVE this crest line:
+    // rasterized, the box at screen (880..930, 380..430) — world x -70..-97,
+    // y 96 to 140 — was 89% open, because the saddle floor there stands at
+    // 71-108 m between a 143 m shoulder and a 114 m plateau. instances.mjs's
+    // colBlock fills it, and the box measures 0 open pixels.
+    //
+    // 0.70 is chosen so it CANNOT pass without that mass. Measured on the
+    // finished bake: 0.764. Measured on the same bake with colBlock alone
+    // removed: 0.620, and the worst column moves back into the col at
+    // x = -95. Anything at or below 0.62 would let the gap reopen silently.
+    expect(worst).toBeGreaterThanOrEqual(0.7)
   })
 })
 

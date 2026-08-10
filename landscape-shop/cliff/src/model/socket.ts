@@ -8,7 +8,7 @@ import { Mesh } from 'three'
 import { buildGridGeometry, type GridPoint } from './grid'
 import { rockFrontAt } from './massif'
 import { buildGateLip } from './gateLip'
-import { rectPoint, ring, ovalPoint, type Ring } from './socketRings'
+import { apertureBreak, backFlare, rectPoint, ring, ovalPoint, type Ring } from './socketRings'
 import { interiorMaterial, paintInterior, type SocketDepth } from './socketTone'
 import { ENTRANCE } from '../spec'
 
@@ -98,14 +98,21 @@ export function buildSocket(gateWallMinZ: number): Socket {
     const [x, y] = ovalPoint(THROAT, angle)
     return { x, y, z: throatZ }
   })
+  // The cut is not planar either: a mouth chiselled out of bedded rock is
+  // deeper at some angles than others, and a mouth ring that wanders in DEPTH
+  // makes the jamb-to-shaft crease wander in tone as well as in outline.
+  // Backward only, so it can never reach forward into the throat ring.
   const mouth = ring((angle) => {
-    const [x, y] = rectPoint(GATE, angle)
-    return { x, y, z: gateZ }
+    const [x, y] = apertureAt(angle)
+    return { x, y, z: gateZ + 0.9 * (0.5 + 0.5 * Math.sin(4 * angle - 1.1) * Math.cos(3 * angle + 0.5)) }
   })
-  // Same rectangle as mouth, slid off-axis at the unchanged backZ.
+  // Same outline as mouth, slid off-axis at the unchanged backZ and flared
+  // out — see socketRings.ts's backFlare. z is untouched, so `back` still
+  // holds the recess-depth contract to the millimetre.
   const back = ring((angle) => {
-    const [x, y] = rectPoint(GATE, angle)
-    return { x: x + DOGLEG_X, y: y + DOGLEG_Y, z: backZ }
+    const [x, y] = apertureAt(angle)
+    const out = 1 + backFlare(angle) / Math.max(Math.hypot(x, y - GATE.centreY), 1e-6)
+    return { x: x * out + DOGLEG_X, y: GATE.centreY + (y - GATE.centreY) * out + DOGLEG_Y, z: backZ }
   })
   // `back`'s vertices hold the recess-depth contract; gateSeal sits in front of them (and the massif) as what shows.
   const sealZ = safeSealZ(gateZ, backZ)
@@ -119,17 +126,52 @@ export function buildSocket(gateWallMinZ: number): Socket {
       unlitStrip(lip.inner, throat, 'gateChamfer', depth),
       unlitStrip(throat, mouth, 'gateJamb', depth),
       unlitStrip(mouth, back, 'gateShaft', depth),
-      buildCap(sealZ, DOGLEG_X * sealT, DOGLEG_Y * sealT, 'gateSeal', depth),
+      buildCap(sealZ, DOGLEG_X * sealT, DOGLEG_Y * sealT, 'gateSeal', depth, gateZ + 0.5),
       buildSill(gateZ, depth),
     ],
   }
 }
 
-/** gateSeal: what the camera sees terminate the passage (see buildSocket). */
-function buildCap(z: number, offsetX: number, offsetY: number, name: string, depth: SocketDepth): Mesh {
-  const columns = [-GATE.halfW + offsetX, GATE.halfW + offsetX].map((x) => (
-    [GATE.centreY - GATE.halfH + offsetY, GATE.centreY + GATE.halfH + offsetY].map((y) => ({ x, y, z }))
-  ))
+/** The mouth's own outline: spec.ts's rectangle, broken (socketRings.ts). */
+function apertureAt(angle: number): [number, number] {
+  const [x, y] = rectPoint(GATE, angle)
+  const k = apertureBreak(angle)
+  return [x * k, GATE.centreY + (y - GATE.centreY) * k]
+}
+
+// gateSeal: what the camera sees terminate the passage (see buildSocket).
+//
+// A lattice since R3.1, not two triangles. OVERSIZED past the widest the
+// flared tube can be, because the cap's own outline is never what a person
+// sees — the tube's cross-section is — so its only job is to leave no slot
+// anywhere for the eye to get past the end of the passage. What it does own
+// is its RELIEF: a face that wanders a metre and a half in depth crosses the
+// tube wall along a wandering line, which is the other half of breaking the
+// straight crease. Clamped a clear half metre behind the mouth ring, so it
+// can never come forward far enough to show outside the aperture.
+const CAP_COLS = 9
+const CAP_ROWS = 7
+const CAP_OVERSIZE_M = 3.0
+const CAP_RELIEF_M = 1.5
+
+function buildCap(
+  z: number, offsetX: number, offsetY: number, name: string, depth: SocketDepth, floorZ: number,
+): Mesh {
+  const columns: GridPoint[][] = []
+  for (let c = 0; c < CAP_COLS; c++) {
+    const u = c / (CAP_COLS - 1)
+    const column: GridPoint[] = []
+    for (let r = 0; r < CAP_ROWS; r++) {
+      const v = r / (CAP_ROWS - 1)
+      const relief = CAP_RELIEF_M * (0.5 + 0.5 * Math.sin(7.3 * u + 4.1 * v + 1.9) * Math.cos(5.7 * v - 3.2 * u))
+      column.push({
+        x: offsetX + (GATE.halfW + CAP_OVERSIZE_M) * (2 * u - 1),
+        y: GATE.centreY + offsetY + (GATE.halfH + CAP_OVERSIZE_M) * (2 * v - 1),
+        z: Math.max(floorZ, z - relief),
+      })
+    }
+    columns.push(column)
+  }
   return darkMesh(columns, name, depth)
 }
 

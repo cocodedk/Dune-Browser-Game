@@ -11,19 +11,22 @@
 
 const ROUND = 10 // decimetres — 10 cm on a 600 m formation is well under one pixel at either rig
 
-/** @param ranges [{ name, from, to }] slices of `index`, in element offsets.
+/** @param round reciprocal quantum, in units of 1/metre. R3's dressing bake
+ *  passes 100 (1 cm) for the 2-3 m props at the gate: the massif's 10 cm is a
+ *  tenth of a sack. Defaulted, so the massif bake's bytes cannot move.
+ *  @param ranges [{ name, from, to }] slices of `index`, in element offsets.
  *  Welding can drop a degenerate triangle, so the same slices are re-measured
  *  on the way out and returned in TRIANGLE offsets. That is what lets
  *  model/strata.ts know which mass each finished triangle belongs to — and so
  *  which bedding plane colours it — without storing a per-triangle id. */
-export function weld(positions, index, ranges = []) {
+export function weld(positions, index, ranges = [], round = ROUND) {
   const lookup = new Map()
   const out = []
   const remap = new Uint32Array(positions.length / 3)
   for (let v = 0; v < positions.length / 3; v++) {
-    const x = Math.round(positions[v * 3] * ROUND) / ROUND
-    const y = Math.round(positions[v * 3 + 1] * ROUND) / ROUND
-    const z = Math.round(positions[v * 3 + 2] * ROUND) / ROUND
+    const x = Math.round(positions[v * 3] * round) / round
+    const y = Math.round(positions[v * 3 + 1] * round) / round
+    const z = Math.round(positions[v * 3 + 2] * round) / round
     const key = `${x},${y},${z}`
     let at = lookup.get(key)
     if (at === undefined) {

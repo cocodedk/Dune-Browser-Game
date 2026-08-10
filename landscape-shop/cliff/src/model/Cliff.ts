@@ -22,6 +22,7 @@ import { Group, Mesh } from 'three'
 import type { LandscapeModel } from '../contracts'
 import { FOOTPRINT } from '../spec'
 import { buildMassif } from './massif'
+import { buildDressing } from './dressing'
 import { buildGateWall } from './gateWall'
 import { buildSkirtApron } from './skirtApron'
 import { buildSocket } from './socket'
@@ -55,6 +56,16 @@ export function createCliff(): LandscapeModel {
     skirt.add(track(mesh))
   }
   root.add(skirt)
+
+  // R3: the entrance zone's own life — the swept forecourt, the drifts at the
+  // foot, the fallen rock under the scars, the waymarkers and the goods at the
+  // sill. Its own group, never inside 'massing' or 'entrance': those two are
+  // what the R1 silhouette guards and the recess guard measure, and dressing
+  // is not massing.
+  const dressing = new Group()
+  dressing.name = 'dressing'
+  for (const mesh of buildDressing()) dressing.add(track(mesh))
+  root.add(dressing)
 
   // R2: the geology, the wind and the weather go on last, in one place, off
   // the finished geometry — see model/surface.ts.

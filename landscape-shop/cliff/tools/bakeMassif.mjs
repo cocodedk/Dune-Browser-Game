@@ -20,6 +20,19 @@ import { readGlbPrimitive, normalizeSource } from './bake/glb.mjs'
 import { INSTANCES, FEEDSTOCK } from './bake/instances.mjs'
 import { compose, assertComposition, TARGET } from './bake/compose.mjs'
 import { weld, frontOutline, frontField } from './bake/pack.mjs'
+import { collapseNeedles } from './bake/needles.mjs'
+import { refineFacets } from './bake/refine.mjs'
+
+// R3.2, the two mesh-quality passes. Both run on the WELDED formation, where
+// a shared edge is a shared pair of vertex indices, and both are followed by
+// a second weld that re-quantizes what they added and drops anything they
+// left degenerate. See the headers of bake/needles.mjs and bake/refine.mjs
+// for why each exists and what it was measured against.
+// colBlock is in scope with westBastion because it is a mass THIS round added
+// and it arrived with the same defect: the cap shave left it two 0.4 m-edged
+// slivers of its own. Nothing else in the formation is touched.
+const NEEDLES = { masses: ['westBastion', 'colBlock'], aspect: 6, maxShort: 8.5, maxTurnDeg: 60 }
+const FACETS = { frontZ: -150, frontEdge: 30, backEdge: 45 }
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = resolve(HERE, '..', '..', '..')
@@ -59,7 +72,12 @@ const outline = frontOutline(composed.positions, {
   frontZ: TARGET.frontZ,
 })
 
-const packed = weld(composed.positions, composed.index, composed.ranges)
+const first = weld(composed.positions, composed.index, composed.ranges)
+const cleaned = collapseNeedles(first.positions, first.index, first.ranges, NEEDLES)
+const refined = refineFacets(cleaned.positions, cleaned.index, cleaned.ranges, FACETS)
+const packed = weld(refined.positions, refined.index, byElement(refined.ranges))
+console.log(`quality: ${first.index.length / 3} tris -> collapsed ${cleaned.collapsed} needles`
+  + ` -> split ${refined.split} edges -> ${packed.index.length / 3} tris`)
 // R2: which finished triangles belong to which mass, and the bedding plane
 // that mass's strata run along (tools/bake/bedding.mjs). This is the whole
 // of what the surface round needs from the bake — no per-vertex colour data
@@ -105,6 +123,12 @@ console.log(`wrote ${OUT} (${(bytes / 1024).toFixed(1)} KB)`)
 
 function round2(value) {
   return Math.round(value * 100) / 100
+}
+
+/** pack.mjs's weld() reads its slices in ELEMENT offsets and returns them in
+ *  TRIANGLE offsets; the two quality passes both speak triangles. */
+function byElement(ranges) {
+  return ranges.map((range) => ({ name: range.name, from: range.from * 3, to: range.to * 3 }))
 }
 
 function round6(value) {

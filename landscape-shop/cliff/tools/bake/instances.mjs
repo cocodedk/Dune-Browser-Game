@@ -105,6 +105,24 @@ export const INSTANCES = [
   { name: 'westSpur', src: 'mesa', sizeM: [146, 53, 114], pos: [-274, -3, -156],
     rotY: 4.1, capR: 1, taperK: 0.58, taperP: 1.1, dip: 0.24, noise: 0.05, seed: 67, clampFront: true },
 
+  // --- THE COL FILLER (R3.2) ---
+  // Not a primary and deliberately not sized like one. R1.5 bridged the
+  // hero/westBastion saddle at the CREST line, and the crest guard has been
+  // green ever since — but the approach rig still read sky through the col
+  // ABOVE that crest: rasterized on the R3.1 shot, the box at screen
+  // (880..930, 380..430) — world x -70..-97 between y 96 and 140 — was 89%
+  // open. The saddle floor there stands at 71-108 m while the hero's west
+  // shoulder rises past 143 m and westBastion's plateau holds 114 m, so the
+  // gap is a notch of sky between two shoulders, not a dip in the crest.
+  //
+  // One block fills it, seated ON the col floor rather than founded in the
+  // sand: its base is authored well above ground so its own solid volume
+  // stays UNDER westSpur's (the smallest primary), which is what keeps it out
+  // of the eight the height-step chain is measured on. It is a subordinate
+  // filler, and the hierarchy still has to read it as one.
+  { name: 'colBlock', src: 'mesa', sizeM: [50, 108, 122], pos: [-99, 50, -152],
+    rotY: 2.05, capR: 0.82, taperK: 0.5, taperP: 1.15, dip: -0.12, noise: 0.05, seed: 179 },
+
   // Fallen blocks at the foot: the feedstock's own boulder, big enough to
   // break the base line where the masses meet the sand.
   { name: 'blockfallWest', src: 'boulder', sizeM: [104, 56, 92], pos: [-166, -8, -148],
