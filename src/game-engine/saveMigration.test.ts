@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest'
 import { migrateV1ToV2, migrateSave, CURRENT_SAVE_VERSION } from './saveMigration'
 import type { VersionedSave } from './saveMigration'
 import type { WorldState } from '../types'
+import { INITIAL_VILLAGES } from '../data/villages'
 
 /** A minimal v1-shaped world: no kind, discovered, regionId or paused. */
 function legacyState(): WorldState {
@@ -57,6 +58,30 @@ describe('migrateV1ToV2', () => {
     expect(byId.arrakeen).toBe('palace')
     expect(byId.carthag).toBe('fort')
     expect(byId.sietch_tabr).toBe('sietch')
+  })
+
+  it('recovers the exact shipped kind for every current location, not just the three whose id happens to contain "sietch"', () => {
+    // habbanya_ridge and hagg are real sietches whose ids don't spell
+    // "sietch" — the bug this test pins down. A fixture of only
+    // sietch_tabr/arrakeen/carthag (the block above) cannot catch it: those
+    // three were already covered by the old hardcoded table or its substring
+    // guess. Stripping the *entire* shipped roster down to v1 shape and
+    // migrating it back is what actually exercises every id, so a future
+    // village added to villages.wider.ts/.farside.ts can't go unnoticed the
+    // way thirteen of the current nineteen did.
+    const state = legacyState()
+    state.villages = INITIAL_VILLAGES.map(v => {
+      const stripped: Record<string, unknown> = { ...v }
+      delete stripped.kind
+      delete stripped.discovered
+      delete stripped.regionId
+      return stripped
+    }) as unknown as WorldState['villages']
+    const out = migrateV1ToV2(state)
+    for (const original of INITIAL_VILLAGES) {
+      const migrated = out.villages.find(v => v.id === original.id)
+      expect(migrated?.kind).toBe(original.kind)
+    }
   })
 
   it('defaults regionId to the location id', () => {

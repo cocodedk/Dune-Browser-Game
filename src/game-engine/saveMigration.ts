@@ -8,6 +8,7 @@
 
 import type { WorldState, Village, LocationKind } from '../types'
 import { createQuotaState } from './quota/quota'
+import { INITIAL_VILLAGES } from '../data/villages'
 
 export const CURRENT_SAVE_VERSION = 2
 
@@ -21,16 +22,35 @@ export interface VersionedSave {
 type LegacyVillage = Omit<Village, 'kind' | 'discovered' | 'regionId'> &
   Partial<Pick<Village, 'kind' | 'discovered' | 'regionId'>>
 
-const KIND_BY_ID: Readonly<Record<string, LocationKind>> = {
-  arrakeen: 'palace',
-  carthag: 'fort',
-  imperial_basin: 'station',
-  tsimpo: 'smuggler_den',
-  cielago_depression: 'field_camp',
-}
+/** Every id this build ships, with the kind it is actually authored as. */
+const CURRENT_KIND_BY_ID: ReadonlyMap<string, LocationKind> = new Map(
+  INITIAL_VILLAGES.map(v => [v.id, v.kind]),
+)
 
+/**
+ * A pre-v2 save recorded no `kind` at all, so upgrading it has to invent one.
+ *
+ * This used to be a hardcoded id->kind table plus an "id contains 'sietch'"
+ * guess, both authored against the original eight-location roster in
+ * villages.ts and never revisited when villages.wider.ts and
+ * villages.farside.ts added eleven more. The result: 13 of the 19 shipped
+ * locations — everything whose id doesn't literally spell "sietch"
+ * (habbanya_ridge, hagg, funeral_plain, plaster_basin, wind_pass, old_gap,
+ * bight_of_cliff, and every farside village) — silently downgraded to
+ * 'field_camp' on any save taken before v2, which is why sietchGate.ts
+ * painted a diorama instead of mounting the 3D set at those places for a
+ * player carrying an old save. sietch_tabr and red_wall_sietch happened to
+ * still work, which is what let the release-round check miss it.
+ *
+ * The fix looks the id up in today's real roster instead of guessing — every
+ * id a save can reference was, at some point, one of today's
+ * INITIAL_VILLAGES, so this is exact rather than inferred, and it never goes
+ * stale again when a new location is added. The old substring guess survives
+ * only as a last-resort default for an id no longer in the current roster.
+ */
 function inferKind(id: string): LocationKind {
-  if (KIND_BY_ID[id]) return KIND_BY_ID[id]
+  const current = CURRENT_KIND_BY_ID.get(id)
+  if (current) return current
   return id.includes('sietch') ? 'sietch' : 'field_camp'
 }
 
