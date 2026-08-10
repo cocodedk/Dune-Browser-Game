@@ -11,7 +11,12 @@
 
 const ROUND = 10 // decimetres — 10 cm on a 600 m formation is well under one pixel at either rig
 
-export function weld(positions, index) {
+/** @param ranges [{ name, from, to }] slices of `index`, in element offsets.
+ *  Welding can drop a degenerate triangle, so the same slices are re-measured
+ *  on the way out and returned in TRIANGLE offsets. That is what lets
+ *  model/strata.ts know which mass each finished triangle belongs to — and so
+ *  which bedding plane colours it — without storing a per-triangle id. */
+export function weld(positions, index, ranges = []) {
   const lookup = new Map()
   const out = []
   const remap = new Uint32Array(positions.length / 3)
@@ -30,7 +35,14 @@ export function weld(positions, index) {
   }
 
   const welded = []
+  const kept = new Array(ranges.length).fill(null).map(() => ({ from: 0, to: 0 }))
+  let at = 0
   for (let t = 0; t < index.length; t += 3) {
+    while (at < ranges.length && t >= ranges[at].to) at++
+    if (at < ranges.length && t === ranges[at].from) {
+      kept[at].from = welded.length / 3
+      kept[at].to = kept[at].from
+    }
     const a = remap[index[t]]
     const b = remap[index[t + 1]]
     const c = remap[index[t + 2]]
@@ -38,8 +50,13 @@ export function weld(positions, index) {
     // keeps computeVertexNormals() from producing NaN normals.
     if (a === b || b === c || a === c) continue
     welded.push(a, b, c)
+    if (at < ranges.length) kept[at].to = welded.length / 3
   }
-  return { positions: out, index: welded }
+  return {
+    positions: out,
+    index: welded,
+    ranges: ranges.map((range, i) => ({ name: range.name, from: kept[i].from, to: kept[i].to })),
+  }
 }
 
 /**

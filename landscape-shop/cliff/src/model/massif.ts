@@ -27,11 +27,23 @@ export interface BakedMass {
   max: number[]
 }
 
+/** One mass's slice of the finished triangle list, and the bedding plane its
+ *  strata run along — s(x,y,z) = plane[0]x + plane[1]y + plane[2]z + plane[3],
+ *  a stratigraphic height in meters. Derived and self-checked offline by
+ *  tools/bake/bedding.mjs; model/strata.ts is what reads it. */
+export interface BakedStrata {
+  name: string
+  from: number
+  to: number
+  plane: number[]
+}
+
 export interface MassifBake {
   triangles: number
   vertices: number
   masses: number
   hierarchy: BakedMass[]
+  strata: BakedStrata[]
   footprint: { widthM: number; heightM: number; frontZ: number; backZ: number }
   bounds: { min: number[]; max: number[] }
   outline: { xs: number[]; zs: number[] }

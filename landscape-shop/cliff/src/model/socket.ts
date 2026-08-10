@@ -5,15 +5,13 @@
 // consecutive rings weld into quad strips with no fan and no pole.
 
 import { Mesh } from 'three'
-import { buildGridGeometry, meshFrom, type GridPoint } from './grid'
-import { gateWallZ, socketRadius, SOCKET } from './gateWall'
+import { buildGridGeometry, type GridPoint } from './grid'
 import { rockFrontAt } from './massif'
+import { buildGateLip } from './gateLip'
+import { rectPoint, ring, ovalPoint, type Ring } from './socketRings'
 import { interiorMaterial, paintInterior, type SocketDepth } from './socketTone'
-import { ENTRANCE, PALETTE } from '../spec'
+import { ENTRANCE } from '../spec'
 
-const SAMPLES = 48
-const LIP_OUTER = { halfW: 33, halfH: 19, centreY: 18, proud: 0.2 }
-const LIP_INNER = { halfW: 20, halfH: 12, centreY: 13 }
 // The mouth's inner rim hangs this far in front of the prow's own frontmost vertex, so the entrance owns -Z by construction.
 const RIM_PROUD_M = 1.2
 const THROAT = { halfW: 14, halfH: 9, centreY: 8, depth: 3 }
@@ -23,9 +21,6 @@ const GATE_DEPTH_M = 3.8
 // ground sits at y = 0 here, so a Y dogleg would dip the floor below grade.
 const DOGLEG_X = -6
 const DOGLEG_Y = 0
-// LIP_OUTER's wobble can shrink it below gateWall.ts's punched SOCKET hole
-// at some angles — a raw, unlipped hole-edge sliver. Pushed outside first.
-const SOCKET_CLEARANCE = 1.08
 // Chamfer/jamb are a FUNNEL (LIP_INNER 40x24 -> THROAT 28x18 -> GATE 16x12
 // over 3.8 m): every visible facet's normal points partly toward camera,
 // axis AND floor — the key light's own direction — so no dogleg/taper turns
@@ -68,49 +63,6 @@ function safeSealZ(gateZ: number, backZ: number): number {
   return Math.min(backZ, Math.max(gateZ, nearestRock - SEAL_MARGIN_M))
 }
 
-/** Irregular, and deliberately not symmetric about any axis. */
-function wobble(angle: number): number {
-  return 1 + 0.13 * Math.sin(3 * angle + 1.1) + 0.08 * Math.sin(5 * angle + 2.3)
-    + 0.05 * Math.sin(7 * angle + 0.4)
-}
-
-function ovalPoint(shape: { halfW: number; halfH: number; centreY: number }, angle: number): [number, number] {
-  const k = wobble(angle)
-  return [shape.halfW * k * Math.cos(angle), shape.centreY + shape.halfH * k * Math.sin(angle)]
-}
-
-/** Radially pushes (x, y) out until it clears gateWall.ts's punched hole by SOCKET_CLEARANCE, leaving clear points untouched. */
-function pushOutsideSocket(x: number, y: number): [number, number] {
-  const r = socketRadius(x, y)
-  if (r >= SOCKET_CLEARANCE) return [x, y]
-  const scale = SOCKET_CLEARANCE / Math.max(r, 0.01)
-  return [x * scale, SOCKET.centreYM + (y - SOCKET.centreYM) * scale]
-}
-
-/** The 16 x 12 aperture, sampled at the SAME angles as the mouth rings so the chamfer strips stay quad-to-quad all the way in. */
-function rectPoint(shape: { halfW: number; halfH: number; centreY: number }, angle: number): [number, number] {
-  const c = Math.cos(angle)
-  const s = Math.sin(angle)
-  const k = 1 / Math.max(Math.abs(c) / shape.halfW, Math.abs(s) / shape.halfH)
-  return [k * c, shape.centreY + k * s]
-}
-
-type Ring = GridPoint[]
-
-function ring(at: (angle: number) => GridPoint): Ring {
-  const points: Ring = []
-  // SAMPLES + 1 points: the last repeats the first, which closes the loop.
-  for (let i = 0; i <= SAMPLES; i++) points.push(at((2 * Math.PI * i) / SAMPLES))
-  return points
-}
-
-function strip(a: Ring, b: Ring, color: number, name: string): Mesh {
-  const columns = a.map((point, i) => [point, b[i]])
-  const mesh = meshFrom(buildGridGeometry(columns), color)
-  mesh.name = name
-  return mesh
-}
-
 /** Unlit mesh carrying socketTone.ts's depth gradient: no N.L term, so a
  *  self-shadowed facet and a directly-lit one come out identically dark,
  *  and what varies inside the mouth is depth, never light. */
@@ -140,17 +92,7 @@ export function buildSocket(gateWallMinZ: number): Socket {
   const throatZ = frontZ + THROAT.depth
   const gateZ = frontZ + GATE_DEPTH_M
   const backZ = frontZ + ENTRANCE.recessM
-
-  // Capped at backZ: where the fluting runs deeper than the recess, the rim
-  // stands a little proud instead, or it drags the z-span past recessM.
-  const outer = ring((angle) => {
-    const [x, y] = pushOutsideSocket(...ovalPoint(LIP_OUTER, angle))
-    return { x, y, z: Math.min(gateWallZ(x, y) - LIP_OUTER.proud, backZ) }
-  })
-  const inner = ring((angle) => {
-    const [x, y] = ovalPoint(LIP_INNER, angle)
-    return { x, y, z: frontZ }
-  })
+  const lip = buildGateLip(frontZ, backZ)
 
   const throat = ring((angle) => {
     const [x, y] = ovalPoint(THROAT, angle)
@@ -173,8 +115,8 @@ export function buildSocket(gateWallMinZ: number): Socket {
   return {
     frontZ,
     meshes: [
-      strip(outer, inner, PALETTE.rock, 'gateLip'),
-      unlitStrip(inner, throat, 'gateChamfer', depth),
+      lip.mesh,
+      unlitStrip(lip.inner, throat, 'gateChamfer', depth),
       unlitStrip(throat, mouth, 'gateJamb', depth),
       unlitStrip(mouth, back, 'gateShaft', depth),
       buildCap(sealZ, DOGLEG_X * sealT, DOGLEG_Y * sealT, 'gateSeal', depth),

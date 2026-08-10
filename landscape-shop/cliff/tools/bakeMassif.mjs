@@ -59,7 +59,17 @@ const outline = frontOutline(composed.positions, {
   frontZ: TARGET.frontZ,
 })
 
-const packed = weld(composed.positions, composed.index)
+const packed = weld(composed.positions, composed.index, composed.ranges)
+// R2: which finished triangles belong to which mass, and the bedding plane
+// that mass's strata run along (tools/bake/bedding.mjs). This is the whole
+// of what the surface round needs from the bake — no per-vertex colour data
+// is stored, so the committed derivative stays a geometry file.
+const strata = packed.ranges.map((range, i) => ({
+  name: range.name,
+  from: range.from,
+  to: range.to,
+  plane: composed.planes[i].map(round6),
+}))
 const bake = {
   generatedBy: 'landscape-shop/cliff/tools/bakeMassif.mjs',
   derivation: 'Reshaped derivative of licensed feedstock (see tools/bake/instances.mjs). ' +
@@ -71,6 +81,7 @@ const bake = {
   // Every mass ranked by solid volume — what makes the formation's
   // hierarchy a measurable fact instead of a claim (bakeSeam.test.ts).
   hierarchy: composed.hierarchy,
+  strata,
   triangles: packed.index.length / 3,
   vertices: packed.positions.length / 3,
   bounds: { min: bounds.min.map(round2), max: bounds.max.map(round2) },
@@ -94,4 +105,8 @@ console.log(`wrote ${OUT} (${(bytes / 1024).toFixed(1)} KB)`)
 
 function round2(value) {
   return Math.round(value * 100) / 100
+}
+
+function round6(value) {
+  return Math.round(value * 1e6) / 1e6
 }

@@ -9,11 +9,11 @@
 // The hole for the carved socket is punched here; model/socket.ts fills it.
 
 import type { Mesh } from 'three'
-import { buildGridGeometry, largestComponentMask, meshFrom, type GridColumns } from './grid'
+import { buildGridGeometry, flatShade, largestComponentMask, meshFrom, type GridColumns } from './grid'
 import { rockFrontAt } from './massif'
+import { prowRelief, smoothstep, PROW_FRONT_Z } from './prowRelief'
+import { COURSE_M } from './strata'
 import { PALETTE } from '../spec'
-
-export const PROW_FRONT_Z = -219.4
 // The prow leans back with height at the same rate the baked formation does
 // (tools/bake/compose.mjs's LEAN), so it stands a roughly CONSTANT 7 m proud
 // of the rock all the way up instead of swelling into a lens near the top.
@@ -29,78 +29,19 @@ const HALF_WIDTH_M = 118
 const RIM_HEIGHT_M = 92
 const RIM_CENTRE_Y = 8
 const TOP_M = 104
-const COLUMNS = 49
-// Rows land exactly four to a stratum, so the sawtooth below samples as a
-// staircase of courses instead of a blurred ripple.
-export const STRATUM_M = 13
-const ROWS = Math.round(TOP_M / (STRATUM_M / 4))
+// R2: 49 -> 73. The wind flutes below were widened to a 24 m wavelength and
+// deepened; at the old 4.9 m column pitch that is four and a half samples to
+// a rib, which renders as a zigzag rather than a scoop. 3.3 m resolves it.
+const COLUMNS = 73
+// Rows land three to a bed, so the sawtooth below samples as a staircase of
+// courses instead of a blurred ripple. The bed thickness is the formation's
+// own (model/strata.ts), not a second number: the prow's steps and the rock's
+// colour bands have to be one rhythm.
+const ROWS = Math.round(TOP_M / (COURSE_M / 3))
 const BURY_M = 8
 
 // The socket's own mouth, in the same (x, y) frame — see model/socket.ts.
 export const SOCKET = { halfWidthM: 25, halfHeightM: 15.5, centreYM: 15 }
-
-function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)))
-  return t * t * (3 - 2 * t)
-}
-
-// R1.5: the inner panel (low rim, before plating.ts's ramp engages) is
-// nearly flat at the scale the grazing key light sees it — grain/flute/
-// course all vary over 30m+ wavelengths, so across any few-meter patch the
-// surface is almost tangent to the light. The renderer's shadow map (fixed
-// bias, main.ts, read-only) then self-shadows that patch into a fine
-// checkerboard ("shadow acne" — confirmed by a shadows-off diagnostic
-// render, which erases the pattern completely; see the round notes). A
-// modest higher-frequency ripple breaks the local tangency across the panel
-// THIS surface actually controls (low rim, where core dominates gateWallZ —
-// see the sink()/blend comment below). It measurably softens the acne here
-// without reading as its own shape. It does NOT reach the outer, high-rim
-// band: there gateWallZ blends toward the baked massif's own surface, which
-// this file cannot reshape (massif.ts's geometry is the visible one there).
-function chatter(x: number, y: number): number {
-  return 0.18 * Math.sin(x * 0.29 + y * 0.37 + 1.3) + 0.12 * Math.sin(x * 0.53 - y * 0.21 + 3.7)
-}
-
-/** Wind-scoured undulation plus stacked courses, matching the feedstock's own
- *  shape language so the procedural prow and the baked rock read as the same
- *  material. Kept NON-NEGATIVE: the prow may recede from its front plane, never
- *  advance past it. */
-function relief(x: number, y: number, rim: number): number {
-  const grain = 1.2 * Math.sin(x * 0.061 + y * 0.043)
-    + 0.8 * Math.sin(x * 0.13 - y * 0.097 + 2.1)
-    + 0.5 * Math.sin(x * 0.021 + y * 0.19 + 4.4)
-  // Vertical fluting: wind scours a cliff face into shallow ribs running down
-  // it. Without this the prow is a smooth panel among faceted rock and reads
-  // as a different, softer material.
-  const flute = 1.25 * (1 + Math.sin(x * 0.16 + 0.8 * Math.sin(y * 0.045)))
-  // Sawtooth, four grid rows to the course: each stratum juts at its base and
-  // is worn back by its top, then the next one starts proud again.
-  const course = y / STRATUM_M - Math.floor(y / STRATUM_M)
-  return grain + 2.5 + flute + 3 * course + chatter(x, y) + plating(x, y, rim)
-}
-
-/** Coarse STEPPED relief that is absent across the sheer panel around the
- *  mouth and full strength out at the rim. The R1.3 seam was not really a
- *  gap in the geometry — the prow is buried in rock out there — it was a
- *  gap in SHAPE LANGUAGE: a smooth, finely fluted panel running straight
- *  into 30 m faceted plates, which reads as two rock kits meeting. This
- *  makes the prow's own surface break into plates of the same coarseness
- *  before the two surfaces ever touch. Quantized on purpose: steps and
- *  risers, not ripples. Never negative — the prow may recede from its
- *  front plane, never advance past it. */
-function plating(x: number, y: number, rim: number): number {
-  // Ramped over 0.40..0.78, NOT out to the rim: past about 0.78 the prow has
-  // already sunk behind the rock and nothing it does there is visible. The
-  // band that matters is where the two surfaces cross, which is where the
-  // steps have to be, so the crossing line comes out as a ragged edge
-  // between plates instead of one smooth curve.
-  const ramp = smoothstep(0.4, 0.78, rim)
-  if (ramp <= 0) return 0
-  const field = Math.sin(x * 0.031 + 1.4)
-    + Math.sin(y * 0.048 - 0.7)
-    + Math.sin(x * 0.017 - y * 0.026 + 3.2)
-  return ramp * 2.8 * (Math.round(field) + 3)
-}
 
 /** How far back into the massif this point of the prow has sunk: 0 across the
  *  sheer panel, 1 out at the rim where it is safely inside rock. Flat for the
@@ -129,7 +70,7 @@ export function socketRadius(x: number, y: number): number {
  *  the socket lip can lie exactly on it. */
 export function gateWallZ(x: number, y: number): number {
   const rim = rimRadius(x, y)
-  const core = PROW_FRONT_Z + PROW_LEAN * Math.max(0, y) + relief(x, y, rim)
+  const core = PROW_FRONT_Z + PROW_LEAN * Math.max(0, y) + prowRelief(x, y, rim)
   const rock = rockFrontAt(x, y)
   const blend = sink(rim)
   if (rock === null) return core + blend * 30
@@ -172,7 +113,7 @@ export function buildGateWall(): GateWall {
   const onMainSurface = largestComponentMask(COLUMNS - 1, ROWS, (c, r) => hasRock(xs, ys, c, r))
 
   const columns: GridColumns = xs.map((x) => ys.map((y) => ({ x, y, z: gateWallZ(x, y) })))
-  const geometry = buildGridGeometry(columns, {
+  const lattice = buildGridGeometry(columns, {
     skipQuad(c, r) {
       const x = (xs[c] + xs[c + 1]) / 2
       const y = (ys[r] + ys[r + 1]) / 2
@@ -183,6 +124,8 @@ export function buildGateWall(): GateWall {
       return !onMainSurface(c, r)
     },
   })
+  // FLAT-SHADED, like the baked rock it grows out of — see grid.flatShade.
+  const geometry = flatShade(lattice)
   const mesh = meshFrom(geometry, PALETTE.rock)
   mesh.name = 'gateWall'
 

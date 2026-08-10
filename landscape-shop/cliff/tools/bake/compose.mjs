@@ -10,6 +10,7 @@
 import { deformInstance, clampFront } from './deform.mjs'
 import { SCARP } from './instances.mjs'
 import { rank } from './rank.mjs'
+import { beddingPlane, tiltFallen, maxPlaneError } from './bedding.mjs'
 
 export const TARGET = {
   widthM: 600,
@@ -29,6 +30,7 @@ export function compose(sources) {
   const positions = []
   const index = []
   const ranges = []
+  const vertexRanges = []
   let vertexBase = 0
   for (let m = 0; m < masses.length; m++) {
     const mass = masses[m]
@@ -36,25 +38,57 @@ export function compose(sources) {
     for (const value of mass.positions) positions.push(value)
     for (const i of mass.index) index.push(i + vertexBase)
     ranges.push({ name: sources[m].spec.name, from, to: index.length })
+    vertexRanges.push({ from: vertexBase, to: vertexBase + mass.positions.length / 3 })
     vertexBase += mass.positions.length / 3
   }
 
   const merged = new Float32Array(positions)
   const indices = Uint32Array.from(index)
-  normalize(merged)
+  const factors = normalize(merged)
   return {
     positions: merged,
     index: indices,
     masses: masses.length,
     hierarchy: rank(merged, indices, ranges),
+    ranges,
+    planes: beddingPlanes(sources, masses, vertexRanges, merged, factors),
   }
+}
+
+/** One bedding plane per mass, checked against the height the deformer gave
+ *  every unshaved vertex — see tools/bake/bedding.mjs. */
+function beddingPlanes(sources, masses, vertexRanges, merged, factors) {
+  return sources.map(({ spec }, m) => {
+    const plane = beddingPlane(spec, factors)
+    const error = maxPlaneError(plane, merged, masses[m], vertexRanges[m], factors.ky)
+    if (error > 0.05) {
+      throw new Error(`bedding plane for ${spec.name} is off by ${error.toFixed(3)} m`)
+    }
+    // Debris lies where it fell (bedding.mjs): tilt is applied AFTER the
+    // check, because the check is what proves the untilted plane correct.
+    return spec.src === 'boulder' ? tiltFallen(plane, spec.name, centroid(merged, vertexRanges[m])) : plane
+  })
+}
+
+function centroid(positions, range) {
+  const sum = [0, 0, 0]
+  for (let v = range.from; v < range.to; v++) {
+    for (let axis = 0; axis < 3; axis++) sum[axis] += positions[v * 3 + axis]
+  }
+  const count = Math.max(1, range.to - range.from)
+  return sum.map((value) => value / count)
 }
 
 /** Deforms every instance and shaves the ones flagged clampFront. */
 function deformAll(sources) {
   return sources.map(({ soup, spec }) => {
-    const mass = deformInstance(soup, { ...spec, scale: fitScale(soup, spec) })
-    if (spec.clampFront) clampFront(mass.positions, SCARP)
+    const scale = fitScale(soup, spec)
+    const mass = deformInstance(soup, { ...spec, scale })
+    if (spec.clampFront) mass.moved = clampFront(mass.positions, SCARP)
+    // Where deform.mjs's dip shear is still ramping in, the bedding curves
+    // and no plane describes it; bedding.mjs skips below this height.
+    mass.dampTop = soup.height * scale[1] * 0.2
+    mass.baseY = spec.pos[1]
     return mass
   })
 }
@@ -110,6 +144,9 @@ function normalize(positions) {
   for (let i = 2; i < positions.length; i += 3) {
     positions[i] = TARGET.backZ + (positions[i] - leaned.max[2]) * kz
   }
+  // Handed to bedding.mjs so its bedding planes are derived from the SAME
+  // numbers this pass used, never from a second copy of them.
+  return { cx, kx, ky, kz, leanedMax: leaned.max[2], backZ: TARGET.backZ, lean: LEAN }
 }
 
 const LEAN = 0.12

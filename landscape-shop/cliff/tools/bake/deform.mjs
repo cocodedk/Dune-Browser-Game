@@ -37,6 +37,11 @@ function hashNoise(x, y, z, seed, channel) {
 export function deformInstance(soup, spec) {
   const src = soup.positions
   const out = new Float32Array(src.length)
+  // Every vertex's height in the mass's own scaled frame BEFORE the dip
+  // shear — i.e. which bedding course it belongs to. R2 colours the courses,
+  // and tools/bake/bedding.mjs checks its per-mass bedding plane against
+  // exactly these numbers, so the colours cannot drift off the geometry.
+  const bedding = new Float32Array(src.length / 3)
   const taperK = spec.taperK ?? 0
   const taperP = spec.taperP ?? 1
   // A STRAIGHT wall on the taper envelope, as a fraction of the source's
@@ -97,6 +102,7 @@ export function deformInstance(soup, spec) {
     // shear is damped to nothing over the bottom fifth so the mass's base
     // ring stays flat and seats into the skirt, which makes it a fold
     // rather than a whole mass leaning over.
+    bedding[i / 3] = y
     if (dip !== 0) y += dip * x * smoothstep(0, soup.height * sy * 0.2, y)
 
     out[i] = px + x * cos + z * sin
@@ -107,7 +113,7 @@ export function deformInstance(soup, spec) {
   // A mirror is a negative-determinant transform: without reversing the
   // winding, every face of that mass points inward and lights dark.
   const index = spec.mirrorX ? reverseWinding(soup.index) : Uint32Array.from(soup.index)
-  return { positions: out, index }
+  return { positions: out, index, bedding }
 }
 
 function reverseWinding(index) {
@@ -126,9 +132,17 @@ function reverseWinding(index) {
  *  (batter, as a real scarp does) and bows away at its ends (bow), so the
  *  shaved face never reads as a machined cut. */
 export function clampFront(positions, { planeZ, batter, bow }) {
+  // Returns which vertices it moved. A shaved vertex was pushed THROUGH the
+  // bedding, so its old course number no longer describes where it now sits;
+  // tools/bake/bedding.mjs excludes these from its plane check.
+  const moved = new Uint8Array(positions.length / 3)
   for (let i = 0; i < positions.length; i += 3) {
     const x = positions[i]
     const limit = planeZ + batter * Math.max(0, positions[i + 1]) + (bow * x * x) / 100
-    if (positions[i + 2] < limit) positions[i + 2] = limit
+    if (positions[i + 2] < limit) {
+      positions[i + 2] = limit
+      moved[i / 3] = 1
+    }
   }
+  return moved
 }

@@ -146,21 +146,32 @@ describe('seam: R1 massing reads as a real massif, not a box', () => {
     expect(top.length).toBeGreaterThan(10)
     expect(sill.length).toBeGreaterThan(10)
 
-    // Rock in shadow OUTSIDE the mouth renders in the high 30s/255 at the
-    // landing rig (post shadowSide-fix measurement), so the brightest
-    // interior point must stay clearly under that or the hole reads as
-    // more lit rock.
-    expect(Math.max(...all)).toBeLessThan(0.2)
+    // R2.1 MOVED THIS BAND UP, and it is the only threshold in the round that
+    // moves in the loosening direction. The reason is measured, not wanted.
+    // tools/probe.mjs swept the R2 landing PNG in world height and found the
+    // mouth's visible interior — y = 1 to 25, everything lower being behind
+    // the sand — rendering 36, 32, 31, 29, 24, 19, 15, 11 of 255 bottom to
+    // top, against surrounding rock at 49 to 58. That is a smooth dark ramp
+    // with no floor in it: the critic's "flat, gradientless black". The cap
+    // exists to stop the void reading as a LIT BOX, not to enforce
+    // invisibility, and it was doing the second. R2.1's interior peaks at a
+    // measured 0.235 (60/255) and only on the sill, and it renders near 55;
+    // the rock around the mouth now measures 69 to 83 of 255, so the mouth is
+    // still the darkest thing in the frame by a wide margin.
+    expect(Math.max(...all)).toBeLessThan(0.245)
     // The sill itself: bright enough to be the thing a person's eye lands
     // on first inside the mouth (R1.5's actual bar), never so bright it
-    // rivals the shadow-rock ceiling above.
-    expect(average(sill)).toBeGreaterThan(0.12)
-    expect(average(sill)).toBeLessThan(0.2)
+    // rivals the shadow-rock ceiling above. Measured 0.191.
+    expect(average(sill)).toBeGreaterThan(0.175)
+    expect(average(sill)).toBeLessThan(0.21)
     // The roof: no bounce reaches it, so it stays unmistakably darker than
     // the sill — this is what keeps the shape reading as a hole, not a box.
-    expect(average(top)).toBeLessThan(0.06)
+    // R2.1 TIGHTENED 0.05 -> 0.042 (measured 0.037): the bounce now stops at
+    // a hard ceiling of y = 12.6 instead of trailing off to y = 16.
+    expect(average(top)).toBeLessThan(0.042)
     // Not one flat tone anywhere: this is the "painted-on hole" guard.
-    expect(Math.max(...all) / Math.min(...all)).toBeGreaterThan(3)
+    // R2.1 TIGHTENED 4.5 -> 6.5 (measured 7.17).
+    expect(Math.max(...all) / Math.min(...all)).toBeGreaterThan(6.5)
     set.dispose()
   })
 })

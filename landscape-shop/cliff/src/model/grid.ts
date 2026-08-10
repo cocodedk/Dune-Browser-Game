@@ -23,6 +23,15 @@ export interface BuildGridOptions {
   skipQuad?(colIndex: number, rowIndex: number): boolean
 }
 
+// A fixed split diagonal, deliberately. R2.1 tried alternating it on a
+// checkerboard, reasoning that one diagonal everywhere would read as a woven
+// herringbone once the prow was flat-shaded. Shot and measured, it did the
+// opposite and much worse: the two triangulations of a quad give genuinely
+// different facet normals wherever the surface curves, so alternating them
+// stamped a hard light-dark CHECKERBOARD across the whole prow at quad pitch
+// — the single most visible thing in the landing frame. One diagonal reads as
+// rock; two read as a chessboard.
+
 export function buildGridGeometry(columns: GridColumns, options: BuildGridOptions = {}): BufferGeometry {
   const cols = columns.length
   const rows = columns[0]?.length ?? 0
@@ -113,6 +122,24 @@ export function largestComponentMask(
   let largest = 0
   for (let i = 1; i < sizes.length; i++) if (sizes[i] > sizes[largest]) largest = i
   return (c, r) => id[at(c, r)] === largest
+}
+
+/** Splits a lattice so every triangle owns its vertices, then re-derives the
+ *  normals — which makes them FLAT, one per facet.
+ *
+ *  model/massif.ts has always done this to the baked rock, for the reason its
+ *  header gives: the feedstock's shape language is hard facets and smoothing
+ *  turns a scarp back into a dune. The prow was the one lit surface in the
+ *  set still smooth-shaded and still painted per vertex, and the R2 landing
+ *  critic read exactly that: "a soft, indistinct blur-blob with no rock-like
+ *  edges". A 3.2 m cell covers 34 px at the landing rig, so an interpolated
+ *  normal and an interpolated colour are both an airbrush at that size.
+ *  Non-indexing costs no triangles at all — only vertices. */
+export function flatShade(geometry: BufferGeometry): BufferGeometry {
+  const flat = geometry.toNonIndexed()
+  geometry.dispose()
+  flat.computeVertexNormals()
+  return flat
 }
 
 export function meshFrom(geometry: BufferGeometry, color: number): Mesh {

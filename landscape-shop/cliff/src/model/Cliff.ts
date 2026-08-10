@@ -25,6 +25,7 @@ import { buildMassif } from './massif'
 import { buildGateWall } from './gateWall'
 import { buildSkirtApron } from './skirtApron'
 import { buildSocket } from './socket'
+import { surfaceCliff } from './surface'
 
 export function createCliff(): LandscapeModel {
   const root = new Group()
@@ -54,6 +55,10 @@ export function createCliff(): LandscapeModel {
     skirt.add(track(mesh))
   }
   root.add(skirt)
+
+  // R2: the geology, the wind and the weather go on last, in one place, off
+  // the finished geometry — see model/surface.ts.
+  surfaceCliff(root)
 
   return {
     root,
