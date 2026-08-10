@@ -86,3 +86,22 @@ wraps the shop harvester via `@shop/harvester` (measured: 60 fps held, chunk 23.
 130 vs 106 draw calls, −3k triangles). Open items: the user's look-gate verdict on each
 (env-map opt-in for the harvester, gear-up-in-cruise for the thopter are the candidate
 follow-ups), and a shop-side test pinning `CRUISE_BEAT_HZ` to `flight/constants.ts`.
+
+Two landscape sets are released through the third shop root (`landscape-shop/<name>/`,
+alias `@land`, loop contract in `landscape-shop/docs/gauntlet-loop.md`), 2026-08-10:
+
+- **Sietch interior** — `src/game-render/modes/location/SietchSet.ts` (+ `sietchGate`,
+  `sietchHud`, `sietchRig`) mounts `@land/sietch` for `kind === 'sietch'`; the painted
+  diorama stays as every other kind's backdrop. Carved firelit hall with licensed
+  Desert-Kingdom dressing and three CC0 figure silhouettes; exposure pinned to the
+  authored ACES 1.0 while active. Measured: chunk 138,803 of 150,000 bytes; 81 draw
+  calls / 38.2k triangles in view, deterministic across entries.
+- **Cliff massif** — `src/game-render/modes/flight/CliffMassif.ts` mounts `@land/cliff`
+  as the flight destination's landform: entrance faces the incoming craft, touchdown
+  45 m before the gate, seated within the shop's 40 m skirt contract (proven across
+  seeds). Quantized bakes split into three chunks (52.6 / 68.0 / 124.4 KB, each within
+  the 150 KB budget). Measured: flight 143 draw calls / 84.2k triangles (was 130/60.6k).
+
+Open items: the user's in-game look-gate on both landscape releases (build verdicts were
+settled by the user at every round; panels recorded in each shop's `progress.md`), and
+the vehicle look-gates above.
