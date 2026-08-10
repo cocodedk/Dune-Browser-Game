@@ -24,14 +24,19 @@
 import { writeFileSync, existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { readGlbSoup } from './bake/glb.mjs'
+import { readGlbSoup, boundsOf } from './bake/glb.mjs'
 import { cropSource, dropVendorPlate, placePiece, selectEmissive } from './bake/reshape.mjs'
+import { stripWide } from './bake/figureLimbs.mjs'
 import { decimate } from './bake/decimate.mjs'
 import { paintTriangles } from './bake/paint.mjs'
+import { paintFigureTriangles } from './bake/figurePaint.mjs'
 import { packPiece } from './bake/pack.mjs'
 import { PIECES } from './bake/pieces.mjs'
-import { FEEDSTOCK, SOURCE_LICENCE, SPEC_ANCHORS, ZONES } from './bake/zones.mjs'
+import { FIGURE_PIECES } from './bake/figurePieces.mjs'
+import { FEEDSTOCK, FIGURE_SOURCES, SOURCE_LICENCE, SPEC_ANCHORS, ZONES } from './bake/zones.mjs'
 import { HEARTH_COLOR, PALETTE } from './bake/tones.mjs'
+
+const ALL_PIECES = [...PIECES, ...FIGURE_PIECES]
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = resolve(HERE, '..', '..', '..')
@@ -50,7 +55,7 @@ for (const [key, relative] of Object.entries(FEEDSTOCK)) {
 const tones = []
 const baked = []
 
-for (const piece of PIECES) {
+for (const piece of ALL_PIECES) {
   const soup = soups[piece.src]
   if (!soup) throw new Error(`${piece.name}: unknown feedstock key ${piece.src}`)
 
@@ -70,14 +75,30 @@ for (const piece of PIECES) {
   for (const cut of piece.split ? [false, true] : [null]) {
     const subset = cut === null ? index : selectEmissive(soup, index, cut)
     if (!subset.length) throw new Error(`${piece.name}: emissive split left nothing (${cut})`)
-    const { vertices, triangles } = decimate(world, subset, piece.cellM)
+    let { vertices, triangles } = decimate(world, subset, piece.cellM)
+    // Reference-pose limb removal — POST-decimate, in built world metres,
+    // never pre-decimate source-space (figureLimbs.mjs's header has the
+    // measured reason: a source-space crop leaves spike triangles).
+    if (piece.stripAxis) {
+      const axisIndex = piece.stripAxis === 'x' ? 0 : 2
+      const before = triangles.length
+      triangles = stripWide(vertices, triangles, axisIndex, piece.stripThresholdM, piece.atM[axisIndex])
+      if (!triangles.length) throw new Error(`${piece.name}: limb strip removed every triangle`)
+      if (triangles.length === before) throw new Error(`${piece.name}: limb strip removed nothing — check the axis/threshold`)
+    }
     if (groundShift === null) {
       groundShift = piece.atM[1] - Math.min(...vertices.map((v) => v[1]))
     }
     for (const vertex of vertices) vertex[1] += groundShift
     const ramp = cut === true ? 'ember' : piece.ramp
-    const tone = paintTriangles(soup, triangles, ramp, piece.foliage, tones, piece.toneRange)
+    // Figures have no source vertex colour worth reading (glb.mjs fills a
+    // neutral placeholder) — figurePaint.mjs reads the source HEIGHT
+    // instead, over the bounds of exactly the vertices this piece kept.
+    const tone = piece.figure
+      ? paintFigureTriangles(soup, triangles, ...figureYBounds(soup, subset), tones, piece.skinBandMin)
+      : paintTriangles(soup, triangles, ramp, piece.foliage, tones, piece.toneRange)
     const packed = packPiece(vertices, triangles, tone)
+    const attribution = FIGURE_SOURCES[piece.src]
     baked.push({
       name: cut === true ? `${piece.name}Embers` : piece.name,
       zone: piece.zone,
@@ -89,10 +110,23 @@ for (const piece of PIECES) {
       // src/dressing.test.ts checks containment rather than contact.
       supportY: cut === true ? packed.boundsMin[1] : piece.atM[1],
       insideOf: cut === true ? piece.name : null,
+      // Per-piece provenance, alongside the top-level sourceLicence: null
+      // for the Desert Kingdom 23 (covered by sourceLicence already), the
+      // Poly Pizza CC0 evidence for the three figures — the bake carries
+      // its own record the same way sourceLicence always has.
+      sourceUrl: attribution?.url ?? null,
+      licence: attribution?.licence ?? null,
       transforms: describe(piece, stripped, subset.length / 3),
       ...packed,
     })
   }
+}
+
+/** [minY, maxY] of a figure's own kept source vertices — the span
+ *  figurePaint.mjs's height-fraction rule reads against. */
+function figureYBounds(soup, index) {
+  const { min, max } = boundsOf(soup.positions, index)
+  return [min[1], max[1]]
 }
 
 const bake = {
@@ -135,6 +169,7 @@ function describe(piece, strippedTris, croppedTris) {
   if (piece.spreadXZ) parts.push(`footprint x${piece.spreadXZ}`)
   if (piece.squashZ) parts.push(`depth x${piece.squashZ}`)
   if (piece.rotYDeg) parts.push(`turned ${piece.rotYDeg} deg`)
+  if (piece.stripAxis) parts.push(`reference-pose limbs stripped past ${piece.stripThresholdM} m on ${piece.stripAxis}`)
   parts.push(`decimated at ${piece.cellM} m`, `re-tinted on the ${piece.ramp}/${piece.foliage} ramps`)
   return parts.join(', ')
 }

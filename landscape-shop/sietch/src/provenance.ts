@@ -35,4 +35,15 @@ export const PROVENANCE = {
     'survives), byte-deterministic from tools/bakeDressing.mjs for pack ' +
     'owners. royal_palm was skipped (Draco-compressed; a temp decompress ' +
     'step would break repo-only reproducibility) in favor of doum_palm.',
+  figures: 'USED (figures pass, user-authorized one-case CC0 exception ' +
+    'to the threejsassets-only rule): "Wizard" by Polygonal Mind ' +
+    '(poly.pizza/m/6kY9VaAfPv) and "Evil Wizard" by AliceCassie ' +
+    '(poly.pizza/m/bdxawstqtq), both CC0 1.0 public domain (verified ' +
+    '2026-08-10), both non-rigged static meshes. Reshaped into three ' +
+    'sietch derivatives - hearthElder and basinTender (first source, ' +
+    'different scale/placement), tierSentinel (second source, crown ' +
+    'cropped) - reference-pose limbs geometrically stripped, decimated ' +
+    'to 381-539 tris, re-tinted entirely to PALETTE robe/skin ramps. ' +
+    'The dressing bake carries per-piece sourceUrl/licence fields as ' +
+    'its own attribution record.',
 } as const

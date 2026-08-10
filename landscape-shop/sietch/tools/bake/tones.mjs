@@ -65,6 +65,18 @@ export const RAMPS = {
   // The fire itself — DRESSING.hearthColor, the light's own colour, given
   // a body to come from.
   ember: [mix(HEARTH_COLOR, rockShadow, 0.55), mix(HEARTH_COLOR, rock, 0.22), HEARTH_COLOR],
+  // R4 figures — worn robes: dusty dark umber/charcoal, rockShadow's own
+  // family (never cloth's reddened warmth, which is bleached-by-the-hearth
+  // sacking, not what a body wears). Lighter than char (soot has no hue
+  // left at all) but the darkest CLOTHED tone in the set on purpose — three
+  // quiet, unlit-looking presences, not three more lit objects competing
+  // with the hearth's own glow.
+  robe: [scale(rockShadow, 0.7), mix(rockShadow, rock, 0.35), mix(rockShadow, rock, 0.55)],
+  // R4 figures — muted skin: warmed rockGlowlit, the same hue rock already
+  // sits in, pulled toward HEARTH_COLOR only enough to read as flesh lit by
+  // firelight rather than as more cut stone. Never fibre or cloth's
+  // yellow — skin is redder than either.
+  skin: [mix(rock, rockGlowlit, 0.3), mix(rock, rockGlowlit, 0.55), mix(rockGlowlit, HEARTH_COLOR, 0.12)],
 }
 
 /** Relative luminance of an sRGB-encoded hex, 0..1 — the ranking key. */

@@ -46,6 +46,7 @@ export const ZONES = [
 ]
 
 const PACK = 'landscape-shop/feedstock-packs/desert-kingdom/glb/individual'
+const FIGURES = 'landscape-shop/sietch/feedstock/cc0-figures'
 
 /** Every feedstock file the bake opens. Gitignored by design — the header
  *  of tools/bakeDressing.mjs says why. All plain (un-Draco'd) GLB. */
@@ -61,6 +62,16 @@ export const FEEDSTOCK = {
   scrub: `${PACK}/desert_scrub.glb`,
   seatStone: `${PACK}/sandstone_boulder.glb`,
   doorway: `${PACK}/tomb_entrance.glb`,
+  // R4 human figures — threejsassets.com has none (checked); the user
+  // authorized CC0 low-poly people as a one-case exception. Both are Poly
+  // Pizza CC0 1.0 (Public Domain), non-rigged, non-animated static
+  // meshes — the reference pose baked directly into the geometry, not a
+  // skin bind pose (see FIGURE_SOURCES below for the per-model evidence).
+  // figureBasin is read TWICE (hearthElder and basinTender both use it,
+  // at different heights/turns/placements) — the same reuse pieces.mjs
+  // already makes of seatStone (three sitting stones, one boulder).
+  figureBasin: `${FIGURES}/wizard-robed.glb`,
+  figureTier: `${FIGURES}/evil-wizard.glb`,
 }
 
 /** Source URL and licence line per asset, for provenance.ts. */
@@ -70,3 +81,24 @@ export const SOURCE_LICENCE =
   'in unlimited personal, client and commercial finished projects. You ' +
   'may not resell, redistribute, sublicense or give away the raw GLB or ' +
   'component files, alone or repackaged as an asset pack or template."'
+
+/** Per-figure source + licence evidence, keyed by the FEEDSTOCK key that
+ *  reads it. Embedded into each figure's own baked piece (see
+ *  tools/bakeDressing.mjs) rather than folded into SOURCE_LICENCE above,
+ *  because these three did not come from the Desert Kingdom pack and carry
+ *  their own, separately-verified licence: Poly Pizza's page for each
+ *  model states "Public Domain (CC0)" linking
+ *  https://creativecommons.org/publicdomain/zero/1.0/ — checked on the
+ *  live page for all three, 2026-08-10. */
+export const FIGURE_SOURCES = {
+  figureBasin: {
+    title: 'Wizard', creator: 'Polygonal Mind', uploaded: '2023-05-07',
+    url: 'https://poly.pizza/m/6kY9VaAfPv',
+    licence: 'CC0 1.0 (Public Domain) — https://creativecommons.org/publicdomain/zero/1.0/',
+  },
+  figureTier: {
+    title: 'Evil Wizard', creator: 'AliceCassie', uploaded: '2022-03-27',
+    url: 'https://poly.pizza/m/bdxawstqtq',
+    licence: 'CC0 1.0 (Public Domain) — https://creativecommons.org/publicdomain/zero/1.0/',
+  },
+}

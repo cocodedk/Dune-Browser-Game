@@ -15,6 +15,7 @@
 
 import { BufferGeometry, Color, Float32BufferAttribute, Mesh, SRGBColorSpace } from 'three'
 import type { Material } from 'three'
+import { decodeInt16, decodeUint16, decodeUint8 } from './bakeCodec'
 
 export interface BakedPiece {
   name: string
@@ -23,21 +24,28 @@ export interface BakedPiece {
   material: string
   supportY: number
   insideOf: string | null
+  // Per-piece provenance for the three R4 CC0 figures; null for every
+  // Desert Kingdom piece (covered by the bake's top-level sourceLicence).
+  sourceUrl: string | null
+  licence: string | null
   transforms: string
   originM: number[]
   boundsMin: number[]
   boundsMax: number[]
   triangles: number
   vertices: number
-  posCm: number[]
-  index: number[]
-  tone: number[]
+  posQ: string
+  indexQ: string
+  toneQ: string
 }
 
 const CM = 100
 
 export function buildPiece(piece: BakedPiece, tones: number[], material: Material): Mesh {
-  const { originM, posCm, index, tone } = piece
+  const { originM } = piece
+  const posCm = decodeInt16(piece.posQ)
+  const index = decodeUint16(piece.indexQ)
+  const tone = decodeUint8(piece.toneQ)
   const count = index.length
   const positions = new Float32Array(count * 3)
   const colors = new Float32Array(count * 3)

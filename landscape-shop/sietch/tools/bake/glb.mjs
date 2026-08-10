@@ -26,10 +26,27 @@ const FLOAT32 = 5126
 const UINT32 = 5125
 const UINT16 = 5123
 
-/** Reads the first primitive of the first mesh as a triangle soup:
- *  positions (Float32Array, xyz), index (Uint32Array) and per-vertex
- *  colours (Float32Array, rgb in LINEAR space — glTF's COLOR_0 is linear
- *  by specification, which is also three.js's working space). */
+// A neutral mid-grey, LINEAR, for feedstock with no COLOR_0 (the CC0
+// figure kit — see readGlbSoup below). Flat and colourless (no hue, mid
+// luminance) so familyOf() reading it falls through to the piece's own
+// ramp rather than being misread as char or foliage; figures never use
+// familyOf anyway (tools/bake/figurePaint.mjs paints them geometrically),
+// but the field must still exist for readers that assume it does.
+const NEUTRAL_COLOR = 0.5
+
+/** Reads every primitive of the first mesh as ONE triangle soup: positions
+ *  (Float32Array, xyz), index (Uint32Array) and per-vertex colours
+ *  (Float32Array, rgb, LINEAR — glTF's COLOR_0 is linear by specification,
+ *  which is also three.js's working space). Multiple primitives (one per
+ *  material, the shape a multi-material FBX->glTF export takes) are
+ *  concatenated with their index values offset, so a multi-material kit
+ *  piece — the CC0 figures' Evil Wizard, six primitives to one mesh — soups
+ *  into a single index space exactly like a single-primitive asset does.
+ *  COLOR_0 is OPTIONAL: the CC0 figure kit is UV/texture coloured, not
+ *  vertex coloured, and re-tinting them never reads the source colour (a
+ *  geometric Y-band decides skin vs robe, not luminance/hue) — a missing
+ *  COLOR_0 is filled with NEUTRAL_COLOR so the shape of the soup stays the
+ *  one every other reshape function expects. */
 export function readGlbSoup(path) {
   const bytes = readFileSync(path)
   if (bytes.readUInt32LE(0) !== GLB_MAGIC) throw new Error(`${path}: not a GLB`)
@@ -41,16 +58,42 @@ export function readGlbSoup(path) {
   }
   const bin = bytes.subarray(20 + jsonLength + 8)
 
-  const primitive = json.meshes?.[0]?.primitives?.[0]
-  if (!primitive) throw new Error(`${path}: no mesh primitive`)
-  if (primitive.attributes.COLOR_0 == null) throw new Error(`${path}: no COLOR_0 attribute`)
+  const primitives = json.meshes?.[0]?.primitives
+  if (!primitives?.length) throw new Error(`${path}: no mesh primitive`)
+
+  const positions = []
+  const colors = []
+  const index = []
+  let base = 0
+  for (const primitive of primitives) {
+    const p = readVec3(json, bin, primitive.attributes.POSITION)
+    positions.push(p)
+    colors.push(
+      primitive.attributes.COLOR_0 == null
+        ? new Float32Array(p.length).fill(NEUTRAL_COLOR)
+        : readColor(json, bin, primitive.attributes.COLOR_0),
+    )
+    for (const i of readScalar(json, bin, primitive.indices)) index.push(base + i)
+    base += p.length / 3
+  }
 
   return {
     name: json.meshes[0].name ?? 'mesh',
-    positions: readVec3(json, bin, primitive.attributes.POSITION),
-    colors: readColor(json, bin, primitive.attributes.COLOR_0),
-    index: readScalar(json, bin, primitive.indices),
+    positions: concatFloat32(positions),
+    colors: concatFloat32(colors),
+    index: Uint32Array.from(index),
   }
+}
+
+function concatFloat32(chunks) {
+  const total = chunks.reduce((n, c) => n + c.length, 0)
+  const out = new Float32Array(total)
+  let at = 0
+  for (const chunk of chunks) {
+    out.set(chunk, at)
+    at += chunk.length
+  }
+  return out
 }
 
 function viewOf(json, accessorIndex) {

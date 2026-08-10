@@ -28,9 +28,12 @@ import { GALLERY_LAYOUT } from './model/backWall'
 // instead of landing) can never pass by accident.
 const CONTACT_TOLERANCE_M = 0.05
 const PROBE_DROP_M = 0.5
-// R3's share of the 40,000-triangle set budget. The hall's own carving
-// spends ~32,800 of it (surface.test.ts holds the total).
-const DRESSING_TRIANGLE_BUDGET = 6000
+// R3+R4's share of the 40,000-triangle set budget. The hall's own carving
+// spends ~32,845 of it (surface.test.ts holds the total), which caps this
+// at 7,155 — 7,100 keeps a 55-triangle margin rather than sitting exactly
+// on the line the other guard also enforces. The figures' own guards
+// (hearth clearance, built height) live in dressingFigures.test.ts.
+const DRESSING_TRIANGLE_BUDGET = 7100
 
 function dressingMeshes(root: Object3D): Mesh[] {
   return meshesOf(dressingOf(root))

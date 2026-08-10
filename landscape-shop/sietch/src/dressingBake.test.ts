@@ -18,6 +18,7 @@ import { describe, it, expect } from 'vitest'
 import type { Mesh, Object3D } from 'three'
 import { createSietch } from './model/Sietch'
 import { DRESSING_BAKE } from './model/dressing/Dressing'
+import { decodeUint16 } from './model/dressing/bakeCodec'
 import { dressingOf, meshesOf } from './testHelpers'
 import { DRESSING, PALETTE } from './spec'
 
@@ -72,7 +73,10 @@ describe('R3 bake: what the file says is what the model builds', () => {
       expect(position.count / 3, `${piece.name} triangle count drifted`).toBe(piece.triangles)
       // The loader expands the indexed bake into a flat-shaded soup, so
       // three vertices per triangle is the contract, not an accident.
-      expect(position.count).toBe(piece.index.length)
+      // Decoded here (not read off `position.count` twice) so a pack.mjs
+      // bug that writes the wrong element count into indexQ is still
+      // caught, not just a mismatch between two readings of the mesh.
+      expect(position.count).toBe(decodeUint16(piece.indexQ).length)
       total += piece.triangles
     }
     expect(total, 'the bake\'s own total disagrees with its pieces').toBe(DRESSING_BAKE.triangles)
@@ -121,5 +125,46 @@ describe('R3 bake: no feedstock colour survived the re-tint', () => {
       expect(green.sat, 'a frond tone is more saturated than PALETTE.palmFrond')
         .toBeLessThanOrEqual(target.sat * 1.15)
     }
+  })
+})
+
+// R4: figures — 0.2126/0.7152/0.0722 relative luminance, the exact weights
+// tools/bake/tones.mjs's own luminanceOf uses, duplicated here for the same
+// reason PALETTE and the hue windows above are: a .mjs bake tool and a .ts
+// test cannot share a function, so the guard re-derives instead of trusts.
+function luminanceOf(hex: number): number {
+  const [r, g, b] = [(hex >> 16) & 255, (hex >> 8) & 255, hex & 255].map((v) => v / 255)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+// Palette warmth, narrower than the general HUE_WINDOWS check above — this
+// is specifically "does a skin-window tone actually sit near PALETTE.rock's
+// own 29 deg", not merely "is it somewhere warm".
+const SKIN_HUE_WINDOW: [number, number] = [15, 45]
+const ROBE_MAX_LUM = 0.28
+const SKIN_MIN_LUM = 0.34
+
+describe('R4: the human figures are sourced, provenanced, and palette-true', () => {
+  it('records a source URL and a CC0 licence for exactly the figure pieces', () => {
+    const attributed = DRESSING_BAKE.pieces.filter((p) => p.sourceUrl != null)
+    expect(attributed.length, 'no figure pieces carry source attribution').toBeGreaterThanOrEqual(2)
+    for (const piece of attributed) {
+      expect(piece.sourceUrl, `${piece.name} sourceUrl`).toMatch(/^https:\/\//)
+      expect(piece.licence, `${piece.name} licence`).toMatch(/CC0/)
+    }
+  })
+
+  // Operationalises "dusty dark umber/charcoal robes, muted skin tone
+  // within palette warmth": a dark robe-band tone AND a distinctly lighter
+  // skin-band tone both exist, both inside the rock family's own hue.
+  it('keeps a dark robe tone and a lighter skin tone, both in PALETTE\'s own hue', () => {
+    const inWindow = DRESSING_BAKE.tones.filter((t) => {
+      const { hue } = hueSat(t)
+      return hue >= SKIN_HUE_WINDOW[0] && hue <= SKIN_HUE_WINDOW[1]
+    })
+    const robeLike = inWindow.filter((t) => luminanceOf(t) <= ROBE_MAX_LUM)
+    const skinLike = inWindow.filter((t) => luminanceOf(t) >= SKIN_MIN_LUM)
+    expect(robeLike.length, 'no dark umber/charcoal robe tone in the bake').toBeGreaterThan(0)
+    expect(skinLike.length, 'no lighter skin tone in the bake').toBeGreaterThan(0)
   })
 })
