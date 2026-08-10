@@ -102,7 +102,8 @@ the WP09 IP/license decision are user-owned: reaching one means `blocked`, not
   several browser tabs or drive it from several agents in parallel — WebGL contexts
   multiply and it kills the machine (user rule, 2026-08-10; this box has been OOMed
   before). Reuse the single shared dev server, close a tab before opening another,
-  and sequence all browser evidence.
+  and sequence all browser evidence. **Close the browser the moment its capture or
+  check is finished** — never leave a page open while doing non-browser work.
 - Use the status vocabulary exactly: `planned`, `in_progress`, `verified`, `blocked`.
   "Done", "green", "implemented", and "mostly" are banned in reports.
 - Report using items 1–6 of 08 §Package completion report. Item 7 (reviewer verdict)

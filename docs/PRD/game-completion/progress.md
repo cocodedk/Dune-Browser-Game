@@ -22,3 +22,31 @@ reproduce.
   console output.
 - WP00 flipped to `in_progress` on the board. First dispatches: legacy-authority
   inventory and content/asset manifest recording.
+
+## Round 1 — WP00 builders: inventory, manifest, characterization (2026-08-10)
+
+- **Legacy-authority inventory** (`baseline/legacy-authority-inventory.md`, 239
+  lines): six categories, all non-empty — 16 faction-sim sites reachable from the
+  day loop, 11 threshold/village payout sites, 6 PoC-goal sites, 16
+  `player.troops`/`player.influence` sites, 11 engine `Math.random()` sites (no
+  seeded-RNG service exists anywhere), 3 confirmed duplicate resource paths. Lead
+  spot-verified the five most load-bearing claims at their cited lines — all
+  reproduced, including the triple spice credit
+  (`harvestRun.ts:94` + `VillageSystem` + `GameLoop` payout loop).
+- **Content/asset manifest** (`baseline/content-manifest.md`, counted at
+  `e693ed5`): dialogue 131 nodes vs 500 release floor; scripted events 0 vs 60;
+  authored scene families 0 vs 8; 3 of 5 authored spice fields permanently
+  unreachable (`prospectRun.ts:69` fabricates ids instead of revealing them);
+  zero `character-shop` imports in `src/`; `public/assets/audio/` empty. Lead
+  spot-verified four claims — all reproduced.
+- **Characterization tests** (`src/game-engine/baseline/`, 5 files, 16 tests):
+  pin the PoC ending write, the triple spice credit (exact value 16.148), the
+  sietch payout loop, the combat pledge + `pledged.count` flag sync (Water of
+  Life dependency), and faction day updates. Lead re-ran independently: 16/16
+  pass, `tsc --noEmit` clean, all files ≤96 lines.
+- **Discoveries pinned as-found:** the PoC win-check runs every frame, outside
+  the `isDayBoundary()` block (`GameLoop.ts:142`); the first `update()` after
+  `initLoop()` always fires a day boundary (`TimeSystem` `lastDay=-1` sentinel).
+- **Did not reproduce:** nothing this round.
+- Remaining WP00 scope: baseline saves + browser captures (serial, one tab,
+  closed after each), then the evidence-auditor critic.
