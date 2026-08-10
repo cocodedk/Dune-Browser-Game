@@ -8,6 +8,7 @@ import type { RegionEcology } from './game-engine/ecology/ecology'
 import type { FortState } from './game-engine/acts/endgame'
 import type { PrescienceLevel } from './game-engine/prescience/prescience'
 import type { TroopGroup, SpiceField, Equipment } from './game-engine/troops/types'
+import type { RngState } from './game-engine/rng/rng'
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type VillageId = string;
@@ -87,7 +88,14 @@ export interface WorldState {
   dialogue: DialogueState | null;
   events: GameEvent[];    // ring buffer — keep last 20
   goalAchieved: boolean;
-  goalType: 'control_all_villages' | 'survive_20_min';
+  /**
+   * Optional: retired campaign-completion authority (docs/PRD/game-completion/
+   * 02-runtime-consolidation.md "Campaign status"). Never set on a canonical
+   * new campaign's save and dropped by save migration; kept optional, not
+   * removed, so already-loaded legacy state and the untouched GameLoop win
+   * check that still reads it continue to type-check.
+   */
+  goalType?: 'control_all_villages' | 'survive_20_min';
   factionProfiles: FactionProfile[];
   regions: Region[];
   sietches: SietchState[];
@@ -121,6 +129,11 @@ export interface WorldState {
   wormSightings: WormSighting[];
   /** Deep-desert sites, generated once per game and revealed by prospecting. */
   desertSites: DesertSite[];
+  /**
+   * The campaign's single seeded RNG state — see game-engine/rng/rng.ts and
+   * 02-runtime-consolidation.md "Randomness". Canonical and serialized.
+   */
+  rng: RngState;
 }
 
 export type { DesertSite, SiteKind } from './game-engine/desert/sites';

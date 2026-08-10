@@ -18,10 +18,17 @@
 //   crew harvest:        6 * 1 * 1 * (0.5 + 30/100) * (0.4 + 0.006*60) = 3.648
 //   sietch threshold:    HARVEST_SPICE_PAYOUT = 12
 //   total:                16.148
+//
+// WP01 update (cited per this file's header): createInitialState() no longer
+// seeds an operational crew (00-index "Opening state" / 02 "Crew lifecycle"),
+// so the fixture now constructs the crew from INITIAL_TROOP_GROUPS directly —
+// the same authored values the opening used to supply — keeping every formula
+// input and the pinned 16.148 total identical.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { update, initLoop } from '../GameLoop'
 import { world, setWorld, createInitialState } from '../GameState'
+import { INITIAL_TROOP_GROUPS } from '../../data/troopGroups'
 import type { WorldState } from '../../types'
 
 vi.mock('../../EventBus', () => ({
@@ -47,11 +54,12 @@ function fixture(): WorldState {
     productionRate: 2, kind: 'sietch', discovered: true, regionId: 'v1',
   }]
 
-  // Path 2: crew harvest. Reuses the starting crew's default skills/morale
-  // (spice: 30, morale: 60) so the yield formula's inputs are all authored
-  // defaults, not test-invented numbers.
-  state.troopGroups = state.troopGroups.map(g => ({
-    ...g, task: 'harvest', taskTargetId: 'field_test', changeoverDaysLeft: 0,
+  // Path 2: crew harvest. Uses the formerly-default starting crew's authored
+  // skills/morale (spice: 30, morale: 60) so the yield formula's inputs are
+  // authored defaults, not test-invented numbers. Sourced from the data module
+  // since WP01's contract opening no longer seeds it (see header).
+  state.troopGroups = INITIAL_TROOP_GROUPS.map(g => ({
+    ...g, task: 'harvest' as const, taskTargetId: 'field_test', changeoverDaysLeft: 0,
   }))
   state.spiceFields = [{
     id: 'field_test', regionId: 'v1', position: { x: 0, y: 0 },

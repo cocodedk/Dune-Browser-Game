@@ -90,6 +90,7 @@ function createTestWorld(): WorldState {
     forts: [],
     wormSightings: [],
     desertSites: [],
+    rng: { seed: 1, step: 0 },
   };
 }
 

@@ -8,12 +8,17 @@ import { world, setWorld, createInitialState } from './GameState'
 
 describe('pledgePlayerSietch: pledged.count', () => {
   beforeEach(() => {
-    setWorld(createInitialState())
+    const state = createInitialState()
+    // The canonical opening now starts the player at Arrakeen (00-index.md
+    // "Opening state"), so these pledge-mechanics fixtures move the player
+    // to sietch_tabr explicitly rather than relying on the old default.
+    state.player.location = 'sietch_tabr'
+    setWorld(state)
   })
 
   it('sets pledged.count to 1 after pledging the player\'s starting sietch', () => {
-    // Fresh state: player stands at sietch_tabr, a fremen-owned, unpledged
-    // sietch — pledging it should need no other setup.
+    // Player stands at sietch_tabr, a fremen-owned, unpledged sietch —
+    // pledging it should need no other setup.
     pledgePlayerSietch('sietch_tabr')
     expect(world.flags['pledged.count']).toBe(1)
   })

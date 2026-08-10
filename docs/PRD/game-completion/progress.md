@@ -106,3 +106,32 @@ reproduce.
 - **WP00 → `verified` on the board.** Package evidence: inventory + manifest +
   5 characterization test files (16 tests) + 8 captures + endings-coverage
   table + `wp00-critic-verdict.md` (independent reviewer, two audit passes).
+
+## Round 4 — WP01 in_progress: RNG service (A) + canonical state (C) (2026-08-11)
+
+- Approach advisor-checked. Sequence A → C → B+D (day runner) → E (fixtures),
+  forced serial by the no-concurrent-edit zones. Scope calls: WP01 targets its
+  five fixtures only (five belong to WP02); the runner keeps a marked legacy-
+  production seam for WP02 to delete; only RNG call sites that survive WP02 get
+  seeded (CombatSystem's rolls die with `player.troops` — recorded so a critic
+  doesn't count them as a miss); StatusBar's PoC readout comes out in WP01
+  because the schema change forces it.
+- **A (`9afb07a`):** `src/game-engine/rng/` — `RngState {seed, step}`, every
+  draw derived purely from the pair (BigInt SplitMix variant, Lemire int),
+  O(1) snapshot-resume. 16 tests incl. pinned seed-42 known answers. Lead
+  re-ran: pass + tsc clean + zero `Math.random`/`Date.now` call sites.
+- **C:** `src/game-engine/state/` (SCHEMA_VERSION 3, deterministic
+  `serializeCanonical` omitting `goalType`/`goalAchieved` and embedding `rng`,
+  FNV-1a `hashState`); `WorldState.rng` added (types.ts at 183/200);
+  `createInitialState(seed=1)` now the contract opening — Arrakeen, day 0,
+  **60 spice** (deliberate change, 00-index "Opening state"), no crew;
+  migration extended in place: v1→v2→v3 chain, `deriveLegacySeed` (FNV over
+  saved scalars, no wall clock), idempotency proven by deep-equal tests.
+- **Casualty handled per plan:** removing the default starting crew broke
+  `spiceTripleCredit.characterization.test.ts` (16.148 → 12.5). Builder
+  correctly reported `blocked` instead of editing the protected file; lead
+  updated it with citation — fixture now sources `INITIAL_TROOP_GROUPS`
+  directly, keeping every formula input and the 16.148 pin identical.
+- Lead verification: full suite 236 files / **2037 tests pass**, tsc clean.
+- Next: B+D — ten-step day runner, faction/PoC quarantine, ending-writer
+  collapse, multi-day catch-up, surviving-call-site seeding.

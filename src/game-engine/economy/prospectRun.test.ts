@@ -18,6 +18,16 @@ import { AWARENESS } from '../prescience/prescience'
  */
 function riggedSietchRoll(): void {
   setWorld(createInitialState())
+  // The canonical opening starts with no operational crew (00-index.md
+  // "Opening state"; 02-runtime-consolidation.md "Crew lifecycle") — a new
+  // campaign has none before the first pledge. This is a prospecting-mechanics
+  // fixture, not an opening-state one, so it stands up its own crew rather
+  // than relying on the old default starting crew.
+  world.troopGroups = [{
+    id: 'group_tabr_1', homeSietchId: 'sietch_tabr', locationId: 'sietch_tabr',
+    size: 30, skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
+    morale: 60, equipmentIds: [], task: 'idle', taskTargetId: null, changeoverDaysLeft: 0,
+  }]
   const crew = world.troopGroups.find(g => g.id === 'group_tabr_1')!
   crew.task = 'prospect'
   crew.taskTargetId = null // regionId falls back to crew.locationId: 'sietch_tabr'

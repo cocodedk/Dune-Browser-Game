@@ -7,10 +7,14 @@
 // therefore fills in defaults rather than assuming a field exists.
 
 import type { WorldState, Village, LocationKind } from '../types'
+import type { RngState } from './rng/rng'
 import { createQuotaState } from './quota/quota'
 import { INITIAL_VILLAGES } from '../data/villages'
+import { SCHEMA_VERSION } from './state/schema'
+import { fnv1a64 } from './state/hash'
 
-export const CURRENT_SAVE_VERSION = 2
+/** Single source of truth for the schema number — see state/schema.ts. */
+export const CURRENT_SAVE_VERSION = SCHEMA_VERSION
 
 export interface VersionedSave {
   version?: number
@@ -91,6 +95,40 @@ export function migrateV1ToV2(state: WorldState): WorldState {
 }
 
 /**
+ * Derive a stable rng seed from a save's own identity, for a save that
+ * predates the seeded rng and so never carried one.
+ *
+ * docs/PRD/game-completion/02-runtime-consolidation.md ("Save migration"
+ * point 6): "derive one stable seed from old save identity and time for
+ * migrated saves" — deterministic, no wall clock, no Math.random(), so
+ * re-migrating the SAME save (idempotency, point 7) always derives the SAME
+ * seed. Combines elapsed game time with the player's spice and location: any
+ * one of the three colliding between two distinct saves is plausible, all
+ * three colliding is not. Folded to 32 bits so it stays a safe-integer
+ * `number` (RngState.seed), well within what rng/hash.ts's own masking
+ * already tolerates.
+ */
+function deriveLegacySeed(state: WorldState): number {
+  const identity = `${state.time}|${state.player?.spice ?? 0}|${state.player?.location ?? ''}`
+  return Number(fnv1a64(identity) & 0xffffffffn)
+}
+
+/**
+ * v2 -> v3: add the seeded `rng` field and drop the retired `goalType`.
+ *
+ * 02's migration list: preserve the rng seed for new saves and derive one
+ * for migrated saves (point 6); drop `goalType` (point 4). Idempotent (point
+ * 7): a save that already carries `rng` keeps that exact value, and one with
+ * no `goalType` is untouched by the drop.
+ */
+export function migrateV2ToV3(state: WorldState): WorldState {
+  const { goalType: _goalType, ...rest } = state
+  void _goalType
+  const rng: RngState = state.rng ?? { seed: deriveLegacySeed(state), step: 0 }
+  return { ...rest, rng }
+}
+
+/**
  * Bring any supported save up to the current schema.
  * Returns null when the save is too old, unrecognised, or structurally broken.
  */
@@ -103,6 +141,9 @@ export function migrateSave(save: VersionedSave): WorldState | null {
   const version = save.version ?? 1
 
   if (version > CURRENT_SAVE_VERSION) return null // Written by a newer build.
-  if (version === CURRENT_SAVE_VERSION) return state
-  return migrateV1ToV2(state)
+
+  let migrated = state
+  if (version < 2) migrated = migrateV1ToV2(migrated)
+  if (version < 3) migrated = migrateV2ToV3(migrated)
+  return migrated
 }
