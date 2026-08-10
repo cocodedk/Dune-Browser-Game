@@ -53,7 +53,7 @@ function framePiece(
   capZ: number, recessM: number, materials: PaletteMaterials,
 ): Mesh {
   const depth = PROUD_OFFSET_M + recessM
-  const mesh = new Mesh(new BoxGeometry(w, h, depth), materials.rockShadow)
+  const mesh = new Mesh(new BoxGeometry(w, h, depth), materials.stoneShadow)
   mesh.name = name
   mesh.position.set(cx, cy, capZ - PROUD_OFFSET_M + depth / 2)
   return mesh
@@ -87,7 +87,7 @@ export function buildGalleryRecess(
 
   // Unlit socket floor: deep, near-black by the physics of the single
   // hearth point light rather than any authored darkness.
-  const backCap = new Mesh(new BoxGeometry(width, height, 0.06), materials.rockShadow)
+  const backCap = new Mesh(new BoxGeometry(width, height, 0.06), materials.stoneShadow)
   backCap.name = `${name}BackCap`
   backCap.position.set(x, baseY + height / 2, capZ + recessM)
   group.add(backCap)

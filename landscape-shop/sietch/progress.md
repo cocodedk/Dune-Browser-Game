@@ -4,8 +4,9 @@ Standalone rig at `landscape-shop/sietch/`. Run it with `npm run land:sietch`.
 
 ## STATUS
 
-R1 massing ACCEPTED by user verdict, 2026-08-09 ("I like what I see. It has
-very alien vibe to it"). Next: R2 — surface and materials (Opus).
+R2 surface ACCEPTED by user verdict, 2026-08-10 (with R1 accepted 2026-08-09:
+"I like what I see. It has very alien vibe to it"). Next: R3 — dressing +
+final panel (Opus).
 
 ## The bar
 
@@ -36,3 +37,17 @@ findings; user's eye outranks any critic.
   habitation — are R2/R3 scope); the user looked and accepted. Known cosmetic
   note, deferred to R2: hearth PointLight.castShadow stays OFF (cube-shadow
   artifact blacks out the render — documented in main.ts).
+- **R2 (Opus + two fix passes, user-accepted 2026-08-10).** Carved-surface
+  system (model/surface/*): 11 bedding courses at world-Y with dip/swell/
+  fault, 8 sweep ridges with asymmetric profiles, unquarried wall blocks,
+  DataTexture maps (shell/wall/floor/chisel, 2.75 MiB) carrying desire-line
+  floor wear, hearth scorch, hand polish, and soot anchored to the hearth
+  with a gallery-flue lean (a +2.2 sign bug had it leaning the wrong way).
+  Harness fixes ratified: ACES for lit shots (matches game Renderer), clay
+  pass bypasses tone mapping with raking key (the first R2 critic verdict
+  was thrown out — judged from a clipped clay render). Back wall took three
+  passes: painted stripes → proud slabs reading as concrete beams (lead
+  caught by mesh isolation: courses zero-gated into void bands, a missing-
+  neighbor bug creating a full-width lintel riser) → continuous coursed
+  face with 0.14 m carved parting lines and 0.01-0.10 m face steps. Final:
+  32,835 triangles of 40k, 26 guards green.

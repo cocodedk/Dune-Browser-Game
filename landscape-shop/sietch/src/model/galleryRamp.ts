@@ -41,7 +41,7 @@ export function buildGalleryRamp(gallery: GalleryLayout, capZ: number, materials
     // reaches only one stepRun — see the header note on why this is
     // inverted from the naive "tall steps reach further" version.
     const reach = stepRun * (STEP_COUNT - i)
-    const mesh = new Mesh(new BoxGeometry(width, topY, reach), materials.rock)
+    const mesh = new Mesh(new BoxGeometry(width, topY, reach), materials.stone)
     mesh.name = `${gallery.name}RampStep${i}`
     mesh.position.set(gallery.x, topY / 2, capZ - reach / 2)
     group.add(mesh)

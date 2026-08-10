@@ -40,7 +40,7 @@ function buildSkirt(materials: ReturnType<typeof buildPalette>): Mesh {
   const { widthM, depthM, skirtDepthM } = FOOTPRINT
   const height = skirtDepthM - SKIRT_TOP_GAP_M
   const geometry = new BoxGeometry(widthM * SKIRT_SCALE, height, depthM)
-  const mesh = new Mesh(geometry, materials.rockShadow)
+  const mesh = new Mesh(geometry, materials.stoneShadow)
   mesh.name = 'skirt'
   mesh.position.set(0, -skirtDepthM + height / 2, -depthM / 2)
   return mesh
@@ -54,14 +54,13 @@ export function createSietch(): LandscapeModel {
 
   const massing = new Group()
   massing.name = 'massing'
-  const envelope = buildEnvelope(materials)
-  massing.add(envelope.mesh)
-  massing.add(buildBackWall(envelope.halfWidth, envelope.heightM, materials))
+  massing.add(buildEnvelope(materials).mesh)
+  massing.add(buildBackWall(materials))
   root.add(massing)
 
   root.add(buildFloor(materials))
   root.add(buildSkirt(materials))
-  root.add(buildEntrance(envelope.halfWidth, envelope.heightM, materials))
+  root.add(buildEntrance(materials))
   root.add(buildGalleryTier(materials))
 
   const meshes: Mesh[] = []
@@ -82,6 +81,10 @@ export function createSietch(): LandscapeModel {
           disposedMaterials.add(material)
         }
       }
+      // R2: three does NOT free a material's textures when the material
+      // goes, so without this the DataTexture set leaks its GPU upload
+      // every time a location is re-entered.
+      for (const texture of materials.textures) texture.dispose()
       root.clear()
     },
   }

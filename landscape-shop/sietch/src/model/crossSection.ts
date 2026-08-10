@@ -45,9 +45,53 @@ export interface VaultProfile {
 // tube is swept per-ring (loftGeometry.ts) so every extra point here
 // costs (rings - 1) * 2 triangles project-wide, still cheap at this
 // budget.
-const WALL_SEGMENTS = 12
-const ARCH_HALF_SEGMENTS = 20
+//
+// R2: raised 12 -> 20. The R2 surface layer displaces this profile per
+// point to carve bedding courses into the walls (surface/bedding.ts) and
+// 12 segments over a ~6 m wall could not resolve a 1 m course — the step
+// smeared into a slope. 20 gives ~0.31 m per segment on the left wall,
+// enough for a course to read as a step with a top and a bottom.
+//
+// R2.1: 20 -> 38, and the wall is no longer subdivided EVENLY. A fresh
+// critic read R2's vault as "a uniform sine-wave ripple, not shadowed
+// irregular courses", and the reason was never the count: it was that a
+// course's riser is smoothed away unless a vertex lands on it. Evenly
+// spaced, the riser had to be blended wide enough to survive whichever
+// samples happened to straddle it, and a riser as wide as its course is
+// a raised cosine. wallSampling.ts now places a PAIR of vertices on each
+// course boundary the wall carries, so a riser is exactly one quad at
+// every depth; 38 buys the 16 boundary vertices plus enough filler to
+// keep the flat faces between them honest.
+//
+// The arch keeps 30, and its own points are biased toward the springings
+// (ARCH_SPRING_BIAS). It carries no courses — carvedProfile.ts fades them
+// out above the spring line, because an angle-parametrised arch cannot
+// resolve them — so what it has to resolve is its own silhouette and
+// carveSweep.ts's ridges, and those run ALONG it at constant depth, which
+// makes them RING_COUNT's job rather than this one's.
+export const WALL_SEGMENTS = 38
+export const ARCH_HALF_SEGMENTS = 30
 const CROWN_OFFSET_CLAMP_FRAC = 0.3 // max crown drift, as a fraction of halfWidth
+
+// R2.1: the arch's points are NOT spread evenly in angle any more. Evenly
+// in angle means evenly in arc length, which puts most of them near the
+// crown — where the surface is nearly horizontal, nothing is bedded
+// (bedding stops at BEDDED_TOP_Y_M) and no detail needs them. The courses
+// that DO cross the arch sit just above the springing, where an even
+// spread gave 0.86 m of rise per segment and a 1 m course could not
+// resolve at all. Biasing the angle by this exponent concentrates points
+// at both springings: ~0.3 m of rise on the low arch, at the cost of
+// coarser (and still smooth-shaded) facets across the crown.
+const ARCH_SPRING_BIAS = 1.4
+
+/** Index of the LEFT spring point in buildVaultProfile()'s point list. */
+export const SPRING_LEFT_INDEX = WALL_SEGMENTS
+/** Index of the crown (the single tallest point). */
+export const CROWN_INDEX = WALL_SEGMENTS + ARCH_HALF_SEGMENTS
+/** Index of the RIGHT spring point. */
+export const SPRING_RIGHT_INDEX = WALL_SEGMENTS + 2 * ARCH_HALF_SEGMENTS
+/** Total points a profile always has, at any z. */
+export const PROFILE_POINT_COUNT = 2 * WALL_SEGMENTS + 2 * ARCH_HALF_SEGMENTS + 1
 
 /** Bump peaking at the middle of a 0..1 wall-height fraction, zero at both
  *  ends — so a dent never touches the floor edge or the spring point (the
@@ -57,24 +101,36 @@ function wallBulgeHump(heightFrac: number): number {
   return Math.sin(heightFrac * Math.PI)
 }
 
+/** Heights of one wall's WALL_SEGMENTS + 1 vertices, floor to springing.
+ *  R2.1: a caller that knows where the bedding courses are at this depth
+ *  supplies them (wallSampling.ts), so a course boundary always lands ON
+ *  a vertex instead of drifting across a fixed grid. Without it the wall
+ *  is subdivided evenly, exactly as it was through R2. */
+export interface WallSamples { left: number[]; right: number[] }
+
+function wallY(ys: number[] | undefined, springY: number, i: number): number {
+  return ys ? ys[i] : springY * (i / WALL_SEGMENTS)
+}
+
 /** Floor to spring, inclusive both ends (spring supplies the arch's own
  *  start point, which the arch never repeats). */
-function leftWallAscending(x: number, springY: number): Point2[] {
+function leftWallAscending(x: number, springY: number, ys?: number[]): Point2[] {
   const points: Point2[] = []
-  for (let i = 0; i <= WALL_SEGMENTS; i++) {
-    points.push({ x, y: springY * (i / WALL_SEGMENTS) })
-  }
+  for (let i = 0; i <= WALL_SEGMENTS; i++) points.push({ x, y: wallY(ys, springY, i) })
   return points
 }
 
 /** Spring to floor, EXCLUDING spring (the arch already supplied it) and
- *  INCLUDING floor. */
-function rightWallDescending(x: number, springY: number, bulgeAmountM: number): Point2[] {
+ *  INCLUDING floor. The dent's hump follows the vertex's own HEIGHT, not
+ *  its index, so an uneven subdivision still dents the same shape. */
+function rightWallDescending(
+  x: number, springY: number, bulgeAmountM: number, ys?: number[],
+): Point2[] {
   const points: Point2[] = []
   for (let i = WALL_SEGMENTS - 1; i >= 0; i--) {
-    const frac = i / WALL_SEGMENTS
-    const dent = bulgeAmountM * wallBulgeHump(frac)
-    points.push({ x: x - dent, y: springY * frac })
+    const y = wallY(ys, springY, i)
+    const dent = bulgeAmountM * wallBulgeHump(springY > 0 ? y / springY : 0)
+    points.push({ x: x - dent, y })
   }
   return points
 }
@@ -89,7 +145,14 @@ function archQuarter(
   const points: Point2[] = []
   for (let i = 1; i <= ARCH_HALF_SEGMENTS; i++) {
     const frac = i / ARCH_HALF_SEGMENTS
-    const theta = sweepUp ? frac * (Math.PI / 2) : (Math.PI / 2) * (1 - frac)
+    // Biased toward theta = 0, which is the SPRINGING on both quarters —
+    // see ARCH_SPRING_BIAS. frac = 1 still lands exactly on theta = PI/2
+    // (the crown) going up and exactly on 0 (the spring) coming down, so
+    // the two quarters still meet the same crown point and the same
+    // spring points they always did.
+    const theta = sweepUp
+      ? (Math.PI / 2) * Math.pow(frac, ARCH_SPRING_BIAS)
+      : (Math.PI / 2) * Math.pow(1 - frac, ARCH_SPRING_BIAS)
     points.push({
       x: crownX + (fromX - crownX) * Math.cos(theta),
       y: fromY + (crownY - fromY) * Math.sin(theta),
@@ -103,11 +166,14 @@ function archQuarter(
  * @param heightM    Apex height, y = 0 at the floor.
  * @param asymmetry  Per-z shape variance (vaultAsymmetry.ts). Defaults to
  *   a symmetric profile for any caller that doesn't need the R1.2 carving.
+ * @param walls      Per-wall vertex heights (wallSampling.ts). Omitted,
+ *   both walls are subdivided evenly.
  */
 export function buildVaultProfile(
   halfWidth: number,
   heightM: number,
   asymmetry: VaultAsymmetry = SYMMETRIC_VAULT,
+  walls?: WallSamples,
 ): VaultProfile {
   const { springFracLeft, springFracRight, crownOffsetM, bulgeAmountM } = asymmetry
   const springHeightLeft = heightM * springFracLeft
@@ -117,10 +183,10 @@ export function buildVaultProfile(
   const crownY = heightM
 
   const points: Point2[] = [
-    ...leftWallAscending(-halfWidth, springHeightLeft),
+    ...leftWallAscending(-halfWidth, springHeightLeft, walls?.left),
     ...archQuarter(-halfWidth, springHeightLeft, crownX, crownY, true),
     ...archQuarter(halfWidth, springHeightRight, crownX, crownY, false),
-    ...rightWallDescending(halfWidth, springHeightRight, bulgeAmountM),
+    ...rightWallDescending(halfWidth, springHeightRight, bulgeAmountM, walls?.right),
   ]
 
   return { points, halfWidth, springHeightLeft, springHeightRight }

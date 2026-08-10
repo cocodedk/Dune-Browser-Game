@@ -70,7 +70,7 @@ function tierSegment(index: number, z0: number, z1: number, materials: PaletteMa
   const depth = Math.abs(z1 - z0)
   const mesh = new Mesh(
     new BoxGeometry(outerX - innerX, TIER_THICKNESS_M, depth),
-    materials.rockGlowlit,
+    materials.stoneWorn,
   )
   mesh.name = `galleryTierSlab${index}`
   mesh.position.set(innerX + (outerX - innerX) / 2, TIER_TOP_Y_M - TIER_THICKNESS_M / 2, (z0 + z1) / 2)
@@ -101,7 +101,7 @@ function buildTierStair(materials: PaletteMaterials): Group {
     // tallest (last) reaches only one stepRun, tucked against the tier —
     // same inversion as galleryRamp.ts and for the same reason.
     const reach = stepRun * (STAIR_STEP_COUNT - i)
-    const mesh = new Mesh(new BoxGeometry(STAIR_WIDTH_M, topY, reach), materials.rock)
+    const mesh = new Mesh(new BoxGeometry(STAIR_WIDTH_M, topY, reach), materials.stone)
     mesh.name = `galleryTierStairStep${i}`
     mesh.position.set(innerX + STAIR_WIDTH_M / 2, topY / 2, STAIR_FAR_Z_M + reach / 2)
     group.add(mesh)
@@ -121,7 +121,7 @@ function buildTierTermination(materials: PaletteMaterials): Mesh {
   const innerX = outerX - TERMINATION_REACH_M
   const mesh = new Mesh(
     new BoxGeometry(TERMINATION_REACH_M, TERMINATION_TOP_Y_M, TERMINATION_DEPTH_M),
-    materials.rock,
+    materials.stone,
   )
   mesh.name = 'galleryTierTerminationPier'
   mesh.position.set(innerX + TERMINATION_REACH_M / 2, TERMINATION_TOP_Y_M / 2, (z0 + z1) / 2)
