@@ -56,7 +56,17 @@ export default defineConfig({
           }
 
           if (id.includes('/landscape-shop/')) {
-            return `landscape-${id.split('/landscape-shop/')[1].split('/')[0]}`
+            const shop = id.split('/landscape-shop/')[1].split('/')[0]
+            // A single bake's Int16/Uint16 payload can still blow the
+            // 150,000-byte budget on its own (landscape-shop/cliff's
+            // massif: 386 KB of plain JSON, still ~192 KB quantized —
+            // tools/bake/quantize.mjs's header has the arithmetic). Its own
+            // named chunk, split from the shop's code and every other bake,
+            // is what CODEX.md's bundle-budget section now documents as the
+            // multi-chunk fallback.
+            if (id.endsWith('BakeIndex.json')) return `landscape-${shop}-index`
+            if (id.endsWith('BakeGeo.json')) return `landscape-${shop}-geo`
+            return `landscape-${shop}`
           }
 
           if (!id.includes('node_modules')) {

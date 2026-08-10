@@ -173,3 +173,8 @@ function fillGaps(zs, fallback) {
 function round2(value) {
   return Math.round(value * 100) / 100
 }
+
+// R4 quantization (Int16/Uint16 positions+index, base64) lives in
+// quantize.mjs, split out once this file crossed the 200-line rule — see
+// its header for the byte-budget arithmetic.
+export { quantizePositions, quantizeIndex, base64Of } from './quantize.mjs'

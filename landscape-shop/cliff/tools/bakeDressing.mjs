@@ -31,7 +31,7 @@ import {
   DRESS_FRONT_Z, DRESS_HALF_WIDTH_M, DRESS_TRIANGLE_BUDGET,
 } from './bake/dressPlan.mjs'
 import { SAND_PIECES } from './bake/dressSand.mjs'
-import { weld } from './bake/pack.mjs'
+import { weld, quantizePositions, quantizeIndex, base64Of } from './bake/pack.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = resolve(HERE, '..', '..', '..')
@@ -63,6 +63,24 @@ for (const family of ['rock', 'sand', 'goods']) {
 }
 
 const triangles = Object.values(families).reduce((sum, f) => sum + f.index.length / 3, 0)
+
+// report()/assertDressing() below read `families` as plain arrays (the
+// in-memory, pre-quantization shape) so their bounds/triangle-count maths
+// stays untouched; `familiesQ` is the quantized shape that actually gets
+// written (pack.mjs's own header has the byte-budget arithmetic — same
+// R4 pass as tools/bakeMassif.mjs, at this shop's own per-family weld
+// quantum: WELD_CM above IS the quantize scale, so nothing here rounds a
+// second time). model/dressing.ts's bakeCodec.ts is the decode side.
+const familiesQ = {}
+for (const [family, data] of Object.entries(families)) {
+  familiesQ[family] = {
+    scale: WELD_CM[family],
+    triangles: data.index.length / 3,
+    positionsQ: base64Of(quantizePositions(data.positions, WELD_CM[family])),
+    indexQ: base64Of(quantizeIndex(data.index, data.positions.length / 3)),
+  }
+}
+
 const bake = {
   generatedBy: 'landscape-shop/cliff/tools/bakeDressing.mjs',
   derivation: 'Reshaped derivative of licensed feedstock (see tools/bake/dressPlan.mjs and ' +
@@ -79,10 +97,10 @@ const bake = {
     triangles: slices.get(piece.name).to - slices.get(piece.name).from,
     min: piece.min, max: piece.max, centroid: piece.centroid,
   })),
-  families,
+  families: familiesQ,
 }
 
-report(bake)
+report({ ...bake, families })
 assertDressing(pieces)
 writeFileSync(OUT, JSON.stringify(bake))
 console.log(`wrote ${OUT} (${(JSON.stringify(bake).length / 1024).toFixed(1)} KB)`)

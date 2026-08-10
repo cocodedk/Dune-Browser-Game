@@ -6,8 +6,13 @@
 // non-uniformly scaled, rotated, mirrored, sheared, cap-tapered, noise-
 // displaced and welded into one formation. The raw feedstock is gitignored
 // and is never committed (docs/gauntlet-loop.md, "Sourced assets"); this
-// derivative is. Nothing here loads a GLB at runtime and no test needs a
-// decoder: the bake is plain JSON of numbers.
+// derivative is. Nothing here loads a GLB at runtime.
+//
+// R4: split three ways and quantized (tools/bake/pack.mjs's header has the
+// byte-budget arithmetic) — massifBake.json (this file's METADATA: hierarchy,
+// strata, footprint, bounds, outline, gateField), massifBakeGeo.json
+// (positionsQ, Int16 decimetres) and massifBakeIndex.json (indexQ, Uint16).
+// bakeCodec.ts decodes the last two back into the plain arrays below.
 //
 // toNonIndexed() is deliberate. The feedstock's own shape language is
 // stacked strata and hard facets, and that only reads with FLAT normals —
@@ -15,7 +20,10 @@
 
 import { BackSide, BufferAttribute, BufferGeometry, DoubleSide, Mesh, MeshStandardMaterial } from 'three'
 import { PALETTE } from '../spec'
-import bake from './massifBake.json'
+import bakeMeta from './massifBake.json'
+import bakeGeo from './massifBakeGeo.json'
+import bakeIndex from './massifBakeIndex.json'
+import { decodeQuantizedPositions, decodeIndex } from './bakeCodec'
 
 /** One instance's contribution to the formation, as the bake measured it:
  *  solid volume (signed-tetrahedron, so rotation cannot inflate it) and
@@ -38,7 +46,7 @@ export interface BakedStrata {
   plane: number[]
 }
 
-export interface MassifBake {
+export interface MassifBakeMeta {
   triangles: number
   vertices: number
   masses: number
@@ -51,16 +59,31 @@ export interface MassifBake {
     minX: number; maxX: number; minY: number; maxY: number
     nx: number; ny: number; noRock: number; z: number[]
   }
-  positions: number[]
-  index: number[]
 }
 
-export const MASSIF_BAKE = bake as MassifBake
+/** The metadata plus the two quantized fields, RAW — bakeSeam.test.ts
+ *  decodes `positionsQ`/`indexQ` itself (via the same bakeCodec.ts this
+ *  file uses) so the guard exercises the real codec, not a pre-decoded
+ *  convenience field only this module trusts. */
+export interface MassifBake extends MassifBakeMeta {
+  scale: number
+  positionsQ: string
+  indexQ: string
+}
+
+export const MASSIF_BAKE: MassifBake = {
+  ...(bakeMeta as MassifBakeMeta),
+  scale: (bakeGeo as { scale: number }).scale,
+  positionsQ: (bakeGeo as { positionsQ: string }).positionsQ,
+  indexQ: (bakeIndex as { indexQ: string }).indexQ,
+}
 
 export function buildMassif(): Mesh {
+  const positions = decodeQuantizedPositions(MASSIF_BAKE.positionsQ, MASSIF_BAKE.scale)
+  const index = decodeIndex(MASSIF_BAKE.indexQ)
   const indexed = new BufferGeometry()
-  indexed.setAttribute('position', new BufferAttribute(new Float32Array(MASSIF_BAKE.positions), 3))
-  indexed.setIndex(MASSIF_BAKE.index)
+  indexed.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
+  indexed.setIndex(index)
   const geometry = indexed.toNonIndexed()
   indexed.dispose()
   geometry.computeVertexNormals()

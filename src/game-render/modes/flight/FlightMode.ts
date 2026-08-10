@@ -22,6 +22,7 @@ import { fogColorFor } from '../strategic/DesertSky'
 import { currentTravelProgress } from '../../../game-engine/TravelSystem'
 import { positionAt, chaseCameraAt, yawOf, bankAt, pitchAt } from './FlightPath'
 import { createOrnithopter } from './Ornithopter'
+import { createCliffMassif } from './CliffMassif'
 import type { FlightArc } from './FlightPath'
 
 const DAY_SECONDS = 60
@@ -87,6 +88,13 @@ export function createFlightMode(
   }
   const heading = yawOf(arc)
 
+  // The release destination-as-landform (docs/PRD/dune92/04-asset-pipeline.md):
+  // CliffMassif.ts owns scale (1:1, true metres), orientation and seating —
+  // this mode only mounts and disposes it. Lit by the mode's own sun/fog
+  // below, same as the dune terrain; no per-mode material policy of its own.
+  const massif = createCliffMassif(arc, heightfield)
+  scene.add(massif.group)
+
   camera.near = 1
   camera.far = FIELD_SIZE * 3
   camera.updateProjectionMatrix()
@@ -138,9 +146,11 @@ export function createFlightMode(
       scene.remove(terrain.mesh)
       scene.remove(sky.mesh)
       scene.remove(craft.group)
+      scene.remove(massif.group)
       lighting.dispose()
       terrain.dispose()
       craft.dispose()
+      massif.dispose()
       sand.dispose()
       sky.dispose()
       scene.fog = null

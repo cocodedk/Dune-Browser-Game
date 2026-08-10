@@ -27,6 +27,7 @@ import { BufferAttribute, BufferGeometry, Mesh } from 'three'
 import { PALETTE } from '../spec'
 import { flatShade, meshFrom } from './grid'
 import { interiorMaterial } from './socketTone'
+import { decodeQuantizedPositions, decodeIndex } from './bakeCodec'
 import bake from './dressingBake.json'
 
 /** One prop's slice of its family's merged triangle list, and where it ended
@@ -47,9 +48,19 @@ export interface DressPiece {
   centroid: number[]
 }
 
+/** R4: positions/index are quantized (Int16/Uint16, base64 — tools/bake/
+ *  pack.mjs's header has the byte-budget arithmetic) at `scale` units per
+ *  metre, the SAME quantum tools/bakeDressing.mjs's own weld() call used
+ *  for this family (rock/sand: decimetre; goods: centimetre, a tenth of a
+ *  sack), so decoding adds no precision loss beyond what the weld already
+ *  committed to. bakeCodec.ts is the decode side; `triangles` is stored
+ *  plain so pieceIndexFor below never has to decode just to measure a
+ *  length. */
 export interface DressFamily {
-  positions: number[]
-  index: number[]
+  scale: number
+  triangles: number
+  positionsQ: string
+  indexQ: string
 }
 
 export interface DressingBake {
@@ -63,9 +74,11 @@ export const DRESSING_BAKE = bake as DressingBake
 export const DRESS_MESHES = ['dressRock', 'dressSand', 'dressGoods'] as const
 
 function geometryOf(family: DressFamily): BufferGeometry {
+  const positions = decodeQuantizedPositions(family.positionsQ, family.scale)
+  const index = decodeIndex(family.indexQ)
   const geometry = new BufferGeometry()
-  geometry.setAttribute('position', new BufferAttribute(new Float32Array(family.positions), 3))
-  geometry.setIndex(family.index)
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
+  geometry.setIndex(index)
   geometry.computeVertexNormals()
   return geometry
 }
@@ -87,7 +100,7 @@ export function buildDressing(): Mesh[] {
 
 /** The piece a triangle of `family` belongs to, by name. Built once. */
 export function pieceIndexFor(family: string): string[] {
-  const total = DRESSING_BAKE.families[family as 'rock'].index.length / 3
+  const total = DRESSING_BAKE.families[family as 'rock'].triangles
   const out = new Array<string>(total).fill('')
   for (const piece of DRESSING_BAKE.pieces) {
     if (piece.family !== family) continue

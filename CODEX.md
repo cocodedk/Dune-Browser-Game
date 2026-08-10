@@ -149,7 +149,12 @@ Current budget classes:
 - `game-*.js`: `200_000` bytes
 - `vehicle-*.js`: `150_000` bytes — one chunk per `vehicle-shop/<name>/` release
 - `character-*.js`: `150_000` bytes — one chunk per `character-shop/<name>/` release
-- `landscape-*.js`: `150_000` bytes — one chunk per `landscape-shop/<name>/` release
+- `landscape-*.js`: `150_000` bytes — one chunk per `landscape-shop/<name>/` release,
+  each budgeted separately. Usually one chunk; `vite.config.ts`'s `manualChunks` splits
+  a shop's own baked geometry into `landscape-<name>-geo`/`landscape-<name>-index`
+  alongside the default `landscape-<name>` (code + smaller bakes) when a single bake's
+  quantized payload alone would not fit in one chunk (`landscape-cliff`'s massif bake
+  is the first case — see `landscape-shop/cliff/tools/bake/quantize.mjs`).
 - fallback `*.js`: `500_000` bytes
 
 Do not "fix" a budget failure by only raising the threshold unless there is a clear, justified reason.

@@ -12,18 +12,31 @@ import { describe, it, expect } from 'vitest'
 import type { Object3D, Mesh } from 'three'
 import { createCliff } from './model/Cliff'
 import { MASSIF_BAKE } from './model/massif'
+import { decodeQuantizedPositions, decodeIndex } from './model/bakeCodec'
 import { FOOTPRINT } from './spec'
 import { triangleCountOf } from './testHelpers'
 
+// Decoded HERE, independently of model/massif.ts's own call to the same
+// codec — R4 (tools/bake/pack.mjs's header has the byte-budget arithmetic):
+// the guard has to exercise the real positionsQ/indexQ/scale round trip,
+// not just agree with whatever massif.ts already did with them.
+function decodedGeometry(): { positions: number[]; index: number[] } {
+  return {
+    positions: decodeQuantizedPositions(MASSIF_BAKE.positionsQ, MASSIF_BAKE.scale),
+    index: decodeIndex(MASSIF_BAKE.indexQ),
+  }
+}
+
 describe('seam: the committed bake and the built massif are the same object', () => {
   it('the bake is present and self-consistent', () => {
-    expect(MASSIF_BAKE.positions.length % 3).toBe(0)
-    expect(MASSIF_BAKE.index.length % 3).toBe(0)
-    expect(MASSIF_BAKE.vertices).toBe(MASSIF_BAKE.positions.length / 3)
-    expect(MASSIF_BAKE.triangles).toBe(MASSIF_BAKE.index.length / 3)
+    const { positions, index } = decodedGeometry()
+    expect(positions.length % 3).toBe(0)
+    expect(index.length % 3).toBe(0)
+    expect(MASSIF_BAKE.vertices).toBe(positions.length / 3)
+    expect(MASSIF_BAKE.triangles).toBe(index.length / 3)
     expect(MASSIF_BAKE.masses).toBeGreaterThanOrEqual(3)
     // Every index must address a real vertex, or toNonIndexed() emits NaN.
-    expect(Math.max(...MASSIF_BAKE.index)).toBeLessThan(MASSIF_BAKE.vertices)
+    expect(Math.max(...index)).toBeLessThan(MASSIF_BAKE.vertices)
   })
 
   it('the built massif mesh has exactly the bake triangle count', () => {
@@ -128,7 +141,7 @@ describe('seam: the formation reads as one silhouette, no saddle drops to open s
   const WINDOW_M = 60
 
   it('no saddle drops below 70% of its lower flanking peak', () => {
-    const crest = crestByColumn(MASSIF_BAKE.positions, BAND_MIN_X, BAND_MAX_X, BIN_M)
+    const crest = crestByColumn(decodedGeometry().positions, BAND_MIN_X, BAND_MAX_X, BIN_M)
     const worst = worstSaddleRatio(crest, WINDOW_M / BIN_M)
     // R1.4 state (pre-fix) measured 27.6% here, the hero/westBastion saddle
     // reading as sky; R1.5's westBastion reshape got it to 56.5% and the bar

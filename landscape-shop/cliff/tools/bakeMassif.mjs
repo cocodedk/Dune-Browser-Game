@@ -19,9 +19,13 @@ import { fileURLToPath } from 'node:url'
 import { readGlbPrimitive, normalizeSource } from './bake/glb.mjs'
 import { INSTANCES, FEEDSTOCK } from './bake/instances.mjs'
 import { compose, assertComposition, TARGET } from './bake/compose.mjs'
-import { weld, frontOutline, frontField } from './bake/pack.mjs'
+import { weld, frontOutline, frontField, quantizePositions, quantizeIndex, base64Of } from './bake/pack.mjs'
 import { collapseNeedles } from './bake/needles.mjs'
 import { refineFacets } from './bake/refine.mjs'
+
+// Matches weld()'s own default ROUND (decimetre) -- see pack.mjs's header:
+// quantizing at the weld's own quantum adds no precision loss.
+const SCALE = 10
 
 // R3.2, the two mesh-quality passes. Both run on the WELDED formation, where
 // a shared edge is a shared pair of vertex indices, and both are followed by
@@ -36,7 +40,9 @@ const FACETS = { frontZ: -150, frontEdge: 30, backEdge: 45 }
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = resolve(HERE, '..', '..', '..')
-const OUT = join(HERE, '..', 'src', 'model', 'massifBake.json')
+const OUT_META = join(HERE, '..', 'src', 'model', 'massifBake.json')
+const OUT_GEO = join(HERE, '..', 'src', 'model', 'massifBakeGeo.json')
+const OUT_INDEX = join(HERE, '..', 'src', 'model', 'massifBakeIndex.json')
 
 // Mirrors model/socket.ts: the deepest surface of the carved entrance that is
 // meant to be SEEN. Rock in front of it would swallow the gate, so
@@ -88,7 +94,19 @@ const strata = packed.ranges.map((range, i) => ({
   to: range.to,
   plane: composed.planes[i].map(round6),
 }))
-const bake = {
+const triangles = packed.index.length / 3
+const vertices = packed.positions.length / 3
+
+// R4 CHUNK BUDGET (pack.mjs's own header has the arithmetic): plain-JSON
+// positions+index alone ran 386 KB, over any single 150,000-byte
+// landscape-*.js chunk. Quantized+base64'd they are still ~192 KB together
+// — smaller, but still too big for ONE chunk alongside this shop's model
+// code and the dressing bake. Split into three files instead: META (this
+// object, everything BUT the two big arrays) lands in the shop's default
+// chunk with the code and dressingBake.json; GEO and INDEX get their own
+// filename-keyed chunks (vite.config.ts's manualChunks). model/massif.ts
+// reads all three and merges them back into one MASSIF_BAKE object.
+const meta = {
   generatedBy: 'landscape-shop/cliff/tools/bakeMassif.mjs',
   derivation: 'Reshaped derivative of licensed feedstock (see tools/bake/instances.mjs). ' +
     `${composed.masses} instances, non-uniformly scaled, rotated, mirrored, sheared, ` +
@@ -100,26 +118,32 @@ const bake = {
   // hierarchy a measurable fact instead of a claim (bakeSeam.test.ts).
   hierarchy: composed.hierarchy,
   strata,
-  triangles: packed.index.length / 3,
-  vertices: packed.positions.length / 3,
+  triangles,
+  vertices,
   bounds: { min: bounds.min.map(round2), max: bounds.max.map(round2) },
   outline,
   gateField,
-  positions: packed.positions,
-  index: packed.index,
 }
+const geo = { scale: SCALE, positionsQ: base64Of(quantizePositions(packed.positions, SCALE)) }
+const index = { indexQ: base64Of(quantizeIndex(packed.index, vertices)) }
 
-writeFileSync(OUT, JSON.stringify(bake))
-const bytes = JSON.stringify(bake).length
-console.log(`baked ${bake.masses} masses -> ${bake.triangles} tris, ${bake.vertices} verts`)
-console.log(`bounds min ${bake.bounds.min.join(', ')}  max ${bake.bounds.max.join(', ')}`)
-for (const mass of bake.hierarchy.slice(0, 9)) {
+writeFileSync(OUT_META, JSON.stringify(meta))
+writeFileSync(OUT_GEO, JSON.stringify(geo))
+writeFileSync(OUT_INDEX, JSON.stringify(index))
+const metaBytes = JSON.stringify(meta).length
+const geoBytes = JSON.stringify(geo).length
+const indexBytes = JSON.stringify(index).length
+console.log(`baked ${meta.masses} masses -> ${triangles} tris, ${vertices} verts`)
+console.log(`bounds min ${meta.bounds.min.join(', ')}  max ${meta.bounds.max.join(', ')}`)
+for (const mass of meta.hierarchy.slice(0, 9)) {
   const height = (mass.max[1] - mass.min[1]).toFixed(1)
   console.log(`  ${mass.name.padEnd(14)} ${String(mass.volumeM3).padStart(9)} m3  h ${height.padStart(6)}  ` +
     `x ${mass.min[0].toFixed(0)}..${mass.max[0].toFixed(0)}`)
 }
-console.log(`hero/next volume ratio ${(bake.hierarchy[0].volumeM3 / bake.hierarchy[1].volumeM3).toFixed(2)}`)
-console.log(`wrote ${OUT} (${(bytes / 1024).toFixed(1)} KB)`)
+console.log(`hero/next volume ratio ${(meta.hierarchy[0].volumeM3 / meta.hierarchy[1].volumeM3).toFixed(2)}`)
+console.log(`wrote ${OUT_META} (${(metaBytes / 1024).toFixed(1)} KB)`)
+console.log(`wrote ${OUT_GEO} (${(geoBytes / 1024).toFixed(1)} KB)`)
+console.log(`wrote ${OUT_INDEX} (${(indexBytes / 1024).toFixed(1)} KB)`)
 
 function round2(value) {
   return Math.round(value * 100) / 100
