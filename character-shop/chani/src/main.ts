@@ -1,0 +1,56 @@
+// character-shop/chani/src/main.ts
+// Minimal dev harness: scene, camera, renderer, resize, render loop.
+// Not a reference implementation — replace this with the shop's own
+// stage/camera modules as the build grows; it exists only so the scaffold
+// boots and shows something. The model is static (no update() — see
+// contracts.ts); the loop just re-renders the unchanging scene. Any motion
+// added to this harness later must stay camera-only.
+
+import { Scene, PerspectiveCamera, WebGLRenderer, Color } from 'three'
+import { createChani } from './model/Chani'
+import { installDebugHandle } from './debug'
+import { installLights, RIGS } from './lighting'
+
+const container = document.getElementById('app')
+if (!container) throw new Error('#app missing')
+
+const scene = new Scene()
+// Dark but not pure black: PALETTE.hair (spec.ts) is near-black, and reads
+// as invisible against a default WebGL clear — a lighter dark neutral keeps
+// the harness moody while every material stays legible.
+scene.background = new Color(RIGS.full.background)
+const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100)
+// -Z is the face-forward side (seam.test.ts, character-shop/docs/
+// gauntlet-loop.md), so the default preview looks from -Z back at the
+// figure to show the front, not the back.
+camera.position.set(0, 1.0, -2.6)
+camera.lookAt(0, 0.9, 0)
+
+const renderer = new WebGLRenderer({ antialias: true })
+renderer.setSize(window.innerWidth, window.innerHeight)
+container.appendChild(renderer.domElement)
+
+// Lighting lives in lighting.ts because R2 needs TWO rigs — R1's harness
+// light for the seven full-body views and a 3-point rig for bust and head
+// framings — and because the shoot tool has to record the numbers it used
+// in .shots/manifest.json.
+const lights = installLights(scene)
+
+const model = createChani()
+scene.add(model.root as never)
+installDebugHandle({ camera, scene, model, lights })
+
+function resize(): void {
+  const width = window.innerWidth
+  const height = window.innerHeight
+  camera.aspect = width / height
+  camera.updateProjectionMatrix()
+  renderer.setSize(width, height)
+}
+window.addEventListener('resize', resize)
+
+function frame(): void {
+  requestAnimationFrame(frame)
+  renderer.render(scene, camera)
+}
+requestAnimationFrame(frame)

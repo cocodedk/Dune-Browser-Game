@@ -59,14 +59,14 @@ Return prose. Do not edit any files.
 
 ## Why each part is there
 
-- **Blind sample first.** Once the critic has seen the full-resolution version it cannot
-  un-see it, and the identification answer becomes worthless.
-- **Several samples.** An artifact that varies — an animation phase, a breakpoint — can
-  present one unlucky frame. A single sample is not a verdict.
-- **The correctness question (4).** The reason this template exists. A critic asked only
+- **Blind sample first** — a critic that has seen the full-resolution version cannot un-see
+  it, and the identification answer becomes worthless.
+- **Several samples** — a varying artifact (animation phase, breakpoint) can present one
+  unlucky frame. A single sample is not a verdict.
+- **The correctness question (4)** — the reason this template exists: a critic asked only
   about quality will describe a defect in loving detail without recognising it as one.
-- **"A diplomatic answer is worthless".** Without it, critics hedge, and a hedged critique
+- **"A diplomatic answer is worthless"** — without it critics hedge, and a hedged critique
   produces a round that changes nothing.
-- **One gap (7).** A list of twelve gaps is a list nobody acts on. One is a next round.
-- **A score (8).** Makes progress legible across rounds and stops "it's better now" from
-  being the only signal.
+- **One gap (7)** — twelve gaps is a list nobody acts on; one is a next round.
+- **A score (8)** — makes progress legible across rounds and stops "it's better now" being
+  the only signal.

@@ -127,10 +127,16 @@ export default function ThreeContainer() {
       // an emissive workaround. The bake itself is throttled internally to
       // real palette changes — see env/skyEnvironment.ts — so calling this
       // every frame costs nothing on the frames that do not rebake.
-      const palette = paletteForTime(world.time, DAY_SECONDS)
-      handle.setExposure(palette.exposure)
-
       const scene = modes.scene
+      const palette = paletteForTime(world.time, DAY_SECONDS)
+      // A mode may pin exposure for its own scene (scene.userData.exposurePin)
+      // when it has real lit materials tuned against a fixed value rather than
+      // the hour curve — the sietch interior is the current example
+      // (sietchGate.ts). modes.update() above already ran sync() for this
+      // frame, so the pin is current before it is read here.
+      const exposurePin = scene?.userData.exposurePin as number | undefined
+      handle.setExposure(exposurePin ?? palette.exposure)
+
       if (scene) {
         handle.updateEnvironment(scene, palette)
         handle.render(scene, modes.active?.camera)

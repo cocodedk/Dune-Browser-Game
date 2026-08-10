@@ -62,12 +62,12 @@ read of the result. Say what you did not manage, and what you deliberately left 
 
 ## Notes on why this shape
 
-- **"You choose the approach"** is load-bearing. Prescribing the route produces the
-  solution you already imagined, which is rarely the best one available.
-- **Quote the critic verbatim.** Paraphrasing sands off the specificity.
-- **Name the unrun checks.** Gates lie by omission, and a builder cannot check for a hook
+- **"You choose the approach"** is load-bearing — prescribing the route produces the
+  solution you already imagined, rarely the best one available.
+- **Quote the critic verbatim** — paraphrasing sands off the specificity.
+- **Name the unrun checks** — gates lie by omission, and a builder cannot check for a hook
   it does not know exists.
-- **"with the frame each came from"** prevents the most common bad measurement: pairing a
+- **"with the frame each came from"** — prevents the most common bad measurement, pairing a
   reading from one sample against a reading from another.
-- **Asking what it left alone** surfaces the honest gaps. Builders will tell you if asked
-  and quietly omit it if not.
+- **Asking what it left alone** — builders surface honest gaps if asked, quietly omit them
+  if not.

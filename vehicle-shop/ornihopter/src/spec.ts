@@ -186,3 +186,13 @@ export const GEAR = {
   /** Stations aft of the nose for the three gear legs per side. */
   stationsFromNose: [4.2, 7.8, 11.4],
 } as const
+
+/**
+ * Nominal cruise wing-beat frequency, Hz — beatHzFor(CRUISE_THROTTLE) from
+ * flight/wingBeat.ts and flight/constants.ts (BEAT_HZ_MIN 1.5, BEAT_HZ_MAX
+ * 4.0, CRUISE_THROTTLE 0.5): 1.5 + (4.0 - 1.5) * 0.5. flight/ sits outside
+ * the public surface (model/**, contracts, spec) src/ may import, so this is
+ * promoted rather than reached across the fence. Nothing cross-checks it
+ * against flight/constants.ts automatically — update by hand if those move.
+ */
+export const CRUISE_BEAT_HZ = 2.75

@@ -10,6 +10,7 @@ import {
   Scene, OrthographicCamera, Mesh, PlaneGeometry,
   MeshBasicMaterial, CanvasTexture, Group, Color,
 } from 'three'
+import type { Camera } from 'three'
 import type { SceneModeId, WorldState, LocationKind } from '../../../types'
 import type { SceneMode } from '../../core/ModeManager'
 import { createHotspotLayer } from './HotspotLayer'
@@ -20,6 +21,7 @@ import { paintDiorama, FRAME_WIDTH, FRAME_HEIGHT } from './paintDiorama'
 import { createFraming } from './framing'
 import { paintHeightFor, paintWidthFor } from './paintResolution'
 import { createPointerRouter } from './pointerRouter'
+import { createSietchGate } from './sietchGate'
 import { INITIAL_CHARACTERS } from '../../../data/characters'
 import { paletteForTime } from '../../materials/Atmosphere'
 
@@ -72,7 +74,7 @@ export function createLocationMode(
 
   const pointer = createPointerRouter(canvas, {
     spots: () => spots,
-    hover: id => hotspots?.setHover(id),
+    hover: id => { hotspots?.setHover(id); sietchGate.setHover(id) },
     activate: id => { if (id === 'leave') onLeave?.(); else onSpot?.(id) },
   })
 
@@ -87,6 +89,11 @@ export function createLocationMode(
   })
   const mesh = new Mesh(geometry, material)
   root.add(mesh)
+
+  // Real 3D interior, mounted in place of the painted plane for kind 'sietch'.
+  const sietchGate = createSietchGate(scene, canvas, displayHeight, displayRatio,
+    () => { mesh.visible = false; if (hotspots) hotspots.mesh.visible = false },
+    () => { mesh.visible = true; if (hotspots) hotspots.mesh.visible = true })
 
   let currentKey = ''
   let hotspotKey = ''
@@ -163,19 +170,23 @@ export function createLocationMode(
   return {
     id: 'location' as SceneModeId,
     scene,
-    camera: view,
+    get camera(): Camera { return sietchGate.camera ?? view },
     update(deltaMs: number, world: WorldState): void {
       elapsedMs += deltaMs
       framing.refit()
-      ensurePainting(world)
+      sietchGate.sync(world) // shows the real 3D set instead, for kind 'sietch'
+      if (sietchGate.active) spots = sietchGate.spots
+      else ensurePainting(world)
       hotspots?.update(elapsedMs)
-      // Slow drift gives the flat backdrop a suggestion of depth.
+      // Slow drift; harmless while a sietch is shown, since those pieces are hidden.
       root.position.x = Math.sin(elapsedMs * 0.00016) * 26
       root.position.y = Math.cos(elapsedMs * 0.00012) * 14
+      sietchGate.update(elapsedMs)
     },
     dispose(): void {
       canvas?.removeEventListener('wheel', onWheel)
       pointer.dispose()
+      sietchGate.dispose()
       if (hotspots) {
         scene.remove(hotspots.mesh)
         hotspots.dispose()

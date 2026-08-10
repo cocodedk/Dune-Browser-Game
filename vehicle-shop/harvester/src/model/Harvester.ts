@@ -21,7 +21,7 @@ import { buildTracks } from './tracks'
 import { buildCutter } from './cutter'
 import { buildCab } from './cab'
 import { buildMachinery } from './machinery'
-import { buildDustPlumes } from '../stage/dust'
+import { buildDustPlumes } from './dust'
 
 export function createHarvester(): HarvesterModel {
   const root = new Group()
@@ -36,7 +36,7 @@ export function createHarvester(): HarvesterModel {
   const machinery = buildMachinery(m.dark, m.accent, m.trim)
   // I7 (immediate-improvements §7 dust): two plumes behind the rear
   // sprockets, parented here so they inherit the machine's own pose exactly
-  // like every other component — see stage/dust.ts for why they are
+  // like every other component — see ./dust.ts for why they are
   // deterministic and exactly zero while parked.
   const dust = buildDustPlumes()
 

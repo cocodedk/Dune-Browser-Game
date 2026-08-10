@@ -1,182 +1,81 @@
 // src/game-render/modes/flight/Ornithopter.test.ts
-// The hinge invariant — stage 22 section 1.1 and build Step 1. `Mesh` and
-// `Vector3` are plain three.js math objects with no WebGL dependency (see
-// shadowRig.test.ts and planetField.test.ts for the same pattern already
-// used in this repo), so building the real craft here needs no GL context.
+// The adapter's own contract, not the shop's: Ornithopter.ts's job is scale
+// mapping and per-frame FlightState synthesis over a model the shop's own
+// suite (vehicle-shop/ornihopter/src/seam.test.ts and friends) already
+// covers in full. The shop model is DataTexture-only and constructs with no
+// GL context — the same pattern Harvester.test.ts already proves for its own
+// shop model, so this suite builds the real craft rather than a stub.
 
 import { describe, it, expect } from 'vitest'
-import { Mesh, Vector3 } from 'three'
+import { Box3, Vector3 } from 'three'
+import type { Object3D } from 'three'
+import { OVERALL } from '@shop/ornihopter/src/spec'
 import { createOrnithopter, HULL_MAX_RADIUS } from './Ornithopter'
-import { BEAT_HZ } from './wingConfig'
 
-function wingMeshes(craft: ReturnType<typeof createOrnithopter>): Mesh[] {
-  const found: Mesh[] = []
-  craft.group.traverse((object) => {
-    if (object instanceof Mesh && object.name === 'wing') found.push(object)
-  })
-  return found
+// The Stage-22 craft this adapter replaced measured 41.810m nose-to-tail
+// (Box3 z-extent) before deletion — see Ornithopter.ts's own
+// PINNED_OLD_LENGTH_M comment for how that number was taken.
+const PINNED_OLD_LENGTH_M = 41.81041070398643
+const EXPECTED_SCALE = PINNED_OLD_LENGTH_M / OVERALL.length
+const OLD_HULL_MAX_RADIUS = 2.1
+
+/** Every descendant's rotation.x/y/z, in traversal order — enough to catch
+ *  any single wing pivot that turned between two calls. */
+function rotationSnapshot(root: Object3D): number[] {
+  const values: number[] = []
+  root.traverse((child) => { values.push(child.rotation.x, child.rotation.y, child.rotation.z) })
+  return values
 }
 
-/**
- * Indices of the vertex/vertices AT the wing's root — the point on the
- * span axis where the wing meets the fuselage, which is what section 1.1
- * measured as "root" (a single point, not the whole root cross-section:
- * that ring is the wing's own chord, up to 5.5 units wide, and is wider
- * than the hull by design — spar and membrane are a separate work stream).
- * WingRig.ts translates each wing's geometry so this point sits at local
- * (0,0,0), so it is found here as the vertex/vertices nearest that origin,
- * robust regardless of span, taper, or which side the wing is on.
- */
-function rootVertexIndices(mesh: Mesh): number[] {
-  const position = mesh.geometry.attributes.position
-  let minAbsX = Infinity
-  for (let i = 0; i < position.count; i++) minAbsX = Math.min(minAbsX, Math.abs(position.getX(i)))
-
-  let minRadiusSq = Infinity
-  for (let i = 0; i < position.count; i++) {
-    if (Math.abs(position.getX(i)) - minAbsX > 1e-6) continue
-    const y = position.getY(i)
-    const z = position.getZ(i)
-    minRadiusSq = Math.min(minRadiusSq, y * y + z * z)
-  }
-
-  const indices: number[] = []
-  for (let i = 0; i < position.count; i++) {
-    if (Math.abs(position.getX(i)) - minAbsX > 1e-6) continue
-    const y = position.getY(i)
-    const z = position.getZ(i)
-    if (y * y + z * z - minRadiusSq < 1e-6) indices.push(i)
-  }
-  return indices
-}
-
-describe('the wing root hinge (stage 22 section 1.1, build Step 1)', () => {
-  it('builds four named, hinged wings', () => {
+describe('createOrnithopter (release adapter)', () => {
+  it('wraps a non-empty shop model, scaled to the old craft\'s footprint', () => {
     const craft = createOrnithopter()
-    expect(wingMeshes(craft).length).toBe(4)
+    expect(craft.group.children.length).toBeGreaterThan(0)
+    expect(craft.group.scale.x).toBeCloseTo(EXPECTED_SCALE, 9)
     craft.dispose()
   })
 
-  it('keeps every wing root vertex within the fuselage radius across a full beat cycle', () => {
-    // This is the test the stage document asks for: it must fail against
-    // the code it replaces (see the contrast test below, which reproduces
-    // that formula directly) and pass here.
-    //
-    // Measured relative to the wing's pivot PARENT (driftNode, the
-    // fuselage's own frame) rather than absolute world space: the craft's
-    // slow attitude drift (section 2.3) and, in the real flight cinematic,
-    // its heading and bank, legitimately move the whole aircraft through
-    // world space — that is not a hinge failure. The hinge is a property
-    // of the wing's relationship to the hull, not the hull's to the world.
+  it('keeps the old craft\'s pinned nose-to-tail length within 10%', () => {
     const craft = createOrnithopter()
-    const meshes = wingMeshes(craft)
-    expect(meshes.length).toBe(4)
-
-    const periodMs = 1000 / BEAT_HZ
-    let maxRadiusFromHullAxis = 0
-    let maxExcursionFromRest = 0
-
-    for (const mesh of meshes) {
-      const pivot = mesh.parent! // WingRig's shoulder pivot; mesh itself never translates or rotates
-      pivot.updateMatrix() // Object3D.matrix starts as identity until synced at least once
-      const indices = rootVertexIndices(mesh)
-      const position = mesh.geometry.attributes.position
-      const restRelative = indices.map((i) => (
-        new Vector3(position.getX(i), position.getY(i), position.getZ(i)).applyMatrix4(pivot.matrix)
-      ))
-
-      // Three full periods: the invariant must hold everywhere, not just
-      // across the single cycle the spec happened to measure.
-      for (let step = 0; step <= 180; step++) {
-        const elapsedMs = (step / 180) * periodMs * 3
-        craft.update(elapsedMs)
-        pivot.updateMatrix()
-
-        indices.forEach((i, n) => {
-          const relative = new Vector3(position.getX(i), position.getY(i), position.getZ(i)).applyMatrix4(pivot.matrix)
-          const radius = Math.sqrt(relative.x * relative.x + relative.y * relative.y)
-          maxRadiusFromHullAxis = Math.max(maxRadiusFromHullAxis, radius)
-          maxExcursionFromRest = Math.max(maxExcursionFromRest, relative.distanceTo(restRelative[n]))
-        })
-      }
-    }
-
-    // Section 1.1 measured a +-5.67 unit excursion against a 2.6 unit hull
-    // radius — more than double it. The fixed hinge should not even come
-    // close: the root is the rotation origin, so it should barely move at
-    // all, well inside the hull.
-    expect(maxRadiusFromHullAxis).toBeLessThanOrEqual(HULL_MAX_RADIUS + 1e-6)
-    expect(maxExcursionFromRest).toBeLessThan(0.5)
-    craft.dispose()
-  })
-
-  it('both wings of a pair move the same vertical direction, not opposite (a mirrored-sign bug check)', () => {
-    const craft = createOrnithopter()
-    const [a, b] = wingMeshes(craft)
-    craft.update(1000 / BEAT_HZ / 4) // quarter beat: near peak flap
     craft.group.updateMatrixWorld(true)
-    const tipA = a.localToWorld(farthestLocalVertex(a))
-    const tipB = b.localToWorld(farthestLocalVertex(b))
-    const restY = 2.6 // both fore wings mount at the same height at rest
-    expect(Math.sign(tipA.y - restY)).toBe(Math.sign(tipB.y - restY))
+    const size = new Box3().setFromObject(craft.group).getSize(new Vector3())
+    expect(size.z).toBeGreaterThan(PINNED_OLD_LENGTH_M * 0.9)
+    expect(size.z).toBeLessThan(PINNED_OLD_LENGTH_M * 1.1)
     craft.dispose()
   })
-})
 
-function farthestLocalVertex(mesh: Mesh): Vector3 {
-  const position = mesh.geometry.attributes.position
-  let best = 0
-  let bestAbsX = 0
-  for (let i = 0; i < position.count; i++) {
-    const absX = Math.abs(position.getX(i))
-    if (absX > bestAbsX) {
-      bestAbsX = absX
-      best = i
-    }
-  }
-  return new Vector3(position.getX(best), position.getY(best), position.getZ(best))
-}
-
-describe('triangle budget (stage 22 section 2.5 / acceptance criterion 4)', () => {
-  it('stays at or under the ~10,000 triangle budget', () => {
+  it('beats the wings: some descendant transform changes between two updates', () => {
     const craft = createOrnithopter()
-    let triangles = 0
-    let meshCount = 0
-    craft.group.traverse((object) => {
-      if (!(object instanceof Mesh)) return
-      meshCount++
-      const geometry = object.geometry
-      const index = geometry.getIndex()
-      triangles += index ? index.count / 3 : geometry.attributes.position.count / 3
-    })
-    // Deliberate: the actual count is reporting data this stage's spec asks
-    // to be measured, not just asserted against a threshold.
-    console.log(`ornithopter: ${meshCount} meshes, ${triangles} triangles`)
-    expect(triangles).toBeLessThanOrEqual(10_000)
-    expect(triangles).toBeGreaterThan(296) // the primitive-built craft this replaces
+    craft.update(0) // first call: dt clamped, establishes the baseline pose
+    const before = rotationSnapshot(craft.group)
+    craft.update(500) // a real gap: dt clamps to the 0.1s ceiling and advances the beat
+    const after = rotationSnapshot(craft.group)
+
+    expect(after.length).toBe(before.length)
+    const changed = before.some((value, i) => value !== after[i])
+    expect(changed).toBe(true)
     craft.dispose()
   })
-})
 
-describe('for contrast: the see-saw pivot this replaces (section 1.1)', () => {
-  it('rotating about midspan sends the root +-5.67 units past a 2.6 unit hull', () => {
-    // Reproduces the formula this stage replaces: leftWing.rotation.z =
-    // beat * 0.34, with the mesh positioned at its own midspan (-17, 2.6)
-    // rather than at the fuselage. Confirms the numbers this stage's
-    // measurements are built on, and that the methodology above is
-    // discriminating — this would fail the bound it asserts.
-    const meshOriginY = 2.6
-    const rootLocalX = 17 // the wing's root end, in the old midspan-centred geometry
+  it('exports a finite, positive HULL_MAX_RADIUS in the neighbourhood of the old value', () => {
+    // The old hull was a body of revolution (radius 2.1, one value for every
+    // axis); the shop hull is not, so this is a scaled analogue derived from
+    // its widest single half-extent, not a bit-exact carryover — see
+    // Ornithopter.ts's own comment on HULL_MAX_RADIUS. The wide upper bound
+    // reflects that: a rectangular half-extent scaled the same way a
+    // circular radius was is a looser tolerance by construction.
+    expect(Number.isFinite(HULL_MAX_RADIUS)).toBe(true)
+    expect(HULL_MAX_RADIUS).toBeGreaterThan(OLD_HULL_MAX_RADIUS)
+    expect(HULL_MAX_RADIUS).toBeLessThan(OLD_HULL_MAX_RADIUS * 3)
+  })
 
-    let maxExcursion = 0
-    for (let i = 0; i <= 100; i++) {
-      const beat = Math.sin((i / 100) * Math.PI * 2)
-      const rotationZ = beat * 0.34
-      const worldY = meshOriginY + rootLocalX * Math.sin(rotationZ)
-      maxExcursion = Math.max(maxExcursion, Math.abs(worldY - meshOriginY))
-    }
+  it('disposes without throwing, and a second instance is independent', () => {
+    const first = createOrnithopter()
+    expect(() => first.dispose()).not.toThrow()
 
-    expect(maxExcursion).toBeCloseTo(5.67, 1)
-    expect(maxExcursion).toBeGreaterThan(HULL_MAX_RADIUS * 2)
+    const second = createOrnithopter()
+    expect(second.group.scale.x).toBeCloseTo(EXPECTED_SCALE, 9)
+    expect(() => second.update(16)).not.toThrow()
+    second.dispose()
   })
 })

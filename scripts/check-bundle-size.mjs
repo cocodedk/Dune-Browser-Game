@@ -8,6 +8,9 @@ const budgets = [
   { pattern: /^three-addons-.*\.js$/, maxBytes: 200_000 },
   { pattern: /^react-vendor-.*\.js$/, maxBytes: 250_000 },
   { pattern: /^game-.*\.js$/, maxBytes: 200_000 },
+  { pattern: /^vehicle-.*\.js$/, maxBytes: 150_000 },
+  { pattern: /^character-.*\.js$/, maxBytes: 150_000 },
+  { pattern: /^landscape-.*\.js$/, maxBytes: 150_000 },
   { pattern: /\.js$/, maxBytes: 500_000 },
 ]
 
