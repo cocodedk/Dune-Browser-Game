@@ -91,9 +91,14 @@ export interface WorldState {
   /**
    * Optional: retired campaign-completion authority (docs/PRD/game-completion/
    * 02-runtime-consolidation.md "Campaign status"). Never set on a canonical
-   * new campaign's save and dropped by save migration; kept optional, not
-   * removed, so already-loaded legacy state and the untouched GameLoop win
-   * check that still reads it continue to type-check.
+   * new campaign's save and dropped by save migration. GameLoop's PoC win
+   * check that used to read this was removed in WP01 (dayRunner.ts /
+   * legacy-authority-inventory.md category 3) — the field itself stays
+   * optional, not removed, only because files outside that package's scope
+   * still construct it: AISystem.test.ts's literal WorldState, the
+   * saveMigration test fixtures, and the spiceTripleCredit/sietchPayoutLoop
+   * baseline characterization tests (which this package must leave
+   * unmodified).
    */
   goalType?: 'control_all_villages' | 'survive_20_min';
   factionProfiles: FactionProfile[];

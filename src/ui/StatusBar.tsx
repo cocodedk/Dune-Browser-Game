@@ -2,7 +2,7 @@ import { useGameStore } from './store'
 import { EventBus } from '../EventBus'
 import type { Difficulty } from '../types'
 import { useState, useEffect } from 'react'
-import { palette, type as typo, button } from './theme'
+import { type as typo, button } from './theme'
 
 /** A labelled figure. Labels are words, not emoji — emoji do not scan. */
 function Readout({ label, value }: { label: string; value: string }) {
@@ -16,7 +16,7 @@ function Readout({ label, value }: { label: string; value: string }) {
 
 export default function StatusBar() {
   const { world, lastSaveTime, saveGame, loadGame, newGame } = useGameStore()
-  const { player, time, speed, goalAchieved, goalType, villages, difficulty } = world
+  const { player, time, speed, goalAchieved, difficulty } = world
   const [isMuted, setIsMuted] = useState(false)
 
   useEffect(() => {
@@ -29,11 +29,6 @@ export default function StatusBar() {
 
   const minutes = Math.floor(time / 60)
   const seconds = Math.floor(time % 60)
-  const playerVillages = villages.filter(v => v.owner === 'player').length
-
-  const goalText = goalType === 'control_all_villages'
-    ? `Villages: ${playerVillages}/${villages.length}`
-    : `Survive: ${minutes}m ${seconds}s / 20m`
 
   function setSpeed(s: number) {
     EventBus.emit('game:speed', { speed: s })
@@ -69,9 +64,6 @@ export default function StatusBar() {
       <Readout label="spice" value={player.spice.toFixed(1)} />
       <Readout label="troops" value={`${player.troops ?? 0}`} />
       <Readout label="influence" value={`${player.influence}`} />
-      <span style={{ ...styles.item, color: goalAchieved ? palette.good : palette.gold }}>
-        {goalAchieved ? 'RUN ENDED' : goalText}
-      </span>
       {!goalAchieved && (
         <span style={styles.item}>
           Speed:

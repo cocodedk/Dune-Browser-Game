@@ -13,13 +13,18 @@ import { harvestDay, resolveWorm } from '../troops/harvest'
 import { extractionTier } from '../troops/types'
 import { pruneSightings } from '../worms/wormsign'
 import { carriedKinds } from './carried'
+import type { RngService } from '../rng/rng'
 
 /**
  * Run one day of harvesting for every assigned crew.
  * Spice accrues continuously to the player's stock — the shipment event is
  * kept as the player-facing notification.
+ *
+ * `rng` is one seeded service instance for the whole day (see
+ * dayRunner.ts's header) — the worm roll below draws from it instead of
+ * Math.random(), per 02-runtime-consolidation.md "Randomness".
  */
-export function runHarvestDay(): void {
+export function runHarvestDay(rng: RngService): void {
   let dayTotal = 0
 
   for (const group of world.troopGroups) {
@@ -39,10 +44,11 @@ export function runHarvestDay(): void {
 
     // Worms. The rules for this were written and tested long ago and then
     // never called, so in practice no crew on Arrakis had ever been taken.
-    // Rolls come from Math.random at this mutation layer; the rules stay pure.
+    // Rolls come from the day's seeded rng at this mutation layer; the
+    // rules stay pure.
     const hasHarvester = kinds.includes('harvester') || kinds.includes('heavy_harvester')
     const hasThopter = kinds.includes('thopter') || kinds.includes('lr_thopter')
-    const worm = resolveWorm(hasHarvester, hasThopter, Math.random())
+    const worm = resolveWorm(hasHarvester, hasThopter, rng.next())
 
     if (worm.attacked) {
       world.wormSightings.push({ fieldId: field.id, atTime: world.time })

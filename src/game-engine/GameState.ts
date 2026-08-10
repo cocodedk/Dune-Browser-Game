@@ -55,7 +55,11 @@ export function createInitialState(seed: number = DEFAULT_SEED): WorldState {
     dialogue: null,
     events: [],
     goalAchieved: false,
-    goalType: 'control_all_villages',
+    // goalType is not seeded: the PoC win-condition check that read it was
+    // removed from GameLoop's campaign day path (WP01 quarantine, see
+    // legacy-authority-inventory.md category 3). The field itself stays
+    // optional on WorldState — see types.ts — because it is still
+    // constructed by test fixtures outside this package's scope.
     factionProfiles: (factionsData as unknown as FactionProfile[]).map(f => ({ ...f, relations: { ...f.relations }, goals: [...f.goals] })),
     regions: (regionsData as unknown as Region[]).map(r => ({ ...r })),
     sietches: INITIAL_SIETCHES.map(s => ({ ...s })),
@@ -114,23 +118,4 @@ export async function loadFromSave(): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-// Helper: check if player controls all villages.
-// A village counts as player-controlled when either:
-//   - village.owner === 'player' (direct control), OR
-//   - village.owner === 'fremen' AND the matching sietch is pledgedToPlayer
-//     (Fedaykin/Muad'Dib authority)
-export function playerControlsAll(): boolean {
-  return world.villages.every(v => {
-    if (v.owner === 'player') return true;
-    if (v.owner !== 'fremen') return false;
-    const sietch = world.sietches.find(s => s.villageId === v.id);
-    return sietch?.pledgedToPlayer === true;
-  });
-}
-
-// Helper: check PoC survival goal (survive 20 minutes = 1200 game-seconds at speed 1)
-export function hasPlayerSurvived(): boolean {
-  return world.time >= 1200;
 }

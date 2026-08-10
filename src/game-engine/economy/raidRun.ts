@@ -11,6 +11,7 @@ import {
 import { raidWarningDays } from '../prescience/prescience'
 import { carriedKinds } from './carried'
 import { CHARISMA_PER_RAID } from '../sietch/loyalty'
+import type { RngService } from '../rng/rng'
 
 /**
  * The Harkonnen raid clock.
@@ -18,8 +19,11 @@ import { CHARISMA_PER_RAID } from '../sietch/loyalty'
  * Raids target a pledged sietch and are resolved against whatever garrison is
  * standing there. A sietch with no crew present still defends — its people
  * fight — but badly, which is the cost of leaving it uncovered.
+ *
+ * `rng` is the day's one seeded service instance (see dayRunner.ts's
+ * header) — the combat roll below draws from it instead of Math.random().
  */
-export function runRaidCheck(): void {
+export function runRaidCheck(rng: RngService): void {
   const interval = raidInterval(world.act)
   if (interval === null) return
 
@@ -73,7 +77,7 @@ export function runRaidCheck(): void {
   const outcome = resolveCombat(
     { size: power / 2, militarySkill: 60, weapon: 'krys', defending: false },
     { size: defenderSize || 20, militarySkill: defenderSkill, weapon, defending: true },
-    Math.random(),
+    rng.next(),
   )
 
   const place = world.villages.find(v => v.id === target.villageId)

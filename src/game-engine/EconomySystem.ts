@@ -34,6 +34,15 @@ import { carriedKinds } from './economy/carried'
  *
  * Payment is automatic from stock: the player's decision is what they produced
  * before the deadline, not whether they remember to click a button on it.
+ *
+ * This mutates patience only — it does not write `world.ending`/
+ * `world.goalAchieved`. The act machine's day-boundary ending evaluation
+ * (economy/actRun.ts's runActCheck, which reads `world.quota.patience` via
+ * ActWorldView) is the sole ending writer, per
+ * docs/PRD/game-completion/02-runtime-consolidation.md "Campaign status":
+ * "`world.act` and `world.ending` are the only progression authority."
+ * dayRunner.ts runs this before runActCheck in the same day, so a
+ * patience-0 loss still lands the same day it always has.
  */
 export function runQuotaCheck(): void {
   if (!isDue(world.quota, currentDay())) return
@@ -68,13 +77,12 @@ export function runQuotaCheck(): void {
     )
   }
 
-  if (outcome.gameOver) {
-    world.goalAchieved = true
-    // Recorded, not just announced: without this the overlay had no way to
-    // know the run had ended badly, and captioned it a victory.
-    world.ending = 'loss_patience'
-    pushEvent('poc_goal_achieved', 'The Emperor recalls you. Arrakis is taken from your house.')
-  }
+  // outcome.gameOver (patience just hit 0) is deliberately not read here.
+  // runActCheck's evaluateEnding() re-derives it from world.quota.patience
+  // moments later in the same day and is the only writer of world.ending/
+  // world.goalAchieved — see this function's header comment. Writing here
+  // too used to duplicate 'poc_goal_achieved' with an identical event
+  // string; that duplicate write is what this collapse removes.
 }
 
 /**
