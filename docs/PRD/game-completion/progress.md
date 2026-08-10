@@ -72,3 +72,37 @@ reproduce.
 - Lead spot-verified: capture files, raid gate, auto-load, GoalExecutor
   narration, and the loss-ending raw artifact — all reproduced.
 - Next: evidence-auditor critic over the whole WP00 package.
+
+## Round 3 — WP00 evidence audit + fixes (2026-08-11)
+
+- **Critic verdict (fresh-context evidence auditor, `baseline/wp00-critic-verdict.md`):
+  7.5/10, `verified` NOT warranted.** Re-runs passed (16/16 tests, tsc clean),
+  both manifest recounts delta 0 (131 dialogue nodes, 19 locations, plus a
+  reverse-BFS closing the orphan-node open item at 0), live opening reproduction
+  matched every key number.
+- **Named gaps, all fixed by the lead this round:**
+  1. Endings coverage — three of five `EndingId` routes had no baseline row.
+     Added an "Endings coverage" table to `captures/captures.md`: `win_ecology`
+     blocked (act4-gated behind an act-2 exit the measured economy can't reach),
+     `loss_palace` blocked and **decorative** (`actRun.ts:25` hard-codes
+     `palaceHeld: true` — risk-register hit), `loss_abandoned` blocked (no
+     un-pledge path exists in production code + full quotas unreachable).
+  2. `actRun.ts:25` added to inventory category 3 (owner WP01); counts updated.
+  3. `DialogueSystem.ts:84-86` — a fourth independent `world.player.spice`
+     writer the inventory missed — added to category 6 (owner WP02).
+- **Did not reproduce (critic):** capture 1's index line claimed frame 191 /
+  ~3.3s; the shipped JSON is frame 814 / 13.65s. Index corrected to match the
+  artifact, correction labeled.
+- Next: critic delta re-audit of the three fixes → WP00 `verified` decision.
+- **Delta re-audit result: 9/10, `verified` warranted.** All three fixes checked
+  against source; the previously non-reproducing frame line now reproduces
+  (`jq`: frame 814 / 13.6497). Two cite-precision defects named as handoff
+  conditions and fixed by the lead in the same round: the `loss_patience` row now
+  credits the actual writer (`EconomySystem.ts:71-75` fires first at
+  `GameLoop.ts:112`; `transitions.ts:53` never evaluated — the two writers emit
+  byte-identical event strings, split authority WP01 collapses), and the
+  `loss_abandoned` row's no-unpledge wording now cites the production seed data
+  (`sietches.ts:4-22`) and `raidRun.ts:95`'s deliberate self-assign.
+- **WP00 → `verified` on the board.** Package evidence: inventory + manifest +
+  5 characterization test files (16 tests) + 8 captures + endings-coverage
+  table + `wp00-critic-verdict.md` (independent reviewer, two audit passes).

@@ -41,7 +41,7 @@ implementation starts.
 
 | ID | Package | Status | Depends on | Primary contract |
 |---|---|---|---|---|
-| WP00 | Baseline and contract fixtures | `in_progress` | — | `02`, `03`, `04` |
+| WP00 | Baseline and contract fixtures | `verified` | — | `02`, `03`, `04` |
 | WP01 | Runtime authority and seeded time | `planned` | WP00 | `02` |
 | WP02 | Command, pledge, crew, and tribute consolidation | `planned` | WP01 | `02` |
 | WP03 | Title, new run, and opening through Q1 | `planned` | WP02 | `03` |

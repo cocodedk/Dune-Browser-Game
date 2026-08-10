@@ -47,7 +47,11 @@ evidence, not cheating, per the task's honesty rule.
   immediately, then read back. Same `createInitialState()` as the PNG, not the
   same exact frame — noted inside the file's `note` field.
 - Frame/day at capture: PNG at frame ~229 / day 0 (~worldTime 3.9s). JSON at frame
-  191 / day 0 (~worldTime 3.3s).
+  814 / day 0 (worldTime 13.65, `save.state.time` 13.35) — the JSON was re-captured
+  after the PNG (its own `note` field records this); the two are the same
+  `createInitialState()` state but NOT the same frame. (Corrected in round 3: this
+  line previously carried the first capture attempt's frame 191 / ~3.3s identity,
+  which did not match the shipped `.raw.json`.)
 - Helper calls: none for the PNG. For the JSON: IndexedDB `delete('current')` via
   raw `indexedDB` calls (equivalent to production `deleteSave()`), then
   `browser_navigate`, then click **Save**, then read IndexedDB back.
@@ -229,6 +233,19 @@ half of the `&&` is never true. Proven directly, not inferred:
   because it is easy to misread as "day 12's event ran on day 12."
 
 ---
+
+## Endings coverage — one row per `EndingId` (added in round 3)
+
+`EndingId` (`src/game-engine/acts/transitions.ts:10-12`) has five values. Every
+route is either captured above or blocked with a code-cited proof:
+
+| EndingId | Baseline row | Evidence |
+|---|---|---|
+| `win_military` | captured — state 7a, **debug-forced** via `__DUNE__.endRun` | Neither real evaluator ever fired in baseline: the act-machine route is act4-gated (`transitions.ts:58-60`) and act 2 was never reachable (state 5); the PoC route (`GameLoop.ts:142-152`) requires controlling all 19 villages, never approached. |
+| `win_ecology` | `blocked` | Act4-only (`transitions.ts:59`: `greenRegions >= 3 && averagePledgedLoyalty >= 80`). The act1 exit in `evaluateActTransition` needs three fully-paid tributes plus three sworn sietches; state 5 measured 0 of 3 full tributes even with all 8 sietches pledged and harvesting, so act 2 — let alone act 4 — is unreachable in the baseline economy. |
+| `loss_patience` | captured — state 6, **organic** (production mechanics only) | Written by `EconomySystem.ts:71-75` (`runQuotaCheck`'s patience-0 loss), reached at day 28 with no forcing. Cite precision matters here: `runQuotaCheck()` runs at `GameLoop.ts:112` before `runActCheck()` at `:116`, so the act machine early-returns (`actRun.ts:47`) and `transitions.ts:53` — which encodes the same `patience <= 0` rule — never evaluated for this capture. The two writers emit byte-identical event strings, so the log alone cannot disambiguate them; WP01 collapses this split authority. (Corrected in round 3 delta re-audit; previously cited `transitions.ts:53`.) |
+| `loss_palace` | `blocked` — **decorative ending** | `src/game-engine/economy/actRun.ts:25` hard-codes `palaceHeld: true` in `actView()`, so `transitions.ts:54` (`if (!view.palaceHeld) return 'loss_palace'`) can never fire. No production or debug path sets it false. This is a live hit on the risk register's "One ending is decorative" row; recorded in the legacy-authority inventory (category 3, owner WP01). |
+| `loss_abandoned` | `blocked` | `transitions.ts:56` needs `pledgedCount === 0 && quotasPaid > 0`. Production seed data constructs all 19 sietches `pledgedToPlayer: false` (`src/data/sietches.ts:4-22`), but nothing anywhere transitions the flag true → false — `economy/raidRun.ts:95` even self-assigns it to preserve a pledge through a raid. So the route requires at least one fully-paid quota while never having pledged any sietch — and state 5 shows full quota payment is out of reach even WITH all eight sietches. Unreachable by both prongs. (Wording corrected in round 3 delta re-audit; previously said "only test fixtures construct it false".) |
 
 ## Findings (apply across all states above)
 
