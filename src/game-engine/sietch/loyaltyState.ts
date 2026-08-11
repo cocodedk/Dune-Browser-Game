@@ -5,8 +5,10 @@
 // pledged naming mismatch" rather than rename either side.
 //
 // SietchState calls the fact "pledgedToPlayer" — the vocabulary every other
-// engine module (SietchSystem, CombatSystem, the EventBus commands) already
-// shares. loyalty.ts's pure rule module calls the exact same fact "pledged",
+// engine module (SietchSystem, the EventBus commands) already shares.
+// (CombatSystem used to share it too, before its combat-pledge path died in
+// W2b and the file itself was deleted in W2e — legacy-authority-inventory.md
+// category 4.) loyalty.ts's pure rule module calls the exact same fact "pledged",
 // its own self-contained vocabulary, checked against nothing else. Two names
 // for one boolean; every live loyalty writer goes through these two pure
 // functions instead of re-deriving the mapping at each call site.

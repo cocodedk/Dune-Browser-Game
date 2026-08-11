@@ -1,8 +1,7 @@
 import { useGameStore, selectSietch } from './store'
 import { EventBus } from '../EventBus'
 import type { Village } from '../types'
-import SietchCommandSection from './SietchCommandSection'
-import AttackSection from './AttackSection'
+import PledgePanel from './PledgePanel'
 import PeopleHere from './PeopleHere'
 import TravelAction from './TravelAction'
 
@@ -54,7 +53,7 @@ export default function VillagePanel() {
       {/*
         Above the statistics on purpose. Talking to people is the primary verb
         at a location you are standing in, and this panel is long enough that
-        anything below the attack section falls off the bottom of a 800px
+        anything further down risked falling off the bottom of a 800px
         window — captured, the list rendered entirely below the fold with only
         its heading visible. It draws nothing when the player is elsewhere, so
         inspecting a distant village is unchanged.
@@ -96,23 +95,12 @@ export default function VillagePanel() {
         </>
       )}
 
-      <SietchCommandSection
+      <PledgePanel
         villageId={selectedVillage.id}
         villageName={selectedVillage.name}
         villageOwner={selectedVillage.owner}
         sietch={sietch}
         playerIsHere={isHere}
-      />
-
-      <AttackSection
-        villageId={selectedVillage.id}
-        villageName={selectedVillage.name}
-        villageOwner={selectedVillage.owner}
-        playerTroops={world.player.troops ?? 0}
-        playerSpice={world.player.spice}
-        playerTraveling={world.player.state === 'traveling'}
-        sietchPledged={sietch?.pledgedToPlayer ?? false}
-        scoutedDefense={world.scoutedDefense[selectedVillage.id]}
       />
 
       <div style={{ marginTop: 12 }}>

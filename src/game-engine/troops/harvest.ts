@@ -114,8 +114,9 @@ export interface WormOutcome {
 }
 
 /**
- * Resolve the daily worm roll. The roll is injected so tests are deterministic
- * — the same pattern CombatSystem already uses.
+ * Resolve the daily worm roll. The roll is injected so tests are
+ * deterministic — the same pattern every other rng-consuming rule uses
+ * (rng/rng.ts, threaded in by dayRunner.ts).
  */
 export function resolveWorm(
   hasHarvester: boolean,

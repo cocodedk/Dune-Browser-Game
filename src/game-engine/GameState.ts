@@ -44,9 +44,7 @@ export function createInitialState(seed: number = DEFAULT_SEED): WorldState {
       state: 'idle',
       travelTarget: null,
       arrivalTime: 0,
-      influence: 5,
       spice: 60,
-      troops: 0,
       prescience: 0,
     },
     aiTimers: {

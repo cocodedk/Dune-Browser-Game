@@ -14,10 +14,7 @@
 // world.rng mid-day.
 
 import { world } from './GameState'
-import { pushEvent } from './EventSystem'
 import { DAY_SECONDS, crossedDays } from './TimeSystem'
-import { updateVillages } from './VillageSystem'
-import { updateSietches } from './sietch/updateSietches'
 import { createRng } from './rng/rng'
 import {
   runHarvestDay, runProspectDay, runTributeCheck, runActCheck,
@@ -28,11 +25,15 @@ import {
 export function runDay(): void {
   const rng = createRng(world.rng)
 
-  // LEGACY PRODUCTION SEAM — WP02 removes; see legacy-authority-inventory.md
-  // category 2. Village production/collection (VillageSystem.updateVillages)
-  // duplicates crew harvest and is one of the two retired paths named in 02's
-  // "Current conflicts to retire" table; it is not this package's to remove.
-  updateVillages()
+  // LEGACY PRODUCTION SEAM REMOVED (WP02e, chunk W2e — see
+  // legacy-authority-inventory.md category 2). VillageSystem.updateVillages()
+  // used to run here: village.spice += productionRate, then
+  // collectPlayerSpice() skimmed 10% of every player-owned village's
+  // stockpile straight into world.player.spice, duplicating crew harvest.
+  // Both the call and the function are gone — VillageSystem.ts now exports
+  // only the pure village-diplomacy functions (checkOwnershipTransition,
+  // visitVillage, harkonnenAttack, harkonnenBribe) that TravelSystem and the
+  // quarantined AISystem still use.
 
   // Step 1: Finish task changeovers.
   // Step 2: Apply harvest and field depletion.
@@ -60,9 +61,13 @@ export function runDay(): void {
 
   // Step 7: Update loyalty neglect, morale, and persistent location state.
   // Sietch loyalty neglect is authored now (economy/sietchLoyaltyRun.ts,
-  // chunk W2b) — village loyalty neglect/rebellion still lives inside the
-  // legacy updateVillages() call above (untouched; that seam is not this
-  // chunk's). Morale neglect/drift has no day-boundary writer yet.
+  // chunk W2b). Village loyalty neglect/rebellion (VillageSystem's old
+  // updateVillages()) had no day-boundary caller left once chunk W2e removed
+  // the legacy seam above, so that check no longer runs at all — it was
+  // never named as a category-2 finding on its own merits; it only ran
+  // because it was bundled inside the same function as the player-crediting
+  // code that WAS the target. Morale neglect/drift has no day-boundary
+  // writer yet.
   runSietchLoyaltyDay()
 
   // Step 8: Evaluate act objectives and endings — the sole ending writer.
@@ -75,26 +80,16 @@ export function runDay(): void {
   // entry for the measured day.
   runActCheck()
 
-  // LEGACY PRODUCTION SEAM — WP02e removes; see legacy-authority-inventory.md
-  // category 2. The threshold-based sietch task/payout loop duplicates crew
-  // harvest/training and is the other retired path from that same table.
-  // Left BEFORE step 9 (not itself a numbered step) so its spice payout is
-  // already in `player.spice` by the time step 9 snapshots stock into the
-  // pending-settlement decision — the deadline should not read the player
-  // as short by income this same day's own seam is about to grant.
-  const sietchResult = updateSietches(world.sietches)
-  world.sietches = sietchResult.sietches
-  for (const payout of sietchResult.payouts) {
-    const village = world.villages.find(v => v.id === payout.villageId)
-    const name = village?.name ?? payout.villageId
-    if (payout.kind === 'spice') {
-      world.player.spice += payout.amount
-      pushEvent('spice_shipment_received', `Fremen at ${name} deliver ${payout.amount} spice`)
-    } else {
-      world.player.troops += payout.amount
-      pushEvent('fedaykin_ready', `${payout.amount} Fedaykin at ${name} ready for your command`)
-    }
-  }
+  // LEGACY PRODUCTION SEAM REMOVED (WP02e — see legacy-authority-inventory.md
+  // category 2). The threshold-based sietch task/payout loop
+  // (sietch/updateSietches.ts, called here every day for every pledged
+  // sietch with a currentTask) used to credit world.player.spice /
+  // world.player.troops directly, duplicating crew harvest/training. Both
+  // the loop and updateSietches.ts itself are deleted — crews (the
+  // assign-crew command) are now the sole production authority (02
+  // "Current conflicts to retire"). SietchState.currentTask/outputProgress
+  // stay on the type as inert fields (like Village.productionRate); nothing
+  // reads or writes them in campaign code anymore.
 
   // Step 9: if tribute is due and no ending has occurred, create the
   // pending settlement decision (or settle automatically via auto-ship —

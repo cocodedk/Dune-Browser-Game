@@ -8,8 +8,6 @@ import { STORY_NODES, STORY_TREE_ID } from '../data/dialogue';
 import { checkOwnershipTransition } from './VillageSystem';
 import { adjustLoyalty } from './sietch/loyalty';
 import { readLoyaltyState, writeLoyaltyState } from './sietch/loyaltyState';
-import { applyPlayerAction } from './faction/reputation';
-import { toReputationWorld } from './faction/adapter';
 // Imported straight from endgameOps rather than the EconomySystem facade —
 // EconomySystem re-exports dozens of day-runners this module has no use for,
 // and pulling in the whole facade for one function is the kind of import
@@ -90,11 +88,26 @@ function applyEffect(effect: DialogueEffect, villageId: VillageId): void {
       checkOwnershipTransition(village);
     }
   }
-  if (effect.influenceDelta) {
-    world.player.influence = Math.max(0, Math.min(100, world.player.influence + effect.influenceDelta));
-  }
+  // effect.influenceDelta is accepted-but-ignored (WP02e —
+  // legacy-authority-inventory.md category 4): player.influence is removed
+  // from WorldState. The field stays on DialogueEffect and every authored
+  // influenceDelta stays in src/data/ untouched — that is the smaller diff
+  // than stripping ~68 authored effect literals, and category 4's own
+  // "Gate search result" already proved no engine-reachable code gates
+  // content on influence, so dropping the write changes no reachable
+  // behavior (02 migration step 5 is a documented no-op for this reason).
   if (effect.spiceDelta) {
     world.player.spice = Math.max(0, world.player.spice + effect.spiceDelta);
+    // Typed and logged distinct from harvest income (02 "Crew lifecycle":
+    // "Story effects, trade, and one-time rewards are individually typed
+    // and logged") — 'spice_shipment_received' stays reserved for crew
+    // harvest/market/upkeep events; dialogue rewards get their own type.
+    pushEvent(
+      'story_reward',
+      effect.spiceDelta > 0
+        ? `You receive ${effect.spiceDelta} spice.`
+        : `You give up ${Math.abs(effect.spiceDelta)} spice.`,
+    );
   }
   // Story flags and renown. These were declared on the effect type, authored
   // throughout the dialogue data, and silently dropped here — so every
@@ -106,11 +119,14 @@ function applyEffect(effect: DialogueEffect, villageId: VillageId): void {
   if (effect.charismaDelta) {
     world.charisma = Math.max(0, world.charisma + effect.charismaDelta);
   }
-  if (effect.reputationAction) {
-    const repWorld = toReputationWorld(world);
-    const updated = applyPlayerAction(effect.reputationAction, repWorld);
-    world.factionProfiles = updated.factions;
-  }
+  // effect.reputationAction is accepted-but-ignored (WP02e): the faction
+  // reputation write (WP01-audit residue) dies with the quarantined faction
+  // simulation it fed (legacy-authority-inventory.md category 1 — "Do not
+  // call in campaign"; 02's "Current conflicts to retire"). The field stays
+  // on DialogueEffect and every authored reputationAction stays in
+  // src/data/ untouched, for the same smaller-diff reason as influenceDelta
+  // above — nothing reachable reads world.factionProfiles once FactionPanel
+  // is unmounted (category 1's own panel-removal row).
   // attemptRitual re-checks its own gate (act, charisma, forts, uses-left)
   // and refuses silently-to-the-caller (it pushes its own event) rather than
   // trusting the choice was only offered when eligible — the same defence

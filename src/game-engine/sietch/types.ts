@@ -17,14 +17,17 @@ export interface SietchState {
    * sietch's loyalty (see actRun.ts's averagePledgedSietchLoyalty and
    * VillagePanel.tsx's kind-gated LoyaltyBar).
    *
-   * Optional, not required: the three protected baseline characterization
-   * tests (spiceTripleCredit/sietchPayoutLoop/combatPledgePath, under
-   * baseline/) construct SietchState object literals without these fields
-   * and must not be edited. Every production reader falls back to a
-   * documented default (see loyalty.ts's PLEDGE_THRESHOLD-adjacent 0 and
-   * morale.ts's MORALE_NEUTRAL) when a value is absent — a save from before
-   * this chunk, or a fixture outside its scope, both read the same way a
-   * migrated one would.
+   * Optional, not required: several test fixtures across the codebase still
+   * construct SietchState object literals without these fields. (The three
+   * baseline characterization tests that originally motivated this —
+   * spiceTripleCredit/sietchPayoutLoop/combatPledgePath, under baseline/ —
+   * are gone: combatPledgePath was deleted in W2b, spiceTripleCredit and
+   * sietchPayoutLoop in W2e, each citing the pinned legacy behavior their
+   * deletion removes.) Every production reader falls back to a documented
+   * default (see loyalty.ts's PLEDGE_THRESHOLD-adjacent 0 and morale.ts's
+   * MORALE_NEUTRAL) when a value is absent — a save from before this chunk,
+   * or a fixture outside its scope, both read the same way a migrated one
+   * would.
    */
   loyalty?: number
   /** See morale.ts's MoraleState; MORALE_NEUTRAL (50) is the default read. */
@@ -39,12 +42,10 @@ export interface SietchState {
   crewIds?: string[]
 }
 
-export const HARVEST_PROGRESS_PER_DAY = 1.0
-export const HARVEST_PAYOUT_THRESHOLD = 3.0
-export const HARVEST_SPICE_PAYOUT = 12
-export const HARVEST_MIN_WORKERS = 5
-
-export const TRAIN_PROGRESS_PER_DAY = 1.0
-export const TRAIN_PAYOUT_THRESHOLD = 3.0
-export const TRAIN_TROOPS_PAYOUT = 6
-export const TRAIN_MIN_WORKERS = 10
+// The eight HARVEST_*/TRAIN_* threshold-payout constants that used to live
+// here (progress-per-day, payout threshold, payout amount, min workers, one
+// set per task) were removed in WP02e along with sietch/updateSietches.ts,
+// their only reader — see legacy-authority-inventory.md category 2.
+// currentTask/outputProgress stay on SietchState above as inert fields, like
+// Village.productionRate (02 "Current conflicts to retire": "static values
+// may remain temporarily for migration").

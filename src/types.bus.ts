@@ -9,7 +9,6 @@ import type {
   VillageId, SceneModeId, WorldState, GameEvent, Difficulty, RegionId,
 } from './types'
 import type { EquipmentKind, TroopTask } from './game-engine/troops/types'
-import type { SietchTask } from './game-engine/sietch/types'
 
 export interface BusEvents {
   /** Speak to whoever is at the player's location. Sent from a location hotspot. */
@@ -30,10 +29,6 @@ export interface BusEvents {
   'audio:mute': void;
   'player:pledge_sietch': { villageId: VillageId };
   'player:gift_sietch': { villageId: VillageId };
-  'player:assign_sietch_task': { villageId: VillageId; task: SietchTask };
-  'player:attack_village': { targetVillageId: VillageId; troopsCommitted: number };
-  'player:scout_village': { targetVillageId: VillageId };
-  'player:stop_sietch_task': { villageId: VillageId };
   'game:pause': { paused: boolean };
   'player:assign_crew': { groupId: string; task: TroopTask; targetId: string | null };
   'player:assault_fort': { fortId: string };

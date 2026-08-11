@@ -9,14 +9,12 @@ import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue, startDialogue } from '../game-engine/DialogueSystem'
 import { pushEvent } from '../game-engine/EventSystem'
 import { decideVisit, decideSpeakTo } from './VisitPolicy'
-import { assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
 import { runPledgeCommand } from '../game-engine/commands/pledgeCommand'
 import { pledgeChainRefusalMessage } from '../game-engine/sietch/pledgeRefusal'
 import { runSettleCommand } from '../game-engine/commands/settleCommand'
 import { settleRefusalMessage } from '../game-engine/quota/settlementRefusal'
 import { runSetAutoShipCommand } from '../game-engine/commands/autoShipCommand'
 import { giftPlayerSietch } from '../game-engine/SietchVisitSystem'
-import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
 import { buyEquipment } from '../game-engine/EconomySystem'
 import { runAssignCrewCommand } from '../game-engine/commands/assignCrewCommand'
 import { assignCrewRefusalMessage } from '../game-engine/troops/assignCrewRefusal'
@@ -88,18 +86,6 @@ export function wireCommands(): () => void {
   const onGift = ({ villageId }: BusEvents['player:gift_sietch']): void => {
     giftPlayerSietch(villageId)
   }
-  const onAssignTask = ({ villageId, task }: BusEvents['player:assign_sietch_task']): void => {
-    assignPlayerSietchTask(villageId, task)
-  }
-  const onStopTask = ({ villageId }: BusEvents['player:stop_sietch_task']): void => {
-    stopPlayerSietchTask(villageId)
-  }
-  const onAttack = ({ targetVillageId, troopsCommitted }: BusEvents['player:attack_village']): void => {
-    attackVillage(targetVillageId, troopsCommitted)
-  }
-  const onScout = ({ targetVillageId }: BusEvents['player:scout_village']): void => {
-    scoutVillage(targetVillageId)
-  }
   /**
    * Crew assignment (commands/assignCrewCommand.ts) and issue-equipment
    * (commands/issueEquipmentCommand.ts) follow the same refusal-mapping
@@ -148,10 +134,6 @@ export function wireCommands(): () => void {
   EventBus.on('game:difficulty', onDifficulty)
   EventBus.on('player:pledge_sietch', onPledge)
   EventBus.on('player:gift_sietch', onGift)
-  EventBus.on('player:assign_sietch_task', onAssignTask)
-  EventBus.on('player:stop_sietch_task', onStopTask)
-  EventBus.on('player:attack_village', onAttack)
-  EventBus.on('player:scout_village', onScout)
   EventBus.on('player:assign_crew', onAssignCrew)
   EventBus.on('player:buy_equipment', onBuy)
   EventBus.on('player:issue_equipment', onIssue)
@@ -169,10 +151,6 @@ export function wireCommands(): () => void {
     EventBus.off('game:difficulty', onDifficulty)
     EventBus.off('player:pledge_sietch', onPledge)
     EventBus.off('player:gift_sietch', onGift)
-    EventBus.off('player:assign_sietch_task', onAssignTask)
-    EventBus.off('player:stop_sietch_task', onStopTask)
-    EventBus.off('player:attack_village', onAttack)
-    EventBus.off('player:scout_village', onScout)
     EventBus.off('player:assign_crew', onAssignCrew)
     EventBus.off('player:buy_equipment', onBuy)
     EventBus.off('player:issue_equipment', onIssue)

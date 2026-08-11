@@ -47,9 +47,7 @@ function createTestWorld(): WorldState {
       state: 'idle',
       travelTarget: null,
       arrivalTime: 0,
-      influence: 5,
       spice: 0,
-      troops: 0,
       prescience: 0,
     },
     aiTimers: {

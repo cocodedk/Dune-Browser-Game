@@ -48,9 +48,7 @@ export interface Player {
   state: 'idle' | 'traveling';
   travelTarget: VillageId | null;
   arrivalTime: number;    // game-time (seconds) when travel completes
-  influence: number;      // 0–100
   spice: number;
-  troops: number;
   /** 0 none, 1 awareness, 2 farspeech, 3 foresight. */
   prescience: PrescienceLevel;
 }
@@ -64,7 +62,9 @@ export type GameEventType =
   | 'alliance_offer' | 'betrayal' | 'attack' | 'dialogue_start' | 'dialogue_end'
   | 'village_selected' | 'travel_start' | 'travel_complete'
   | 'faction_decision' | 'tribute_refused' | 'poc_goal_achieved'
-  | 'sietch_pledged' | 'sietch_task_assigned' | 'spice_shipment_received' | 'fedaykin_ready';
+  | 'sietch_pledged' | 'sietch_task_assigned' | 'spice_shipment_received' | 'fedaykin_ready'
+  /** Dialogue spiceDelta effects — distinct from harvest income (02 "Crew lifecycle"). */
+  | 'story_reward';
 
 export interface GameEvent {
   id: string;

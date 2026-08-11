@@ -39,7 +39,6 @@ describe('migrateV1ToV2', () => {
     const out = migrateV1ToV2(legacyState())
     expect(out.time).toBe(120)
     expect(out.player.spice).toBe(40)
-    expect(out.player.troops).toBe(6)
     expect(out.villages).toHaveLength(3)
     expect(out.villages[0].loyalty).toBe(70)
     expect(out.villages[2].status).toBe('rebelling')
@@ -110,6 +109,23 @@ describe('migrateV1ToV2', () => {
   it('is idempotent', () => {
     const once = migrateV1ToV2(legacyState())
     expect(migrateV1ToV2(once)).toEqual(once)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Legacy keys the consolidated schema no longer models (WP02e item 9:
+// player.troops/player.influence leave WorldState this chunk, but the
+// actual v5 migration that STRIPS them off old envelopes is W2f's — this
+// migration only ever ADDS/fills fields, so an old envelope's dropped keys
+// simply ride along untouched, same as any other unmodeled JSON property).
+// ---------------------------------------------------------------------------
+
+describe('extra/dropped legacy keys survive migration untouched', () => {
+  it('does not strip player.troops/player.influence off a v1 envelope', () => {
+    const out = migrateV1ToV2(legacyState())
+    const rawPlayer = out.player as unknown as Record<string, unknown>
+    expect(rawPlayer.troops).toBe(6)
+    expect(rawPlayer.influence).toBe(12)
   })
 })
 

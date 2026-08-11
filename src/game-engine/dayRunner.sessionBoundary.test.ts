@@ -25,26 +25,40 @@ vi.mock('../EventBus', () => ({
 }))
 
 /**
- * A crew that discovers fields (proves rng.step moves) plus one
- * player-owned friendly village (proves spice moves too, rng-free — see
- * VillageSystem.ts's collectPlayerSpice: max(0.5, spice*0.1)/day). A
- * prospect crew alone earns no spice, so it cannot by itself distinguish
- * "day boundaries fire" from "day boundaries are inert". Quota pushed out
- * so tribute settlement never interferes with these bookkeeping checks.
+ * A prospecting crew (proves rng.step moves) plus a SECOND crew harvesting a
+ * discovered field (proves spice moves too — crew harvest is the sole spice
+ * authority since WP02e removed VillageSystem's updateVillages/
+ * collectPlayerSpice, legacy-authority-inventory.md category 2). A prospect
+ * crew alone earns no spice, so it cannot by itself distinguish "day
+ * boundaries fire" from "day boundaries are inert". No equipment (hand-tier
+ * extraction) avoids worm rolls, which would otherwise make rng.step
+ * comparisons across the control/actual branches path-dependent. Quota
+ * pushed out so tribute settlement never interferes with these bookkeeping
+ * checks.
  */
 function withProspectingCrewAndVillage(seed: number): WorldState {
   const state = createInitialState(seed)
-  state.troopGroups = [{
-    id: 'group_tabr_1', homeSietchId: 'sietch_tabr', locationId: 'sietch_tabr',
-    size: 30, skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
-    morale: 60, task: 'prospect', taskTargetId: null, changeoverDaysLeft: 0,
-  }]
+  state.troopGroups = [
+    {
+      id: 'group_tabr_1', homeSietchId: 'sietch_tabr', locationId: 'sietch_tabr',
+      size: 30, skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
+      morale: 60, task: 'prospect', taskTargetId: null, changeoverDaysLeft: 0,
+    },
+    {
+      id: 'group_tabr_2', homeSietchId: 'sietch_tabr', locationId: 'sietch_tabr',
+      size: 30, skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
+      morale: 60, task: 'harvest', taskTargetId: 'field_session_boundary', changeoverDaysLeft: 0,
+    },
+  ]
+  state.spiceFields = [
+    ...state.spiceFields,
+    {
+      id: 'field_session_boundary', regionId: 'sietch_tabr', position: { x: 0, y: 0 },
+      discovered: true, density: 60, capacity: 1000, remaining: 1000,
+    },
+  ]
+  state.equipment = []
   state.quota.nextDueDay = 9999
-  const arrakeen = state.villages.find(v => v.id === 'arrakeen')!
-  arrakeen.owner = 'player'
-  arrakeen.status = 'friendly'
-  arrakeen.spice = 0
-  arrakeen.productionRate = 2
   return state
 }
 

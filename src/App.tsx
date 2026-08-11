@@ -8,7 +8,6 @@ import VillagePanel from './ui/VillagePanel'
 import DialoguePanel from './ui/DialoguePanel'
 import SettlementModal from './ui/SettlementModal'
 import EventLog from './ui/EventLog'
-import FactionPanel from './ui/FactionPanel'
 import GoalOverlay from './ui/GoalOverlay'
 import { COMMAND_COLUMN_WIDTH, palette } from './ui/theme'
 import EventToasts from './ui/EventToasts'
@@ -49,7 +48,6 @@ export default function App() {
         <OrnamentFrame><MarketPanel /></OrnamentFrame>
         <OrnamentFrame><FortPanel /></OrnamentFrame>
         <OrnamentFrame plain><VillagePanel /></OrnamentFrame>
-        <OrnamentFrame plain><FactionPanel /></OrnamentFrame>
         <OrnamentFrame plain><EventLog /></OrnamentFrame>
       </div>
 

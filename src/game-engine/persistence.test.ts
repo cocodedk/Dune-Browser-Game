@@ -52,13 +52,11 @@ describe('persistence serialization', () => {
     state.time = 500;
     state.speed = 5;
     state.player.spice = 100;
-    state.player.influence = 50;
     const json = serializeWorld(state);
     const restored = deserializeWorld(json);
     expect(restored.time).toBe(500);
     expect(restored.speed).toBe(5);
     expect(restored.player.spice).toBe(100);
-    expect(restored.player.influence).toBe(50);
     // docs/PRD/game-completion/02-runtime-consolidation.md "Campaign
     // status": goalAchieved "must not be serialized ... independently" —
     // it is excluded from the canonical save (state/canonical.ts) and
@@ -67,6 +65,16 @@ describe('persistence serialization', () => {
     // the trip (ending is still null), which is the point: see the
     // "derives goalAchieved from ending, not from the save" test below.
     expect(restored.goalAchieved).toBe(false);
+  });
+
+  it('tolerates unmodeled legacy keys on player (e.g. troops/influence) without stripping them — the v5 migration that removes them off old envelopes is W2f\'s, not this schema version', () => {
+    const state = createInitialState();
+    (state.player as unknown as Record<string, unknown>).troops = 6;
+    (state.player as unknown as Record<string, unknown>).influence = 12;
+    const restored = deserializeWorld(serializeWorld(state));
+    const rawPlayer = restored.player as unknown as Record<string, unknown>;
+    expect(rawPlayer.troops).toBe(6);
+    expect(rawPlayer.influence).toBe(12);
   });
 
   it('derives goalAchieved from ending, not from the save', () => {

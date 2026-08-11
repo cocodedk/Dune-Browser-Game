@@ -62,8 +62,6 @@ export default function StatusBar() {
       <Readout label="day" value={`${Math.floor(time / 60)}`} />
       <Readout label="time" value={`${minutes}:${seconds.toString().padStart(2, '0')}`} />
       <Readout label="spice" value={player.spice.toFixed(1)} />
-      <Readout label="troops" value={`${player.troops ?? 0}`} />
-      <Readout label="influence" value={`${player.influence}`} />
       {!goalAchieved && (
         <span style={styles.item}>
           Speed:

@@ -93,6 +93,7 @@ describe('playability: a fresh campaign can pledge, earn, and reach and resolve 
     setWorld(state)
     initLoop()
 
+    const startingSpice = world.player.spice // 60 — the opening balance
     const pledge = runPledgeCommand('red_wall_sietch')
     expect(pledge).toEqual({ ok: true, code: 'pledged' })
 
@@ -101,9 +102,37 @@ describe('playability: a fresh campaign can pledge, earn, and reach and resolve 
     const crew = world.troopGroups.find(g => g.id === 'group_red_wall_sietch')
     expect(crew?.task).toBe('harvest')
 
-    for (let d = 0; d <= 12; d++) advanceToDay(d)
+    // single-harvest-authority (02 "Deterministic fixtures": "spice equals
+    // the crew rule's accumulated yield; no legacy threshold payout
+    // occurs"). Sum every harvest-delivery event (economy/harvestRun.ts's
+    // 'Crews deliver X spice' message, the crew rule's own event) seen
+    // right after each day, rather than re-reading world.events once at the
+    // end — its ring buffer keeps only the last 20 and would silently drop
+    // early days' events by day 12 otherwise.
+    const harvestPattern = /^Crews deliver ([\d.]+) spice$/
+    const seenEventIds = new Set<string>()
+    let harvestedTotal = 0
+    for (let d = 0; d <= 12; d++) {
+      advanceToDay(d)
+      for (const e of world.events) {
+        if (seenEventIds.has(e.id)) continue
+        seenEventIds.add(e.id)
+        const match = e.message.match(harvestPattern)
+        if (match) harvestedTotal += Number(match[1])
+      }
+    }
 
     expect(world.pendingSettlement).not.toBeNull()
+    // pendingSettlement.stock is a snapshot of world.player.spice at the
+    // moment tribute came due (quota/settlement.ts's buildPendingSettlement)
+    // — taken AFTER that same day's harvest, before any settlement payment.
+    // With VillageSystem's legacy village-production skim and the sietch
+    // threshold payout loop both deleted (WP02e), the crew rule is the only
+    // thing that could have moved player.spice between day 0 and day 12; if
+    // anything else silently credited spice, this sum would fall short of
+    // the snapshot.
+    expect(harvestedTotal).toBeGreaterThan(0) // proves the sum actually measured something
+    expect(world.pendingSettlement!.stock).toBeCloseTo(startingSpice + harvestedTotal, 0)
     const amount = world.pendingSettlement!.legalRange.max
 
     const outcome = runSettleCommand(amount)

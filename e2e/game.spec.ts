@@ -40,13 +40,15 @@ test('game UI structure is visible after initialisation', async ({ page }) => {
 // ---------------------------------------------------------------------------
 // Test 3 — Status bar renders with game stats
 // ---------------------------------------------------------------------------
-test('status bar renders spice, influence and speed buttons', async ({ page }) => {
+test('status bar renders spice and speed buttons', async ({ page }) => {
   await page.goto('/')
   await page.waitForTimeout(2000)
 
   // Readouts are a word label beside a tabular figure, not "Spice: 0".
+  // "troops"/"influence" readouts removed in WP02e (legacy-authority-
+  // inventory.md category 4: player.troops/player.influence left
+  // WorldState) — spice is the one aggregate figure that survives.
   await expect(page.locator('text=spice').first()).toBeVisible()
-  await expect(page.locator('text=influence').first()).toBeVisible()
 
   await expect(page.getByRole('button', { name: '1×' })).toBeVisible()
   await expect(page.getByRole('button', { name: '2×' })).toBeVisible()
@@ -96,33 +98,52 @@ test('event log renders with empty state', async ({ page }) => {
 })
 
 // ---------------------------------------------------------------------------
-// Test 7 — Events appear over time (AI integration)
+// Test 7 — A production action emits a logged event
 // ---------------------------------------------------------------------------
-test('events appear in the log after running at 5× speed', async ({ page }) => {
-  // This test sleeps 15s wall-clock on purpose, waiting for the simulation to
-  // produce something, and the suite default is 30s. That left barely any room
-  // for the rest: locally it finished in 24.8s, and on a CI runner — where
-  // WebGL falls back to SwiftShader and first paint alone costs ~10s — it went
-  // over and failed on timeout while every assertion in it still passed.
-  //
-  // Worth being precise about why this only surfaced now: CI invoked the suite
-  // as `npm test -- --run`, which Playwright rejects outright, under
-  // continue-on-error. These tests had never actually run here.
-  test.setTimeout(90_000)
-  await page.goto('/')
+// Rewritten in WP02e (legacy-authority-inventory.md category 2): the
+// original test just ran 5x speed for 15s wall-clock and expected SOME event
+// to appear, which held only because the legacy village-production skim and
+// sietch threshold payout fired unconditionally on every day boundary. With
+// both removed, a truly fresh, no-input campaign emits ZERO events for its
+// first several days — day-boundary systems only produce events for a
+// pledged, assigned crew (harvest/prospect/train), a due tribute deadline
+// (day 12), or a raid (blocked in act1 today — raidInterval('act1') returns
+// null per progress.md's baseline captures). None of those are reachable in
+// a few seconds of idle time anymore, so this test now drives one concrete
+// production action instead of waiting and hoping.
+//
+// window.__DUNE__.pick(id) is "the same path a raycast hit will take"
+// (DebugHandle.ts's own comment) — it is the exact function a canvas click
+// on a map marker calls (ThreeContainer.tsx's dispatchPick), not a shortcut
+// around it. Picking the player's OWN starting location (Arrakeen,
+// neutral-owned) resolves through decideVisit to a 'dialogue' action
+// (VisitPolicy.ts): the player isn't the owner, so it opens the neutral
+// faction's conversation and startDialogue unconditionally pushes a
+// 'dialogue_start' event (DialogueSystem.ts) — no travel, no pledge
+// threshold, nothing that can refuse.
+//
+// __DUNE__ only attaches with `?debug=1` on a production/preview build
+// (game-render/core/DebugHandle.ts's shouldAttachDebug: import.meta.env.DEV
+// is false under `npm run preview`, which is what this suite's webServer
+// runs) — plain `/` would leave window.__DUNE__ undefined here.
+//
+// UNVERIFIED BY THE BUILDER: no Playwright run was made (not permitted this
+// chunk). The lead should watch for: __DUNE__ attach timing after
+// page.goto (the 2s wait mirrors every other test in this file, but
+// ThreeContainer's mount is async); and that pick('arrakeen') actually
+// resolves to the 'dialogue' branch and not 'none' (would only happen if
+// decideVisit's traveling/dialogue guards are somehow already tripped on a
+// fresh load, which nothing in this test does).
+test('a production pick action emits a logged event', async ({ page }) => {
+  await page.goto('/?debug=1')
+  await page.waitForTimeout(2000)
 
-  // Accelerate game time to trigger AI decision cycles quickly
-  await page.getByRole('button', { name: '5×' }).click()
+  await page.evaluate(() => window.__DUNE__?.pick('arrakeen'))
+  await page.waitForTimeout(500)
 
-  // Wait 15 seconds wall-clock — enough for several AI decision cycles at 5×
-  await page.waitForTimeout(15000)
-
-  // Verify at least one event appeared: "No events yet." should be gone
-  // OR a timestamp marker (number followed by "s") is present in an event entry
-  const noEventsCount = await page.locator('text=No events yet.').count()
-  const hasTimestamp = (await page.locator('text=/\\d+s/').count()) > 0
-
-  expect(noEventsCount === 0 || hasTimestamp).toBe(true)
+  // A timestamp marker (number followed by "s") is present in an event
+  // entry once the dialogue_start event lands in EventLog.
+  await expect(page.locator('text=/\\d+s/').first()).toBeVisible()
 
   // Into test-results/, which is gitignored and is where Playwright already
   // puts its own artifacts. This wrote to the repository root on every run, so

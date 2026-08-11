@@ -7,11 +7,15 @@
 // baseline/legacy-authority-inventory.md category 1.
 //
 // factionProfiles/regions/aiTimers are asserted untouched rather than "no
-// faction_decision event was emitted": the legacy VillageSystem.updateVillages
-// rebellion check (kept running — see dayRunner.ts's LEGACY PRODUCTION SEAM)
-// pushes that exact same event type on loyalty collapse, so an event-type
-// filter alone would be a false signal. updateFactionAI/executeGoals push
-// events without mutating state, so they are proven not-called directly.
+// faction_decision event was emitted": at the time this fixture was written,
+// the legacy VillageSystem.updateVillages rebellion check (kept running —
+// see dayRunner.ts's LEGACY PRODUCTION SEAM) pushed that exact same event
+// type on loyalty collapse, so an event-type filter alone would have been a
+// false signal. WP02e removed that seam entirely (updateVillages no longer
+// exists), so nothing in the campaign day path pushes 'faction_decision'
+// today — the field-level assertions below remain the direct proof either
+// way. updateFactionAI/executeGoals push events without mutating state, so
+// they are proven not-called directly.
 
 import { describe, it, expect, vi } from 'vitest'
 import { update, initLoop } from './GameLoop'
