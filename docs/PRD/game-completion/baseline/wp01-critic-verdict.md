@@ -3,19 +3,23 @@
 Independent evidence auditor, fresh context. Judged against the WP01 exit proof in
 `08-execution-plan.md` and the contract clauses in `02-runtime-consolidation.md`.
 
-- **Commits audited:** `9afb07a`, `a583561`, `59d8667` (diff base `d0d4b39`)
+- **Commits audited:** `9afb07a`, `a583561`, `59d8667` (diff base `d0d4b39`);
+  **delta re-audit: `bfee65a`**
 - **Branch:** `feat/game-completion`
-- **Score: 6.5 / 10**
-- **Verdict: `verified` is NOT warranted for WP01.**
+- **First-pass score: 6.5 / 10** — `verified` NOT warranted
+- **After delta re-audit of `bfee65a`: 9 / 10 — `verified` IS warranted.**
+  See §9 "Delta re-audit" for the revised verdict; §1-§8 are preserved unedited as the
+  first-pass record.
 
-The exit proof names five fixtures that must "pass through production engine entry
-points". Four of them do, and hold up under independent probing. The fifth —
-**save/reload** — fails on **both** production load paths. One of those failures is a
-regression this package introduced.
+**First-pass finding (superseded by §9):** the exit proof names five fixtures that must
+"pass through production engine entry points". Four of them did, and held up under
+independent probing. The fifth — **save/reload** — failed on all three production
+session-boundary paths, two of those failures being regressions this package introduced.
+`bfee65a` fixed all three; §9 re-probes them.
 
 ---
 
-## 1. Re-runs (raw tails)
+## 1. Re-runs (raw tails) — first pass, at `59d8667`
 
 ### `npx tsc --noEmit`
 
@@ -536,3 +540,252 @@ or dropping `goalAchieved` from what is persisted.
 
 Same bar as the WP00 precedent: first-pass audit names the gaps, the lead fixes them, a delta
 re-audit warrants the status.
+
+---
+
+# 9. Delta re-audit (`bfee65a`)
+
+Second pass, same auditor. Scope: **only the deltas** — the three blocking findings from
+§8, the migration decision, and the canonical save wiring. Non-blocking residue re-checked
+by inspection, not re-probed.
+
+**Fix under review:** `WorldState.lastProcessedDay` replaces TimeSystem's module-global;
+production persistence writes a canonical **v4** envelope via `toEnvelope`/`fromEnvelope`;
+`migrateV3ToV4` backfills a missing `lastProcessedDay` to the save's own current day.
+
+## 9.1 Re-runs at HEAD (raw tails)
+
+### `npx tsc --noEmit`
+
+```
+TSC_EXIT=0
+```
+
+### `npx vitest run` (full suite)
+
+```
+ RUN  v4.1.4 /home/cocodedk/0-projects/Dune-Browser-Game
+
+
+ Test Files  238 passed (238)
+      Tests  2045 passed (2045)
+   Start at  02:46:38
+   Duration  15.29s (transform 5.50s, setup 0ms, import 14.23s, tests 28.82s, environment 13ms)
+```
+
+238 files / 2045 tests (up from 237 / 2037: `dayRunner.sessionBoundary.test.ts` plus
+migration and persistence additions). `resetTime()` is fully removed — `grep -rn "resetTime" src/`
+returns nothing, so no dangling reference survives its deletion.
+
+## 9.2 The three blocking findings, re-probed
+
+I re-ran my own PROBE A / B / F code against HEAD, with the assertions restated the way a
+**correct** engine should satisfy them (first pass they were written to expose the defect).
+
+```
+DELTA A  control  spice=76.1072 step=6 hash=d8c38f27d3524b52
+DELTA A  reloaded spice=76.1072 step=6 hash=d8c38f27d3524b52 lastProcessedDay=5
+DELTA A  deltas: spice=0.0000 rngStep=0
+
+DELTA B  saved day-20: spice=113.29 step=21 cycleIndex=0 lastProcessedDay=20
+DELTA B  after ONE frame post-Load: spice=113.29 step=21 cycleIndex=0
+DELTA B  days replayed = 0
+
+DELTA F  before days 0-2: {"spice":60,"step":0,"events":0}
+DELTA F  after  days 0-2: {"spice":68.14577723136,"step":3,"events":8} (lastProcessedDay=2)
+
+DELTA F2 one frame on a null-bookkeeping day-4 world: step 0 -> 1, lastProcessedDay=4
+
+ ✓ DELTA PROBE A: page reload must not re-process the saved day
+ ✓ DELTA PROBE B: in-session Load must not replay intervening days
+ ✓ DELTA PROBE F: "New" mid-session must give a live campaign
+ ✓ DELTA PROBE F2: New must not backfill from day 0 on a mid-day fresh start
+      Tests  4 passed (4)
+```
+
+| First-pass finding | Measured then | Measured at HEAD | Status |
+|---|---|---|---|
+| **PROBE A** reload re-runs the saved day | +2.61 spice, +1 draw, +1 event, 6 keys drifted | **spice delta 0.0000, rng delta 0, hash byte-identical** (`d8c38f27d3524b52` both branches) | fixed |
+| **PROBE B** in-session Load replays intervening days | 17 days, +37.31 spice; day-40 variant ended the run | **0 days replayed**, spice/step/cycleIndex all unchanged | fixed |
+| **PROBE F** New leaves the campaign inert | 0 draws, 0 events, spice frozen | **step 0→3, events 0→8, spice 60→68.15** | fixed |
+
+**PROBE F2 is new this round** — I added it to check the fix did not overcorrect into the
+backfill it was guarding against. A fresh (`lastProcessedDay === null`) world whose clock
+already reads day 4 processes **one** day and sets bookkeeping to 4; it does not replay days
+0-3. The `null` branch in `TimeSystem.ts:45-48` is correct in both directions.
+
+**Honesty note on my own probe.** My first delta run of PROBE A reported a hash mismatch
+(`61383249bcbda14c` vs `d8c38f27d3524b52`) while spice and RNG matched exactly. I isolated
+it with a key-level diff rather than reporting it:
+
+```
+DIAG  key "time" DRIFTED
+DIAG    before: 300.01666666666665
+DIAG    after : 300.0333333333333
+DIAG  before-only keys: (none)
+DIAG  after-only keys: (none)
+```
+
+`world.time` and nothing else — because my probe ticked the control once *before* taking the
+blob and the reload branch ticked again *after* restoring it, so the reload branch had two
+`1/60` frames to the control's one. **A defect in my probe, not the engine.** Corrected to
+take the save before either branch's frame; the hash then matches byte for byte. Recorded
+here because a delta re-audit that quietly drops a failed assertion is worth nothing.
+
+## 9.3 The migration decision (audit item 2)
+
+```
+DELTA 2  migrated v3 day-40 save: lastProcessedDay=40 (expect 40, not null)
+DELTA 2  first frame after load: rng.step 0 -> 0, quota.cycleIndex=0
+DELTA 2  createInitialState lastProcessedDay=null
+DELTA 2  explicit null preserved=null | missing@day7 backfilled=7
+DELTA 2  idempotent: true
+ ✓ a real v3 save at day 40 is marked already-processed, so a reload runs no day
+ ✓ null is reserved for fresh campaigns and never assigned by the migration
+```
+
+**The decision is right, and it is right for exactly the reason my reload finding implies.**
+Backfilling a missing `lastProcessedDay` to `null` would mean "process the current day once"
+— which *is* PROBE A's defect, reintroduced for every real pre-v4 IndexedDB save on a
+player's disk. Backfilling to `Math.floor(state.time / 60)` (`saveMigration.ts:154`) marks
+that day already processed, so the first frame after load advances cleanly.
+
+`null` is correctly reserved for fresh campaigns only: it is assigned in exactly one place
+(`GameState.ts:93`, `createInitialState`) and `migrateV3ToV4` never produces it. The guard is
+`state.lastProcessedDay !== undefined` (`saveMigration.ts:149`), so an explicit `null` from a
+v4 save taken before its first boundary is preserved rather than overwritten — idempotent,
+and correct, since that day genuinely has not been processed.
+
+The **v4 schema bump is load-bearing, not cosmetic**: pre-fix saves already self-report
+`version: 3`, so without the bump they would bypass migration and never gain the field
+(`schema.ts:21-27` states this reasoning explicitly).
+
+## 9.4 The canonical save path (audit item 3)
+
+```
+DELTA 3  envelope keys: version, savedAt, state
+DELTA 3  version=4
+DELTA 3  blob contains "goalType"=false "goalAchieved"=false
+DELTA 3  state.rng={"seed":12,"step":3} state.lastProcessedDay=2
+DELTA 3  hostile save on disk: ending=null goalAchieved=true
+DELTA 3  after load: ending=null goalAchieved=false
+ ✓ the on-disk blob omits goalType/goalAchieved and carries rng + lastProcessedDay
+ ✓ goalAchieved is re-derived from world.ending on load, not trusted from disk
+```
+
+The production save path now round-trips through the canonical serializer.
+`persistence.ts:44` builds the envelope from `toCanonicalState(world)`, and
+`persistence.ts:113-115`'s `serializeWorld` is the same function minus the IndexedDB
+transport — so the test-facing and production paths cannot drift apart.
+
+**02's "must not be serialized" clause for `goalAchieved` is now met**, and better than
+required: `fromEnvelope` (`persistence.ts:57`) re-derives it as `migrated.ending !== null` on
+every load. I probed this adversarially with a hostile save carrying `ending: null` **and**
+`goalAchieved: true` — precisely the combination that would freeze `actRun.ts:46` forever if
+trusted — and it loads as `false`. **The latent hazard named in §2(b) is closed**, not merely
+avoided by luck.
+
+**One coordinator claim does not hold.** The handoff states "hashState/CanonicalSaveEnvelope
+now have production callers". `CanonicalSaveEnvelope` does (`persistence.ts:43`), and
+`toCanonicalState` does (`persistence.ts:44`) — but **`hashState` still has zero production
+callers**:
+
+```
+$ grep -rn "hashState" src/ --include=*.ts --include=*.tsx | grep -v "\.test\."
+src/game-engine/state/hash.ts:28:export function hashState(world: WorldState): string {
+```
+
+Only its own definition. `serializeCanonical` is likewise production-reachable only through
+`hash.ts`, which is itself test-only — production reaches the canonical shape via
+`toCanonicalState` instead. This is **not blocking**: state hashing serves 02 acceptance
+criterion 5 (runtime/simulator parity), which belongs to a later package. Recorded because
+the claim as written overstates the wiring.
+
+## 9.4a Determinism re-check — the first pass's passing results still hold
+
+The fix touched `crossedDays()`, the save format, and migration, so PROBE C (seed
+divergence) and PROBE E (RNG resume) were re-run at HEAD to confirm nothing regressed —
+now across the **real canonical-envelope** save path rather than the old raw-world one:
+
+```
+DELTA C  seed23=e5927b7bf7ed87ab seed23=e5927b7bf7ed87ab seed24=8023d8c357cf1436
+DELTA E  control day3 step=4 spice=70.8199 | reloaded day3 step=4 spice=70.8199
+
+ ✓ same seed reproduces, different seeds diverge
+ ✓ rng resumes the same sequence across a real save/load round trip
+```
+
+Same seed reproduces byte-identically, a different seed diverges, and the RNG resumes its
+sequence across a genuine save/load with identical step **and** identical spice to four
+decimals. (Hashes differ from the first pass's values because the canonical state now
+carries `lastProcessedDay` — expected, and precisely why they were re-measured.)
+
+## 9.5 Are the shipped regression tests discriminating?
+
+`dayRunner.sessionBoundary.test.ts` (154 lines, 3 tests) — **yes, and its Load test is
+stronger than mine.** Rather than only asserting "nothing replays", it saves at day 5, keeps
+playing the *same* session to day 8, then Loads the day-5 snapshot and drives days 6-8 again,
+asserting the result matches an uninterrupted day-8 control. That distinguishes the two
+opposite failure modes at once — replaying days that already happened, and *skipping* days
+the loaded timeline has not yet lived. Its fixture deliberately pairs a prospecting crew
+(moves `rng.step`) with a player-owned village (moves spice without RNG), because a prospect
+crew alone earns nothing and so could not tell "boundaries fire" from "boundaries are inert"
+(lines 27-34). The reload test asserts full `hashState` equality. Its Load test documents
+why it compares fields instead of the hash — event-id numbering from a discarded pre-Load
+detour — which is an honest harness limitation, not a dodge.
+
+I did not need to take the builder's word that these fail on the old code: **my own probes
+independently failed at `59d8667` and pass at `bfee65a`**, which establishes the behavior
+change without trusting either the tests or the report.
+
+## 9.6 Residue — WP02 handoff list still stands
+
+Re-checked at HEAD by inspection. **Blocking rows 1-3 are closed.** The four non-blocking
+rows are unchanged, verbatim:
+
+| # | Item | Owner | State at HEAD |
+|---|---|---|---|
+| 4 | `actRun.ts:46` — `if (world.goalAchieved) return` still gates on the derived shadow, not `world.ending` | WP02 | **still present** (verified at line 46). Materially safer now: the shadow can no longer be desynced by a save, since load re-derives it. |
+| 5 | `DialogueSystem.ts:97-101` writes `world.factionProfiles` via `applyPlayerAction` | WP02 | **still present** |
+| 6 | `FactionPanel` (`App.tsx:51`), `SietchCommandSection` (`VillagePanel.tsx:91`), troops/influence readouts (`StatusBar.tsx:65-66`) | WP02/WP03 | **still present** |
+| 7 | `Date.now()` at `persistence.ts:44` (`savedAt`) | WP01 | **still present, now correctly scoped** — it is envelope metadata, excluded from `toCanonicalState`, and `persistence.ts:33-36` documents it as display-only. Acceptable as-is. |
+
+`Math.random()` call sites in `src/game-engine/`: **still exactly 8, still exactly the
+declared deferral list** (CombatSystem ×2, endgameOps:75, faction ×5). No new site.
+
+The **forward risk from §5 is unchanged and still un-owned**: `dayRunner.ts:120` pins
+intermediate days of a batched jump to exact day starts while sequential frames land on
+fractional times, and `harvestRun.ts:54` writes `atTime: world.time` into the canonical
+`wormSightings`. Batched and sequential paths will therefore hash differently under realistic
+frame timing. Not a WP01 exit-proof failure; it will bite 02 acceptance criterion 5.
+
+## 9.7 Revised score and verdict
+
+### Score: 9 / 10 (from 6.5)
+
+All three blocking findings are closed, and closed at the root rather than patched at the
+symptom: moving day bookkeeping onto `WorldState` makes Load, New, and reload correct **by
+construction** — `setWorld` and serialization carry the right value with no per-call-site
+wiring, which is why the fix needed no change to `store.ts` at all. The canonical serializer
+is genuinely wired into production, and `goalAchieved` is not merely unserialized but
+re-derived from the declared authority on every load, which closes the latent hazard I could
+only downgrade last round. The migration decision reasons correctly about real saves on real
+disks rather than test fixtures.
+
+The missing point: `hashState` still has no production caller (and the handoff note says
+otherwise); `actRun.ts:46` still reads the derived shadow rather than `world.ending`; and the
+`wormSightings` timestamp risk to hash parity remains unowned. None of the three sits inside
+WP01's exit proof.
+
+### Verdict line
+
+**`verified` IS warranted for WP01.** The five fixtures in `02` — `new-campaign-normal`,
+deterministic RNG, `multi-day-catch-up`, save/reload, and no-faction — now pass through
+production engine entry points, confirmed by my own independently-constructed probes rather
+than the shipped fixtures alone: reload is byte-identical (`d8c38f27d3524b52`), in-session
+Load replays zero days, a New campaign is live, seeds diverge, and the RNG resumes its
+sequence across a real save/load round trip. No campaign import or saved field depends on the
+retired goal authority: `goalType` is absent from new saves and dropped in migration, the PoC
+evaluators are gone, and `goalAchieved` is excluded from the canonical save and re-derived
+from `world.ending` on load. Full gate re-run clean at HEAD (238 files / 2045 tests, `tsc`
+exit 0). Residue items 4-7 carry to WP02/WP03 as recorded handoffs, not as WP01 debt.

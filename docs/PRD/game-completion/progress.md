@@ -169,3 +169,35 @@ reproduce.
 - WP01 fixture coverage complete: new-campaign-normal (C), seeded-prospect +
   multi-day-catch-up + save-load (BD determinism tests), no-faction (BD
   quarantine test). Next: WP01 evidence-auditor critic.
+
+## Round 6 — WP01 audit, session-boundary fix, verified (2026-08-11, `bfee65a`)
+
+- **First audit: 6.5/10, NOT verified** (`baseline/wp01-critic-verdict.md`).
+  The critic's own production-sequence probes found what 2037 green tests
+  didn't: `lastDay` module-global bookkeeping broke all three session
+  boundaries — in-session Load replayed intervening days (day-20 save: 17
+  days, +37.31 spice; day-40: spurious `loss_patience`), New mid-session went
+  inert, reload re-ran the saved day. Two of three were WP01 regressions.
+  Also: the canonical serializer had zero production callers — saves still
+  stored the raw world, `goalAchieved` included.
+- **Fix (`bfee65a`):** `WorldState.lastProcessedDay` replaces the module
+  global (null = fresh only; downward resync = process-current-once; all
+  three paths correct by construction since `setWorld` carries bookkeeping);
+  persistence writes the canonical v4 envelope, `goalAchieved` re-derived
+  from `ending` on every load; `migrateV3ToV4` backfills missing bookkeeping
+  to the save's own day, never null (the bump is load-bearing — v3 saves
+  self-report and would bypass migration). Three regression tests proven
+  discriminating by revert-to-baseline runs.
+- **Delta re-audit: 9/10, `verified` warranted.** Probes at HEAD: reload
+  hash byte-identical, Load replays 0 days, New advances (rng 0→3, events
+  0→8), null-branch doesn't backfill (new PROBE F2). Adversarial hostile
+  save (`ending:null` + `goalAchieved:true`) loads safely — the zombie-freeze
+  hazard is closed. Full suite 238/2045 + tsc clean re-confirmed.
+- **Baseline shift, explained not drifted:** organic `loss_patience` now day
+  36 (was 28) — the deliberate opening change (60 spice, no starting crew).
+- **Carry-forwards to WP02/WP03** (recorded, not missed): `hashState` still
+  has zero production callers (serves acceptance criterion 5, WP04's parity
+  work); `wormSightings.atTime` hash-parity risk un-owned; residue —
+  `actRun.ts:46` shadow guard, `DialogueSystem.ts:97-101` faction-reputation
+  write, `FactionPanel`/`SietchCommandSection`/troops readouts,
+  `endgameOps.ts:75` command-time roll. **WP01 → `verified` on the board.**
