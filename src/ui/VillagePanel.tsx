@@ -33,6 +33,14 @@ export default function VillagePanel() {
   const isHere = world.player.location === selectedVillage.id
   const isTraveling = world.player.state === 'traveling'
   const sietch = selectSietch(world, selectedVillage.id)
+  // Sietch-kind locations: SietchState is now the sole loyalty authority
+  // (docs/PRD/game-completion/02-runtime-consolidation.md "Sietches and
+  // loyalty") — Village.loyalty is a stale legacy copy for these. Every
+  // other kind still reads Village.loyalty, which the (untouched) village
+  // diplomacy systems keep mutating.
+  const loyalty = selectedVillage.kind === 'sietch'
+    ? sietch?.loyalty ?? selectedVillage.loyalty
+    : selectedVillage.loyalty
 
   function travel() {
     EventBus.emit('player:travel', { targetVillageId: selectedVillage!.id })
@@ -63,7 +71,7 @@ export default function VillagePanel() {
       </div>
       <div style={styles.row}>
         <span style={styles.label}>Loyalty</span>
-        <LoyaltyBar value={selectedVillage.loyalty} />
+        <LoyaltyBar value={loyalty} />
       </div>
       <div style={styles.row}>
         <span style={styles.label}>Status</span>

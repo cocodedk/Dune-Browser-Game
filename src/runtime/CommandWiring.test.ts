@@ -8,9 +8,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 vi.mock('../game-engine/TravelSystem', () => ({ startTravel: vi.fn() }))
 vi.mock('../game-engine/DialogueSystem', () => ({ chooseDialogue: vi.fn() }))
 vi.mock('../game-engine/SietchSystem', () => ({
-  pledgePlayerSietch: vi.fn(),
   assignPlayerSietchTask: vi.fn(),
   stopPlayerSietchTask: vi.fn(),
+}))
+vi.mock('../game-engine/commands/pledgeCommand', () => ({
+  runPledgeCommand: vi.fn(),
 }))
 vi.mock('../game-engine/CombatSystem', () => ({
   attackVillage: vi.fn(),
@@ -19,7 +21,8 @@ vi.mock('../game-engine/CombatSystem', () => ({
 
 import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue } from '../game-engine/DialogueSystem'
-import { pledgePlayerSietch, assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
+import { assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
+import { runPledgeCommand } from '../game-engine/commands/pledgeCommand'
 import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
 import { EventBus } from '../EventBus'
 import { world, setWorld, createInitialState } from '../game-engine/GameState'
@@ -48,9 +51,9 @@ describe('wireCommands', () => {
     expect(chooseDialogue).toHaveBeenCalledWith('offer_help')
   })
 
-  it('routes player:pledge_sietch to pledgePlayerSietch', () => {
+  it('routes player:pledge_sietch through the runPledgeCommand dispatch seam', () => {
     EventBus.emit('player:pledge_sietch', { villageId: 'sietch_tabr' })
-    expect(pledgePlayerSietch).toHaveBeenCalledWith('sietch_tabr')
+    expect(runPledgeCommand).toHaveBeenCalledWith('sietch_tabr')
   })
 
   it('routes player:assign_sietch_task to assignPlayerSietchTask', () => {

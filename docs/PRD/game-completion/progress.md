@@ -201,3 +201,31 @@ reproduce.
   `actRun.ts:46` shadow guard, `DialogueSystem.ts:97-101` faction-reputation
   write, `FactionPanel`/`SietchCommandSection`/troops readouts,
   `endgameOps.ts:75` command-time roll. **WP01 → `verified` on the board.**
+
+## Round 7 — WP02 opened: plan of record (2026-08-11)
+
+- Advisor-checked. Six serial chunks, one gate-passing commit each, and an
+  invariant at every commit: a fresh campaign can pledge, earn, and reach Q1
+  through production UI — so the new authority is BUILT (W2a-W2d) before the
+  legacy economy is DELETED (W2e). Order: W2a data model (SietchState becomes
+  loyalty/pledge/crew source of truth, `CommandOutcome<T>` substrate; extend
+  CommandWiring/SietchSystem, never parallel-build) → W2b pledge+crew commands
+  (atomic five-step chain, refusal codes, idempotency, combat-pledge path
+  dies here with `pledged.count` preserved through the canonical chain) →
+  W2c pausing tribute settlement (serialized pending decision; payload must
+  match 03's settlement modal spec; patience bands are a canonical-numbers
+  decision to record) → W2d assignment/equipment/casualties → W2e legacy
+  removal sweep (both seams, `player.troops`/`influence`, CombatSystem +
+  panels, FactionPanel/SietchCommandSection; check the 5×-events E2E doesn't
+  starve; influence migration step 5 is a documented no-op per WP00's
+  write-only evidence) → W2f migration v5 (ONE bump for the package) +
+  fixtures + browser trace (exposes read-only `hashState` via `__DUNE__`,
+  closing that carry-forward).
+- Traps resolved up front: the settlement-assigns-loss rule gets ONE shared
+  ending-authority function (runner step 8 + settle command), after which the
+  runner returns to 02's literal step order and the quota-before-8 deviation
+  retires (organic-loss timing shifts again — expected, cite);
+  **acceptance criterion 5 (state-hash parity) cannot pass until WP04's
+  runner exists — recorded now as a scope reading, not a miss**;
+  `endgameOps.assaultFort` is authored fort content, survives — commandify
+  and seed it in W2d/W2f, don't sweep it with the PoC attack subsystem.

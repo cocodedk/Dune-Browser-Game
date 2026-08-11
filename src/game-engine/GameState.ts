@@ -62,7 +62,13 @@ export function createInitialState(seed: number = DEFAULT_SEED): WorldState {
     // constructed by test fixtures outside this package's scope.
     factionProfiles: (factionsData as unknown as FactionProfile[]).map(f => ({ ...f, relations: { ...f.relations }, goals: [...f.goals] })),
     regions: (regionsData as unknown as Region[]).map(r => ({ ...r })),
-    sietches: INITIAL_SIETCHES.map(s => ({ ...s })),
+    // crewIds is copied, not aliased — spreading a plain `{ ...s }` would
+    // share one array per seed entry across every createInitialState() call
+    // (New Game, a reset, a test fixture), so a future mutation to one run's
+    // sietch.crewIds (W2b's pledge chain) would leak into every other run
+    // built from the same seed module. factionProfiles above takes the same
+    // precaution for its nested relations/goals.
+    sietches: INITIAL_SIETCHES.map(s => ({ ...s, crewIds: [...(s.crewIds ?? [])] })),
     difficulty: 'normal' as Difficulty,
     scoutedDefense: {},
     paused: false,

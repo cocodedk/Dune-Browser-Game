@@ -9,7 +9,8 @@ import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue, startDialogue } from '../game-engine/DialogueSystem'
 import { pushEvent } from '../game-engine/EventSystem'
 import { decideVisit, decideSpeakTo } from './VisitPolicy'
-import { pledgePlayerSietch, assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
+import { assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
+import { runPledgeCommand } from '../game-engine/commands/pledgeCommand'
 import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
 import {
   assignCrew, buyEquipment, issueEquipment, assaultFort,
@@ -62,8 +63,14 @@ export function wireCommands(): () => void {
     world.difficulty = difficulty
     EventBus.emit('world:updated', { state: world })
   }
+  /**
+   * The reference CommandOutcome dispatch seam (chunk W2a) — see
+   * commands/pledgeCommand.ts. The outcome is available for a future
+   * chunk's toast/refusal wiring; success already publishes its own event
+   * from inside pledgePlayerSietch, unchanged.
+   */
   const onPledge = ({ villageId }: BusEvents['player:pledge_sietch']): void => {
-    pledgePlayerSietch(villageId)
+    runPledgeCommand(villageId)
   }
   const onAssignTask = ({ villageId, task }: BusEvents['player:assign_sietch_task']): void => {
     assignPlayerSietchTask(villageId, task)

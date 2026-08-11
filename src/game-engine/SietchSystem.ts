@@ -6,6 +6,7 @@ import { world } from './GameState'
 import { CHARISMA_PER_PLEDGE } from './sietch/loyalty'
 import { pushEvent } from './EventSystem'
 import { pledgeSietch, pledgedCount, assignTask, canAssignTask } from './sietch/assignTask'
+import { ok, fail, type CommandOutcome } from './commands/outcome'
 import type { SietchTask } from './sietch/types'
 import type { VillageId } from '../types'
 
@@ -14,20 +15,50 @@ function taskLabel(task: SietchTask): string {
 }
 
 /**
- * Pledge the Fremen sietch at villageId to the player.
- * Guards: sietch exists, player is present, village owner is 'fremen',
- * not already pledged.
+ * Every reason pledgePlayerSietch currently refuses a pledge, named as a
+ * stable code — docs/PRD/game-completion/02-runtime-consolidation.md
+ * "Command outcome contract". These mirror today's guard order exactly.
+ * Loyalty and charisma-cap checks (sietch/loyalty.ts's checkPledge) are NOT
+ * part of this list: pledgePlayerSietch does not run them today, and this
+ * chunk wraps the existing rules rather than rewriting them — the atomic
+ * five-step chain is chunk W2b's.
  */
-export function pledgePlayerSietch(villageId: VillageId): void {
-  const sietch = world.sietches.find(s => s.villageId === villageId)
-  if (!sietch) return
+export type PledgeGuardRefusal = 'no-sietch' | 'not-present' | 'not-fremen' | 'already-pledged'
 
-  if (world.player.location !== villageId) return
+/**
+ * Read-only precondition check for pledging villageId, against live
+ * `world` state. pledgePlayerSietch calls this before mutating anything;
+ * commands/pledgeCommand.ts (the CommandOutcome dispatch seam) calls it
+ * again to classify a refusal without touching state. Checking twice costs
+ * nothing (both reads are pure) and keeps each caller independently
+ * defended against a stale UI — the same defence DialogueSystem's
+ * attemptRitual re-check already takes against its own gate.
+ */
+export function checkPledgeGuards(villageId: VillageId): CommandOutcome<'ok', PledgeGuardRefusal> {
+  const sietch = world.sietches.find(s => s.villageId === villageId)
+  if (!sietch) return fail('no-sietch')
+
+  if (world.player.location !== villageId) return fail('not-present')
 
   const village = world.villages.find(v => v.id === villageId)
-  if (!village || village.owner !== 'fremen') return
+  if (!village || village.owner !== 'fremen') return fail('not-fremen')
 
-  if (sietch.pledgedToPlayer) return
+  if (sietch.pledgedToPlayer) return fail('already-pledged')
+
+  return ok('ok')
+}
+
+/**
+ * Pledge the Fremen sietch at villageId to the player.
+ * Guards: sietch exists, player is present, village owner is 'fremen',
+ * not already pledged — see checkPledgeGuards.
+ */
+export function pledgePlayerSietch(villageId: VillageId): void {
+  if (!checkPledgeGuards(villageId).ok) return
+
+  // Safe: checkPledgeGuards already confirmed a fremen-owned village exists
+  // at villageId.
+  const village = world.villages.find(v => v.id === villageId)!
 
   world.charisma += CHARISMA_PER_PLEDGE
 

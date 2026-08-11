@@ -1,14 +1,29 @@
 // src/game-engine/economy/actRun.ts
 // Act transitions and endings.
 
+/**
+ * Average loyalty across pledged sietches, read from SietchState — the sole
+ * loyalty authority for sietch-kind locations (docs/PRD/game-completion/
+ * 02-runtime-consolidation.md "Sietches and loyalty"). Village/Location no
+ * longer answers for this; the village lookup this replaced is gone.
+ *
+ * A sietch predating this chunk's `loyalty` field (an old save, or a test
+ * fixture outside its scope — see sietch/types.ts's SietchState doc) reads
+ * as 0 rather than throwing or producing NaN: no in-memory migration
+ * adapter is needed for this value, a documented default suffices.
+ */
+export function averagePledgedSietchLoyalty(sietches: readonly SietchState[]): number {
+  const loyalties = sietches
+    .filter(s => s.pledgedToPlayer)
+    .map(s => s.loyalty ?? 0)
+  return loyalties.length
+    ? loyalties.reduce((a, b) => a + b, 0) / loyalties.length
+    : 0
+}
+
 /** Build the act machine's view of the world from live state. */
 function actView(): ActWorldView {
   const pledged = world.sietches.filter(s => s.pledgedToPlayer)
-  const loyalties = pledged
-    .map(s => world.villages.find(v => v.id === s.villageId)?.loyalty ?? 0)
-  const avgLoyalty = loyalties.length
-    ? loyalties.reduce((a, b) => a + b, 0) / loyalties.length
-    : 0
 
   return {
     act: world.act,
@@ -24,7 +39,7 @@ function actView(): ActWorldView {
     capitalFortDestroyed: capitalDestroyed(world.forts),
     palaceHeld: true,
     greenRegions: greenRegionCount(world.ecology),
-    averagePledgedLoyalty: avgLoyalty,
+    averagePledgedLoyalty: averagePledgedSietchLoyalty(world.sietches),
     countdownExpired: false,
   }
 }
@@ -35,6 +50,7 @@ import { pushEvent } from '../EventSystem'
 import { evaluateAct, actQuotaMultiplier, actNumber } from '../acts/transitions'
 import { onActTransition } from '../quota/quota'
 import type { ActWorldView, EndingId } from '../acts/transitions'
+import type { SietchState } from '../sietch/types'
 import { greenRegionCount, maxVegetation } from '../ecology/ecology'
 import { destroyedCount, capitalDestroyed } from '../acts/endgame'
 
