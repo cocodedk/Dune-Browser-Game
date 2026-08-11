@@ -19,7 +19,7 @@ import { useGameStore } from './store'
 import { EventBus } from '../EventBus'
 import { activeOpeningObjective, completedOpeningObjectives } from '../game-engine/acts/openingObjectives'
 import type { ObjectiveTargetHint } from '../game-engine/acts/openingObjectives'
-import { OBJECTIVE_COPY, PANEL_LABELS } from './objectiveCopy'
+import { OBJECTIVE_COPY, PANEL_LABELS, POST_OPENING_PLACEHOLDER } from './objectiveCopy'
 import { palette, type as typo } from './theme'
 
 function showTarget(hint: ObjectiveTargetHint): void {
@@ -41,13 +41,18 @@ export default function ObjectivePanel() {
   // with Act 1's own objectives once they exist.
   const displayActive = active && active.id !== 'opening.complete' ? active : null
   const history = completedOpeningObjectives(world).filter(r => r.id !== 'opening.complete')
+  // `active === null` only once the WHOLE chain, including opening.complete,
+  // is done (openingObjectives.ts's activeOpeningObjective) — task item 3's
+  // "the objective surface moves past the opening chain" reading.
+  const pastOpening = active === null
 
-  if (!displayActive && history.length === 0) return null
+  if (!displayActive && !pastOpening && history.length === 0) return null
 
   const copy = displayActive ? OBJECTIVE_COPY[displayActive.id] : undefined
 
   return (
     <div style={styles.box}>
+      {pastOpening && <div style={styles.title}>{POST_OPENING_PLACEHOLDER}</div>}
       {displayActive && copy && (
         <>
           <div style={styles.title}>{copy.title}</div>

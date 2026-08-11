@@ -18,6 +18,8 @@ import { DUNCAN_NODES } from './duncan'
 import { BRIEFING_NODES } from './opening-briefing'
 import { LEDGER_NODES } from './opening-ledger'
 import { REDWALL_TRUST_NODES } from './opening-redwall-trust'
+import { TABR_DILEMMA_NODES } from './opening-tabr-dilemma'
+import { Q1_DEBRIEF_NODES, q1DebriefRootId } from './opening-q1-debrief'
 import type { DialogueNode } from '../../types'
 
 export const STORY_NODES: DialogueNode[] = [
@@ -36,18 +38,19 @@ export const STORY_NODES: DialogueNode[] = [
  */
 export const STORY_TREE_ID = 'story'
 
-export { BRIEFING_NODES, LEDGER_NODES, REDWALL_TRUST_NODES }
+export { BRIEFING_NODES, LEDGER_NODES, REDWALL_TRUST_NODES, TABR_DILEMMA_NODES, Q1_DEBRIEF_NODES, q1DebriefRootId }
 /**
- * The opening's dedicated beat trees (chunks W3c-d — 03-opening-
- * experience.md "Teaching sequence" Beats 1-2 and 4). Each is its own tree,
- * NOT folded into STORY_NODES/STORY_TREE_ID — see opening-briefing.ts's
+ * The opening's dedicated beat trees (chunks W3c-e — 03-opening-
+ * experience.md "Teaching sequence" Beats 1-2, 4, 6, and 7). Each is its own
+ * tree, NOT folded into STORY_NODES/STORY_TREE_ID — see opening-briefing.ts's
  * header for why. Opened only by DialogueSystem.ts's own auto-open/
- * auto-chain logic, TravelSystem.ts's arrival trigger (Beat 4 — see
- * checkTravelArrival's own doc for why that trigger lives there rather than
- * runtime/openingBriefing.ts) and runtime/openingBriefing.ts's own trigger
- * (Beats 1-2), never by VisitPolicy routing, so none needs an entry in
- * routedTrees()/DIALOGUES.
+ * auto-chain logic, TravelSystem.ts's arrival triggers (Beats 4 and 6 — see
+ * checkTravelArrival's own doc), runtime/openingBriefing.ts's trigger
+ * (Beats 1-2), and runtime/q1Debrief.ts's trigger (Beat 7), never by
+ * VisitPolicy routing, so none needs an entry in routedTrees()/DIALOGUES.
  */
 export const BRIEFING_TREE_ID = 'story/briefing'
 export const LEDGER_TREE_ID = 'story/ledger'
 export const REDWALL_TRUST_TREE_ID = 'story/redwall_trust'
+export const TABR_DILEMMA_TREE_ID = 'story/tabr_dilemma'
+export const Q1_DEBRIEF_TREE_ID = 'story/q1_debrief'

@@ -73,3 +73,18 @@ export const PANEL_LABELS: Record<string, string> = {
   'quota-ledger': 'Tribute Ledger',
   'crew-panel': 'Crew',
 }
+
+/**
+ * Shown once every step of the opening chain — including `opening.complete`
+ * itself — is done, i.e. `activeOpeningObjective(world)` returns null
+ * (game-engine/acts/openingObjectives.ts). A single placeholder line rather
+ * than a real Act 1 objective: WP05 owns Act 1's own objective content
+ * (docs/PRD/game-completion/progress.md Round 11 — "W3a builds the minimal
+ * act1 objective-record seam and WP05 extends it — no parallel-build").
+ * This chunk (W3e) only decides the panel must show SOMETHING here rather
+ * than going blank (03 "Objective presentation": "At no point may the only
+ * current goal be... a raw flag name" — an empty panel is the same failure
+ * by omission).
+ */
+export const POST_OPENING_PLACEHOLDER =
+  'Act 1 continues: strengthen your position before the next tribute.'

@@ -13,6 +13,7 @@ import { serializeWorld, deserializeWorld } from '../persistence'
 import { runSettleCommand } from './settleCommand'
 import { DAY_SECONDS } from '../TimeSystem'
 import { BRIEFING_COMPLETE_FLAG, OPENING_COMPLETE_FLAG } from '../acts/openingObjectives'
+import { Q1_DEBRIEF_PENDING_FLAG, Q1_DEBRIEF_BAND_FLAG, buildPendingSettlement } from '../quota/settlement'
 
 vi.mock('../../EventBus', () => ({
   EventBus: { emit: vi.fn(), on: vi.fn(), off: vi.fn() },
@@ -92,5 +93,41 @@ describe('opening-short-payment: reaching day 12 below the minimum partial thres
     expect(world.ending).toBeNull() // patience started at 3; one loss does not end the run
     expect(world.player.spice).toBe(0)
     expect(world.flags[OPENING_COMPLETE_FLAG]).toBe(true) // short still closes the opening
+  })
+})
+
+describe('Beat 7 debrief signal: cycle 0 sets it, cycle 1 does not', () => {
+  it('sets the pending flag and encodes the band on the first settlement', () => {
+    reachQ1(90) // full payment
+    runSettleCommand(90)
+
+    expect(world.flags[Q1_DEBRIEF_PENDING_FLAG]).toBe(true)
+    expect(world.flags[Q1_DEBRIEF_BAND_FLAG]).toBe(2) // full
+  })
+
+  it('encodes partial (1) and short (0) correctly', () => {
+    reachQ1(60)
+    runSettleCommand(54) // minPartialPayment — partial band
+    expect(world.flags[Q1_DEBRIEF_BAND_FLAG]).toBe(1)
+
+    reachQ1(30)
+    runSettleCommand(30) // below the partial threshold — short band
+    expect(world.flags[Q1_DEBRIEF_BAND_FLAG]).toBe(0)
+  })
+
+  it('does not set the signal on a later cycle (only the FIRST settlement)', () => {
+    reachQ1(90)
+    runSettleCommand(90) // cycle 0 -> cycle 1
+    world.flags[Q1_DEBRIEF_PENDING_FLAG] = false // consumed, as the runtime hook would
+
+    // Directly install cycle 1's pending decision rather than simulating
+    // eight more days (which, with this fixture's zero-crew, zero-pledge
+    // setup, risks tripping an unrelated loss_abandoned ending) — this test
+    // is about the debrief SIGNAL, not day-boundary mechanics.
+    world.pendingSettlement = buildPendingSettlement(world.quota, world.player.spice)
+    runSettleCommand(world.pendingSettlement.legalRange.max)
+
+    expect(world.quota.cycleIndex).toBe(2)
+    expect(world.flags[Q1_DEBRIEF_PENDING_FLAG]).toBe(false)
   })
 })

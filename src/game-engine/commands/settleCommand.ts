@@ -10,7 +10,11 @@
 
 import { world } from '../GameState'
 import { ok, fail, type CommandOutcome } from './outcome'
-import { validateSettleAmount, type SettleAmountRefusal } from '../quota/settlement'
+import {
+  validateSettleAmount, encodeSettlementBand,
+  Q1_DEBRIEF_PENDING_FLAG, Q1_DEBRIEF_BAND_FLAG,
+  type SettleAmountRefusal,
+} from '../quota/settlement'
 import { applySettlement } from '../economy/settlementRun'
 import { evaluateEndingAuthority } from '../economy/actRun'
 import { OPENING_COMPLETE_FLAG } from '../acts/openingObjectives'
@@ -45,11 +49,18 @@ export function runSettleCommand(
   // every existing fixture pinning that code needs no change.
   const isOpeningSettlement = pending.cycleIndex === 0
 
-  applySettlement(amount)
+  const outcome = applySettlement(amount)
   world.pendingSettlement = null
   evaluateEndingAuthority()
 
-  if (isOpeningSettlement) world.flags[OPENING_COMPLETE_FLAG] = true
+  if (isOpeningSettlement) {
+    world.flags[OPENING_COMPLETE_FLAG] = true
+    // Beat 7's debrief signal (03 "Teaching sequence" Beat 7) — see
+    // quota/settlement.ts's own doc for why this is a flag, not a direct
+    // startDialogue call from here.
+    world.flags[Q1_DEBRIEF_PENDING_FLAG] = true
+    world.flags[Q1_DEBRIEF_BAND_FLAG] = encodeSettlementBand(outcome.band)
+  }
 
   return ok('settled')
 }

@@ -12,10 +12,22 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from './store'
 import { EventBus } from '../EventBus'
-import { settleQuota } from '../game-engine/quota/quota'
+import { settleQuota, type PaymentOutcome } from '../game-engine/quota/quota'
 import { defaultSettleAmount } from '../game-engine/quota/settlement'
 import { getDifficultyConfig } from '../game-engine/difficulty'
 import { palette, type, space, row, panelShell, button } from './theme'
+
+/**
+ * 03-opening-experience.md Beat 7's settlement wording, shared by every
+ * preview this modal shows (full-result, minimum-result, and the live
+ * selected-amount preview) — one function, called against settleQuota's own
+ * PaymentOutcome each time, never a second estimate of the band rule.
+ */
+function bandMessage(outcome: PaymentOutcome): string {
+  if (outcome.band === 'full') return 'Patience restored, arrears cleared.'
+  if (outcome.band === 'partial') return `Patience held, ${outcome.quota.arrears.toFixed(0)} carried as arrears.`
+  return `Patience falls to ${outcome.quota.patience} of 3, ${outcome.quota.arrears.toFixed(0)} carried.`
+}
 
 export default function SettlementModal() {
   const { world } = useGameStore()
@@ -43,7 +55,15 @@ export default function SettlementModal() {
 
   const chosen = amount ?? defaultSettleAmount(pending)
   const config = getDifficultyConfig(world.difficulty)
-  const preview = settleQuota(world.quota, chosen, config.quotaMultiplier)
+  const minAmount = Math.min(pending.minPartialPayment, pending.legalRange.max)
+  // Three calls to the same pure engine function — 03 Beat 7's full-result,
+  // minimum-result, and "the patience consequence of the SELECTED amount
+  // before confirmation" are three different amounts, not three different
+  // rules (W2c's recorded pattern: "the modal calls the engine's own
+  // function, never a second estimate").
+  const fullPreview = settleQuota(world.quota, pending.legalRange.max, config.quotaMultiplier)
+  const minPreview = settleQuota(world.quota, minAmount, config.quotaMultiplier)
+  const chosenPreview = settleQuota(world.quota, chosen, config.quotaMultiplier)
 
   function settle(a: number) {
     EventBus.emit('player:settle_tribute', { amount: a })
@@ -71,13 +91,15 @@ export default function SettlementModal() {
           <button style={button.base} onClick={() => setAmount(pending.legalRange.max)}>
             Full ({pending.legalRange.max.toFixed(0)})
           </button>
-          <button
-            style={button.base}
-            onClick={() => setAmount(Math.min(pending.minPartialPayment, pending.legalRange.max))}
-          >
-            Minimum ({Math.min(pending.minPartialPayment, pending.legalRange.max).toFixed(0)})
+          <button style={button.base} onClick={() => setAmount(minAmount)}>
+            Minimum ({minAmount.toFixed(0)})
           </button>
         </div>
+        {/* Full-payment result and minimum-partial result (03 Beat 7): static
+            reference previews, independent of whatever is currently selected
+            below. */}
+        <div style={type.note}>Full: {bandMessage(fullPreview)}</div>
+        <div style={type.note}>Minimum: {bandMessage(minPreview)}</div>
 
         <input
           type="number"
@@ -88,12 +110,11 @@ export default function SettlementModal() {
           style={styles.input}
         />
 
+        {/* The patience consequence of the CURRENTLY SELECTED amount, before
+            confirmation (03 Beat 7) — a distinct "Selected —" prefix keeps
+            this line unambiguous against the two static previews above. */}
         <div style={{ ...type.note, marginTop: space.xs }}>
-          {preview.band === 'full' && 'Full payment: patience restored, arrears cleared.'}
-          {preview.band === 'partial' &&
-            `Partial: patience held, ${preview.quota.arrears.toFixed(0)} carried as arrears.`}
-          {preview.band === 'short' &&
-            `Short: patience falls to ${preview.quota.patience} of 3, ${preview.quota.arrears.toFixed(0)} carried.`}
+          Selected — {bandMessage(chosenPreview)}
         </div>
 
         <button style={{ ...button.base, ...button.active, marginTop: space.sm }} onClick={() => settle(chosen)}>

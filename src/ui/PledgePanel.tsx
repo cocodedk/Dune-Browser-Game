@@ -39,9 +39,17 @@ function recoveryHint(reason: PledgeRefusal, charisma: number): string {
   switch (reason) {
     case 'not-loyal-enough':
       return 'Speak with them again, or offer a gift, to raise loyalty.'
-    case 'charisma-cap':
-      return `Charisma ${charisma} is not enough for another pledge — earn more through ` +
-        'a tribute paid in full or a raid survived. Existing pledges remain safe.'
+    case 'charisma-cap': {
+      // 03 "Recovery and refusal behavior": "Explain cap, current charisma,
+      // next known source, and that existing pledges remain safe." Sources
+      // cited are the three that actually exist in loyalty.ts —
+      // CHARISMA_PER_PLEDGE, CHARISMA_PER_QUOTA, CHARISMA_PER_RAID — no
+      // invented mechanism.
+      const cap = maxPledged(charisma)
+      return `Your cap is ${cap} pledged sietch${cap === 1 ? '' : 'es'} at charisma ${charisma}. ` +
+        'Pledging and story events raise charisma — a sietch pledged, a tribute paid in ' +
+        'full, or a raid survived. Existing pledges remain safe.'
+    }
     case 'already-pledged':
     case 'not-present':
     case 'no-sietch':

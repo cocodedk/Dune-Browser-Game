@@ -77,18 +77,50 @@ export async function chooseReply(page: Page, name: RegExp): Promise<void> {
  * identically under this mechanism, and the UI (e.g. the pledge confirm
  * modal) is stable for 30s+ under real clicks — the flake is the test
  * mechanism, not the app.
+ *
+ * `nth` (chunk W3e) picks among several matches in document order — needed
+ * once two CrewCards render identical field-button labels (e.g. two crews
+ * both showing a "red_wall_pan"-shaped recommendation), where the default
+ * first match would always hit crew 1's card.
  */
-export async function clickButton(page: Page, text: string, exact = true): Promise<void> {
+export async function clickButton(page: Page, text: string, exact = true, nth = 0): Promise<void> {
   await page.waitForFunction(
-    ({ t, ex }) => [...document.querySelectorAll('button')]
-      .some(b => ex ? b.textContent?.trim() === t : b.textContent?.includes(t)),
-    { t: text, ex: exact },
+    ({ t, ex, n }) => [...document.querySelectorAll('button')]
+      .filter(b => ex ? b.textContent?.trim() === t : b.textContent?.includes(t)).length > n,
+    { t: text, ex: exact, n: nth },
   )
-  await page.evaluate(({ t, ex }) => {
-    const b = [...document.querySelectorAll('button')]
-      .find(x => ex ? x.textContent?.trim() === t : x.textContent?.includes(t))
-    ;(b as HTMLButtonElement).click()
-  }, { t: text, ex: exact })
+  await page.evaluate(({ t, ex, n }) => {
+    const matches = [...document.querySelectorAll('button')]
+      .filter(x => ex ? x.textContent?.trim() === t : x.textContent?.includes(t))
+    ;(matches[n] as HTMLButtonElement).click()
+  }, { t: text, ex: exact, n: nth })
+}
+
+/**
+ * Walks Beats 3-5 for real through production UI: travel Arrakeen -> Hagg
+ * -> Red Wall, Beat 4's auto-opened trust dialogue (transaction branch),
+ * pledge confirm, and the first crew's harvest order — the common prefix
+ * opening2.spec.ts and opening3.spec.ts (chunk W3e) both need, extracted
+ * here rather than duplicated so a change to that flow only needs updating
+ * once. Assumes Beats 1-2 are already complete (completeOpeningBriefing)
+ * and the page was entered with `?debug=1`.
+ */
+export async function reachFirstCrew(page: Page): Promise<void> {
+  await chooseReply(page, /Hagg/)
+  await advanceUntilArrived(page, 'hagg')
+
+  const redWallAtHagg = page.getByRole('button', { name: /Red Wall Sietch/ })
+  await redWallAtHagg.dispatchEvent('click')
+  await advanceUntilArrived(page, 'red_wall_sietch')
+
+  await chooseReply(page, /fair exchange/i) // the transaction branch
+  await chooseReply(page, /Agreed/i)
+
+  await clickButton(page, 'Pledge the Fremen', false) // opens the confirm step
+  await clickButton(page, 'Pledge')
+
+  await clickButton(page, 'red_wall_pan', false) // the recommended field
+  await clickButton(page, 'Issue order')
 }
 
 /**

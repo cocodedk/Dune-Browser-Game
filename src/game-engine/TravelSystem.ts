@@ -8,7 +8,11 @@ import type { TravelMode } from './travel/rules';
 import { REGION_ADJACENCY } from '../data/regionAdjacency';
 import { TRAVEL_RED_WALL_FLAG, REDWALL_TRUST_ACKNOWLEDGED_FLAG } from './acts/openingObjectives';
 import { startDialogue } from './DialogueSystem';
-import { REDWALL_TRUST_TREE_ID } from '../data/dialogue';
+import { REDWALL_TRUST_TREE_ID, TABR_DILEMMA_TREE_ID } from '../data/dialogue';
+
+/** Beat 6's own guard flag (data/dialogue/opening-tabr-dilemma.ts) — set at
+ * OPEN time, not by a dialogue effect. See maybeOpenTabrDilemma's doc. */
+export const TABR_DILEMMA_SHOWN_FLAG = 'tabr.dilemma.shown';
 
 export function travelDuration(fromId: VillageId, toId: VillageId): number {
   const from = world.villages.find(v => v.id === fromId);
@@ -129,6 +133,7 @@ export function checkTravelArrival(): void {
   }
 
   maybeOpenRedWallTrustDialogue(arrivedAt);
+  maybeOpenTabrDilemma(arrivedAt);
 }
 
 /**
@@ -158,4 +163,23 @@ function maybeOpenRedWallTrustDialogue(arrivedAt: VillageId): void {
   if (world.flags[REDWALL_TRUST_ACKNOWLEDGED_FLAG] === true) return;
 
   startDialogue(REDWALL_TRUST_TREE_ID, arrivedAt);
+}
+
+/**
+ * Beat 6's auto-open trigger (03-opening-experience.md Beat 6 — "must not
+ * script the decision"). Same arrival-hook shape as Beat 4's trigger above,
+ * with one deliberate difference: story/tabr_dilemma is NOT in
+ * canCloseDialogue's mandatory set, so the player may Escape/× out before a
+ * terminal choice. A completion-flag guard (Beat 4's shape) would therefore
+ * reopen this tree on every later arrival for anyone who closed it early —
+ * not "auto-opens ONCE". TABR_DILEMMA_SHOWN_FLAG is set here, at open time,
+ * so exactly one auto-open ever happens regardless of how the player leaves it.
+ */
+function maybeOpenTabrDilemma(arrivedAt: VillageId): void {
+  if (arrivedAt !== 'sietch_tabr') return;
+  if (world.dialogue !== null) return;
+  if (world.flags[TABR_DILEMMA_SHOWN_FLAG] === true) return;
+
+  world.flags[TABR_DILEMMA_SHOWN_FLAG] = true;
+  startDialogue(TABR_DILEMMA_TREE_ID, arrivedAt);
 }

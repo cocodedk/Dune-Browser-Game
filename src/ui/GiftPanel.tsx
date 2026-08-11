@@ -8,7 +8,7 @@
 
 import { EventBus } from '../EventBus'
 import type { SietchState } from '../game-engine/sietch/types'
-import { GIFT_SPICE_COST } from '../game-engine/sietch/loyalty'
+import { GIFT_SPICE_COST, GIFT_LOYALTY_GAIN } from '../game-engine/sietch/loyalty'
 import { giftButtonVisible } from './giftButtonVisibility'
 
 interface Props {
@@ -39,6 +39,12 @@ export default function GiftPanel({
       <p style={styles.prose}>
         Offer spice to the Fremen of {villageName} to earn their trust.
       </p>
+      {/* Beat 6 (03-opening-experience.md): "a gift has a previewed cost and
+          loyalty gain" — GIFT_SPICE_COST/GIFT_LOYALTY_GAIN, the same
+          constants the command itself reads (sietch/loyalty.ts). */}
+      <p style={styles.preview}>
+        Costs {GIFT_SPICE_COST} spice · +{GIFT_LOYALTY_GAIN} loyalty
+      </p>
       <button onClick={gift} style={styles.btn}>
         Gift spice ({GIFT_SPICE_COST})
       </button>
@@ -54,6 +60,11 @@ const styles = {
     fontStyle: 'italic' as const,
     margin: '0 0 8px',
     lineHeight: 1.4,
+  },
+  preview: {
+    color: '#c9b27a',
+    fontSize: 11,
+    margin: '0 0 6px',
   },
   btn: {
     background: '#2a1e0a',

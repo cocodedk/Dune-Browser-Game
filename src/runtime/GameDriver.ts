@@ -7,6 +7,7 @@
 import { world } from '../game-engine/GameState'
 import { update as engineUpdate, initLoop as engineInitLoop } from '../game-engine/GameLoop'
 import { EventBus } from '../EventBus'
+import { maybeOpenQ1Debrief } from './q1Debrief'
 
 const UI_UPDATE_INTERVAL_MS = 100 // throttle for world:updated / renderer refresh
 
@@ -30,6 +31,10 @@ export function initLoop(): void {
  */
 export function tick(deltaMs: number): boolean {
   engineUpdate(deltaMs / 1000)
+  // Beat 7's debrief auto-open (03-opening-experience.md) — see
+  // runtime/q1Debrief.ts's own doc for why this lives here rather than
+  // inside settleCommand.ts itself.
+  maybeOpenQ1Debrief()
 
   updateTimer += deltaMs
   if (updateTimer < UI_UPDATE_INTERVAL_MS) return false
