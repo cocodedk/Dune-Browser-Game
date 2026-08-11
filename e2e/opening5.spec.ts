@@ -72,7 +72,6 @@ test('with guidance disabled from the start, every step stays discoverable and t
   await clickButton(page, 'Tabr Shallows', false, 1)
   await clickButton(page, 'Issue order')
 
-  await page.evaluate(() => window.__DUNE__?.giveHarvester?.())
   await page.evaluate(t => window.__DUNE__?.setTime?.(t), 12 * 60 + 1)
   await expect(page.getByRole('button', { name: 'Settle' })).toBeVisible()
   await clickButton(page, 'Full (', false)

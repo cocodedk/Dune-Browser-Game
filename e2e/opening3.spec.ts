@@ -70,13 +70,10 @@ test('Tabr dilemma, gift climb, second crew, settlement preview, and the Q1 debr
   await clickButton(page, 'Tabr Shallows', false, 1)
   await clickButton(page, 'Issue order')
 
-  // WP04 chunk W4e's yield-lever retune (progress.md's round record) means
-  // two crews now clear Q1's 90 due honestly by day 12, unassisted — see
-  // cycleTwo.test.ts's own invest-line measurement. giveHarvester stays
-  // here regardless: stripping the debug bridges is W4f's own closure
-  // chunk, not this scenario's — it only adds further headroom now rather
-  // than being load-bearing for the canary assertion below.
-  await page.evaluate(() => window.__DUNE__?.giveHarvester?.())
+  // W4f closure: the giveHarvester debug bridge is GONE — after W4e's
+  // authored retune two crews clear Q1's 90 due honestly by day 12
+  // (cycleTwo.test.ts's own invest-line measurement), so this scenario now
+  // proves the real economy end to end with no state mutation.
 
   // Advance to day 12 — the setTime pattern (progress.md Round 9). Waits on
   // the Settle button specifically, not "Imperial Tribute" text — that
@@ -86,7 +83,7 @@ test('Tabr dilemma, gift climb, second crew, settlement preview, and the Q1 debr
   await expect(page.getByRole('button', { name: 'Settle' })).toBeVisible()
 
   const { due, stock } = await settlementFigures(page)
-  expect(stock).toBeGreaterThanOrEqual(due) // canary: covers Q1 in full (two crews + giveHarvester)
+  expect(stock).toBeGreaterThanOrEqual(due) // canary: covers Q1 in full (two real crews, no debug bridge)
 
   // The patience preview varies with the selected amount, BEFORE confirming.
   await clickButton(page, 'Full (', false)

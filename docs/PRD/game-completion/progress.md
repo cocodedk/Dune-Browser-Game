@@ -536,6 +536,44 @@ reproduce.
 - On WP04 `verified`: **M1 flips and the loop STOPS** — build handed to
   the user for the play verdict, per 09's stop conditions.
 
+## Round 17 — WP04 chunks a–f (2026-08-11/12, `395624c`…W4f)
+
+- **W4a (`395624c`):** runtime-faithful runner driving the REAL
+  commandHandlers; shared runtimeTick (GameDriver and runner cannot
+  drift); saveGame no-ops sans indexedDB; simulate.ts DELETED (closes
+  WP02's C5 carve-out + the 15-vs-28 divergence); reserve-line smoke
+  deterministic to the byte with mid-run reload.
+- **W4b (`6cc30bb`):** parity EXACT through two tribute cycles on both
+  lines — parityView excludes events + wormSightings (cited; time/rng
+  stay in), __DUNE__.replay + ?seed=N evidence affordances, fixtures
+  generated same-commit; three real races root-fixed (unbound emit,
+  ambient rAF between evaluates, reload-vs-async-save durability poll).
+- **W4c (`e7f7fd5`):** five agents as pure VisibleState policies
+  (settle-explicitly enforced by throw; production dialogue predicate);
+  distressed fixture PLAYED into patience-1; invariant-2 probe 0/10 at
+  a 9-vs-246 order-of-magnitude gap.
+- **W4d (`1f83a47`):** published 100-seed append-only sweep, 1300 runs
+  in 68.5s, zero seed variance in the window (invariant 9's teeth),
+  invariants 1+2 FAIL stated numerically; capacity ≡ reactive
+  byte-identical; ~23/23 idle days recorded.
+- **W4e (`d615aa4`):** the authored retune — hand rate 6→7, crew floor
+  15→40, opening fields to 95, BASE_AMOUNTS [90,100,30]. Two protocol
+  rounds; round-1 hand-math predicted 120/69, measured 118.85/68.76.
+  ALL FIVE TARGETS MET: reserve FULL/FULL, invest FULL/FULL, income
+  15.40 vs 7.70/day, recovery 0/100→**100/100** with patience held,
+  difficulty monotonic. Lead decisions logged: the Normal overshoot
+  goes to the M1 play verdict rather than a round-3 trade against the
+  binding recovery constraint; cycle-3's base-30 dip is a recorded
+  temporary artifact owned by WP05's act escalation. Test-infra:
+  reuseExistingServer=false (stale-dist phantom failures) + the
+  mid-session-New assertion de-raced (scheduler-luck flake on identical
+  trees, fixed by asserting the ledger dialogue's own copy).
+- **W4f:** both giveHarvester E2E bridges STRIPPED (opening3, opening5)
+  — the invest scenario now proves the real economy with zero state
+  mutation; both pass. Suite: 294 files / 2364 tests; 28/28 E2E.
+- Next: WP04 evidence-auditor critic → board flip → **M1** → STOP and
+  hand the user the build.
+
 ## Round 14 — WP03 remediation W3h: both critics' findings closed (2026-08-11)
 
 - **Verdicts merged (`baseline/wp03-critic-verdict.md` 7/10 + `baseline/
