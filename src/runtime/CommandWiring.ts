@@ -15,6 +15,8 @@ import { runSettleCommand } from '../game-engine/commands/settleCommand'
 import { settleRefusalMessage } from '../game-engine/quota/settlementRefusal'
 import { runSetAutoShipCommand } from '../game-engine/commands/autoShipCommand'
 import { giftPlayerSietch } from '../game-engine/SietchVisitSystem'
+import { giftRefusalMessage } from '../game-engine/sietch/giftRefusal'
+import { autoShipRefusalMessage } from '../game-engine/quota/autoShipRefusal'
 import { buyEquipment } from '../game-engine/EconomySystem'
 import { runAssignCrewCommand } from '../game-engine/commands/assignCrewCommand'
 import { assignCrewRefusalMessage } from '../game-engine/troops/assignCrewRefusal'
@@ -83,8 +85,15 @@ export function wireCommands(): () => void {
     const outcome = runPledgeCommand(villageId)
     if (!outcome.ok) pushEvent('sietch_pledged', pledgeChainRefusalMessage(outcome.reason))
   }
+  /**
+   * Same refusal-mapping shape as onPledge (chunk W2g — closes C3-FAIL,
+   * finding 3b): giftPlayerSietch already returns a CommandOutcome; success
+   * has already pushed its own event from inside it, so a refusal is the one
+   * place this becomes player-visible text instead of a silent no-op.
+   */
   const onGift = ({ villageId }: BusEvents['player:gift_sietch']): void => {
-    giftPlayerSietch(villageId)
+    const outcome = giftPlayerSietch(villageId)
+    if (!outcome.ok) pushEvent('sietch_pledged', giftRefusalMessage(outcome.reason))
   }
   /**
    * Crew assignment (commands/assignCrewCommand.ts) and issue-equipment
@@ -118,8 +127,14 @@ export function wireCommands(): () => void {
     const outcome = runSettleCommand(amount)
     if (!outcome.ok) pushEvent('tribute_refused', settleRefusalMessage(outcome.reason))
   }
+  /**
+   * Same refusal-mapping shape as onSettle (chunk W2g — finding 3c, minor:
+   * QuotaLedger.tsx only renders the control once unlocked, but the wiring
+   * must not trust that and discard the outcome unchecked).
+   */
   const onAutoShip = ({ enabled, amount }: BusEvents['player:set_auto_ship']): void => {
-    runSetAutoShipCommand(enabled, amount)
+    const outcome = runSetAutoShipCommand(enabled, amount)
+    if (!outcome.ok) pushEvent('tribute_refused', autoShipRefusalMessage(outcome.reason))
   }
   const onPause = ({ paused }: BusEvents['game:pause']): void => {
     world.paused = paused

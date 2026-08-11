@@ -61,7 +61,9 @@ export function chooseDialogue(choiceId: string): void {
   const choice = node.choices.find(c => c.id === choiceId);
   if (!choice) return;
 
-  if (choice.effect) applyEffect(choice.effect, world.dialogue!.villageId);
+  if (choice.effect) {
+    applyEffect(choice.effect, world.dialogue!.villageId, world.dialogue!.treeId, node.id);
+  }
 
   if (choice.nextId === null) {
     world.dialogue = null;
@@ -72,7 +74,28 @@ export function chooseDialogue(choiceId: string): void {
   }
 }
 
-function applyEffect(effect: DialogueEffect, villageId: VillageId): void {
+/**
+ * The once-only reward guard (docs/PRD/game-completion/
+ * baseline/wp02-critic-verdict.md \u00a75: "unbounded repeatable dialogue spice
+ * income" \u2014 seven locations paid 10-25 spice per conversation, with no cap,
+ * cooldown, or flag). Keyed on `treeId` + `node.id`: those are the two
+ * identifiers a dialogue node actually carries in this runtime \u2014 `treeId` is
+ * the key TREES is built from (data/dialogues.ts's DIALOGUES record plus
+ * STORY_TREE_ID), `node.id` is the addressable unit chooseDialogue already
+ * navigates by. Choice ids are not part of the key: two choices at the same
+ * node (e.g. smug_deal's accept-terms vs negotiate) are alternate takes on
+ * one narrative beat, and the beat pays once however it is resolved, not
+ * once per wording.
+ *
+ * Recorded in `world.flags` \u2014 already part of CanonicalCampaignState
+ * (state/canonical.ts), so this survives serialize/deserialize with no
+ * migration step and no schema bump.
+ */
+function rewardKey(treeId: string, nodeId: string): string {
+  return `reward.${treeId}.${nodeId}`;
+}
+
+function applyEffect(effect: DialogueEffect, villageId: VillageId, treeId: string, nodeId: string): void {
   const village = world.villages.find(v => v.id === villageId);
   if (village && effect.loyaltyDelta) {
     // SietchState is the sole loyalty authority for sietch-kind locations
@@ -96,7 +119,17 @@ function applyEffect(effect: DialogueEffect, villageId: VillageId): void {
   // "Gate search result" already proved no engine-reachable code gates
   // content on influence, so dropping the write changes no reachable
   // behavior (02 migration step 5 is a documented no-op for this reason).
-  if (effect.spiceDelta) {
+  // A positive spiceDelta/charismaDelta is a reward for reaching this node —
+  // gated to fire once per (treeId, node.id) ever, see rewardKey above. A
+  // NEGATIVE spiceDelta (a cost — e.g. sova_ritual_root's Water-of-Life
+  // attempt) is not a reward and is never gated: DialogueSystem.test.ts's
+  // ritual suite depends on that cost re-applying on every repeat attempt,
+  // independent of whether attemptRitual's own gate accepts or refuses it.
+  const key = rewardKey(treeId, nodeId);
+  const isReward = (effect.spiceDelta ?? 0) > 0 || (effect.charismaDelta ?? 0) > 0;
+  const rewardAlreadyPaid = isReward && world.flags[key] === true;
+
+  if (effect.spiceDelta && !(effect.spiceDelta > 0 && rewardAlreadyPaid)) {
     world.player.spice = Math.max(0, world.player.spice + effect.spiceDelta);
     // Typed and logged distinct from harvest income (02 "Crew lifecycle":
     // "Story effects, trade, and one-time rewards are individually typed
@@ -116,8 +149,11 @@ function applyEffect(effect: DialogueEffect, villageId: VillageId): void {
   if (effect.setFlags || effect.addFlags) {
     world.flags = applyFlagEffects(world.flags, effect.setFlags, effect.addFlags);
   }
-  if (effect.charismaDelta) {
+  if (effect.charismaDelta && !(effect.charismaDelta > 0 && rewardAlreadyPaid)) {
     world.charisma = Math.max(0, world.charisma + effect.charismaDelta);
+  }
+  if (isReward && !rewardAlreadyPaid) {
+    world.flags[key] = true;
   }
   // effect.reputationAction is accepted-but-ignored (WP02e): the faction
   // reputation write (WP01-audit residue) dies with the quarantined faction

@@ -2,6 +2,7 @@ import { useGameStore, selectSietch } from './store'
 import { EventBus } from '../EventBus'
 import type { Village } from '../types'
 import PledgePanel from './PledgePanel'
+import GiftPanel from './GiftPanel'
 import PeopleHere from './PeopleHere'
 import TravelAction from './TravelAction'
 
@@ -101,6 +102,14 @@ export default function VillagePanel() {
         villageOwner={selectedVillage.owner}
         sietch={sietch}
         playerIsHere={isHere}
+      />
+      <GiftPanel
+        villageId={selectedVillage.id}
+        villageName={selectedVillage.name}
+        villageOwner={selectedVillage.owner}
+        sietch={sietch}
+        playerIsHere={isHere}
+        playerSpice={world.player.spice}
       />
 
       <div style={{ marginTop: 12 }}>

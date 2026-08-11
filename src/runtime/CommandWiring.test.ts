@@ -13,11 +13,15 @@ vi.mock('../game-engine/commands/pledgeCommand', () => ({
 vi.mock('../game-engine/SietchVisitSystem', () => ({
   giftPlayerSietch: vi.fn(() => ({ ok: true, code: 'gifted' })),
 }))
+vi.mock('../game-engine/commands/autoShipCommand', () => ({
+  runSetAutoShipCommand: vi.fn(() => ({ ok: true, code: 'auto-ship-configured' })),
+}))
 
 import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue } from '../game-engine/DialogueSystem'
 import { runPledgeCommand } from '../game-engine/commands/pledgeCommand'
 import { giftPlayerSietch } from '../game-engine/SietchVisitSystem'
+import { runSetAutoShipCommand } from '../game-engine/commands/autoShipCommand'
 import { EventBus } from '../EventBus'
 import { world, setWorld, createInitialState } from '../game-engine/GameState'
 import { wireCommands } from './CommandWiring'
@@ -65,6 +69,30 @@ describe('wireCommands', () => {
   it('routes player:gift_sietch to giftPlayerSietch', () => {
     EventBus.emit('player:gift_sietch', { villageId: 'sietch_tabr' })
     expect(giftPlayerSietch).toHaveBeenCalledWith('sietch_tabr')
+  })
+
+  it('publishes a refusal event when giftPlayerSietch refuses, and nothing on success (chunk W2g, C3-FAIL)', () => {
+    vi.mocked(giftPlayerSietch).mockReturnValueOnce({ ok: false, reason: 'gift-cap-reached' })
+    const before = world.events.length
+
+    EventBus.emit('player:gift_sietch', { villageId: 'sietch_tabr' })
+    expect(world.events.length).toBe(before + 1)
+    expect(world.events[0].message).toBe('They have accepted all they will take from you this visit.')
+
+    EventBus.emit('player:gift_sietch', { villageId: 'sietch_tabr' }) // default mock: success
+    expect(world.events.length).toBe(before + 1) // no second event from this seam
+  })
+
+  it('publishes a refusal event when runSetAutoShipCommand refuses, and nothing on success (chunk W2g, finding 3c)', () => {
+    vi.mocked(runSetAutoShipCommand).mockReturnValueOnce({ ok: false, reason: 'auto-ship-locked' })
+    const before = world.events.length
+
+    EventBus.emit('player:set_auto_ship', { enabled: true })
+    expect(world.events.length).toBe(before + 1)
+    expect(world.events[0].message).toBe('Automatic shipment unlocks after your first tribute is settled.')
+
+    EventBus.emit('player:set_auto_ship', { enabled: true }) // default mock: success
+    expect(world.events.length).toBe(before + 1) // no second event from this seam
   })
 
   // player:assign_sietch_task, player:stop_sietch_task, player:attack_village
