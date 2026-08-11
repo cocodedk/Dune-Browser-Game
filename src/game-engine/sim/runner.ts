@@ -36,7 +36,9 @@ import { initLoop as engineInitLoop } from '../GameLoop'
 import { hashState } from '../state/hash'
 import { parityHash } from '../state/parityView'
 import { serializeWorld, deserializeWorld } from '../persistence'
+import { endDialogue } from '../DialogueSystem'
 import type { Difficulty, VillageId, BusEvents } from '../../types'
+import type { EndingId } from '../acts/transitions'
 import type { TroopTask, EquipmentKind } from '../troops/types'
 import {
   onTalk, onSpeakTo, onTravel, onChoose, onSpeed, onPledge, onGift,
@@ -59,11 +61,24 @@ export interface CampaignRunner {
   visibleState(): VisibleState
   hashNow(): string
   isBlocked(): boolean
+  /** world.ending — WP04 chunk W4c's harness needs this to detect a
+   * terminal state; not policy input (VisibleState deliberately has no
+   * ending field: an agent never chooses a command BECAUSE the campaign is
+   * about to end, it only reacts to warnings that are visible before that
+   * point — 07's invariant 9). */
+  ending(): EndingId | null
 
   talk(): void
   speakTo(characterId: string): void
   travel(targetVillageId: VillageId): void
   choose(choiceId: string): void
+  /** Decline/close the currently open dialogue early — the SAME production
+   * endDialogue() (DialogueSystem.ts) DialoguePanel.tsx's × button and its
+   * Escape handler both call directly (never through a BusEvent — see
+   * trace.ts's HashStep 'close' doc). A no-op while canCloseDialogue() is
+   * false (a mandatory beat), exactly like the real button/key. WP04 chunk
+   * W4c: the agent harness's default policy for an optional dialogue tree. */
+  close(): void
   setSpeed(speed: number): void
   setPaused(paused: boolean): void
   pledge(villageId: VillageId): void
@@ -137,12 +152,19 @@ export function createCampaignRunner(seed: number, difficulty: Difficulty = 'nor
     visibleState,
     hashNow: () => hashState(world),
     isBlocked,
+    ending: () => world.ending,
 
     talk: () => dispatch('player:talk', {}, onTalk),
     speakTo: characterId => dispatch('player:speak_to', { characterId }, () => onSpeakTo({ characterId })),
     travel: targetVillageId =>
       dispatch('player:travel', { targetVillageId }, () => onTravel({ targetVillageId })),
     choose: choiceId => dispatch('player:choose', { choiceId }, () => onChoose({ choiceId })),
+    close: () => {
+      endDialogue()
+      hashLog.push({
+        kind: 'close', ref: world.time, hash: hashState(world), parityHash: parityHash(world),
+      })
+    },
     setSpeed: speed => dispatch('game:speed', { speed }, () => onSpeed({ speed })),
     setPaused: paused => dispatch('game:pause', { paused }, () => onPause({ paused })),
     pledge: villageId => dispatch('player:pledge_sietch', { villageId }, () => onPledge({ villageId })),

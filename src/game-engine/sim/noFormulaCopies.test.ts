@@ -23,9 +23,12 @@ const FORBIDDEN_CALLS = [
 
 /** Every sim/ source file, as text — import.meta.glob rather than node:fs
  * (no @types/node in this project; prescienceCallers.test.ts and
- * flagCoverage.test.ts are the established precedent for this pattern). */
+ * flagCoverage.test.ts are the established precedent for this pattern).
+ * `**` recurses into sim/agents/ (WP04 chunk W4c) — the original one-level
+ * glob left the strategy agents and their harness unscanned, a blind spot
+ * this guard is supposed to close, not carry. */
 function simSources(): Record<string, string> {
-  const files = import.meta.glob('/src/game-engine/sim/*.ts', {
+  const files = import.meta.glob('/src/game-engine/sim/**/*.ts', {
     query: '?raw', import: 'default', eager: true,
   }) as Record<string, string>
   return Object.fromEntries(

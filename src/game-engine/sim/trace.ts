@@ -41,8 +41,14 @@ export interface HashStep {
   /** 'command' after a dispatched command; 'day' after a processed day;
    * 'arrival' after a completed travel (advanceUntilArrival); 'tick' after
    * an explicit CampaignRunner.tick() call (e.g. walkQ1Debrief's one-frame
-   * nudge for the debrief auto-open hook). */
-  kind: 'command' | 'day' | 'arrival' | 'tick'
+   * nudge for the debrief auto-open hook); 'close' after
+   * CampaignRunner.close() (WP04 chunk W4c: the agent harness's default
+   * decline for an optional dialogue — DialoguePanel.tsx's own × button
+   * calls the identical production endDialogue(), just never through a
+   * BusEvent, so it has no RunnerCommandName slot and is not part of
+   * `trace` — only of this hash log, the same way 'day'/'arrival'/'tick'
+   * already are not bus-event-driven either). */
+  kind: 'command' | 'day' | 'arrival' | 'tick' | 'close'
   /**
    * 'command': the trace index. 'day': the day number just processed —
    * multiply by TimeSystem.DAY_SECONDS for the absolute target seconds a
