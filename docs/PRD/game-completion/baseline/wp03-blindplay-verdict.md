@@ -549,3 +549,101 @@ pause + travel softlock replaces "no pause control" as this half's biggest gap: 
 work at most (evidence points at the travel/tick wiring not resuming after a pause-then-travel
 state, likely in `TravelSystem.ts` or the speed-control wiring in `StatusBar.tsx`/
 `CommandWiring`), but it must close before this half can clear `verified`.
+
+---
+
+## Final re-check (findings-verifier, HEAD `77e793d`)
+
+**Method.** Plain URL (`http://localhost:5174/`, no `?debug=1`, no `window.__DUNE__`, no game
+debug API), one tab, Playwright MCP, browser closed at the end. `browser_evaluate` was never
+used to call a game API — only accessibility-tree reads (`browser_snapshot`, `browser_find`)
+and one `browser_navigate` reload. Two sessions: session A replayed the delta's exact isolated
+repro end-to-end (pause mid-Thufir, confirm `0×` pressed via snapshot, attempt travel, finish
+Thufir, unpause, travel, then speed-clears-pause); session B (after the reload in check 4)
+continued for the mid-session New and paused-save checks, plus one unscripted addition
+(pause *during* an in-flight travel, not just before one). Console logs from both sessions were
+read after play (`.playwright-mcp/console-2026-08-11T14-01-58-084Z.log` and
+`console-2026-08-11T14-06-36-633Z.log`) to rule out a new exception hiding behind the fix.
+
+### Per-check results
+
+| # | Check | Verdict | What I saw |
+|---|---|---|---|
+| 1 | Exact softlock repro: pause mid-Thufir → confirm `0×` pressed → click Hagg | **Fixed, verified** | With `0×` confirmed `[active] [pressed]` via snapshot, Playwright's own click action **timed out because the destination button was disabled** (`element is not enabled`) — the strongest possible confirmation the row is a real disabled control, not a styled-to-look-disabled one. The row read "Finish this conversation before you travel." on all three destinations. A `browser_find` for "Traveling" over the full page returned zero matches — no travel started. After finishing Thufir's remaining three lines, the destination list went live (Hagg at "6s"); clicking `1×` released `0×` cleanly, and clicking Hagg produced "🐪 Traveling to Hagg…" in the event log, the clock advancing (`0:00` → `0:31` → …) during the trip, and "✅ Arrived at Hagg." at the end. |
+| 2 | Speed-clears-pause (`0×` then `5×`, no dual-active) | **Verified** | At Hagg, clicking `0×` produced `[active] [pressed]` (day 1, time held). Clicking `5×` immediately after showed `5×` as `[active]` with **no `[pressed]` anywhere in the same query** — `0×` had cleanly released, not just visually dimmed. Day advanced 1 → 2 in 3 real seconds, consistent with 5× running. |
+| 3 | Mid-session New auto-opens briefing; spacebar works on the fresh campaign | **Verified** | Clicked StatusBar's `New`, accepted the native `confirm` ("Start a new game? Current progress will be lost."). The very next snapshot showed day 0, spice 60.0, and Duke Leto's opening line already on screen with no extra click needed — the briefing auto-opened. Spacebar then toggled `0×` to `[pressed]` and back to unpressed on the same fresh campaign, both directions confirmed by `browser_find`. |
+| 4 | Paused save never restores frozen | **Verified** | Paused with `0×` (confirmed pressed), clicked `Save` (timestamp `16:06` appeared), reloaded the page via `browser_navigate` to the same URL. The title screen offered "Continue — Day 0 — saved just now"; loading it landed back in Leto's dialogue with **no speed button `[pressed]`** — the load forced unpaused, matching the commit's stated "forced false on every load." Played the same dialogue back out to confirm the clock genuinely runs post-load (not just cosmetically unpressed): time advanced `0:10` → `0:25` over 3 real seconds with no speed button manually clicked. |
+| 5 (added) | Pause *during* an in-flight travel, not just before one | **Verified — the fix is not scoped to one entry point** | Started travel to Hagg unpaused (event log: "🐪 Traveling to Hagg… 42s"), then clicked `0×` mid-flight. Time held at `0:51` across a 4 s wait with zero drift. Clicked `1×` to resume: travel completed normally ("✅ Arrived at Hagg.") within the following ~30 s. This is a related member of the same "pause + travel" family the commit message claims to have killed "at the root," and it holds — pausing before, or during, a trip both recover cleanly. |
+
+### Console check (advisor-prompted)
+
+Both session logs show the same defect the original report already named and scored
+non-blocking: React's "don't mix shorthand and non-shorthand style properties… Removing
+borderColor border" warning, sourced to `src/ui/StatusBar.tsx:46`, firing once per
+speed-button click (7 occurrences in session A, 2 in session B — matches every `0×`/`1×`/`5×`
+click made). This Playwright capture classifies it as `[ERROR]` rather than the original
+report's `[WARNING]`, which reads as a difference in how this tool buckets React's
+`console.error`-based dev warnings, not a new defect — no stack trace touches `TravelSystem`,
+`GameDriver`, or any pause/travel wiring the W3i commit changed. Ruled out as a hidden
+regression. Also present: one `favicon.ico` 404 per page load and WebGL `glGetProgramiv`
+warnings at startup — both pre-existing and unrelated, as in the original report.
+
+### Also observed, unprompted (not scored, offered for context)
+
+- **Resting-state legibility nit.** Immediately after `New`, after a title-screen `Continue`
+  load, and once after arriving at a destination, *no* speed button showed `[active]` at all
+  (not even `0×`) — yet the clock was confirmed running in every one of those states. This is
+  not a desync (the pause button is visibly unpressed, which is exactly what check 4 needs),
+  but a player glancing at the speed control in that split-second could reasonably wonder
+  which speed is live. Cosmetic, not blocking, not one of the checklist's named items.
+- The delta's six named findings (Hagg DOM path, settlement-modal cluster, debrief-skip guard,
+  travel-refusal copy, raw-id leakage, plus the general "flight sequence now exists") were not
+  all re-driven end-to-end this session (Q1 was not reached), but two were incidentally
+  reconfirmed live: the Hagg location panel again showed a proper `PEOPLE HERE` list
+  (Shishakli, Liet-Kynes) as real DOM buttons on arrival, and the travel-refusal copy again
+  read "Out of walking range from here — travel through a closer place first, or wait for a
+  long-range ornithopter to go directly." on both Red Wall Sietch and Sietch Tabr. No evidence
+  contradicting the other four surfaced; they are carried forward on the prior delta's
+  authority, not re-certified here.
+- Original-report items C6–C10 (coach-mark overlap, no confirmation on the 20-spice gift,
+  cosmetic dialogue choices, the unnamed 25% arrears surcharge, and the Chani/thopter narrative
+  mismatch) were never in scope for W3i and were not re-tested this session — they remain
+  open exactly as the original report left them, and none was ever classified as blocking.
+
+### Revised score — blind-play half
+
+Comprehension is **not re-scored** — this session, like the prior delta, touched correctness
+surfaces only. The original 9/10 read stands.
+
+**Correctness recovers to 7/10** (from the delta's 4/10, up from the original's 5/10). The
+single defect that dragged the delta down — a save-corrupting, no-recovery softlock reachable
+by the exact pause-then-travel sequence the pause control itself invites — is now closed, and
+closed robustly: blocked at its own entry point with the exact expected copy, immune to the
+mid-travel variant tried as a bonus check, and with no dual-active speed desync anywhere it was
+tested. The six delta-fixed findings were not undone (two reconfirmed live, four carried
+forward). Correctness does not return to a clean 9 or 10 because C6–C10 and a few original
+contract-clause gaps (coach marks blocking content, cosmetic dialogue acknowledgement, the
+unnamed surcharge) remain open, undisturbed, and unscored by this pass — they were already
+judged non-blocking in the original report and nothing in this session changes that judgment.
+
+**Combined blind-play score: 8/10** (comprehension 9, correctness 7 — same holistic averaging
+the original and delta both used: 9-and-5 → 7, 9-and-4 → 6, 9-and-7 → 8).
+
+### Verdict
+
+**`verified` is warranted on the blind-play half.** The original report set an explicit bar —
+"I would expect a delta re-audit after the pause control, the settlement-modal cluster, the
+Hagg panel, and the ornithopter copy to clear `verified` comfortably" — and the prior delta
+confirmed all four, then found one new blocker and stated its own bar plainly: the pause +
+travel softlock "must close before this half can clear `verified`." It has closed, verified
+live through the exact original repro, the speed-clears-pause interaction, mid-session New,
+paused-save-on-reload, and one additional pause-during-travel path beyond what any prior
+report tested — with no new regression found in this session and no hidden exception in the
+console. **WP03's blind-play half moves from `in_progress` to `verified`.** Everything left
+open (C6–C10, the coach-mark clause, cosmetic-acknowledgement clause, the resting-state
+legibility nit, the unnamed-surcharge naming, and the settlement caption's brief `0.0`/day lag
+at the instant Q1 resolves) is carried forward as non-blocking polish, consistent with how the
+original report itself classified that entire list before the softlock was ever found.
+
+*The evidence auditor's verdict is the other half of this decision; this report judges only
+what a first-time player can see and do.*

@@ -461,6 +461,51 @@ reproduce.
 - Suite at close: 282 files / 2272 tests; 21/21 E2E ×2. Board: WP03 stays
   `in_progress` pending the two package critics (evidence + blind-play).
 
+## Round 15 — WP03 critics, two remediation rounds, verified (2026-08-11, `77e793d`)
+
+- **First verdicts: evidence 7/10, blind-play 7/10 — both `in_progress`.**
+  Blind comprehension scored ~9/10 (a cold player understood objective,
+  deadline, next action; named both plans; settled Q1 twice in <12 min
+  without debug state — closing the five-dry-runs ledger at 3 suite + 2
+  cold). The failures were correctness: no pause control (8 of 12 deadline
+  days burned just reading), dead Show on 3 of 7 objectives, the settlement
+  cluster (float prefill, dishonest 'Full (63)', 'no crews harvesting' lie,
+  degenerate duplicate previews), canvas-only Speak at Hagg (stale panel),
+  Thufir's debrief skippable at Fenring's terminal-sounding lines, identical
+  Fenring for 63 vs 54, misleading ornithopter copy, raw ids in crew UI.
+- **W3h (`0a572b1`)** fixed all nine merged items. Evidence delta re-audit:
+  **9/10, evidence half `verified`** — every fix confirmed at the audit's own
+  measured states; two honest corrections (read_ledger's Show is unreachable
+  behind the mandatory overlay — closed-with-wording-fixed; its own
+  acceptance-4 ruling had been under-tested at Hagg).
+- **Blind findings re-check verified all six fixes but found a NEW
+  regression:** pause + travel = permanent clock freeze, autosave-persisted
+  through reload (score dropped to 6/10). Lead reproduced a SECOND softlock
+  live: mid-session StatusBar New never re-opens the briefing (mount-only
+  auto-open) — frozen at briefingPending forever.
+- **W3i (`77e793d`)** killed the family at the root, all red-first: opening
+  auto-open moved to the per-frame GameDriver pattern (self-heals on any
+  entry path; revert times out campaign #1); travel refuses during mandatory
+  dialogue ('finish-the-conversation') making the frozen state unreachable;
+  manual pause stripped from canonical state and forced false on load
+  (goalAchieved precedent; paused/unpaused worlds hash identically);
+  spacebar reads live store state; settlement default floors (never rounds
+  past legalRange.max — pinned on the audit's exact float); choosing a speed
+  clears pause (control-desync dead).
+- **Final blind re-verdict: 8/10 (comprehension 9, correctness 7),
+  blind-play half `verified`** — the exact repro now refused with visible
+  copy; speed-clears-pause, mid-session New, and paused-save-loads-running
+  all confirmed in production play, plus an added in-flight-pause check.
+- **WP03 → `verified` on the board.** Package total: seven build chunks +
+  two remediation chunks, two critics with three delta passes, 26 E2E.
+- **Carry-forwards (non-blocking, recorded):** coach-mark overlap, no
+  confirm on the 20-spice gift, arrears surcharge unnamed in copy,
+  resting-state speed-button legibility → WP11; Chani/thopter narrative
+  mismatch + dialogue acknowledgement polish → WP05/WP09; one-click travel
+  commit + 3s skip-gate/guidance-rule-4 coverage debt → WP11/WP14; the
+  giveHarvester scenario bridge + invest-line shortfall + cycle-2 pressure
+  (183 due vs ~2.9/day) + crew 15-vs-28 + 55-spice ceiling → **WP04**.
+
 ## Round 14 — WP03 remediation W3h: both critics' findings closed (2026-08-11)
 
 - **Verdicts merged (`baseline/wp03-critic-verdict.md` 7/10 + `baseline/
