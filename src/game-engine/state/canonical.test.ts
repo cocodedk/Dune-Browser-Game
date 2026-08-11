@@ -24,12 +24,19 @@ describe('serializeCanonical', () => {
 
   it('omits goalType and goalAchieved', () => {
     // docs/PRD/game-completion/02-runtime-consolidation.md "Campaign status":
-    // goalType is retired; goalAchieved is derived and "must not be
-    // serialized ... independently".
+    // goalType is retired (fully removed from WorldState as of WP02f, so
+    // there is trivially nothing to serialize); goalAchieved is derived and
+    // "must not be serialized ... independently".
     const world = createInitialState()
     const json = serializeCanonical(world)
     expect(json).not.toContain('goalType')
     expect(json).not.toContain('goalAchieved')
+  })
+
+  it('omits factionProfiles (WP02f: static quarantined-sandbox content, reseeded on load, never persisted)', () => {
+    const world = createInitialState()
+    expect(world.factionProfiles.length).toBeGreaterThan(0) // sanity: the field is populated in memory
+    expect(serializeCanonical(world)).not.toContain('factionProfiles')
   })
 
   it('includes the rng state', () => {

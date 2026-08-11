@@ -12,6 +12,7 @@ import { createQuotaState } from './quota/quota'
 import { INITIAL_VILLAGES } from '../data/villages'
 import { SCHEMA_VERSION } from './state/schema'
 import { fnv1a64 } from './state/hash'
+import { migrateV4ToV5 } from './saveMigration.v5'
 
 /** Single source of truth for the schema number — see state/schema.ts. */
 export const CURRENT_SAVE_VERSION = SCHEMA_VERSION
@@ -113,6 +114,9 @@ function deriveLegacySeed(state: WorldState): number {
   return Number(fnv1a64(identity) & 0xffffffffn)
 }
 
+/** A pre-v3 save may still carry `goalType` — removed from WorldState entirely in WP02f. */
+type PreV3State = WorldState & { goalType?: unknown }
+
 /**
  * v2 -> v3: add the seeded `rng` field and drop the retired `goalType`.
  *
@@ -122,7 +126,7 @@ function deriveLegacySeed(state: WorldState): number {
  * no `goalType` is untouched by the drop.
  */
 export function migrateV2ToV3(state: WorldState): WorldState {
-  const { goalType: _goalType, ...rest } = state
+  const { goalType: _goalType, ...rest } = state as PreV3State
   void _goalType
   const rng: RngState = state.rng ?? { seed: deriveLegacySeed(state), step: 0 }
   return { ...rest, rng }
@@ -172,5 +176,6 @@ export function migrateSave(save: VersionedSave): WorldState | null {
   if (version < 2) migrated = migrateV1ToV2(migrated)
   if (version < 3) migrated = migrateV2ToV3(migrated)
   if (version < 4) migrated = migrateV3ToV4(migrated)
+  if (version < 5) migrated = migrateV4ToV5(migrated)
   return migrated
 }

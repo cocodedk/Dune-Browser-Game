@@ -3,6 +3,7 @@ import { migrateSave, CURRENT_SAVE_VERSION } from './saveMigration';
 import type { VersionedSave } from './saveMigration';
 import { toCanonicalState } from './state/canonical';
 import type { CanonicalSaveEnvelope } from './state/schema';
+import { seedFactionProfiles } from '../data/factionProfiles';
 
 const DB_NAME = 'dune-browser-game';
 const STORE_NAME = 'world-state';
@@ -28,7 +29,7 @@ function openDB(): Promise<IDBDatabase> {
 
 /**
  * Build the on-disk envelope from live world state: the canonical campaign
- * shape (state/canonical.ts — `goalType`/`goalAchieved` excluded,
+ * shape (state/canonical.ts — `goalAchieved`/`factionProfiles` excluded,
  * `lastProcessedDay` included), plus schema version and save time as
  * envelope metadata. `savedAt` is display metadata ONLY — never read by
  * simulation, never part of canonical/campaign state — so its `Date.now()`
@@ -56,6 +57,14 @@ function toEnvelope(world: WorldState): CanonicalSaveEnvelope {
  * migration step: a save from before the field existed could never have
  * serialized a decision, so `null` ("no decision pending") is exactly
  * correct, not just a safe placeholder.
+ *
+ * `factionProfiles` is always overwritten with a fresh seed (WP02f — see
+ * data/factionProfiles.ts and state/schema.ts's v5 note), regardless of
+ * schema version: a save at any prior version may still carry a legacy
+ * value on disk (nothing ever stripped it before), and a v5+ save never
+ * serialized the field at all. Either way `migrated.factionProfiles` is not
+ * trustworthy content, so this is an unconditional replace, not a `??`
+ * default.
  */
 function fromEnvelope(save: VersionedSave): WorldState | null {
   const migrated = migrateSave(save);
@@ -64,6 +73,7 @@ function fromEnvelope(save: VersionedSave): WorldState | null {
     ...migrated,
     goalAchieved: migrated.ending !== null,
     pendingSettlement: migrated.pendingSettlement ?? null,
+    factionProfiles: seedFactionProfiles(),
   };
 }
 

@@ -103,6 +103,14 @@ export interface DebugHandle {
     spice: number
     inDialogue: boolean
   }
+  /**
+   * Populated by debugSources.ts. Read-only campaign state hash
+   * (game-engine/state/hash.ts) — never mutates `world`. Closes WP01's
+   * "hashState has zero production callers" carry-forward: a browser trace
+   * can call this before and after a reload and compare the two strings
+   * directly, instead of eyeballing individual fields for drift.
+   */
+  hashState?: () => string
 }
 
 declare global {

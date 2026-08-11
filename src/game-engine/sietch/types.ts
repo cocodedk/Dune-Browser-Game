@@ -1,13 +1,9 @@
 import type { VillageId } from '../../types'
 
-export type SietchTask = 'harvest_spice' | 'train_troops'
-
 export interface SietchState {
   villageId: VillageId
   pledgedToPlayer: boolean
   fremenWorkers: number
-  currentTask: SietchTask | null
-  outputProgress: number
 
   /**
    * docs/PRD/game-completion/02-runtime-consolidation.md "Sietches and
@@ -46,6 +42,9 @@ export interface SietchState {
 // here (progress-per-day, payout threshold, payout amount, min workers, one
 // set per task) were removed in WP02e along with sietch/updateSietches.ts,
 // their only reader — see legacy-authority-inventory.md category 2.
-// currentTask/outputProgress stay on SietchState above as inert fields, like
-// Village.productionRate (02 "Current conflicts to retire": "static values
-// may remain temporarily for migration").
+// `currentTask`/`outputProgress` (and the `SietchTask` type they used) are
+// removed from the type entirely as of WP02f, unlike Village.productionRate
+// (still inert-but-present): nothing reads or writes them in campaign code
+// (grep confirmed — only test fixtures constructed them), and
+// saveMigration.v5.ts's migrateV4ToV5 strips them off any old save that
+// still carries them on disk.

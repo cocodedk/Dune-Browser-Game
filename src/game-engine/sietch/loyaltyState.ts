@@ -28,7 +28,7 @@ export function readLoyaltyState(sietch: SietchState): LoyaltyState {
 
 /**
  * Fold a LoyaltyState back onto a SietchState, preserving every other field
- * (fremenWorkers, currentTask, outputProgress, morale, crewIds, ...).
+ * (fremenWorkers, morale, crewIds, ...).
  */
 export function writeLoyaltyState(sietch: SietchState, state: LoyaltyState): SietchState {
   return {

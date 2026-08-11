@@ -7,6 +7,7 @@
 // were systems that were fully built, fully tested, and never actually called.
 
 import { world } from '../../game-engine/GameState'
+import { hashState } from '../../game-engine/state/hash'
 import { wireDebugHandle } from './DebugHandle'
 import type { DebugHandle } from './DebugHandle'
 import type { ModeManager } from './ModeManager'
@@ -78,4 +79,8 @@ export function wireDebugSources(
       camera: () => modes.active?.camera ?? handle.camera,
       size: () => ({ width: canvas.clientWidth, height: canvas.clientHeight }),
   })
+  // Not part of DebugSources: it needs no per-container plumbing (world is
+  // already in scope here), and it must stay read-only by construction —
+  // wireDebugHandle's assignments all come from mutation-capable sources.
+  if (debug) debug.hashState = () => hashState(world)
 }

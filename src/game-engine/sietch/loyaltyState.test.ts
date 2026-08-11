@@ -8,8 +8,7 @@ import type { SietchState } from './types'
 
 function sietch(overrides: Partial<SietchState> = {}): SietchState {
   return {
-    villageId: 'v1', pledgedToPlayer: false, fremenWorkers: 20,
-    currentTask: null, outputProgress: 0, ...overrides,
+    villageId: 'v1', pledgedToPlayer: false, fremenWorkers: 20, ...overrides,
   }
 }
 
@@ -33,7 +32,7 @@ describe('readLoyaltyState', () => {
 
 describe('writeLoyaltyState', () => {
   it('folds pledged back onto pledgedToPlayer and preserves other fields', () => {
-    const original = sietch({ fremenWorkers: 40, currentTask: 'harvest_spice', outputProgress: 2, crewIds: ['a'] })
+    const original = sietch({ fremenWorkers: 40, morale: 65, crewIds: ['a'] })
     const written = writeLoyaltyState(original, {
       loyalty: 70, pledged: true, lastVisitedDay: 3, giftedThisVisit: 8,
     })
@@ -44,8 +43,7 @@ describe('writeLoyaltyState', () => {
     expect(written.giftedThisVisit).toBe(8)
     // Untouched by the loyalty write.
     expect(written.fremenWorkers).toBe(40)
-    expect(written.currentTask).toBe('harvest_spice')
-    expect(written.outputProgress).toBe(2)
+    expect(written.morale).toBe(65)
     expect(written.crewIds).toEqual(['a'])
   })
 

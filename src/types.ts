@@ -98,19 +98,14 @@ export interface WorldState {
   dialogue: DialogueState | null;
   events: GameEvent[];    // ring buffer — keep last 20
   goalAchieved: boolean;
-  /**
-   * Optional: retired campaign-completion authority (docs/PRD/game-completion/
-   * 02-runtime-consolidation.md "Campaign status"). Never set on a canonical
-   * new campaign's save and dropped by save migration. GameLoop's PoC win
-   * check that used to read this was removed in WP01 (dayRunner.ts /
-   * legacy-authority-inventory.md category 3) — the field itself stays
-   * optional, not removed, only because files outside that package's scope
-   * still construct it: AISystem.test.ts's literal WorldState, the
-   * saveMigration test fixtures, and the spiceTripleCredit/sietchPayoutLoop
-   * baseline characterization tests (which this package must leave
-   * unmodified).
-   */
-  goalType?: 'control_all_villages' | 'survive_20_min';
+  // `goalType` (the retired campaign-completion authority — docs/PRD/
+  // game-completion/02-runtime-consolidation.md "Campaign status") is fully
+  // removed as of WP02f: GameLoop's PoC win check that used to read it died
+  // in WP01 (dayRunner.ts / legacy-authority-inventory.md category 3), and
+  // migrateV2ToV3 (saveMigration.ts) has dropped it from every save since.
+  // The spiceTripleCredit/sietchPayoutLoop baseline characterization tests
+  // that used to pin the last non-test constructors were themselves deleted
+  // in WP02e, closing the reason the field stayed optional instead of gone.
   factionProfiles: FactionProfile[];
   regions: Region[];
   sietches: SietchState[];

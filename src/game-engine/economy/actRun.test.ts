@@ -10,8 +10,7 @@ import type { SietchState } from '../sietch/types'
 
 function sietch(overrides: Partial<SietchState>): SietchState {
   return {
-    villageId: 'x', pledgedToPlayer: true, fremenWorkers: 20,
-    currentTask: null, outputProgress: 0, ...overrides,
+    villageId: 'x', pledgedToPlayer: true, fremenWorkers: 20, ...overrides,
   }
 }
 
@@ -47,7 +46,7 @@ describe('averagePledgedSietchLoyalty', () => {
     // SietchState doc) omits `loyalty` entirely — the documented default
     // must hold rather than an in-memory migration adapter being required.
     const sietches: SietchState[] = [
-      { villageId: 'legacy', pledgedToPlayer: true, fremenWorkers: 50, currentTask: null, outputProgress: 0 },
+      { villageId: 'legacy', pledgedToPlayer: true, fremenWorkers: 50 },
     ]
 
     expect(averagePledgedSietchLoyalty(sietches)).toBe(0)
@@ -56,7 +55,7 @@ describe('averagePledgedSietchLoyalty', () => {
 
   it('mixes a legacy (fieldless) sietch and a modern one without producing NaN', () => {
     const sietches: SietchState[] = [
-      { villageId: 'legacy', pledgedToPlayer: true, fremenWorkers: 50, currentTask: null, outputProgress: 0 },
+      { villageId: 'legacy', pledgedToPlayer: true, fremenWorkers: 50 },
       sietch({ villageId: 'modern', loyalty: 60 }),
     ]
 

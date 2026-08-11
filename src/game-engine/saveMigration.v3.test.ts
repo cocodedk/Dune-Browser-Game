@@ -118,7 +118,12 @@ describe('migrateV3ToV4', () => {
   })
 })
 
-describe('migrateSave: v1 -> v4 chain', () => {
+// Extended to v5 in place (this file predates WP02f's v5 step; renaming the
+// describe block rather than leaving it read "v1 -> v4" — the full step-1
+// "everything survives" list and the dedicated legacy-save-migration
+// fixture live in saveMigration.v5.chain.test.ts, split out to stay under
+// the 200-line cap).
+describe('migrateSave: v1 -> v5 chain', () => {
   function save(overrides: Partial<VersionedSave> = {}): VersionedSave {
     return { savedAt: 1, state: v2State(), ...overrides }
   }
@@ -130,6 +135,13 @@ describe('migrateSave: v1 -> v4 chain', () => {
     expect(typeof out!.rng.seed).toBe('number')
     expect('goalType' in out!).toBe(false)
     expect(out!.lastProcessedDay).toBe(2) // v2State().time is 120 -> day 2
+  })
+
+  it('also drops the retired troops/influence aggregate by the time it reaches v5 (v2State carries both)', () => {
+    const out = migrateSave(save())
+    const player = out!.player as unknown as Record<string, unknown>
+    expect('troops' in player).toBe(false)
+    expect('influence' in player).toBe(false)
   })
 
   it('a v2 save ends up with an rng seed and no goalType', () => {

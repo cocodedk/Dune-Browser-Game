@@ -88,8 +88,8 @@ export function runDay(): void {
   // the loop and updateSietches.ts itself are deleted — crews (the
   // assign-crew command) are now the sole production authority (02
   // "Current conflicts to retire"). SietchState.currentTask/outputProgress
-  // stay on the type as inert fields (like Village.productionRate); nothing
-  // reads or writes them in campaign code anymore.
+  // themselves are removed from the type entirely as of WP02f
+  // (saveMigration.v5.ts strips any that survive on an old save).
 
   // Step 9: if tribute is due and no ending has occurred, create the
   // pending settlement decision (or settle automatically via auto-ship —

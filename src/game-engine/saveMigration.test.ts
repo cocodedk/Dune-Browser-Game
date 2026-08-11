@@ -114,10 +114,13 @@ describe('migrateV1ToV2', () => {
 
 // ---------------------------------------------------------------------------
 // Legacy keys the consolidated schema no longer models (WP02e item 9:
-// player.troops/player.influence leave WorldState this chunk, but the
-// actual v5 migration that STRIPS them off old envelopes is W2f's — this
-// migration only ever ADDS/fills fields, so an old envelope's dropped keys
-// simply ride along untouched, same as any other unmodeled JSON property).
+// player.troops/player.influence leave WorldState that chunk, but
+// migrateV1ToV2 tested below only ever ADDS/fills fields — the v4->v5 step
+// that STRIPS them off old envelopes is saveMigration.v5.ts's
+// migrateV4ToV5, WP02f's own migration step, exercised in
+// saveMigration.v5.test.ts/saveMigration.v5.chain.test.ts. At the v1->v2
+// stage tested here, an old envelope's now-unmodeled keys simply ride along
+// untouched, same as any other JSON property this step doesn't recognize.)
 // ---------------------------------------------------------------------------
 
 describe('extra/dropped legacy keys survive migration untouched', () => {

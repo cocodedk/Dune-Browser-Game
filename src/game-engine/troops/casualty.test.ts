@@ -29,7 +29,7 @@ function equip(overrides: Partial<Equipment> = {}): Equipment {
 }
 
 function sietch(overrides: Partial<SietchState> = {}): SietchState {
-  return { villageId: 'sietch_a', pledgedToPlayer: true, fremenWorkers: 40, currentTask: null, outputProgress: 0, crewIds: ['g1'], ...overrides }
+  return { villageId: 'sietch_a', pledgedToPlayer: true, fremenWorkers: 40, crewIds: ['g1'], ...overrides }
 }
 
 describe('casualty-dissolve: a crew driven to 0 is gone, not just empty', () => {

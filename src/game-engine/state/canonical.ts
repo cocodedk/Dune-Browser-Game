@@ -3,10 +3,12 @@
 //
 // docs/PRD/game-completion/02-runtime-consolidation.md ("Campaign status"):
 // `goalAchieved` may remain temporarily as a derived compatibility value
-// "but it must not be serialized ... independently"; `goalType` "is removed
-// from new saves". Neither is part of the canonical form a save or a state
-// hash is built from. ("Randomness") adds the seeded `rng` — already part
-// of `WorldState` — as canonical instead.
+// "but it must not be serialized ... independently". `factionProfiles` is
+// excluded for a different reason (WP02f, see state/schema.ts's v5 note):
+// it is static, quarantined-sandbox content with no live campaign writer,
+// reseeded fresh on every load instead of persisted. Neither is part of the
+// canonical form a save or a state hash is built from. ("Randomness") adds
+// the seeded `rng` — already part of `WorldState` — as canonical instead.
 
 import type { WorldState } from '../../types'
 import type { CanonicalCampaignState } from './schema'
@@ -30,22 +32,23 @@ function canonicalize(value: unknown): unknown {
 }
 
 /**
- * The canonical campaign object itself — `goalType`/`goalAchieved` omitted
- * (see module header), everything else including `lastProcessedDay`
- * included as-is, key order untouched. This is what persistence.ts stores:
- * IndexedDB structured-clones a plain object fine, and sorted keys only
- * matter for the string form below.
+ * The canonical campaign object itself — `goalAchieved`/`factionProfiles`
+ * omitted (see module header), everything else including
+ * `lastProcessedDay` included as-is, key order untouched. This is what
+ * persistence.ts stores: IndexedDB structured-clones a plain object fine,
+ * and sorted keys only matter for the string form below.
  */
 export function toCanonicalState(world: WorldState): CanonicalCampaignState {
-  const { goalType: _goalType, goalAchieved: _goalAchieved, ...rest } = world
-  void _goalType
+  const { goalAchieved: _goalAchieved, factionProfiles: _factionProfiles, ...rest } = world
   void _goalAchieved
+  void _factionProfiles
   return rest
 }
 
 /**
  * Canonical, deterministic JSON of campaign state: stable key order, with
- * `goalType`/`goalAchieved` omitted (see module header) and `rng` included.
+ * `goalAchieved`/`factionProfiles` omitted (see module header) and `rng`
+ * included.
  */
 export function serializeCanonical(world: WorldState): string {
   return JSON.stringify(canonicalize(toCanonicalState(world)))

@@ -1,7 +1,7 @@
-import type { WorldState, Village, FactionProfile, Region, Difficulty } from '../types';
+import type { WorldState, Village, Region, Difficulty } from '../types';
 import { INITIAL_VILLAGES } from '../data/villages';
 import { INITIAL_SIETCHES } from '../data/sietches';
-import factionsData from '../data/factions.json';
+import { seedFactionProfiles } from '../data/factionProfiles';
 import regionsData from '../data/regions.json';
 import { loadGame } from './persistence';
 import { createQuotaState } from './quota/quota';
@@ -53,12 +53,14 @@ export function createInitialState(seed: number = DEFAULT_SEED): WorldState {
     dialogue: null,
     events: [],
     goalAchieved: false,
-    // goalType is not seeded: the PoC win-condition check that read it was
-    // removed from GameLoop's campaign day path (WP01 quarantine, see
-    // legacy-authority-inventory.md category 3). The field itself stays
-    // optional on WorldState — see types.ts — because it is still
-    // constructed by test fixtures outside this package's scope.
-    factionProfiles: (factionsData as unknown as FactionProfile[]).map(f => ({ ...f, relations: { ...f.relations }, goals: [...f.goals] })),
+    // goalType is gone from WorldState entirely (WP02f) — the PoC
+    // win-condition check that used to read it was removed from GameLoop's
+    // campaign day path in WP01 (legacy-authority-inventory.md category 3),
+    // and no field remains to seed here.
+    // Static, quarantined-sandbox content — not persisted (see
+    // data/factionProfiles.ts's doc for why); every load reseeds fresh the
+    // same way a New Game already does.
+    factionProfiles: seedFactionProfiles(),
     regions: (regionsData as unknown as Region[]).map(r => ({ ...r })),
     // crewIds is copied, not aliased — spreading a plain `{ ...s }` would
     // share one array per seed entry across every createInitialState() call

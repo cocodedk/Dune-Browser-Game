@@ -15,8 +15,6 @@ function makeSietch(overrides: Partial<SietchState> = {}): SietchState {
     villageId: 'sietch_tabr',
     pledgedToPlayer: false,
     fremenWorkers: 50,
-    currentTask: null,
-    outputProgress: 0,
     ...overrides,
   }
 }

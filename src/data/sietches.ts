@@ -19,8 +19,6 @@ function seed(villageId: string, fremenWorkers: number, loyalty: number): Sietch
     villageId,
     pledgedToPlayer: false,
     fremenWorkers,
-    currentTask: null,
-    outputProgress: 0,
     loyalty,
     morale: MORALE_NEUTRAL,
     lastVisitedDay: 0,

@@ -56,7 +56,6 @@ function createTestWorld(): WorldState {
     dialogue: null,
     events: [],
     goalAchieved: false,
-    goalType: 'control_all_villages',
     factionProfiles: [
       {
         id: 'harkonnen',
