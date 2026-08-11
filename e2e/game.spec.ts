@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test'
-import { enterGame, enterGameFromTitle } from './helpers'
+import { enterGame, enterGameFromTitle, completeOpeningBriefing } from './helpers'
 
 // A title screen now sits in front of every scenario here (chunk W3b:
 // 03-opening-experience.md "Title and run setup" — "The title screen
 // appears before the renderer begins advancing campaign time"). Every test
-// below enters via enterGame()/enterGameFromTitle() (e2e/helpers.ts) before
-// asserting on in-game UI; each test's ORIGINAL assertions are unchanged.
+// below enters via enterGame()/enterGameFromTitle() (e2e/helpers.ts); each
+// test's ORIGINAL assertions are unchanged except where noted (chunk W3c's
+// briefing auto-open changes first-load state — see Tests 2, 5, 7, 8).
 
 // ---------------------------------------------------------------------------
 // Test 1 — Page loads
@@ -32,8 +33,16 @@ test('page loads with 200 and no JS errors', async ({ page }) => {
 // ---------------------------------------------------------------------------
 // Test 2 — Game UI structure visible
 // ---------------------------------------------------------------------------
+// Repaired (chunk W3c): SceneModes.ts's nextMode() sends 'dialogue_start'
+// straight to 'conversation' unconditionally, and ThreeContainer's frame
+// loop fires it the moment `world.dialogue !== null` — true within the first
+// rendered frame now that the briefing auto-opens on entry. ViewHint's
+// strategic-mode copy this test checks is therefore never on screen on load
+// any more; both beats are walked to their end first (nextMode's
+// dialogue_end returns to 'strategic') so this still checks the same hint.
 test('game UI structure is visible after initialisation', async ({ page }) => {
   await enterGame(page)
+  await completeOpeningBriefing(page)
 
   // Full-bleed redesign: the title is the floating word mark, and the hint
   // describes map controls rather than the old sidebar layout.
@@ -82,12 +91,21 @@ test('speed buttons change active state on click', async ({ page }) => {
 // ---------------------------------------------------------------------------
 // Test 5 — Village panel default state
 // ---------------------------------------------------------------------------
-test('village panel shows placeholder text by default', async ({ page }) => {
+// Rewritten (chunk W3c): the opening's briefing now auto-opens on entry
+// (runtime/openingBriefing.ts) via startDialogue('story/briefing', 'arrakeen'),
+// and DialogueSystem's own 'dialogue:started' event (ui/store.ts) selects
+// that villageId the same way any other conversation's opening always did —
+// so a fresh campaign now starts with Arrakeen selected, not nothing. The
+// placeholder text this test asserted is real UI (VillagePanel.tsx still
+// shows it whenever selectedVillage is null); it is just not the state a
+// fresh campaign lands in any more.
+test('village panel shows the auto-selected Arrakeen on a fresh campaign', async ({ page }) => {
   await enterGame(page)
 
+  await expect(page.getByRole('heading', { name: 'Arrakeen', exact: true })).toBeVisible()
   await expect(
     page.locator('text=Click a village on the map to inspect it.')
-  ).toBeVisible()
+  ).not.toBeVisible()
 })
 
 // ---------------------------------------------------------------------------
@@ -121,33 +139,29 @@ test('event log renders with empty state', async ({ page }) => {
 // production action instead of waiting and hoping.
 //
 // window.__DUNE__.pick(id) is "the same path a raycast hit will take"
-// (DebugHandle.ts's own comment) — it is the exact function a canvas click
-// on a map marker calls (ThreeContainer.tsx's dispatchPick), not a shortcut
-// around it. Picking the player's OWN starting location (Arrakeen,
-// neutral-owned) resolves through decideVisit to a 'dialogue' action
-// (VisitPolicy.ts): the player isn't the owner, so it opens the neutral
-// faction's conversation and startDialogue unconditionally pushes a
-// 'dialogue_start' event (DialogueSystem.ts) — no travel, no pledge
-// threshold, nothing that can refuse.
+// (DebugHandle.ts's own comment). Picking Arrakeen resolves through
+// decideVisit to a 'dialogue' action (VisitPolicy.ts) — corrected from this
+// test's own earlier (unverified) comment: Arrakeen has three named
+// residents and residentsAt() lists Duke Leto first, so decideVisit's
+// resident branch wins over treeForOwner('neutral') — it opens the ongoing
+// 'story' tree's duke_briefing_root. Either way startDialogue unconditionally
+// pushes a 'dialogue_start' event.
 //
-// __DUNE__ only attaches with `?debug=1` on a production/preview build
-// (game-render/core/DebugHandle.ts's shouldAttachDebug: import.meta.env.DEV
-// is false under `npm run preview`, which is what this suite's webServer
-// runs) — plain `/` would leave window.__DUNE__ undefined here. It also
-// only attaches once ThreeContainer mounts (chunk W3b: the title screen
-// gates that mount), so the debug-query navigation happens BEFORE entering
-// via the title, not as a substitute for it.
+// Chunk W3c: a fresh campaign now auto-opens the Duke's own dedicated
+// briefing and refuses to close it (or the ledger that follows) early
+// (DialogueSystem.ts's canCloseDialogue()); pick() while a dialogue is open
+// resolves to 'none' (VisitPolicy.ts's own guard), so both beats are walked
+// to their real end via completeOpeningBriefing() first — the same click
+// path a player takes — before this test's own pick() runs at all.
 //
-// UNVERIFIED BY THE BUILDER: no Playwright run was made (not permitted this
-// chunk). The lead should watch for: __DUNE__ attach timing after entering
-// (enterGameFromTitle's own canvas-attached wait plus its 2s buffer mirrors
-// every other test in this file); and that pick('arrakeen') actually
-// resolves to the 'dialogue' branch and not 'none' (would only happen if
-// decideVisit's traveling/dialogue guards are somehow already tripped on a
-// fresh load, which nothing in this test does).
+// __DUNE__ only attaches with `?debug=1` on a production/preview build and
+// only once ThreeContainer mounts (W3b gates that on the title screen), so
+// the debug query happens before entering via the title, not instead of it.
 test('a production pick action emits a logged event', async ({ page }) => {
   await page.goto('/?debug=1')
   await enterGameFromTitle(page)
+
+  await completeOpeningBriefing(page)
 
   await page.evaluate(() => window.__DUNE__?.pick('arrakeen'))
   await page.waitForTimeout(500)
@@ -164,15 +178,23 @@ test('a production pick action emits a logged event', async ({ page }) => {
 })
 
 // ---------------------------------------------------------------------------
-// Test 8 — Dialogue panel hidden by default
+// Test 8 — Dialogue panel visible on load, naming the Duke
 // ---------------------------------------------------------------------------
-test('dialogue panel overlay is not visible on load', async ({ page }) => {
+// Re-read (chunk W3c): the original assertion ran POST-entry — inside the
+// test body, `enterGame(page)` (which enters a new campaign) runs BEFORE
+// the dialogue-hidden check, so this test was always about the state right
+// after entering, not the pre-entry title screen. That state has changed:
+// 03 "Starting contract" ("simulation paused for the briefing") is now
+// implemented as auto-open-once (runtime/openingBriefing.ts), so a fresh
+// campaign's first-load state legitimately HAS a dialogue open. Fixed
+// faithfully by asserting the new true state rather than the old one.
+test('briefing dialogue is visible immediately after entering a new campaign, naming Duke Leto', async ({ page }) => {
   await enterGame(page)
 
-  // No dialog role element should be visible
-  const dialogVisible = await page.getByRole('dialog').isVisible().catch(() => false)
-  expect(dialogVisible).toBe(false)
-
-  // Speaker name "Stilgar" should not be present
+  await expect(page.locator('text=Duke Leto Atreides').first()).toBeVisible()
+  // Stilgar is Beat 4 content (W3d), never named this early.
   await expect(page.locator('text=Stilgar')).not.toBeVisible()
 })
+
+// Test 9 — completing both opening beats — lives in opening.spec.ts, split
+// out to keep this file under the repository's 200-line cap.

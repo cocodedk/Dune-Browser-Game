@@ -17,6 +17,7 @@ import OrnamentFrame from './ui/Ornament'
 import ViewHint from './ui/ViewHint'
 import PositionStrip from './ui/PositionStrip'
 import ObjectivePanel from './ui/ObjectivePanel'
+import { ledgerDisclosed } from './game-engine/acts/openingObjectives'
 
 // three.js is now the only renderer; Phaser is gone. Kept lazy so the 3D
 // chunk stays out of the initial payload.
@@ -37,6 +38,14 @@ export default function App() {
   // ThreeContainer's wireCommands()/initLoop() never run, until the store's
   // `screen` flips to 'game' inside loadGame()/newGame() (ui/store.ts).
   const screen = useGameStore(s => s.screen)
+  // 03 "Progressive disclosure": "Tribute ledger — Thufir explains the first
+  // demand." Read as the ledger CONVERSATION completing (game-engine/acts/
+  // openingObjectives.ts's ledgerDisclosed — also covers every pre-W3c save,
+  // see its own doc). Gated here rather than inside QuotaLedger itself:
+  // OrnamentFrame renders its border/corner chrome around whatever child it
+  // is given, including null, so gating inside QuotaLedger would still draw
+  // an empty carved box in the command column pre-disclosure.
+  const showLedger = useGameStore(s => ledgerDisclosed(s.world))
   if (screen === 'title') return <TitleScreen />
 
   return (
@@ -56,7 +65,7 @@ export default function App() {
       {/* Command column, floating right. Scrolls independently of the map. */}
       <div style={styles.column}>
         <OrnamentFrame plain><StatusBar /></OrnamentFrame>
-        <OrnamentFrame><QuotaLedger /></OrnamentFrame>
+        {showLedger && <OrnamentFrame><QuotaLedger /></OrnamentFrame>}
         <OrnamentFrame><CrewPanel /></OrnamentFrame>
         <OrnamentFrame><MarketPanel /></OrnamentFrame>
         <OrnamentFrame><FortPanel /></OrnamentFrame>

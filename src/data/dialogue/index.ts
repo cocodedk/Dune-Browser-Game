@@ -15,6 +15,8 @@ import { ACT3_NODES } from './act3'
 import { REACHES_DESERT_NODES } from './reaches-desert'
 import { REACHES_BASIN_NODES } from './reaches-basin'
 import { DUNCAN_NODES } from './duncan'
+import { BRIEFING_NODES } from './opening-briefing'
+import { LEDGER_NODES } from './opening-ledger'
 import type { DialogueNode } from '../../types'
 
 export const STORY_NODES: DialogueNode[] = [
@@ -32,3 +34,15 @@ export const STORY_NODES: DialogueNode[] = [
  * not by faction ownership.
  */
 export const STORY_TREE_ID = 'story'
+
+export { BRIEFING_NODES, LEDGER_NODES }
+/**
+ * The opening's two dedicated beat trees (chunk W3c — 03-opening-
+ * experience.md "Teaching sequence" Beats 1-2). Each is its own tree, NOT
+ * folded into STORY_NODES/STORY_TREE_ID — see opening-briefing.ts's header
+ * for why. Opened only by DialogueSystem.ts's own auto-open/auto-chain
+ * logic and runtime/openingBriefing.ts's trigger, not by VisitPolicy
+ * routing, so neither needs an entry in routedTrees()/DIALOGUES.
+ */
+export const BRIEFING_TREE_ID = 'story/briefing'
+export const LEDGER_TREE_ID = 'story/ledger'

@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest'
 import { createInitialState } from '../GameState'
 import {
-  activeOpeningObjective, completedOpeningObjectives, openingObjectiveChain,
+  activeOpeningObjective, completedOpeningObjectives, openingObjectiveChain, ledgerDisclosed,
   BRIEFING_COMPLETE_FLAG, LEDGER_READ_FLAG, TRAVEL_RED_WALL_FLAG,
   EARNED_TRUST_FLAG, FIRST_HARVEST_FLAG, OPENING_COMPLETE_FLAG,
 } from './openingObjectives'
@@ -96,5 +96,24 @@ describe('targetHint: location ids the pick store can select, panel keys as text
     expect(byId['act1.earn_trust']).toEqual({ kind: 'location', id: 'red_wall_sietch' })
     expect(byId['act1.read_ledger']).toEqual({ kind: 'panel', key: 'quota-ledger' })
     expect(byId['act1.order_first_harvest']).toEqual({ kind: 'panel', key: 'crew-panel' })
+  })
+})
+
+describe('ledgerDisclosed: QuotaLedger mounts on ledger.read, or for any pre-existing save', () => {
+  it('is false for a fresh campaign mid-beats — no flag, no day boundary crossed yet', () => {
+    const world = createInitialState()
+    expect(ledgerDisclosed(world)).toBe(false)
+  })
+
+  it('is true once ledger.read is set, regardless of lastProcessedDay', () => {
+    const world = createInitialState()
+    world.flags[LEDGER_READ_FLAG] = true
+    expect(ledgerDisclosed(world)).toBe(true)
+  })
+
+  it('is true for a pre-W3c save — a day boundary already crossed, ledger.read never set', () => {
+    const world = createInitialState()
+    world.lastProcessedDay = 5 // simulates a save that predates the opening's pause gate
+    expect(ledgerDisclosed(world)).toBe(true)
   })
 })

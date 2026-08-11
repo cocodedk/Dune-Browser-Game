@@ -12,11 +12,12 @@ import { serializeWorld, deserializeWorld } from '../persistence'
 import { runSettleCommand } from './settleCommand'
 import { runPledgeCommand } from './pledgeCommand'
 import { runAssignCrewCommand } from './assignCrewCommand'
-import { startDialogue, endDialogue } from '../DialogueSystem'
+import { startDialogue, chooseDialogue } from '../DialogueSystem'
+import { BRIEFING_TREE_ID } from '../../data/dialogue'
 import { startTravel } from '../TravelSystem'
 import { DAY_SECONDS } from '../TimeSystem'
 import {
-  BRIEFING_COMPLETE_FLAG, TRAVEL_RED_WALL_FLAG, EARNED_TRUST_FLAG,
+  BRIEFING_COMPLETE_FLAG, LEDGER_READ_FLAG, TRAVEL_RED_WALL_FLAG, EARNED_TRUST_FLAG,
   FIRST_HARVEST_FLAG, OPENING_COMPLETE_FLAG,
 } from '../acts/openingObjectives'
 
@@ -31,12 +32,11 @@ function advanceToDay(day: number): void {
 
 function reachQ1(spice: number): void {
   const state = createInitialState()
-  // W3a: pause.ts's briefingPending gate blocks processDayBoundary() until
+  // pause.ts's briefingPending gate blocks processDayBoundary() until
   // briefing.complete is set — irrelevant to what these three fixtures
   // test (the settlement bands themselves), so it's set directly rather
-  // than through the (out-of-scope) stand-in dialogue. The playability
-  // fixture below drives the real stand-in instead, since that IS part of
-  // what it proves.
+  // than by walking the real Duke Leto tree. The playability fixture below
+  // drives the real tree instead, since that IS part of what it proves.
   state.flags[BRIEFING_COMPLETE_FLAG] = true
   state.player.spice = spice
   setWorld(state)
@@ -101,17 +101,31 @@ describe('opening-short-payment: reaching day 12 below the minimum partial thres
   })
 })
 
-describe('playability: a fresh campaign can hear the briefing, travel, pledge, earn, and reach and resolve Q1 — all through production commands', () => {
-  it('closes the stand-in briefing at Arrakeen, travels to Red Wall via Hagg, pledges, harvests, and settles', () => {
+describe('playability: a fresh campaign can hear the briefing, read the ledger, travel, pledge, earn, and reach and resolve Q1 — all through production commands', () => {
+  it('walks the real Duke Leto and Thufir trees at Arrakeen, travels to Red Wall via Hagg, pledges, harvests, and settles', () => {
     const state = createInitialState()
     setWorld(state)
     initLoop()
 
-    // W3c replaces: the stand-in briefing close (DialogueSystem.ts's
-    // endDialogue). Lifts pause.ts's briefingPending gate.
-    startDialogue('neutral_settlement', 'arrakeen')
-    endDialogue()
+    // W3c: the two dedicated opening trees, walked for real via chooseDialogue
+    // (data/dialogue/opening-briefing.ts, opening-ledger.ts) — the stand-in
+    // this fixture used to drive is gone. Beat 1's closing choice sets
+    // briefing.complete and auto-chains straight into Beat 2
+    // (DialogueSystem.ts's endDialogue); Beat 2's own closing choice sets
+    // ledger.read and ends the conversation, lifting pause.ts's
+    // briefingPending gate.
+    startDialogue(BRIEFING_TREE_ID, 'arrakeen')
+    chooseDialogue('briefing_understand')
+    chooseDialogue('briefing_ack_practical_1')
     expect(world.flags[BRIEFING_COMPLETE_FLAG]).toBe(true)
+
+    chooseDialogue('ledger_root_1')
+    chooseDialogue('ledger_stock_1')
+    chooseDialogue('ledger_projection_1')
+    chooseDialogue('ledger_shortfall_1')
+    chooseDialogue('ledger_patience_1')
+    expect(world.flags[LEDGER_READ_FLAG]).toBe(true)
+    expect(world.dialogue).toBeNull()
 
     const startingSpice = world.player.spice // 60 — the opening balance
 

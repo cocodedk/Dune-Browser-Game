@@ -36,8 +36,9 @@ export interface PauseInputs {
    * regardless of the missing flag — no save-migration version bump needed.
    * The one accepted edge case is an old save taken in the first few seconds
    * of day 0, before its own first day boundary; it is rare, and recoverable
-   * the same way a fresh campaign clears the gate — open and close any
-   * conversation at Arrakeen (DialogueSystem.ts's temporary stand-in).
+   * the same way a fresh campaign clears the gate — runtime/openingBriefing.ts's
+   * trigger reopens the Duke Leto (or Thufir) tree on the next mount and the
+   * player walks it to its end, same as any other fresh campaign.
    */
   briefingPending: boolean
 }

@@ -43,3 +43,44 @@ export async function enterGame(
   await enterGameFromTitle(page, difficulty)
   return response
 }
+
+/**
+ * Clicks through both opening beats (Duke Leto's briefing, then Thufir's
+ * ledger — data/dialogue/opening-briefing.ts, opening-ledger.ts) via their
+ * own reply buttons, the same production click path a real player takes.
+ * Assumes the briefing is already open, which every fresh campaign now is
+ * (runtime/openingBriefing.ts's auto-open, chunk W3c). Regex name matches
+ * rather than exact strings, so this stays correct regardless of the exact
+ * punctuation/apostrophe characters authored in the copy.
+ */
+/**
+ * Click one dialogue reply by its accessible name — via dispatchEvent, not
+ * click(): a beat's final reply synchronously unmounts its own button (the
+ * dialogue-event bus re-renders the panel inside the click dispatch), and
+ * Playwright's post-click hit-target verification then retries against a
+ * locator that can never match again — a permanent hang. Measured: the game
+ * state HAD advanced while click() reported a 30s timeout.
+ */
+export async function chooseReply(page: Page, name: RegExp): Promise<void> {
+  const btn = page.getByRole('button', { name })
+  await btn.waitFor({ state: 'visible' })
+  await btn.dispatchEvent('click')
+}
+
+export async function completeOpeningBriefing(page: Page): Promise<void> {
+  const replies = [
+    /understand the numbers first/i,
+    /hear him out/i,
+    /show me the rest/i,
+    /what it becomes/i,
+    /we are short/i,
+    /closes it/i,
+    /go earn one/i,
+  ]
+  for (const name of replies) {
+    await chooseReply(page, name)
+  }
+  await page
+    .getByRole('button', { name: /go earn one/i })
+    .waitFor({ state: 'detached' })
+}

@@ -22,6 +22,7 @@ import { AudioManager } from '../game-render/audio/AudioManager'
 import { startTravel } from '../game-engine/TravelSystem'
 import { startDialogue } from '../game-engine/DialogueSystem'
 import { pushEvent } from '../game-engine/EventSystem'
+import { maybeOpenOpeningDialogue } from '../runtime/openingBriefing'
 
 /** Dispatch a logical pick — the same path a raycast hit will take in Stage 03. */
 function dispatchPick(id: string): void {
@@ -90,6 +91,9 @@ export default function ThreeContainer() {
     const debug = attachDebugHandle(dispatchPick)
     wireDebugSources(debug, handle, modes, canvas, audio)
     initLoop()
+    // Opening's auto-open, placed after wireCommands() on purpose — see
+    // runtime/openingBriefing.ts's own doc for the race this ordering closes.
+    maybeOpenOpeningDialogue()
 
     let raf = 0
     let last = performance.now()

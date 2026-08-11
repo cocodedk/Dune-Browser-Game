@@ -5,18 +5,18 @@
 // two or three objective records with stable IDs, progress values, and
 // completion state. UI wording is authored outside the engine query.")
 //
-// Chunk W3a builds ONLY the opening's seven-step chain; WP05 extends this
+// Chunk W3a built ONLY the opening's seven-step chain; WP05 extends this
 // module for the rest of Act 1 (progress.md Round 11: "W3a builds the
 // minimal act1 objective-record seam and WP05 extends it — no
 // parallel-build"). Every completion check here is a PURE read of `world` —
 // no mutation lives in this file. `receive_briefing`/`read_ledger` are
-// flag-driven with no production writer yet other than DialogueSystem.ts's
-// temporary stand-in (W3c replaces it): W3c's authored dialogue sets these
-// flags itself via the existing `setFlags` dialogue effect, no further
-// engine change required from that chunk. The other four steps already have
-// a live production trigger today — each writes its own sticky flag at the
-// exact command that completes it; see each constant's doc below for why a
-// flag, not a live re-derivation of existing state.
+// flag-driven, written by chunk W3c's two dedicated dialogue trees
+// (data/dialogue/opening-briefing.ts, opening-ledger.ts) via the existing
+// `setFlags` dialogue effect — no engine write outside DialogueSystem.ts's
+// applyEffect. The other four steps already have a live production trigger
+// today — each writes its own sticky flag at the exact command that
+// completes it; see each constant's doc below for why a flag, not a live
+// re-derivation of existing state.
 //
 // targetHint discriminates two kinds a UI Show action can act on today:
 // `location` is a village/sietch id the existing pick/selection store can
@@ -37,9 +37,9 @@ export type ObjectiveId =
   | 'act1.prepare_q1'
   | 'opening.complete'
 
-/** Reserved for W3c's Duke Leto tree; DialogueSystem.ts's stand-in also sets it. */
+/** Set by data/dialogue/opening-briefing.ts's closing choices (Duke Leto). */
 export const BRIEFING_COMPLETE_FLAG = 'briefing.complete'
-/** Reserved for W3c's Thufir ledger tree. No writer exists yet in this chunk. */
+/** Set by data/dialogue/opening-ledger.ts's closing choice (Thufir Hawat). */
 export const LEDGER_READ_FLAG = 'ledger.read'
 /** Written once, at arrival — see TravelSystem.ts's checkTravelArrival. */
 export const TRAVEL_RED_WALL_FLAG = 'travel.red_wall_sietch'
@@ -155,4 +155,28 @@ export function activeOpeningObjective(world: WorldState): ObjectiveRecord | nul
 /** Completed steps, in chain order — the UI's compact history. */
 export function completedOpeningObjectives(world: WorldState): ObjectiveRecord[] {
   return openingObjectiveChain(world).filter(r => r.complete)
+}
+
+/**
+ * Whether the tribute ledger (QuotaLedger.tsx) should be mounted (03
+ * "Progressive disclosure": "Tribute ledger — Thufir explains the first
+ * demand" — read as the ledger conversation COMPLETING).
+ *
+ * `ledger.read === true` covers every post-W3c campaign. The
+ * `lastProcessedDay !== null` branch is the escape hatch for every save
+ * that predates this chunk: such a save has already crossed a day boundary
+ * (the opening's briefing/ledger pause did not exist yet to have gated it),
+ * so it necessarily never sets `ledger.read` — without this branch the
+ * ledger, "the single most important element on screen" per QuotaLedger's
+ * own header, would vanish forever from an existing campaign, including at
+ * its very next tribute deadline. This is exactly pause.ts's own
+ * `briefingPending` sentinel, reused for the same "predates this feature"
+ * reason, and needs no save-migration version bump for the same reason
+ * that one didn't. A post-W3c campaign can never satisfy the OR branch
+ * without first satisfying the flag: crossing a day boundary requires
+ * clearing pause.ts's chain (briefingPending, then inDialogue through the
+ * auto-chained Beat 2), which cannot happen before `ledger.read` is set.
+ */
+export function ledgerDisclosed(world: WorldState): boolean {
+  return world.flags[LEDGER_READ_FLAG] === true || world.lastProcessedDay !== null
 }
