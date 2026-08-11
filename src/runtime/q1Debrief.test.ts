@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest'
 import { world, setWorld, createInitialState } from '../game-engine/GameState'
 import { maybeOpenQ1Debrief } from './q1Debrief'
 import {
-  Q1_DEBRIEF_PENDING_FLAG, Q1_DEBRIEF_BAND_FLAG, encodeSettlementBand,
+  Q1_DEBRIEF_PENDING_FLAG, Q1_DEBRIEF_BAND_FLAG, Q1_DEBRIEF_NEARLY_FULL_FLAG, encodeSettlementBand,
 } from '../game-engine/quota/settlement'
 import { Q1_DEBRIEF_TREE_ID } from '../data/dialogue'
 import { q1DebriefRootId } from '../data/dialogue/opening-q1-debrief'
@@ -23,7 +23,7 @@ describe('maybeOpenQ1Debrief', () => {
     expect(world.dialogue).toBeNull()
   })
 
-  it('opens the band-specific root and consumes the pending flag', () => {
+  it('opens the band-specific root (default bare-minimum when nearlyFull is unset) and consumes the pending flag', () => {
     freshWorld()
     world.flags[Q1_DEBRIEF_PENDING_FLAG] = true
     world.flags[Q1_DEBRIEF_BAND_FLAG] = encodeSettlementBand('partial')
@@ -31,8 +31,19 @@ describe('maybeOpenQ1Debrief', () => {
     maybeOpenQ1Debrief()
 
     expect(world.dialogue?.treeId).toBe(Q1_DEBRIEF_TREE_ID)
-    expect(world.dialogue?.currentNodeId).toBe(q1DebriefRootId('partial'))
+    expect(world.dialogue?.currentNodeId).toBe(q1DebriefRootId('partial', false))
     expect(world.flags[Q1_DEBRIEF_PENDING_FLAG]).toBe(false)
+  })
+
+  it('opens the nearly-full partial variant when the flag is set', () => {
+    freshWorld()
+    world.flags[Q1_DEBRIEF_PENDING_FLAG] = true
+    world.flags[Q1_DEBRIEF_BAND_FLAG] = encodeSettlementBand('partial')
+    world.flags[Q1_DEBRIEF_NEARLY_FULL_FLAG] = true
+
+    maybeOpenQ1Debrief()
+
+    expect(world.dialogue?.currentNodeId).toBe(q1DebriefRootId('partial', true))
   })
 
   it('does not reopen once consumed', () => {

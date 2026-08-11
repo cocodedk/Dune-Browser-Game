@@ -53,6 +53,14 @@ export default function QuotaLedger() {
   // before it is read.
   const urgent = short && days <= 2
 
+  // W3h: the caption below used to gate on `dailyRate > 0`, which is 0 at
+  // the deadline itself (daysRemaining === 0, so the projection loop never
+  // runs) or during a fresh changeover — both cases where a crew genuinely
+  // IS assigned. "No crews are harvesting" then read as false while the
+  // crew panel showed otherwise (blind-play finding C3). Gate on the actual
+  // assignment instead, and always show the rate (even 0.0) once one exists.
+  const anyHarvesting = troopGroups.some(g => g.task === 'harvest')
+
   // Auto-shipment (02 "Tribute"): unavailable until the first settlement of
   // any band has ever completed. This checkbox is the whole minimal-UI
   // surface for it — full configuration (a custom amount) is WP03.
@@ -107,7 +115,7 @@ export default function QuotaLedger() {
       </div>
 
       <div style={{ ...type.note, textAlign: 'center', marginTop: space.xs }}>
-        {projection.dailyRate > 0
+        {anyHarvesting
           ? `${projection.dailyRate.toFixed(1)} spice per day at current orders`
           : 'no crews are harvesting'}
       </div>

@@ -460,3 +460,117 @@ reproduce.
   mapped and closed (keyboard-only traversal: zero UI fixes needed).
 - Suite at close: 282 files / 2272 tests; 21/21 E2E ×2. Board: WP03 stays
   `in_progress` pending the two package critics (evidence + blind-play).
+
+## Round 14 — WP03 remediation W3h: both critics' findings closed (2026-08-11)
+
+- **Verdicts merged (`baseline/wp03-critic-verdict.md` 7/10 + `baseline/
+  wp03-blindplay-verdict.md` 7/10):** nine required items, all closed.
+- **Pause (both critics' biggest gap):** `onPause`/`game:pause` were fully
+  wired (CommandWiring.ts, pause.ts's `manual` input, GameLoop.ts) with no
+  emitter anywhere — StatusBar now has a `0×` button (spacebar bound too,
+  guarded off text-entry targets) beside 1×/2×/5×. No engine change needed;
+  the seam was already correct.
+- **Objective `Show` for panel targets:** was a silent no-op for
+  `act1.read_ledger`/`order_first_harvest`/`prepare_q1` (evidence F4).
+  `coachAnchor.ts` (new, shared with CoachMark.tsx) finds the `data-coach`
+  element; ObjectivePanel's Show now briefly outlines it — a one-shot
+  flash, not a coach mark, so it never blocks the screen either.
+- **Settlement modal cluster (evidence F3 + blind-play C1-C3):** (a) the
+  custom-amount prefill now displays rounded to one decimal — the raw
+  15-decimal stock float was cosmetic only; the underlying settle amount is
+  unchanged. (b) "Full (N)" only labels the button when N actually equals
+  the full amount due; when stock falls short it reads "Pay all available
+  (N)" — Fenring's own "Not the full sum" line no longer contradicts the
+  button the player just pressed. (c) when `legalRange.max <=
+  minPartialPayment` the Full/Minimum previews used to collapse into two
+  identical rows (and an identical pair of preset buttons); now one honest
+  result row plus "the minimum partial (N) is out of reach", and the
+  redundant Minimum button is not rendered. (d) QuotaLedger's "no crews are
+  harvesting" caption was gated on `dailyRate > 0`, which reads 0 at the
+  deadline itself (`daysRemaining === 0`) or mid-changeover even though a
+  crew IS assigned — regated on actual assignment (`task === 'harvest'`);
+  the rate line now always shows, even "0.0/day", when one exists.
+- **Stale location panel at Hagg (blind-play acceptance-4 failure):** root
+  cause was that only `dialogue:started` ever updated `ui/store.ts`'s
+  `selectedVillage` — true at Red Wall/Tabr only because Beats 4/6
+  auto-open a tree there, never true at a plain waypoint like Hagg.
+  `TravelSystem.ts`'s `checkTravelArrival` now emits `village:selected` on
+  every arrival, mirroring that pattern instead of piggy-backing on it.
+- **Thufir's debrief never appearing (blind-play L189) — root cause:**
+  `Q1_DEBRIEF_TREE_ID` was never in `DialogueSystem.ts`'s `canCloseDialogue`
+  mandatory set, so × and Escape were live at Fenring's own root node.
+  Fenring's lines read as terminal on their own ("Make a habit of it.",
+  "See that you do."), so the affordance to close the WHOLE debrief right
+  there existed and nothing else could skip Thufir — the only other
+  `endDialogue` path is a null-`nextId` choice, and the root's one choice
+  chains to Thufir instead. Fixed structurally, not by inference about
+  what the blind player actually pressed: `Q1_DEBRIEF_ROOT_IDS`
+  (opening-q1-debrief.ts) joins the mandatory set for its four root nodes
+  only — free again once Thufir's own node is reached. Fenring's partial-
+  band line also now has two variants (magnitude, not digits): "nearly
+  full" at ≥66% of due, "bare minimum" below — canonical-numbers decision,
+  `Q1_DEBRIEF_NEARLY_FULL_FRACTION = 0.66` in quota/settlement.ts, computed
+  from the settlement snapshot at settle time and carried through a new
+  one-shot flag, band-level granularity unchanged (no interpolation).
+- **Travel-gate copy:** "Too far without a long-range ornithopter" read as
+  an equipment gate for a rule that is actually region adjacency on foot —
+  reworded to name the real rule and both remedies ("Out of walking range
+  from here — travel through a closer place first, or wait for a
+  long-range ornithopter to go directly").
+- **Raw ids in crew UI (blind-play C5):** `SpiceField` has no name slot —
+  new pure `fieldDisplayName()` (troops/, unit-tested) derives
+  'Red Wall Pan' from 'field_red_wall_pan'. Applied in CrewCard's field
+  buttons, recommendation line, harvesting status, and order-confirm
+  title, AND in the engine's own event log line
+  (`commands/assignCrewCommand.ts` — "Crew ordered to harvest
+  field_red_wall_pan." was leaking the same raw id into the log, not only
+  the UI). CrewCard's crew-name header also now reads the home sietch's
+  real name instead of its raw id, reusing the lookup already computed for
+  the meta line beneath it.
+- **Bookkeeping (evidence §3.3, §6, §8):**
+  - `giveHarvester`'s use in scenarios 3 and 5 (opening3.spec.ts,
+    opening5.spec.ts) was disclosed only in those files' own comments —
+    recorded here now, not just in-file: both scenarios reach the FULL
+    band only because of it; the real (`giveHarvester`-free) invest line
+    lands SHORT/degenerate, which is finding F3's own subject.
+  - Recovery row (d) (idle crew, no auto-assign) is copy-only, not a
+    mechanism — `objectiveCopy.ts`'s line exists; no test asserts it.
+    Unchanged this round; not in the merged fix list.
+  - The portrait "404" carry-forward the evidence critic corrected: the
+    request actually returns **200 `text/html`** (Vite's preview SPA
+    fallback serving `index.html` for the missing PNG), not a 4xx. Any
+    future WP15 sweep must search for **silent wrong-content fallback**,
+    not 404s — a 404-only sweep would find nothing and wrongly call it
+    closed.
+  - `opening-reserve-line`'s in-code `78.89` comment
+    (`openingLineFixtures.test.ts`) now cites the real-chain number too:
+    77.35, measured by walking the real dialogue trees and the real
+    two-hop Arrakeen→Hagg→Red Wall trip (the evidence critic's P1). Both
+    land PARTIAL; the assertion itself is unchanged (78.89 is this
+    fixture's own honest number under its teleport-and-force-loyalty
+    shortcut) — only the comment's citation was wrong.
+  - Five-dry-runs ledger: the evidence critic counted 3 clean shipped
+    suite runs (opening4's settlement-reload, opening6's reserve line,
+    opening8's keyboard-only traversal); the blind-play critic's own two
+    cold Playwright runs (Run 1 reserve, Run 2 invest) each independently
+    settled Q1 on the plain URL with no `?debug=1` debug state — 3 + 2 = 5.
+- **E2E deltas:** new `opening9.spec.ts` (pause via button, pause via
+  spacebar, Hagg arrival selection — 3 tests, no `.click()` on canvas).
+  Updated for the raw-id/label/copy changes above: `opening2.spec.ts`
+  ("Too far" → "Out of walking range"; `red_wall_pan` → `Red Wall Pan` ×2),
+  `opening3.spec.ts` (`sietch_tabr`/`tabr_shallows` → display names),
+  `opening5.spec.ts` (`red_wall_pan`/`tabr_shallows` → display names),
+  `opening6.spec.ts` (`red_wall_sietch` → `Red Wall Sietch`; `Full (` →
+  `Pay all available (` — the reserve line lands PARTIAL, not full),
+  `opening8.spec.ts` (`red_wall_pan` → `Red Wall Pan`), `opening4.spec.ts`
+  (`Full (` → `Pay all available (`, same PARTIAL reason). `helpers.ts`'s
+  `reachFirstCrew` and its own doc comment updated to match.
+  `opening-q1-debrief.test.ts` restructured for the four-root-id table and
+  the new `canCloseDialogue` expectation (false at root, true at Thufir).
+  `q1Debrief.test.ts` covers the new `nearlyFull` flag. `CommandWiring
+  .test.ts` gained a `game:pause` routing test, same shape as `game:speed`'s.
+- **Gates, all green:** `npx vitest run` 283 files / 2280 tests;
+  `npx tsc --noEmit` clean; `npm run lint` clean; `npm run build` clean
+  (bundle budgets passed); `npx playwright test --workers=1` 24/24
+  (21 prior + 3 new in opening9.spec.ts).
+- No commits made this round; both critic verdict files left untouched.

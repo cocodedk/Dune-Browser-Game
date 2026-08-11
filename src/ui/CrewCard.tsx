@@ -21,6 +21,7 @@ import type { TroopGroup, SpiceField, Equipment } from '../game-engine/troops/ty
 import type { PrescienceLevel } from '../game-engine/prescience/prescience'
 import type { Village } from '../types'
 import { rateFor, densityKnown, rangeFor } from './crewCardHelpers'
+import { fieldDisplayName } from '../game-engine/troops/fieldDisplayName'
 import ConfirmModal from './ConfirmModal'
 import { palette, type as typo, space, button, divider } from './theme'
 
@@ -41,7 +42,9 @@ type PendingOrder = {
 
 function statusText(group: TroopGroup, field: SpiceField | undefined, rate: number, rateKnown: boolean): string {
   if (group.changeoverDaysLeft > 0) return 'Moving to new orders…'
-  if (group.task === 'harvest' && field) return `Harvesting ${field.id} · ${rateKnown ? `${rate.toFixed(1)}/day` : 'yield unclear'}`
+  if (group.task === 'harvest' && field) {
+    return `Harvesting ${fieldDisplayName(field.id)} · ${rateKnown ? `${rate.toFixed(1)}/day` : 'yield unclear'}`
+  }
   if (group.task === 'prospect') return 'Prospecting for new sand'
   if (group.task === 'train') return `Drilling · skill ${group.skills.military}`
   if (group.task === 'ecology') return 'Planting'
@@ -93,7 +96,7 @@ export default function CrewCard({ group, spiceFields, equipment, villages, pres
   return (
     <div style={styles.crew}>
       <div style={styles.crewHead}>
-        <span style={styles.crewName}>{group.homeSietchId}</span>
+        <span style={styles.crewName}>{home?.name ?? group.homeSietchId}</span>
         <span style={styles.crewMeta}>{group.size} hands · skill {group.skills.spice}</span>
       </div>
       <div style={styles.meta}>
@@ -104,7 +107,7 @@ export default function CrewCard({ group, spiceFields, equipment, villages, pres
 
       {best && bestRange && (
         <div style={styles.recommend}>
-          Recommended: {best.id.replace('field_', '')} · projected {bestRange.min.toFixed(1)}–{bestRange.max.toFixed(1)}/day
+          Recommended: {fieldDisplayName(best.id)} · projected {bestRange.min.toFixed(1)}–{bestRange.max.toFixed(1)}/day
         </div>
       )}
 
@@ -121,10 +124,10 @@ export default function CrewCard({ group, spiceFields, equipment, villages, pres
                 ...(group.taskTargetId === f.id ? styles.btnActive : {}),
                 ...(f.id === best?.id ? styles.btnRecommended : {}),
               }}
-              onClick={() => order('harvest', f.id, `harvest ${f.id}`, `${range.min.toFixed(1)}–${range.max.toFixed(1)}/day`)}
+              onClick={() => order('harvest', f.id, `harvest ${fieldDisplayName(f.id)}`, `${range.min.toFixed(1)}–${range.max.toFixed(1)}/day`)}
               title={`Density ${density}, ${f.remaining.toFixed(0)} left`}
             >
-              {f.id.replace('field_', '')}{f.id === best?.id ? ' ★' : ''}
+              {fieldDisplayName(f.id)}{f.id === best?.id ? ' ★' : ''}
             </button>
           )
         })}

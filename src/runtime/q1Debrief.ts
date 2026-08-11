@@ -13,7 +13,7 @@
 import { world } from '../game-engine/GameState'
 import { startDialogue } from '../game-engine/DialogueSystem'
 import {
-  Q1_DEBRIEF_PENDING_FLAG, Q1_DEBRIEF_BAND_FLAG, decodeSettlementBand,
+  Q1_DEBRIEF_PENDING_FLAG, Q1_DEBRIEF_BAND_FLAG, Q1_DEBRIEF_NEARLY_FULL_FLAG, decodeSettlementBand,
 } from '../game-engine/quota/settlement'
 import { Q1_DEBRIEF_TREE_ID, q1DebriefRootId } from '../data/dialogue'
 
@@ -32,6 +32,11 @@ export function maybeOpenQ1Debrief(): void {
 
   const code = typeof world.flags[Q1_DEBRIEF_BAND_FLAG] === 'number'
     ? (world.flags[Q1_DEBRIEF_BAND_FLAG] as number) : 2
+  const nearlyFull = world.flags[Q1_DEBRIEF_NEARLY_FULL_FLAG] === true
   world.flags[Q1_DEBRIEF_PENDING_FLAG] = false
-  startDialogue(Q1_DEBRIEF_TREE_ID, world.player.location, q1DebriefRootId(decodeSettlementBand(code)))
+  startDialogue(
+    Q1_DEBRIEF_TREE_ID,
+    world.player.location,
+    q1DebriefRootId(decodeSettlementBand(code), nearlyFull),
+  )
 }

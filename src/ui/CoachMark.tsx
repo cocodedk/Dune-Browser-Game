@@ -30,12 +30,13 @@ import { activeOpeningObjective } from '../game-engine/acts/openingObjectives'
 import { coachMarkKey } from './coachMarkTarget'
 import { coachMarkLabel } from './coachMarkCopy'
 import { getGuidanceEnabled, isMarkDismissed, dismissMark } from './settings/localSettings'
+import { findCoachAnchor } from './coachAnchor'
 import { palette } from './theme'
 
 interface Rect { top: number; left: number; width: number; height: number }
 
 function measure(key: string): Rect | null {
-  const el = document.querySelector(`[data-coach="${key}"]`)
+  const el = findCoachAnchor(key)
   if (!el) return null
   const r = el.getBoundingClientRect()
   return { top: r.top, left: r.left, width: r.width, height: r.height }

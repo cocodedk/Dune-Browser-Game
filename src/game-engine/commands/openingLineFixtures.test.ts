@@ -63,7 +63,14 @@ describe('opening-reserve-line: pledge Red Wall, harvest, keep the reserve, sett
     // Measured (not assumed): one crew from day 0 on the denser red_wall_pan
     // field lands in the PARTIAL band by day 12 — above the 54 minimum,
     // short of the 90 due. "No softlock", not "full payment", is this
-    // fixture's own required result (03's fixture table).
+    // fixture's own required result (03's fixture table). 78.89 is THIS
+    // fixture's own number, from its shortcut setup (teleported to Red
+    // Wall, loyalty force-set to threshold, zero travel time spent) — not
+    // the reserve line's real-play number. Walking the real dialogue trees
+    // and the real two-hop Arrakeen->Hagg->Red Wall trip (WP03 remediation
+    // W3h's own probe, mirroring the evidence critic's P1) measures 77.35
+    // instead. Both land PARTIAL, so neither assertion is wrong; they are
+    // two different setups' honest numbers, not one number cited twice.
     expect(world.pendingSettlement!.stock).toBeCloseTo(78.89, 1)
     expect(world.pendingSettlement!.legalRange.max).toBeGreaterThanOrEqual(world.pendingSettlement!.minPartialPayment)
     expect(world.pendingSettlement!.legalRange.max).toBeLessThan(world.pendingSettlement!.amountDue)

@@ -65,6 +65,20 @@ export default function SettlementModal() {
   const minPreview = settleQuota(world.quota, minAmount, config.quotaMultiplier)
   const chosenPreview = settleQuota(world.quota, chosen, config.quotaMultiplier)
 
+  // W3h / evidence finding F3: `legalRange.max` is capped at `stock`, so
+  // when stock falls short of the full due it is "all you hold", not "the
+  // full sum" — a button reading "Full (63)" against a stated due of 90
+  // contradicts Fenring's own "Not the full sum" line one screen later.
+  const isTrueFull = pending.legalRange.max >= pending.amountDue
+  const fullResultLabel = isTrueFull ? 'Full' : 'Pay all available'
+  // When stock can't even reach the true minimum partial, `minAmount`
+  // collapses to the same figure as `legalRange.max` — the Full and Minimum
+  // previews would otherwise read as two rows with the identical band
+  // message. One honest row plus a plain statement of what's out of reach,
+  // instead of a duplicated pair (evidence finding F3's "degenerate preset
+  // pair").
+  const minimumOutOfReach = pending.legalRange.max <= pending.minPartialPayment
+
   function settle(a: number) {
     EventBus.emit('player:settle_tribute', { amount: a })
   }
@@ -89,23 +103,45 @@ export default function SettlementModal() {
 
         <div style={styles.presets}>
           <button style={button.base} onClick={() => setAmount(pending.legalRange.max)}>
-            Full ({pending.legalRange.max.toFixed(0)})
+            {fullResultLabel} ({pending.legalRange.max.toFixed(0)})
           </button>
-          <button style={button.base} onClick={() => setAmount(minAmount)}>
-            Minimum ({minAmount.toFixed(0)})
-          </button>
+          {!minimumOutOfReach && (
+            <button style={button.base} onClick={() => setAmount(minAmount)}>
+              Minimum ({minAmount.toFixed(0)})
+            </button>
+          )}
         </div>
         {/* Full-payment result and minimum-partial result (03 Beat 7): static
             reference previews, independent of whatever is currently selected
-            below. */}
-        <div style={type.note}>Full: {bandMessage(fullPreview)}</div>
-        <div style={type.note}>Minimum: {bandMessage(minPreview)}</div>
+            below. Degenerate case (F3): one honest row instead of a second
+            row identical to the first. */}
+        {minimumOutOfReach ? (
+          <>
+            <div style={type.note}>{fullResultLabel}: {bandMessage(fullPreview)}</div>
+            <div style={type.note}>
+              The minimum partial ({pending.minPartialPayment.toFixed(0)}) is out of reach.
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={type.note}>{fullResultLabel}: {bandMessage(fullPreview)}</div>
+            <div style={type.note}>Minimum: {bandMessage(minPreview)}</div>
+          </>
+        )}
 
         <input
           type="number"
           min={pending.legalRange.min}
           max={pending.legalRange.max}
-          value={chosen}
+          // Prefill rounded to one decimal — every other figure in this
+          // modal is integer or one decimal; the raw stock float
+          // (63.206138100000004) was the build's most conspicuous polish
+          // failure on its most important screen (evidence finding C1). The
+          // engine value itself (`chosen`, used for the preview above and
+          // the actual settle amount below) is untouched — only the DISPLAY
+          // of an untouched default is rounded; a value the player typed
+          // passes through exactly as typed.
+          value={amount ?? Number(defaultSettleAmount(pending).toFixed(1))}
           onChange={e => setAmount(Number(e.target.value))}
           style={styles.input}
         />

@@ -80,7 +80,7 @@ export async function chooseReply(page: Page, name: RegExp): Promise<void> {
  *
  * `nth` (chunk W3e) picks among several matches in document order — needed
  * once two CrewCards render identical field-button labels (e.g. two crews
- * both showing a "red_wall_pan"-shaped recommendation), where the default
+ * both showing a "Red Wall Pan"-shaped recommendation), where the default
  * first match would always hit crew 1's card.
  */
 export async function clickButton(page: Page, text: string, exact = true, nth = 0): Promise<void> {
@@ -119,7 +119,7 @@ export async function reachFirstCrew(page: Page): Promise<void> {
   await clickButton(page, 'Pledge the Fremen', false) // opens the confirm step
   await clickButton(page, 'Pledge')
 
-  await clickButton(page, 'red_wall_pan', false) // the recommended field
+  await clickButton(page, 'Red Wall Pan', false) // the recommended field
   await clickButton(page, 'Issue order')
 }
 

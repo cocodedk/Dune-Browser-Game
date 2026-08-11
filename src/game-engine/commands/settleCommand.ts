@@ -13,6 +13,7 @@ import { ok, fail, type CommandOutcome } from './outcome'
 import {
   validateSettleAmount, encodeSettlementBand,
   Q1_DEBRIEF_PENDING_FLAG, Q1_DEBRIEF_BAND_FLAG,
+  Q1_DEBRIEF_NEARLY_FULL_FLAG, Q1_DEBRIEF_NEARLY_FULL_FRACTION,
   type SettleAmountRefusal,
 } from '../quota/settlement'
 import { applySettlement } from '../economy/settlementRun'
@@ -60,6 +61,12 @@ export function runSettleCommand(
     // startDialogue call from here.
     world.flags[Q1_DEBRIEF_PENDING_FLAG] = true
     world.flags[Q1_DEBRIEF_BAND_FLAG] = encodeSettlementBand(outcome.band)
+    // W3h: which of the 'partial' band's two Fenring variants to open —
+    // see Q1_DEBRIEF_NEARLY_FULL_FRACTION's own doc. Computed against
+    // `pending.amountDue` (the snapshot the player was shown), not the
+    // post-settlement quota, which has already rolled to the next cycle.
+    world.flags[Q1_DEBRIEF_NEARLY_FULL_FLAG] =
+      outcome.paid >= pending.amountDue * Q1_DEBRIEF_NEARLY_FULL_FRACTION
   }
 
   return ok('settled')

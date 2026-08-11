@@ -104,6 +104,12 @@ export function rejectionMessage(reason: TravelRejection): string {
     case 'undiscovered':
       return 'You know of no route there. Send a crew to prospect.'
     case 'out-of-range':
-      return 'Too far without a long-range ornithopter.'
+      // W3h: the old copy ("Too far without a long-range ornithopter")
+      // read as an equipment gate, but the real rule is region adjacency
+      // on foot (checkTravel above) — a first-timer could read it as
+      // "buy a vehicle" when the actual fix is a closer waypoint. Names
+      // the real rule and both remedies instead.
+      return 'Out of walking range from here — travel through a closer place first, ' +
+        'or wait for a long-range ornithopter to go directly.'
   }
 }

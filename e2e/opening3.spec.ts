@@ -62,12 +62,12 @@ test('Tabr dilemma, gift climb, second crew, settlement preview, and the Q1 debr
   // Pledge Tabr — second crew.
   await clickButton(page, 'Pledge the Fremen', false)
   await clickButton(page, 'Pledge')
-  await expect(page.locator('text=sietch_tabr').first()).toBeVisible() // CrewCard's homeSietchId
+  await expect(page.locator('text=Sietch Tabr').first()).toBeVisible() // CrewCard's home village name
 
   // Order the second crew to its own recommended field — nth=1: both crews'
   // cards list every discovered field, and this one is the Tabr crew's
   // second-in-document-order card (Trap 2).
-  await clickButton(page, 'tabr_shallows', false, 1)
+  await clickButton(page, 'Tabr Shallows', false, 1)
   await clickButton(page, 'Issue order')
 
   // Measured (not assumed): two 15-hand crews harvesting from day ~0 still

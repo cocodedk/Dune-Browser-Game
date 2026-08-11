@@ -152,6 +152,22 @@ describe('wireCommands', () => {
     EventBus.off('world:updated', onUpdated)
   })
 
+  // W3h: the manual pause seam (game-engine/pause.ts's `manual` input) was
+  // already wired end-to-end — onPause existed, CommandWiring subscribed —
+  // but nothing ever emitted 'game:pause' (evidence finding F1). This is
+  // that seam's own routing test, same shape as game:speed's just above.
+  it('game:pause sets world.paused and re-broadcasts world:updated', () => {
+    let seen: boolean | null = null
+    const onUpdated = ({ state }: { state: typeof world }): void => { seen = state.paused }
+    EventBus.on('world:updated', onUpdated)
+
+    EventBus.emit('game:pause', { paused: true })
+
+    expect(world.paused).toBe(true)
+    expect(seen).toBe(true)
+    EventBus.off('world:updated', onUpdated)
+  })
+
   // 'game:difficulty' is gone (chunk W3b, types.bus.ts) — difficulty is
   // written once at createInitialState() and has no in-game mutation seam.
   // Proven at runtime, not just by the removed type: the raw string bypasses

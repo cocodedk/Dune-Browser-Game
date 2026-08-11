@@ -48,7 +48,7 @@ test('with guidance disabled from the start, every step stays discoverable and t
 
   await clickButton(page, 'Pledge the Fremen', false)
   await clickButton(page, 'Pledge')
-  await clickButton(page, 'red_wall_pan', false)
+  await clickButton(page, 'Red Wall Pan', false)
   await clickButton(page, 'Issue order')
 
   // Investment line through to Q1, same balance shape as opening3.spec.ts.
@@ -69,7 +69,7 @@ test('with guidance disabled from the start, every step stays discoverable and t
   await expect(page.locator('text=Loyalty 61 / need 60')).toBeVisible()
   await clickButton(page, 'Pledge the Fremen', false)
   await clickButton(page, 'Pledge')
-  await clickButton(page, 'tabr_shallows', false, 1)
+  await clickButton(page, 'Tabr Shallows', false, 1)
   await clickButton(page, 'Issue order')
 
   await page.evaluate(() => window.__DUNE__?.giveHarvester?.())

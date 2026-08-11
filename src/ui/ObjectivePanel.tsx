@@ -11,8 +11,10 @@
 // and the command column is for panels, not the one always-on objective
 // line. `Show` for a location target reuses the existing pick/selection
 // store (EventBus 'village:selected' — the same event a canvas click
-// emits); a panel-key target has no navigation seam yet, so it renders as
-// plain text (W3f wires real panel highlighting).
+// emits); a panel-key target (W3h) briefly flashes the same `data-coach`
+// anchor CoachMark.tsx points at (coachAnchor.ts) — a one-shot highlight,
+// not a persistent coach mark, so Show never blocks the rest of the screen
+// either.
 
 import { useState } from 'react'
 import { useGameStore } from './store'
@@ -20,10 +22,32 @@ import { EventBus } from '../EventBus'
 import { activeOpeningObjective, completedOpeningObjectives } from '../game-engine/acts/openingObjectives'
 import type { ObjectiveTargetHint } from '../game-engine/acts/openingObjectives'
 import { OBJECTIVE_COPY, PANEL_LABELS, POST_OPENING_PLACEHOLDER } from './objectiveCopy'
+import { findCoachAnchor } from './coachAnchor'
 import { palette, type as typo } from './theme'
+
+const FLASH_MS = 900
+
+/** Brief outline/glow on whatever `data-coach="<key>"` currently owns —
+ * plain imperative style mutation, reverted after FLASH_MS, so a panel that
+ * is not mounted right now (its objective step not yet reachable on
+ * screen) is a silent no-op rather than a broken promise (evidence
+ * finding F4: "a button that lies is worse than an absent one"). */
+function flashPanel(key: string): void {
+  const el = findCoachAnchor(key)
+  if (!el) return
+  const prevOutline = el.style.outline
+  const prevShadow = el.style.boxShadow
+  el.style.outline = `2px solid ${palette.gold}`
+  el.style.boxShadow = '0 0 0 4px rgba(212,160,23,0.35)'
+  window.setTimeout(() => {
+    el.style.outline = prevOutline
+    el.style.boxShadow = prevShadow
+  }, FLASH_MS)
+}
 
 function showTarget(hint: ObjectiveTargetHint): void {
   if (hint.kind === 'location') EventBus.emit('village:selected', { villageId: hint.id })
+  else flashPanel(hint.key)
 }
 
 function targetLabel(hint: ObjectiveTargetHint): string {

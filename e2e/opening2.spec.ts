@@ -28,7 +28,9 @@ test('destinations, Stilgar trust, pledge confirm, crew order, and the ledger pr
   const redWallAtArrakeen = page.getByRole('button', { name: /Red Wall Sietch/ })
   await expect(redWallAtArrakeen).toBeVisible()
   await expect(redWallAtArrakeen).toBeDisabled()
-  await expect(redWallAtArrakeen).toContainText(/Too far/)
+  // W3h: the old "Too far without a long-range ornithopter" copy read as an
+  // equipment gate; the real rule is region adjacency on foot (rules.ts).
+  await expect(redWallAtArrakeen).toContainText(/Out of walking range/)
   await expect(redWallAtArrakeen).toContainText('Stilgar') // "who is known there"
 
   // First leg: Arrakeen -> Hagg, the required waypoint.
@@ -61,11 +63,11 @@ test('destinations, Stilgar trust, pledge confirm, crew order, and the ledger pr
   // Beat 5: the crew panel is gated on the first pledge — it did not exist
   // before this.
   await expect(page.locator('text=Crews')).toBeVisible()
-  await expect(page.locator('text=/Recommended: red_wall_pan/')).toBeVisible()
+  await expect(page.locator('text=/Recommended: Red Wall Pan/')).toBeVisible()
 
   const verdictBefore = await page.locator('text=/short by|surplus/').first().textContent()
 
-  await clickButton(page, 'red_wall_pan', false) // the recommended field
+  await clickButton(page, 'Red Wall Pan', false) // the recommended field
   await expect(page.locator('text=/no yield today/')).toBeVisible()
   await clickButton(page, 'Issue order')
 

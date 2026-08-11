@@ -1,4 +1,5 @@
 import { world } from './GameState';
+import { EventBus } from '../EventBus';
 import { pushEvent } from './EventSystem';
 import { visitVillage } from './VillageSystem';
 import { visitPlayerSietch } from './SietchVisitSystem';
@@ -110,6 +111,13 @@ export function checkTravelArrival(): void {
 
   const village = world.villages.find(v => v.id === arrivedAt);
   pushEvent('travel_complete', `\u2705 Arrived at ${village?.name ?? arrivedAt}.`);
+
+  // W3h (acceptance-4 failure at Hagg): mirrors 'dialogue:started''s own
+  // selection write (DialogueSystem.ts) for every arrival, not only the
+  // two that happen to auto-open a tree here \u2014 the stale panel was never a
+  // Hagg-specific bug, just the one waypoint with no auto-dialogue to piggy-
+  // back a selection update off of.
+  EventBus.emit('village:selected', { villageId: arrivedAt });
 
   // Sietch-kind arrivals: SietchState is the sole loyalty authority (02
   // "Sietches and loyalty"). Its authored visit rule (loyalty.ts's

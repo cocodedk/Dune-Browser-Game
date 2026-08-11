@@ -19,7 +19,7 @@ function Readout({ label, value }: { label: string; value: string }) {
 
 export default function StatusBar() {
   const { world, lastSaveTime, saveGame, loadGame, newGame } = useGameStore()
-  const { player, time, speed, goalAchieved, difficulty } = world
+  const { player, time, speed, goalAchieved, difficulty, paused } = world
   const [isMuted, setIsMuted] = useState(false)
 
   useEffect(() => {
@@ -30,11 +30,32 @@ export default function StatusBar() {
     return () => { EventBus.off('audio:changed', onAudioChange) }
   }, [])
 
+  // Both critics' biggest gap (W3h): a manual pause, coexisting with the
+  // engine's own pause reasons (pause.ts's `manual` input) — CommandWiring
+  // already routed 'game:pause' to onPause; only an emitter was missing.
+  // Spacebar too, guarded off text-entry targets so it does not fight
+  // SettlementModal's own number input.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.code !== 'Space') return
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      e.preventDefault()
+      EventBus.emit('game:pause', { paused: !world.paused })
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const minutes = Math.floor(time / 60)
   const seconds = Math.floor(time % 60)
 
   function setSpeed(s: number) {
     EventBus.emit('game:speed', { speed: s })
+  }
+
+  function togglePause() {
+    EventBus.emit('game:pause', { paused: !paused })
   }
 
   function toggleMute() {
@@ -70,11 +91,19 @@ export default function StatusBar() {
       {!goalAchieved && (
         <span style={styles.item}>
           Speed:
+          <button
+            onClick={togglePause}
+            aria-pressed={paused}
+            style={{ ...button.base, ...(paused ? button.active : {}) }}
+            title="Pause (Space)"
+          >
+            0×
+          </button>
           {[1, 2, 5].map(s => (
             <button
               key={s}
               onClick={() => setSpeed(s)}
-              style={{ ...button.base, ...(speed === s ? button.active : {}) }}
+              style={{ ...button.base, ...(!paused && speed === s ? button.active : {}) }}
             >
               {s}×
             </button>

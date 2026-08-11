@@ -9,6 +9,7 @@ import {
   REDWALL_TRUST_NODES, REDWALL_TRUST_TREE_ID, TABR_DILEMMA_NODES, TABR_DILEMMA_TREE_ID,
   Q1_DEBRIEF_NODES, Q1_DEBRIEF_TREE_ID,
 } from '../data/dialogue';
+import { Q1_DEBRIEF_ROOT_IDS } from '../data/dialogue/opening-q1-debrief';
 import {
   BRIEFING_COMPLETE_FLAG, LEDGER_READ_FLAG, REDWALL_TRUST_ACKNOWLEDGED_FLAG,
 } from './acts/openingObjectives';
@@ -76,6 +77,14 @@ export function currentNode() {
  * so loyalty never reaches PLEDGE_THRESHOLD and the pledge stays refused
  * with no click-path back to this specific tree (TravelSystem.ts's trigger
  * only fires once, on arrival — see its own doc).
+ *
+ * Q1_DEBRIEF_TREE_ID joins in remediation W3h, but only AT its four root
+ * nodes (Q1_DEBRIEF_ROOT_IDS) — Fenring's line reads as terminal on its own,
+ * so leaving × and Escape live there let a player close the whole debrief
+ * believing it was over, skipping Thufir's summary (opening-q1-debrief.ts's
+ * own header has the full account). Node-keyed rather than flag-keyed like
+ * the three trees above: this tree carries no effects or flags of its own
+ * to gate on, so the gate reads `currentNodeId` directly instead.
  */
 export function canCloseDialogue(): boolean {
   return dialogueIsCloseable(world);
@@ -95,6 +104,7 @@ export function dialogueIsCloseable(state: WorldState): boolean {
   if (treeId === BRIEFING_TREE_ID) return state.flags[BRIEFING_COMPLETE_FLAG] === true;
   if (treeId === LEDGER_TREE_ID) return state.flags[LEDGER_READ_FLAG] === true;
   if (treeId === REDWALL_TRUST_TREE_ID) return state.flags[REDWALL_TRUST_ACKNOWLEDGED_FLAG] === true;
+  if (treeId === Q1_DEBRIEF_TREE_ID) return !Q1_DEBRIEF_ROOT_IDS.includes(state.dialogue.currentNodeId);
   return true;
 }
 

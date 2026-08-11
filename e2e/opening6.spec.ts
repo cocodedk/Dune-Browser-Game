@@ -16,13 +16,16 @@ test('reserve line settles Q1 with one crew, and the opening autosave survives a
   await reachFirstCrew(page) // Red Wall pledged, one crew harvesting — no second pledge
 
   // Reserve line: exactly one crew — Tabr was never visited.
-  await expect(page.locator('text=red_wall_sietch').first()).toBeVisible()
+  await expect(page.locator('text=Red Wall Sietch').first()).toBeVisible()
   await expect(page.locator('text=sietch_tabr')).toHaveCount(0)
 
   await page.evaluate(t => window.__DUNE__?.setTime?.(t), 12 * 60 + 1)
   await expect(page.getByRole('button', { name: 'Settle' })).toBeVisible()
 
-  await clickButton(page, 'Full (', false)
+  // Reserve line lands PARTIAL (stock < due) — the honest label is "Pay
+  // all available", not "Full" (W3h finding 3b/F3: legalRange.max capped
+  // at stock is "all you hold", not "the full sum").
+  await clickButton(page, 'Pay all available (', false)
   await clickButton(page, 'Settle')
 
   // Beat 7's debrief opens, whichever band the reserve line lands in —

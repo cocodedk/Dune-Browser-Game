@@ -63,7 +63,7 @@ test('keyboard-only traversal reaches every required opening control with no mou
 
   // Crew order: pick the recommended field, then confirm via the same
   // global Enter binding.
-  await tabToButtonAndActivate(page, /red_wall_pan/)
+  await tabToButtonAndActivate(page, /Red Wall Pan/)
   await page.locator('text=/no yield today/').waitFor({ state: 'visible' })
   await page.keyboard.press('Enter')
 

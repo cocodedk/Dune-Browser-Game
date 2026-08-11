@@ -25,6 +25,7 @@ import { canOrderCrewRemotely } from '../EconomySystem'
 import { ok, fail, type CommandOutcome } from './outcome'
 import type { AssignRefusal } from '../troops/assign'
 import { FIRST_HARVEST_FLAG } from '../acts/openingObjectives'
+import { fieldDisplayName } from '../troops/fieldDisplayName'
 
 export type AssignCrewCode = 'assigned'
 export type AssignCrewRefusal = 'unknown-crew' | 'crew-destroyed' | 'too-far' | AssignRefusal
@@ -55,10 +56,14 @@ export function runAssignCrewCommand(
 
   world.troopGroups[index] = applyAssign(group, task, targetId)
 
+  // Blind-play finding C5: the raw field id used to leak straight into
+  // this log line ("Crew ordered to harvest field_red_wall_pan.") —
+  // fieldDisplayName is the same formatter CrewCard.tsx now uses, so the
+  // event log and the UI never disagree on what a field is called.
   const label = task === 'idle'
     ? 'stand down'
     : task === 'harvest'
-      ? `harvest ${target?.id ?? ''}`.trim()
+      ? `harvest ${target ? fieldDisplayName(target.id) : ''}`.trim()
       : task
   pushEvent('sietch_task_assigned', `Crew ordered to ${label}.`)
 

@@ -84,6 +84,22 @@ export const AUTO_SHIP_AMOUNT_FLAG = 'settlement.autoShipAmount'
 export const Q1_DEBRIEF_PENDING_FLAG = 'q1.debrief.pending'
 /** PaymentBand encoded as a number — world.flags is boolean | number only. */
 export const Q1_DEBRIEF_BAND_FLAG = 'q1.debrief.band'
+/**
+ * Remediation W3h: within the 'partial' band alone (60%-99% of due —
+ * PARTIAL_PAYMENT_FRACTION above), whether the payment reads as "nearly
+ * full" or "bare minimum" to Fenring — opening-q1-debrief.ts's two partial
+ * variants. Written only on the opening's own settlement (settleCommand.ts),
+ * same scope as the two flags above.
+ */
+export const Q1_DEBRIEF_NEARLY_FULL_FLAG = 'q1.debrief.nearlyFull'
+/**
+ * Canonical-numbers decision (W3h): two-thirds of what was due is the line
+ * between "nearly full" and "bare minimum" praise from Fenring, inside the
+ * partial band. Band-level granularity stays the design — DialogueNode.text
+ * has no interpolation (opening-q1-debrief.ts's header) — this only adds
+ * ONE more qualitative split inside copy already shown, never a digit.
+ */
+export const Q1_DEBRIEF_NEARLY_FULL_FRACTION = 0.66
 
 const BAND_CODES: Record<PaymentBand, number> = { short: 0, partial: 1, full: 2 }
 const CODES_BAND: readonly PaymentBand[] = ['short', 'partial', 'full']

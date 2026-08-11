@@ -42,12 +42,13 @@ describe('opening-q1-debrief content integrity', () => {
 })
 
 describe.each([
-  ['full', 'q1_debrief_full', 'q1_debrief_full_thufir'],
-  ['partial', 'q1_debrief_partial', 'q1_debrief_partial_thufir'],
-  ['short', 'q1_debrief_short', 'q1_debrief_short_thufir'],
-] as const)('%s band branch', (band, rootId, thufirId) => {
-  it('q1DebriefRootId maps the band to its own root', () => {
-    expect(q1DebriefRootId(band)).toBe(rootId)
+  ['full', undefined, 'q1_debrief_full', 'q1_debrief_full_thufir'],
+  ['partial', true, 'q1_debrief_partial_near', 'q1_debrief_partial_thufir'],
+  ['partial', false, 'q1_debrief_partial_bare', 'q1_debrief_partial_thufir'],
+  ['short', undefined, 'q1_debrief_short', 'q1_debrief_short_thufir'],
+] as const)('%s band branch (nearlyFull=%s)', (band, nearlyFull, rootId, thufirId) => {
+  it('q1DebriefRootId maps the band (and, for partial, the magnitude) to its own root', () => {
+    expect(q1DebriefRootId(band, nearlyFull)).toBe(rootId)
   })
 
   it('Fenring speaks at the root, Thufir at the second node, and the branch terminates', () => {
@@ -59,12 +60,16 @@ describe.each([
     expect(thufir.choices[0].nextId).toBeNull()
   })
 
-  it('canCloseDialogue is true at both nodes of this branch', () => {
+  // W3h: the root is now MANDATORY (canCloseDialogue false) — Fenring's
+  // line reads as terminal on its own, so an early Escape/× used to skip
+  // Thufir's summary entirely (this branch's own header has the full
+  // account). Only past the root, at Thufir's node, is it free again.
+  it('canCloseDialogue is false at the root, true once past it to Thufir', () => {
     const state = createInitialState()
     setWorld(state)
 
     startDialogue(Q1_DEBRIEF_TREE_ID, 'arrakeen', rootId)
-    expect(canCloseDialogue()).toBe(true)
+    expect(canCloseDialogue()).toBe(false)
 
     startDialogue(Q1_DEBRIEF_TREE_ID, 'arrakeen', thufirId)
     expect(canCloseDialogue()).toBe(true)
