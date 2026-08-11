@@ -14,6 +14,16 @@
 // Wall, the transaction branch, "Pledge", the recommended field).
 
 import type { CampaignRunner } from './runner'
+import { FIRST_DEADLINE_DAY, CYCLE_DAYS } from '../quota/quota'
+
+/** Cycle-2's own deadline (quota.ts: `nextDueDay + CYCLE_DAYS` on
+ * settlement) — WP04 chunk W4b's fixtures span "the first two tribute
+ * cycles" (progress.md Round 16), so both lines need this second day
+ * alongside FIRST_DEADLINE_DAY. Re-exported here rather than importing
+ * quota.ts twice in every caller (runner.determinism.test.ts's own existing
+ * FIRST_DEADLINE_DAY import is the precedent for reading the real constant
+ * instead of a hand-copied number). */
+export const SECOND_DEADLINE_DAY = FIRST_DEADLINE_DAY + CYCLE_DAYS
 
 /** Beats 1-2: Duke Leto's briefing, then Thufir's ledger — the real reply
  * choice ids from data/dialogue/opening-briefing.ts, opening-ledger.ts. */
@@ -60,4 +70,19 @@ export function walkQ1Debrief(rc: CampaignRunner): void {
     if (!dialogue) return
     rc.choose(dialogue.choices[0].id)
   }
+}
+
+/**
+ * Settle whatever tribute decision is currently pending, at the legal
+ * maximum ("full-available", same reading as runner.smoke.test.ts's own
+ * settleTribute(pending.legalRange.max) call) — shared by both lines' cycle-
+ * 1 and cycle-2 settlements rather than repeating the two-line pattern at
+ * each call site (WP04 chunk W4b: investLine.ts and e2e/parity.spec.ts both
+ * need this exact step twice). Only cycle 0 (Q1) opens a debrief dialogue
+ * (commands/settleCommand.ts's `isOpeningSettlement` gate) — a caller past
+ * cycle 0 needs no walkQ1Debrief call after this.
+ */
+export function settleFullAvailable(rc: CampaignRunner): void {
+  const pending = rc.visibleState().pendingSettlement!
+  rc.settleTribute(pending.legalRange.max)
 }

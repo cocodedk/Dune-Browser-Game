@@ -27,15 +27,34 @@ export type TraceEntry = { [K in RunnerCommandName]: [K, BusEvents[K]] }[RunnerC
 /** The full ordered command trace for one run. */
 export type CommandTrace = TraceEntry[]
 
-/** One hashState() snapshot, taken after a dispatched command or a
- * processed day — see runner.ts's `steps` for how these line up with the
- * trace and the day log. */
+/** One hashState() snapshot, taken after a dispatched command, a processed
+ * day, a completed travel arrival, or an explicit tick — see runner.ts's
+ * `steps` for how these line up with the trace and the day log.
+ *
+ * WP04 chunk W4b adds `parityHash` alongside the existing full-state `hash`:
+ * the SAME log now carries both the save-format hash (unchanged) and the
+ * cross-runtime parity hash (state/parityView.ts) at every point a caller
+ * already snapshots one, so e2e/parity.spec.ts has one source of truth for
+ * both which points to compare AND what the browser is expected to match —
+ * see that spec's own header. */
 export interface HashStep {
-  /** 'command' after a dispatched command; 'day' after a processed day. */
-  kind: 'command' | 'day'
-  /** The command's trace index (kind 'command') or the day number just
-   * processed (kind 'day') — never both, so a caller need not guess which
-   * applies. */
+  /** 'command' after a dispatched command; 'day' after a processed day;
+   * 'arrival' after a completed travel (advanceUntilArrival); 'tick' after
+   * an explicit CampaignRunner.tick() call (e.g. walkQ1Debrief's one-frame
+   * nudge for the debrief auto-open hook). */
+  kind: 'command' | 'day' | 'arrival' | 'tick'
+  /**
+   * 'command': the trace index. 'day': the day number just processed —
+   * multiply by TimeSystem.DAY_SECONDS for the absolute target seconds a
+   * browser driver replays via debugSources.ts's `advanceTo`. 'arrival' and
+   * 'tick': already the absolute `world.time` seconds reached — no
+   * multiplication needed. Never more than one meaning at once, so a caller
+   * need not guess which applies; see each producer's own doc (advance.ts,
+   * runner.ts) for exactly which is which.
+   */
   ref: number
   hash: string
+  /** state/parityView.ts's parityHash(world) at the same instant `hash` was
+   * taken — see this interface's own header. */
+  parityHash: string
 }

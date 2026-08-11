@@ -24,8 +24,14 @@ import type { CanonicalCampaignState } from './schema'
  * produce byte-identical JSON, regardless of property insertion order.
  * Array element order is meaningful game data (village lists, event logs)
  * and is left untouched — only object keys are sorted.
+ *
+ * Exported for state/parityView.ts (WP04 chunk W4b), which needs the exact
+ * same key-order-independent serialization over a DIFFERENT field subset
+ * (canonical state minus `events`/`wormSightings`) — reusing this function
+ * is what keeps the two views byte-comparable instead of one hand-rolling a
+ * second sort.
  */
-function canonicalize(value: unknown): unknown {
+export function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalize)
   if (value !== null && typeof value === 'object') {
     const entries = Object.entries(value as Record<string, unknown>)

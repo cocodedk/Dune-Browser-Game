@@ -5,11 +5,15 @@
 // pixel comparison is both slow and flaky. Instead we expose the facts a test
 // actually cares about — is it rendering, which mode, how many draw calls —
 // and let assertions run against those.
+//
+// This is the TYPE surface only (the DebugHandle interface + attach/detach).
+// The `DebugSources`/`wireDebugHandle` assignment wiring lives in
+// wireDebugHandle.ts (WP04 chunk W4b split — this file was at exactly
+// 200/200 with no room for the parity affordances below).
 
-import type { Camera, Object3D } from 'three'
 import type { SceneModeId, Difficulty } from '../../types'
 import { inspectScene } from './inspectScene'
-import { inspectLights, type InspectedLight } from './inspectLights'
+import type { InspectedLight } from './inspectLights'
 
 export { inspectScene }
 
@@ -118,6 +122,46 @@ export interface DebugHandle {
    * directly, instead of eyeballing individual fields for drift.
    */
   hashState?: () => string
+  /**
+   * Populated by debugSources.ts (WP04 W4b). state/parityView.ts's
+   * parityHash(world) — the cross-runtime hash e2e/parity.spec.ts compares,
+   * over the view excluding `events`/`wormSightings` (parityView.ts's own
+   * header). Read-only, like hashState.
+   */
+  parityHash?: () => string
+  /** Populated by debugSources.ts (WP04 W4b). Full parityView(world) JSON —
+   * parityHash alone proves THAT two states diverge, not WHERE; this is
+   * 07's "both state summaries" on a reported divergence. */
+  parityViewJSON?: () => string
+  /**
+   * Populated by debugSources.ts (WP04 W4b). Harness scaffolding, NOT a
+   * trace command: sets `world.paused = true` (hash-excluded, W3i
+   * precedent) so the ambient GameDriver rAF loop can never nudge
+   * `world.time` between two Playwright round-trips. `advanceTo` un-pauses
+   * for its own synchronous span and re-pauses after. Idempotent; call once
+   * right after entering a fresh campaign, before any ambient frame runs.
+   */
+  pauseForParity?: () => void
+  /**
+   * Populated by debugSources.ts (WP04 W4b). Advances to EXACTLY
+   * `targetSeconds` via one synchronous call to sim/advance.ts's
+   * `advanceSeconds` — the SAME function the headless runner calls, so a
+   * day boundary or travel arrival runs through one shared code path. Not
+   * `setTime`: that does a raw `world.time =` write with no runtimeTick
+   * call, relying on the next ambient frame to notice — exactly the
+   * real-frame-timing drift this hash cannot tolerate (parityView.ts's
+   * wormSightings citation). Returns parityHash() from inside the same
+   * synchronous call, so no ambient frame can land between the two.
+   */
+  advanceTo?: (targetSeconds: number) => string
+  /**
+   * Populated by debugSources.ts (WP04 W4b). Dispatches ONE recorded trace
+   * tuple (sim/trace.ts's `[eventName, payload]`) through the LIVE
+   * EventBus — the production seam CommandWiring.ts registers and every UI
+   * button uses (Round 9's labeled-affordance precedent). Returns
+   * parityHash() atomically, same reason as `advanceTo`.
+   */
+  replay?: (entry: [string, unknown]) => string
 }
 
 declare global {
@@ -152,48 +196,4 @@ export function attachDebugHandle(pick: (id: string) => void): DebugHandle | nul
 
 export function detachDebugHandle(): void {
   if (typeof window !== 'undefined') delete window.__DUNE__
-}
-
-/** Everything the handle needs to observe, supplied by the render container. */
-export interface DebugSources {
-  audio: () => Record<string, unknown>
-  setTime: (seconds: number) => void
-  setVegetation: (value: number) => void
-  worms: NonNullable<DebugHandle['worms']>
-  signWorm: (fieldId: string) => void
-  revealSites: () => void
-  teleport: (villageId: string) => void
-  giveHarvester: () => void
-  giveEquipment: (kind: string) => void
-  endRun: (ending: string) => void
-  player: NonNullable<DebugHandle['player']>
-  scene: () => Object3D | null
-  camera: () => Camera
-  size: () => { width: number; height: number }
-}
-
-/** Attach the observation surface. No-op when debug is not enabled. */
-export function wireDebugHandle(
-  handle: DebugHandle | null,
-  sources: DebugSources,
-): void {
-  if (!handle) return
-  handle.audio = sources.audio
-  handle.setTime = sources.setTime
-  handle.setVegetation = sources.setVegetation
-  handle.worms = sources.worms
-  handle.signWorm = sources.signWorm
-  handle.revealSites = sources.revealSites
-  handle.teleport = sources.teleport
-  handle.giveHarvester = sources.giveHarvester
-  handle.giveEquipment = sources.giveEquipment
-  handle.endRun = sources.endRun
-  handle.player = sources.player
-  handle.inspect = () => {
-    const scene = sources.scene()
-    if (!scene) return []
-    const { width, height } = sources.size()
-    return inspectScene(scene, sources.camera(), width, height)
-  }
-  handle.lights = () => inspectLights(sources.scene(), sources.camera())
 }

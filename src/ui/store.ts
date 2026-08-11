@@ -11,6 +11,28 @@ import {
   deleteSave,
 } from '../game-engine/persistence'
 
+/**
+ * WP04 chunk W4b's seed evidence affordance (docs/PRD/game-completion/
+ * 07-balance-playtest-and-release.md "Every release claim records... seed":
+ * e2e/parity.spec.ts needs the browser's New Campaign to start from the
+ * EXACT SAME seed its headless twin (game-engine/sim/runner.ts) used,
+ * something no other production entry point can express. Read only here, at
+ * the one call site that already decides the seed
+ * (createInitialState(undefined, difficulty) below) — an absent or
+ * malformed `?seed=` leaves the production default (DEFAULT_SEED,
+ * GameState.ts) completely unchanged, so an ordinary New Campaign click is
+ * unaffected. Same labeled-affordance shape as `?debug=1`
+ * (DebugHandle.ts's shouldAttachDebug) — a URL param a browser evidence
+ * script sets deliberately, not a hidden default.
+ */
+function seedFromQuery(): number | undefined {
+  if (typeof window === 'undefined') return undefined
+  const raw = new URLSearchParams(window.location.search).get('seed')
+  if (raw === null) return undefined
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
 interface UIState {
   world: WorldState
   selectedVillage: Village | null
@@ -134,7 +156,7 @@ export const useGameStore = create<UIState>((set, get) => {
     // pattern instead of building a second, momentarily-divergent copy.
     newGame: async (difficulty) => {
       await deleteSave()
-      const fresh = createInitialState(undefined, difficulty)
+      const fresh = createInitialState(seedFromQuery(), difficulty)
       setWorld(fresh)
       set({
         world: fresh,

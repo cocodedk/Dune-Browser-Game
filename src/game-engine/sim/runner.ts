@@ -34,6 +34,7 @@
 import { world, createInitialState, setWorld } from '../GameState'
 import { initLoop as engineInitLoop } from '../GameLoop'
 import { hashState } from '../state/hash'
+import { parityHash } from '../state/parityView'
 import { serializeWorld, deserializeWorld } from '../persistence'
 import type { Difficulty, VillageId, BusEvents } from '../../types'
 import type { TroopTask, EquipmentKind } from '../troops/types'
@@ -120,7 +121,9 @@ export function createCampaignRunner(seed: number, difficulty: Difficulty = 'nor
   function dispatch<K extends RunnerCommandName>(name: K, payload: BusEvents[K], run: () => void): void {
     trace.push([name, payload] as TraceEntry)
     run()
-    hashLog.push({ kind: 'command', ref: trace.length - 1, hash: hashState(world) })
+    hashLog.push({
+      kind: 'command', ref: trace.length - 1, hash: hashState(world), parityHash: parityHash(world),
+    })
   }
 
   advanceSeconds(0) // the opening auto-open's own first-frame trigger
@@ -154,9 +157,17 @@ export function createCampaignRunner(seed: number, difficulty: Difficulty = 'nor
     setAutoShip: (enabled, amount) =>
       dispatch('player:set_auto_ship', { enabled, amount }, () => onAutoShip({ enabled, amount })),
 
-    advanceTravel: () => advanceUntilArrival(),
+    advanceTravel: () => advanceUntilArrival(hashLog),
     advanceToDay: day => advanceToDay(day, hashLog),
-    tick: seconds => advanceSeconds(seconds),
+    // WP04 chunk W4b: records a 'tick' HashStep too (trace.ts's own doc) —
+    // walkQ1Debrief's one-frame nudge for the debrief auto-open hook is a
+    // real world-advancing step a parity script must replay, not a no-op.
+    tick: seconds => {
+      advanceSeconds(seconds)
+      hashLog.push({
+        kind: 'tick', ref: world.time, hash: hashState(world), parityHash: parityHash(world),
+      })
+    },
 
     save: () => serializeWorld(world),
     reload: json => setWorld(deserializeWorld(json)),

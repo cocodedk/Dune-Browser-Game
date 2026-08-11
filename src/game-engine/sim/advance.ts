@@ -15,6 +15,7 @@ import { world } from '../GameState'
 import { DAY_SECONDS, currentDay } from '../TimeSystem'
 import { runtimeTick } from '../../runtime/runtimeTick'
 import { hashState } from '../state/hash'
+import { parityHash } from '../state/parityView'
 import type { HashStep } from './trace'
 
 /** Whether the engine is in a state that would ignore a further tick
@@ -45,10 +46,18 @@ export function advanceSeconds(seconds: number): void {
  * guard against: `arrivalTime - world.time` is exact and provably positive
  * whenever `state === 'traveling'` (TravelSystem.ts's startTravel always
  * sets arrivalTime strictly after the current `world.time`).
+ *
+ * Records an 'arrival' HashStep (WP04 chunk W4b) so a caller building a
+ * parity script — e2e/parity.spec.ts — has the exact absolute second a
+ * browser driver must reach via debugSources.ts's `advanceTo` to replay this
+ * same leg; a no-op call (not traveling) records nothing, matching
+ * `advanceToDay`'s own "nothing crossed, nothing pushed" shape.
  */
-export function advanceUntilArrival(): void {
+export function advanceUntilArrival(hashLog: HashStep[]): void {
   if (world.player.state !== 'traveling') return
-  advanceSeconds(world.player.arrivalTime - world.time)
+  const arrivalTime = world.player.arrivalTime
+  advanceSeconds(arrivalTime - world.time)
+  hashLog.push({ kind: 'arrival', ref: arrivalTime, hash: hashState(world), parityHash: parityHash(world) })
 }
 
 /**
@@ -65,6 +74,8 @@ export function advanceToDay(day: number, hashLog: HashStep[]): void {
   while (currentDay() < day && !isBlocked()) {
     const nextDayStart = (currentDay() + 1) * DAY_SECONDS
     advanceSeconds(nextDayStart - world.time)
-    hashLog.push({ kind: 'day', ref: currentDay(), hash: hashState(world) })
+    hashLog.push({
+      kind: 'day', ref: currentDay(), hash: hashState(world), parityHash: parityHash(world),
+    })
   }
 }
