@@ -19,6 +19,7 @@ import { createCampaignRunner, type CampaignRunner } from '../runner'
 import type { Difficulty } from '../../../types'
 import type { PendingSettlement } from '../../quota/quota'
 import { drainDialogue } from './dialoguePolicy'
+import type { VisibleState } from '../visibleState'
 import type { Agent, AgentAction, AgentRunResult, SettlementRecord } from './types'
 
 const ACTIONS_PER_ADVANCE = 20
@@ -31,6 +32,22 @@ export interface RunAgentOptions {
    * bound, not a rule; the loop's real stop condition is `ending() !==
    * null`. */
   throughDay?: number
+  /** WP04 chunk W4d: called once per decision-point loop iteration, right
+   * after `view` is read and before the agent (or the settlement branch)
+   * acts on it — the sweep's min/max-stock and similar per-run
+   * distributions sample here. Sampling granularity is therefore per
+   * decision point, not per calendar day: a multi-day forceAdvance can
+   * cross a lower or higher stock value than either endpoint samples. The
+   * sweep report states this caveat rather than implying per-day precision
+   * it does not have. */
+  onStep?: (view: VisibleState) => void
+  /** WP04 chunk W4d: the save/reload parity spot-audit (07's "Seed sweep":
+   * "Save/reload parity"). The first time the loop's day counter reaches
+   * this value, save() then immediately reload() the SAME state — proven to
+   * round-trip to an identical continuation by runner.determinism.test.ts's
+   * own day-6 fixture — so a run that opts in IS its own parity check
+   * rather than needing a second run to diff against. Fires at most once. */
+  reloadAtDay?: number
 }
 
 export function runAgentCampaign(
@@ -45,11 +62,18 @@ export function runAgentCampaign(
   const settlements: SettlementRecord[] = []
   const actionCounts: Record<string, number> = {}
   let sinceAdvance = 0
+  let reloaded = false
 
   drainDialogue(rc, agent) // the opening/campaign-creation auto-open, if any
 
   while (rc.ending() === null && rc.visibleState().day <= throughDay) {
     const view = rc.visibleState()
+    opts.onStep?.(view)
+
+    if (!reloaded && opts.reloadAtDay !== undefined && view.day >= opts.reloadAtDay) {
+      rc.reload(rc.save())
+      reloaded = true
+    }
 
     if (view.pendingSettlement) {
       const action = agent.decide(view)
@@ -71,6 +95,10 @@ export function runAgentCampaign(
 
     const action = agent.decide(view)
     if (!action) {
+      // WP04 chunk W4d: "days with no useful legal command" reads directly
+      // off this count — forceAdvance below moves exactly one day whenever
+      // the player is not mid-travel, its own ordinary case.
+      count(actionCounts, 'idle')
       forceAdvance(rc)
       sinceAdvance = 0
       continue
@@ -86,10 +114,21 @@ export function runAgentCampaign(
     }
   }
 
+  const finalView = rc.visibleState()
   return {
     agentName: agent.name, seed, difficulty, settlements,
-    ending: rc.ending(), finalDay: rc.visibleState().day,
+    ending: rc.ending(), finalDay: finalView.day,
     actionCounts, trace: rc.trace, hashLog: rc.hashLog,
+    // WP04 chunk W4d: final-state reads for the sweep's progression
+    // metrics — taken from THIS finished runner before any later
+    // createCampaignRunner() call re-points the shared world singleton
+    // (runner.ts's own doc on why a late read is silently wrong, not a
+    // throw), same discipline the trace/hashLog capture above already uses.
+    finalPledgedCount: finalView.sietches.filter(s => s.pledgedToPlayer).length,
+    finalCrewCount: finalView.crews.length,
+    finalFieldsAssigned: new Set(
+      finalView.crews.filter(c => c.task === 'harvest' && c.taskTargetId).map(c => c.taskTargetId),
+    ).size,
   }
 }
 

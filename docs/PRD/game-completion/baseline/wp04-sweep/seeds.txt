@@ -1,0 +1,120 @@
+# WP04 chunk W4d — published seed sweep contract (docs/PRD/game-completion/
+# 07-balance-playtest-and-release.md "Seed sweep": "Keep the set stable
+# between tuning rounds; add newly discovered regression seeds without
+# removing inconvenient ones.")
+#
+# One integer seed per line. Lines starting with '#' and blank lines are
+# ignored — src/game-engine/sim/sweep/seeds.ts parses this file directly, so
+# editing it changes what the sweep actually runs, not just what it
+# documents.
+#
+# Rule: APPEND ONLY.
+#   - A newly discovered regression seed is added at the end, with a comment
+#     recording why (the defect or the round that found it).
+#   - No seed is ever removed because its result is inconvenient. A seed may
+#     only be removed by an explicit, cited decision that the seed itself
+#     was invalid (e.g. a duplicate, or later found to violate campaign
+#     setup preconditions) — never because its outcome argues against a
+#     change under consideration.
+#
+# 1..100, simple beats clever for a published contract (progress.md Round 16).
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100

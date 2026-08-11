@@ -64,10 +64,18 @@ export interface AgentRunResult {
   settlements: SettlementRecord[]
   ending: EndingId | null
   finalDay: number
-  /** Count per AgentAction['kind'], for the smoke matrix's dominant-command
-   * reporting (07 "Seed sweep": "Dominant command share and unused command
-   * families"). */
+  /** Count per AgentAction['kind'], plus a synthetic `'idle'` entry for a
+   * null decide() (harness.ts's own count site) — the smoke matrix's
+   * dominant-command reporting and WP04 chunk W4d's "days with no useful
+   * legal command" (07 "Seed sweep") both read this one map. */
   actionCounts: Record<string, number>
   trace: CommandTrace
   hashLog: HashStep[]
+  /** WP04 chunk W4d: final pledged-sietch count, recruited-crew count, and
+   * distinct-fields-currently-assigned count — read once from the finished
+   * runner's own visibleState() (harness.ts's own citation on why this must
+   * happen before the singleton moves on). */
+  finalPledgedCount: number
+  finalCrewCount: number
+  finalFieldsAssigned: number
 }
