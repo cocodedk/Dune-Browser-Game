@@ -86,9 +86,22 @@ export const MIN_TASK_SIZE = 15
 export const MERGE_HOME_SIZE = 10
 export const CHANGEOVER_DAYS = 1
 
-/** Extraction rate by the best harvesting equipment a group carries. */
+/**
+ * Extraction rate by the best harvesting equipment a group carries.
+ *
+ * WP04 chunk W4e (balance tuning, round 2): `hand` raised 6 -> 7. Round 1's
+ * crew-size and field-density legs alone left the invariant-2 recovery
+ * probe (game-engine/sim/agents/recoveryProbe.test.ts) dying at its second
+ * post-handoff settlement even after troopGroups.ts's round-2 crew-size
+ * bump and quota.ts's BASE_AMOUNTS[2] cut — a single hand-tier crew still
+ * could not out-earn both a genuine loyalty-protection gift and two
+ * consecutive settlements. This is the calibration-affecting lever
+ * harvest.test.ts's own header names ("updating those pins IS the authored
+ * retune") — its `hand`/`harvester` ratio pin is updated with the same
+ * citation.
+ */
 export const EXTRACTION_RATE = {
-  hand: 6,
+  hand: 7,
   harvester: 20,
   heavy_harvester: 34,
 } as const

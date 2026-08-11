@@ -135,9 +135,9 @@ test('reload during the pending Q1 settlement restores the same decision, no dup
   expect(defaultAmountAfter).toBe(defaultAmountBefore)
 
   // Settling still works exactly once — one decision, not a duplicate.
-  // Reserve line (reachFirstCrew, one crew) lands PARTIAL — "Pay all
-  // available", not "Full" (see opening6.spec.ts's own note).
-  await clickButton(page, 'Pay all available (', false)
+  // Reserve line (reachFirstCrew, one crew) lands FULL since WP04 chunk
+  // W4e's yield-lever retune (see opening6.spec.ts's own note).
+  await clickButton(page, 'Full (', false)
   await clickButton(page, 'Settle')
   await expect(page.getByRole('button', { name: 'Settle' })).toHaveCount(0)
 })

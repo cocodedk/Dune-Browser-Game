@@ -39,13 +39,20 @@ function field(overrides: Partial<SpiceField> = {}): SpiceField {
 // these, so a change here is a change to the whole economy.
 // ---------------------------------------------------------------------------
 
+// WP04 chunk W4e round 2: EXTRACTION_RATE.hand raised 6 -> 7 (troops/
+// types.ts's own citation — the invariant-2 recovery probe needed it after
+// round 1's crew-size/field-density legs alone still left a single
+// recovering crew unable to out-earn a genuine loyalty-protection gift plus
+// two consecutive settlements). This is the calibration-affecting change
+// this file's own header names ("a change here is a change to the whole
+// economy") — updating these three pins IS the authored retune.
 describe('harvestYield: calibration references', () => {
   const reference = { size: 30, spiceSkill: 40, morale: 70, density: 60 }
 
-  it('hand crew yields about 4.4/day (design target 4.5)', () => {
+  it('hand crew yields about 5.2/day (design target 5.25 = 4.5 x 7/6)', () => {
     const yieldPerDay = harvestYield({ ...reference, tier: 'hand' })
-    expect(yieldPerDay).toBeCloseTo(4.43, 1)
-    expect(Math.abs(yieldPerDay - 4.5)).toBeLessThan(0.3)
+    expect(yieldPerDay).toBeCloseTo(5.17, 1)
+    expect(Math.abs(yieldPerDay - 5.25)).toBeLessThan(0.3)
   })
 
   it('the same crew with a harvester yields about 14.8/day (design target 15)', () => {
@@ -54,11 +61,12 @@ describe('harvestYield: calibration references', () => {
     expect(Math.abs(yieldPerDay - 15)).toBeLessThan(0.3)
   })
 
-  it('makes a harvester worth roughly 3.3x a hand crew', () => {
-    // This ratio is what justifies the 100-spice price against Q2 at 250.
+  it('makes a harvester worth roughly 2.9x a hand crew', () => {
+    // This ratio is what justifies the 100-spice market price
+    // (market/market.ts's own citation of this same round).
     const hand = harvestYield({ ...reference, tier: 'hand' })
     const mech = harvestYield({ ...reference, tier: 'harvester' })
-    expect(mech / hand).toBeCloseTo(20 / 6, 2)
+    expect(mech / hand).toBeCloseTo(20 / 7, 2)
   })
 })
 

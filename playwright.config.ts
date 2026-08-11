@@ -37,7 +37,12 @@ export default defineConfig({
   webServer: {
     command: 'npm run preview -- --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173',
-    reuseExistingServer: !process.env.CI,
+    // Never reuse: a leftover preview server silently serves a stale dist,
+    // and the suite then tests OLD code against NEW expectations — this
+    // produced two phantom gate failures (W4b's and W4e's reports both hit
+    // it) that vanished the moment the stale server died. The ~1s startup
+    // cost buys version coherence on every run.
+    reuseExistingServer: false,
     timeout: 120000,
   },
   projects: [

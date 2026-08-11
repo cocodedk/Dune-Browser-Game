@@ -113,21 +113,23 @@ export function distressedCampaign(seed: number, difficulty: Difficulty = 'norma
 
   // Hand-set 2: damaged field. field_red_wall_pan's own extraction is
   // density x (remaining/capacity) — density-proportional decay, so
-  // remaining falls by roughly 1.67%/day compounding at this crew's size
-  // and skill (measured: ~93% of 440 capacity still remains at day 20,
-  // ~7% harvested in 18 days of continuous work). Reaching a genuinely
-  // "damaged" state through play alone is an order of magnitude beyond the
-  // ~2-cycle window. Set directly to 0 (fully worked out) so
-  // `recommendedFieldId` stops recommending it and recovery's "reassign to
-  // best field" move has a real, observable job — field_tabr_shallows (the
-  // opening's other discovered field, data/spiceFields.ts) is the fallback.
+  // remaining falls off compounding at this crew's size and skill. WP04
+  // chunk W4e's yield-lever rounds (higher density, a bigger crew) speed
+  // this up over the pre-retune measurement (was ~93% of 440 at day 20) —
+  // re-measured after both rounds: ~80.5% of 760 capacity still remains at
+  // day 20. Reaching a genuinely "damaged" state through play alone is
+  // still well beyond the ~2-cycle window. Set directly to 0 (fully worked
+  // out) so `recommendedFieldId` stops recommending it and recovery's
+  // "reassign to best field" move has a real, observable job —
+  // field_tabr_shallows (the opening's other discovered field, data/
+  // spiceFields.ts) is the fallback.
   const field = world.spiceFields.find(f => f.id === RED_WALL_FIELD)!
   field.remaining = 0
   handSet.push({
     field: 'spiceFields[field_red_wall_pan].remaining',
-    citation: 'measured ~93% (410/440) still remaining at day 20 — density-proportional extraction ' +
-      'depletes a field by roughly 1.67%/day compounding, so genuine exhaustion is unreachable within ' +
-      'the probe\'s own window; set to 0 so recommendedFieldId moves off it.',
+    citation: 'measured ~80.5% (611.8/760) still remaining at day 20 (WP04 chunk W4e round 2 re-measure; ' +
+      'was ~93% of 440 before this round\'s yield levers) — density-proportional extraction still leaves ' +
+      'genuine exhaustion unreachable within the probe\'s own window; set to 0 so recommendedFieldId moves off it.',
   })
 
   const view = rc.visibleState()

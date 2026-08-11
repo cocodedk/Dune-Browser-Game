@@ -70,14 +70,12 @@ test('Tabr dilemma, gift climb, second crew, settlement preview, and the Q1 debr
   await clickButton(page, 'Tabr Shallows', false, 1)
   await clickButton(page, 'Issue order')
 
-  // Measured (not assumed): two 15-hand crews harvesting from day ~0 still
-  // land well under Q1's 90 due by day 12 (progress.md Round 2: "the
-  // opening balance cannot clear Q1" even with every sietch pledged) — and
-  // below minPartialPayment too, which would make the Full and Minimum
-  // presets identical and defeat the very preview-varies assertion this
-  // scenario exists to prove. giveHarvester (the established debug
-  // affordance for this exact gap — DebugHandle.ts's own doc) closes it
-  // without inventing a new mechanism.
+  // WP04 chunk W4e's yield-lever retune (progress.md's round record) means
+  // two crews now clear Q1's 90 due honestly by day 12, unassisted — see
+  // cycleTwo.test.ts's own invest-line measurement. giveHarvester stays
+  // here regardless: stripping the debug bridges is W4f's own closure
+  // chunk, not this scenario's — it only adds further headroom now rather
+  // than being load-bearing for the canary assertion below.
   await page.evaluate(() => window.__DUNE__?.giveHarvester?.())
 
   // Advance to day 12 — the setTime pattern (progress.md Round 9). Waits on

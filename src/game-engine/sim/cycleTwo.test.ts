@@ -53,7 +53,7 @@ describe('opening-reserve-line through cycle-2, with a reload checkpoint at the 
 })
 
 describe('opening-invest-line through cycle-2, with a reload checkpoint at the cycle-1 decision', () => {
-  it('lands cycle 1 SHORT as measured through the real route (not the engine-shortcut PARTIAL), reloads, resumes, settles cycle 2', () => {
+  it('lands cycle 1 FULL as measured through the real route (WP04 chunk W4e, round 1 retune), reloads, resumes, settles cycle 2', () => {
     const rc = createCampaignRunner(31, 'normal')
     walkOpeningBriefing(rc)
     walkToFirstCrew(rc)
@@ -64,20 +64,16 @@ describe('opening-invest-line through cycle-2, with a reload checkpoint at the c
     const cycle1 = rc.visibleState().pendingSettlement!
     expect(cycle1.cycleIndex).toBe(0)
 
-    // Measured (not assumed) — and a genuine divergence from
-    // commands/openingLineFixtures.test.ts's engine-level shortcut fixture
-    // (54.35, PARTIAL, teleported with zero travel/dialogue time spent):
-    // walked through the real production route (real travel hops, real
-    // dialogue including story/tabr_dilemma's own three ticks), two crews
-    // land at ~51.5 by day 12 — BELOW the 54 minPartialPayment floor, i.e.
-    // the SHORT band, not PARTIAL. This chunk's own "one partial-band
-    // settlement" fixture requirement is satisfied by the RESERVE line's
-    // cycle-1 instead (see the sibling describe block above — ~77-78 vs 90
-    // due, 54 minimum: genuinely PARTIAL). Reported, not forced — see this
-    // chunk's own final report for the root cause (extra harvest-window time
-    // spent in real travel/dialogue that the engine-level shortcut skips).
-    expect(cycle1.legalRange.max).toBeLessThan(cycle1.minPartialPayment)
-    expect(cycle1.legalRange.max).toBeLessThan(cycle1.amountDue)
+    // Measured (not assumed). Pre-round-1 this landed at ~51.5, SHORT (below
+    // the 54 minimum) — see this test's own git history and progress.md's
+    // round record for that number. WP04 chunk W4e round 1 (data/
+    // troopGroups.ts's MIN_PLEDGE_CREW_SIZE 15->30 plus data/spiceFields.ts's
+    // density raise) nearly quadruples both crews' combined yield: two crews
+    // land at 127.17 by day 12 — ABOVE the 90 amountDue, i.e. the FULL band.
+    // legalRange.max therefore caps at amountDue itself (you cannot pay more
+    // than is due), not at stock.
+    expect(cycle1.legalRange.max).toBe(cycle1.amountDue)
+    expect(cycle1.legalRange.max).toBeGreaterThanOrEqual(cycle1.minPartialPayment)
     console.log('invest-line cycle-1 measured:', {
       stock: cycle1.stock, amountDue: cycle1.amountDue, minPartialPayment: cycle1.minPartialPayment,
     })

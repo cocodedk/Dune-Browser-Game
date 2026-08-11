@@ -70,9 +70,13 @@ test('mid-session New (StatusBar) starts a fresh campaign, auto-opens the briefi
 
   // Back to Beat 1, not still parked on the old campaign's Beat 2 — the
   // clearest sign this is a genuinely fresh campaign's own auto-open, not
-  // leftover DOM from before.
+  // leftover DOM from before. Assert on the LEDGER DIALOGUE's own copy,
+  // never on Thufir's bare name: his name legitimately appears in the
+  // Arrakeen resident list whenever the dialogue auto-select lands, so a
+  // page-wide name count raced real UI and flipped on scheduler luck
+  // (measured: same tree, same fresh server — pass then fail).
   await expect(page.locator('text=Duke Leto Atreides').first()).toBeVisible()
-  await expect(page.locator('text=Thufir Hawat')).toHaveCount(0)
+  await expect(page.locator('text=Show me the rest.')).toHaveCount(0)
 
   // The StatusBar spacebar fix: it must read the FRESH campaign's paused
   // state, not a stale closure captured at the first campaign's mount.

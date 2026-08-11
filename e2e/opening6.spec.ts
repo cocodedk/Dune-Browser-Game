@@ -22,10 +22,11 @@ test('reserve line settles Q1 with one crew, and the opening autosave survives a
   await page.evaluate(t => window.__DUNE__?.setTime?.(t), 12 * 60 + 1)
   await expect(page.getByRole('button', { name: 'Settle' })).toBeVisible()
 
-  // Reserve line lands PARTIAL (stock < due) — the honest label is "Pay
-  // all available", not "Full" (W3h finding 3b/F3: legalRange.max capped
-  // at stock is "all you hold", not "the full sum").
-  await clickButton(page, 'Pay all available (', false)
+  // Reserve line lands FULL (WP04 chunk W4e's yield-lever retune — stock
+  // now clears the 90 due by day 12; pre-retune this was PARTIAL and used
+  // "Pay all available", not "Full" — see W3h finding 3b/F3 for that label
+  // rule, still correct, just landing on the other branch now).
+  await clickButton(page, 'Full (', false)
   await clickButton(page, 'Settle')
 
   // Beat 7's debrief opens, whichever band the reserve line lands in —

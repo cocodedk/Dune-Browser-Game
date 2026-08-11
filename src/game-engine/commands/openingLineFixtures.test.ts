@@ -61,19 +61,18 @@ describe('opening-reserve-line: pledge Red Wall, harvest, keep the reserve, sett
     expect(world.pendingSettlement).not.toBeNull()
     expect(world.player.spice).toBeGreaterThanOrEqual(startingSpice) // reserve intact, harvest only adds
     // Measured (not assumed): one crew from day 0 on the denser red_wall_pan
-    // field lands in the PARTIAL band by day 12 — above the 54 minimum,
-    // short of the 90 due. "No softlock", not "full payment", is this
-    // fixture's own required result (03's fixture table). 78.89 is THIS
-    // fixture's own number, from its shortcut setup (teleported to Red
-    // Wall, loyalty force-set to threshold, zero travel time spent) — not
-    // the reserve line's real-play number. Walking the real dialogue trees
-    // and the real two-hop Arrakeen->Hagg->Red Wall trip (WP03 remediation
-    // W3h's own probe, mirroring the evidence critic's P1) measures 77.35
-    // instead. Both land PARTIAL, so neither assertion is wrong; they are
-    // two different setups' honest numbers, not one number cited twice.
-    expect(world.pendingSettlement!.stock).toBeCloseTo(78.89, 1)
-    expect(world.pendingSettlement!.legalRange.max).toBeGreaterThanOrEqual(world.pendingSettlement!.minPartialPayment)
-    expect(world.pendingSettlement!.legalRange.max).toBeLessThan(world.pendingSettlement!.amountDue)
+    // field lands in the FULL band by day 12 — at or above the 90 due. Pre-
+    // WP04-chunk-W4e this fixture measured 78.89 (PARTIAL) — see this
+    // file's own git history and progress.md's round record. Round 1 (data/
+    // troopGroups.ts's MIN_PLEDGE_CREW_SIZE 15->30 plus data/spiceFields.ts's
+    // density raise) brought it to 123.97; round 2 (floor 30->40, both
+    // field densities to the authored ceiling, EXTRACTION_RATE.hand 6->7 —
+    // needed to clear the recovery probe, T3) raises it further to 157.33 —
+    // comfortably above the 90 due, T1's own "cycle-1 FULL band reachable"
+    // target. legalRange.max therefore caps at amountDue itself (90), not
+    // at stock — you cannot pay more than is due.
+    expect(world.pendingSettlement!.stock).toBeCloseTo(157.33, 1)
+    expect(world.pendingSettlement!.legalRange.max).toBe(world.pendingSettlement!.amountDue)
 
     const outcome = runSettleCommand(world.pendingSettlement!.legalRange.max)
 
@@ -118,13 +117,15 @@ describe('opening-invest-line: pledge Red Wall, gift and pledge Tabr, both crews
     expect(world.troopGroups).toHaveLength(2) // both crews survive to Q1
     // Measured (not assumed): both crews from day 0 (no travel time between
     // them in this engine-level fixture, unlike opening3.spec.ts's real
-    // travel — that E2E path measures ~51.5, per this chunk's own brief)
-    // land at 54.35, just above the 54 partial minimum — PARTIAL, not SHORT.
-    // Citing per this chunk's own instruction rather than forcing the band:
-    // the discrepancy is the balance retune WP04 owns, not a bug here.
-    expect(world.pendingSettlement!.stock).toBeCloseTo(54.35, 1)
-    expect(world.pendingSettlement!.legalRange.max).toBeGreaterThanOrEqual(world.pendingSettlement!.minPartialPayment)
-    expect(world.pendingSettlement!.legalRange.max).toBeLessThan(world.pendingSettlement!.amountDue)
+    // travel). Pre-WP04-chunk-W4e this measured 54.35 (PARTIAL, just above
+    // the 54 minimum) — see this file's own git history and progress.md's
+    // round record. Round 1's combined yield lever brought it to 136.49;
+    // round 2 (see reserve line's own sibling test above for the same
+    // three levers) raises it further to 214.67 — above the 90 due, the
+    // FULL band. legalRange.max therefore caps at amountDue itself (90),
+    // not at stock.
+    expect(world.pendingSettlement!.stock).toBeCloseTo(214.67, 1)
+    expect(world.pendingSettlement!.legalRange.max).toBe(world.pendingSettlement!.amountDue)
 
     const outcome = runSettleCommand(world.pendingSettlement!.legalRange.max)
 

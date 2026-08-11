@@ -3,8 +3,10 @@
 //
 // The market is what turns spice into capability, and therefore what makes the
 // quota a dilemma rather than a treadmill: 100 spice spent on a harvester is
-// 100 spice not paid to the Emperor this cycle, in exchange for roughly triple
-// output next cycle. That trade is the spine of the Act 1 slice.
+// 100 spice not paid to the Emperor this cycle, in exchange for roughly 2.9x
+// output next cycle (WP04 chunk W4e round 2: EXTRACTION_RATE.hand 6->7 moved
+// this ratio from 20/6 to 20/7 — see troops/types.ts's own citation). That
+// trade is the spine of the Act 1 slice.
 
 import type { EquipmentKind } from '../troops/types'
 import type { ActId } from '../acts/transitions'
@@ -24,7 +26,7 @@ export const MARKET_STOCK: readonly MarketItem[] = [
     label: 'Harvester',
     price: 100,
     tier: 2,
-    description: 'Roughly triples a crew’s extraction.',
+    description: 'Raises a crew’s extraction roughly 2.9x.',
   },
   {
     kind: 'thopter',
@@ -50,7 +52,7 @@ export const MARKET_STOCK: readonly MarketItem[] = [
   // carry — so wiring it as the one tier-3 item closes a real dead branch
   // instead of inventing new content. Priced above the harvester (100): its
   // 1.8x combat multiplier (WEAPON_MULTIPLIER) is a bigger swing than the
-  // harvester's ~3.3x extraction swing applied to a much smaller number.
+  // harvester's ~2.9x extraction swing applied to a much smaller number.
   {
     kind: 'sonic_disruptor',
     label: 'Sonic disruptor',

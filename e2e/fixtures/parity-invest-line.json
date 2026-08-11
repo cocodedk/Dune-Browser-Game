@@ -1,303 +1,303 @@
 {
   "seed": 31,
-  "entryParityHash": "2d6033442ab867c0",
+  "entryParityHash": "fac8002d0cdab61b",
   "phaseA": [
     {
       "kind": "command",
       "ref": 0,
-      "hash": "431974331ec55660",
-      "parityHash": "3420bc3cda389d03"
+      "hash": "4f8f06559d350021",
+      "parityHash": "a70668544245ec48"
     },
     {
       "kind": "command",
       "ref": 1,
-      "hash": "9152f678b1ea72dc",
-      "parityHash": "6c0d9ff3f5c6597d"
+      "hash": "221e89830ec8f8fd",
+      "parityHash": "d575df6231daa47a"
     },
     {
       "kind": "command",
       "ref": 2,
-      "hash": "9c998225cbc28eaa",
-      "parityHash": "d128fc4f511bad23"
+      "hash": "33357bb9d74e4fcb",
+      "parityHash": "da02d56a0cf35168"
     },
     {
       "kind": "command",
       "ref": 3,
-      "hash": "c2e043e1bc818d0b",
-      "parityHash": "0143b7b7e49f7b96"
+      "hash": "2c0c06bbdf445f3a",
+      "parityHash": "0e67c26d60920341"
     },
     {
       "kind": "command",
       "ref": 4,
-      "hash": "4ad3a0614d1b1b71",
-      "parityHash": "5cf618bde75321ac"
+      "hash": "a019566194f6bc48",
+      "parityHash": "fe6a65d937d56a57"
     },
     {
       "kind": "command",
       "ref": 5,
-      "hash": "685bbf857e931999",
-      "parityHash": "3e2f5c8a40b1fdb4"
+      "hash": "fdbf4b1b44623510",
+      "parityHash": "5d4d4e1f41c23b7f"
     },
     {
       "kind": "command",
       "ref": 6,
-      "hash": "7caa929ea469cc64",
-      "parityHash": "ad0d0e6eab9894e5"
+      "hash": "ccbbddec73a49f25",
+      "parityHash": "13c3bb41c4ee8222"
     },
     {
       "kind": "command",
       "ref": 7,
-      "hash": "efb40affcca3817b",
-      "parityHash": "8c3b4c1f7331dd8d"
+      "hash": "25af52fa80065d2a",
+      "parityHash": "a66b21d352b1ccca"
     },
     {
       "kind": "arrival",
       "ref": 6,
-      "hash": "066bd66ab2301456",
-      "parityHash": "3b45c51f0edc5b56"
+      "hash": "492fc5afc4f3e2e7",
+      "parityHash": "e7fdd4a4e172e4b9"
     },
     {
       "kind": "command",
       "ref": 8,
-      "hash": "4e928991334be3dc",
-      "parityHash": "a20df239f8dc0943"
+      "hash": "464840a5844f991d",
+      "parityHash": "f69b434c32fa0da8"
     },
     {
       "kind": "arrival",
       "ref": 10,
-      "hash": "9a0e05e00b8791c4",
-      "parityHash": "a575a8d55ad37ea0"
+      "hash": "8e0e8e5bd3a22467",
+      "parityHash": "e980d78273bb57ad"
     },
     {
       "kind": "command",
       "ref": 9,
-      "hash": "0043aa5923a5e71c",
-      "parityHash": "84fb521f956a577e"
+      "hash": "d88046f5a9d354df",
+      "parityHash": "29ce2fbb3648a3a3"
     },
     {
       "kind": "command",
       "ref": 10,
-      "hash": "724d948100f783c7",
-      "parityHash": "1c3e5681c4014def"
+      "hash": "5d9ba127b463e98c",
+      "parityHash": "220e43a513c2c82a"
     },
     {
       "kind": "command",
       "ref": 11,
-      "hash": "01a0b69f404279cc",
-      "parityHash": "b9e0728a3091a87e"
+      "hash": "a96bf4007305c219",
+      "parityHash": "14f45e0435927885"
     },
     {
       "kind": "command",
       "ref": 12,
-      "hash": "0d376eac30e22962",
-      "parityHash": "395baaf08ab63523"
+      "hash": "7d5b76ff4b04ec55",
+      "parityHash": "d444e096fb1eb1fe"
     },
     {
       "kind": "command",
       "ref": 13,
-      "hash": "58cc7fe57bd4f374",
-      "parityHash": "465b2e8de1c86956"
+      "hash": "51097e78ad4d5907",
+      "parityHash": "61eb34f8d6d0ac03"
     },
     {
       "kind": "arrival",
       "ref": 14,
-      "hash": "8deea3052653a19d",
-      "parityHash": "e8df3f88a4ee31d1"
+      "hash": "c0b7bd8bc97587fa",
+      "parityHash": "67c417d421d3f994"
     },
     {
       "kind": "command",
       "ref": 14,
-      "hash": "658b0b0ddfb99e61",
-      "parityHash": "36dbcb67b350e775"
+      "hash": "d9d7c410b5c1b9ee",
+      "parityHash": "73725bf32a446ea8"
     },
     {
       "kind": "command",
       "ref": 15,
-      "hash": "1b094a90e74f72ad",
-      "parityHash": "ae8fb565ea610c81"
+      "hash": "45cc6f80a86c3d0a",
+      "parityHash": "36f0fcad06566c84"
     },
     {
       "kind": "command",
       "ref": 16,
-      "hash": "016c16ab8c8fa8b9",
-      "parityHash": "de9d088b0fcd2b05"
+      "hash": "374064255f951c26",
+      "parityHash": "9de280e2bcd74538"
     },
     {
       "kind": "command",
       "ref": 17,
-      "hash": "f389b01561bf07d0",
-      "parityHash": "32de54b73963d5fe"
+      "hash": "fe8c1a3d415a3aab",
+      "parityHash": "b4ed410498d4ee13"
     },
     {
       "kind": "command",
       "ref": 18,
-      "hash": "ba3ccd948357ef47",
-      "parityHash": "09c1cd2cd88d9566"
+      "hash": "398049ca85ed261c",
+      "parityHash": "a2181bcd0c68e17b"
     },
     {
       "kind": "command",
       "ref": 19,
-      "hash": "d6a73c51df3ca8e1",
-      "parityHash": "72a82c4b0584c184"
+      "hash": "d89665ffaf5cc93e",
+      "parityHash": "cb0510aae72766d9"
     },
     {
       "kind": "command",
       "ref": 20,
-      "hash": "b7be46b541a53c1a",
-      "parityHash": "5b971fcffa83d273"
+      "hash": "3cab1c269f9e1351",
+      "parityHash": "deb9f4c36f566ed2"
     },
     {
       "kind": "day",
       "ref": 1,
-      "hash": "de494fdc7b5abbfc",
-      "parityHash": "82ced2afd1186ad1"
+      "hash": "2de7d17c6ddca907",
+      "parityHash": "ae20526e4fa19a14"
     },
     {
       "kind": "day",
       "ref": 2,
-      "hash": "f630c0e5fb1d95e7",
-      "parityHash": "badf143fcccae1d0"
+      "hash": "ec993288df9fc956",
+      "parityHash": "5d5de5ef9faf14e7"
     },
     {
       "kind": "day",
       "ref": 3,
-      "hash": "c163c368d9e29ac7",
-      "parityHash": "40baf6a975736a2a"
+      "hash": "37835a7771ea241f",
+      "parityHash": "057c1d2d634ed09a"
     },
     {
       "kind": "day",
       "ref": 4,
-      "hash": "767d22e579319147",
-      "parityHash": "1a5fc3c2f55fd1a0"
+      "hash": "e13e360d6e0044b6",
+      "parityHash": "8e91d0984b387bc4"
     },
     {
       "kind": "day",
       "ref": 5,
-      "hash": "c3c53187f62baa6a",
-      "parityHash": "f7375f3a8e6ddfa7"
+      "hash": "64175428a2e17340",
+      "parityHash": "9eb0db77e3f270f1"
     },
     {
       "kind": "day",
       "ref": 6,
-      "hash": "f137040c416dd8b3",
-      "parityHash": "8d1d407c36e11528"
+      "hash": "303a14432877c6bf",
+      "parityHash": "eb7bede9764c243b"
     },
     {
       "kind": "day",
       "ref": 7,
-      "hash": "d6d1794ee282dbd1",
-      "parityHash": "dfe2a35b28cdb7d1"
+      "hash": "fddf83f32e64b5ad",
+      "parityHash": "c5c362413c96a4cf"
     },
     {
       "kind": "day",
       "ref": 8,
-      "hash": "a0c72fd642b4ca25",
-      "parityHash": "01c6fe12a6337d00"
+      "hash": "2df38ff696b3da93",
+      "parityHash": "f31673165af718f3"
     },
     {
       "kind": "day",
       "ref": 9,
-      "hash": "c2f2797b2ceb26c6",
-      "parityHash": "3cfea1048687ca01"
+      "hash": "bec0a26091ffd700",
+      "parityHash": "62aab935d4f224d3"
     },
     {
       "kind": "day",
       "ref": 10,
-      "hash": "c9ed838e2870651b",
-      "parityHash": "33a1b0c113b5a8ef"
+      "hash": "dfdd25e2e3a8b8f6",
+      "parityHash": "4d4629e265ada672"
     },
     {
       "kind": "day",
       "ref": 11,
-      "hash": "e38753c6343ce0ad",
-      "parityHash": "ca08b05720b783ba"
+      "hash": "43a9cbedeb8cfb95",
+      "parityHash": "828c66194819f116"
     },
     {
       "kind": "day",
       "ref": 12,
-      "hash": "7cf67ac923b594d4",
-      "parityHash": "dcda97c9e8f5689e"
+      "hash": "ed0baaa54886ebad",
+      "parityHash": "19be727df18d0245"
     }
   ],
-  "preReloadParityHash": "dcda97c9e8f5689e",
+  "preReloadParityHash": "19be727df18d0245",
   "phaseB": [
     {
       "kind": "command",
       "ref": 21,
-      "hash": "457dc420555696f5",
-      "parityHash": "47cbaec260d72106"
+      "hash": "cb27ed7eb5877a65",
+      "parityHash": "c816bd2900ef04e0"
     },
     {
       "kind": "tick",
       "ref": 721,
-      "hash": "457049a15dc59cc2",
-      "parityHash": "603665f1bf4eedc0"
+      "hash": "5ed60daf8948845d",
+      "parityHash": "e937ad3086f3fd9b"
     },
     {
       "kind": "command",
       "ref": 22,
-      "hash": "4e8cf8602149e587",
-      "parityHash": "f35852dac3425a47"
+      "hash": "675b7df432c3b5b6",
+      "parityHash": "cf6ac926ac3d1f68"
     },
     {
       "kind": "command",
       "ref": 23,
-      "hash": "af56052f31fb1761",
-      "parityHash": "15f95634a4d18fe2"
+      "hash": "1442a7a1bcab7239",
+      "parityHash": "305db48093ada5ae"
     },
     {
       "kind": "day",
       "ref": 13,
-      "hash": "3d48a93e61e20b50",
-      "parityHash": "61864ad364be85a0"
+      "hash": "1cd70c7a671d12c4",
+      "parityHash": "ce9a22fecf898788"
     },
     {
       "kind": "day",
       "ref": 14,
-      "hash": "7edb878d190043d6",
-      "parityHash": "e12ab8c04d13a7b9"
+      "hash": "acdb7f55a5b5f03f",
+      "parityHash": "098624ba528e0558"
     },
     {
       "kind": "day",
       "ref": 15,
-      "hash": "0a5096245c32161d",
-      "parityHash": "31d28a5467816111"
+      "hash": "8c0860a8ad383180",
+      "parityHash": "6f2197fe4ace241a"
     },
     {
       "kind": "day",
       "ref": 16,
-      "hash": "9b40d21b718ab0a0",
-      "parityHash": "1f365c87baf6c32d"
+      "hash": "e2a985b92233274d",
+      "parityHash": "461215f412a03026"
     },
     {
       "kind": "day",
       "ref": 17,
-      "hash": "22e65b04c0112915",
-      "parityHash": "d427a0b546fc81f7"
+      "hash": "7035da4b42f23a93",
+      "parityHash": "dde8f193707dbc41"
     },
     {
       "kind": "day",
       "ref": 18,
-      "hash": "0507fe807d500005",
-      "parityHash": "3cc3b9d9bf59f56e"
+      "hash": "f7bc7130cfa08193",
+      "parityHash": "88b652fad777ab41"
     },
     {
       "kind": "day",
       "ref": 19,
-      "hash": "5fa1d49447d009e3",
-      "parityHash": "f50fd065ce961e19"
+      "hash": "0af8b9aa79c185a0",
+      "parityHash": "5b6098016efe1cc3"
     },
     {
       "kind": "day",
       "ref": 20,
-      "hash": "8d4e9f70fb1e2aaa",
-      "parityHash": "2a0392d7563f16dc"
+      "hash": "9a53788b32528b20",
+      "parityHash": "5334b42d79620fe4"
     },
     {
       "kind": "command",
       "ref": 24,
-      "hash": "8c1be6160881368f",
-      "parityHash": "8a7f0e973250e92e"
+      "hash": "a195390ade2e618a",
+      "parityHash": "93a3296825d9c027"
     }
   ],
   "trace": [
@@ -434,25 +434,25 @@
     [
       "player:settle_tribute",
       {
-        "amount": 51.54018216197045
+        "amount": 90
       }
     ],
     [
       "player:choose",
       {
-        "choiceId": "q1_debrief_short_1"
+        "choiceId": "q1_debrief_full_1"
       }
     ],
     [
       "player:choose",
       {
-        "choiceId": "q1_debrief_short_thufir_1"
+        "choiceId": "q1_debrief_full_thufir_1"
       }
     ],
     [
       "player:settle_tribute",
       {
-        "amount": 22.154451202859114
+        "amount": 100
       }
     ]
   ]

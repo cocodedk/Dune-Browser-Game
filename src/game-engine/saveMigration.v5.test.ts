@@ -77,8 +77,11 @@ describe('migrateV4ToV5: crew backfill (step 2)', () => {
 
     expect(out.troopGroups).toHaveLength(1)
     expect(out.troopGroups[0].id).toBe('group_sietch_tabr')
-    // W2b's own formula (data/troopGroups.ts groupsForPledgedSietch): max(15, round(fremenWorkers/6)).
-    expect(out.troopGroups[0].size).toBe(Math.max(15, Math.round(60 / 6)))
+    // W2b's own formula (data/troopGroups.ts groupsForPledgedSietch):
+    // max(MIN_PLEDGE_CREW_SIZE, round(fremenWorkers/6)). Floor raised
+    // 15->30 at WP04 chunk W4e round 1, then 30->40 at round 2 — see that
+    // file's own citation.
+    expect(out.troopGroups[0].size).toBe(Math.max(40, Math.round(60 / 6)))
     expect(out.sietches[0].crewIds).toEqual(['group_sietch_tabr'])
   })
 

@@ -38,16 +38,24 @@ export const ARREARS_SURCHARGE = 0.25
  * harness (deleted at WP04 chunk W4a — game-engine/sim/runner.ts is its
  * runtime-faithful successor, per 07-balance-playtest-and-release.md)
  * showed that curve was unpayable: Act 1 yields ~470 spice including the
- * starting 60, against 800 demanded. Worse, it left no window in which the
- * 100-spice harvester was affordable, so the capex decision the whole slice
- * is built around never actually occurred.
+ * starting 60, against 800 demanded, and left no window in which the
+ * 100-spice harvester was affordable.
  *
- * 90/150/260 totals 500 against ~530 available to a good line — tight enough
- * that a wasted cycle hurts, loose enough that the harvester window opens
- * around day 12-14 as the design intended. The numbers are unchanged by the
- * harness's retirement — this is a citation update, not a balance retune.
+ * WP04 chunk W4e (balance tuning): [1]/[2] retuned across two rounds,
+ * 150/260 -> 100/173 (round 1) -> 100/30 (round 2). [0]=90 is FORBIDDEN,
+ * unchanged. Round 1: the reserve line (exactly one crew, by design) could
+ * not out-earn a 150 cycle-2 demand in 8 days even after troopGroups.ts's
+ * and spiceFields.ts's yield legs of the same round — measured before the
+ * cut (baseline/wp04-sweep/sweep-report.md): cycle-2 stock 12.18 vs a 166
+ * amountDue, 0/100 seeds even partial. Round 2: `recoveryProbe.test.ts`'s
+ * distressed fixture reaches cycle index 2 (day 28) carrying real arrears
+ * from two forced-short settlements (a fixed ~56 from [0]/[1] and the
+ * forbidden 0.25 surcharge); a single crew recovering from a hand-set
+ * exhausted field still could not out-earn [2]'s 173 while also funding
+ * recovery.ts's genuine loyalty-protection gifts. See progress.md's round
+ * record for the day-by-day arithmetic and measured post-change numbers.
  */
-export const BASE_AMOUNTS = [90, 150, 260] as const
+export const BASE_AMOUNTS = [90, 100, 30] as const
 export const LATER_CYCLE_GROWTH = 1.5
 
 export interface QuotaState {
