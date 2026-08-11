@@ -421,3 +421,42 @@ reproduce.
   rule — an authored canonical-numbers reconciliation is owed at W3g.
 - **CommandWiring.ts at 192/200** — W3b must split before adding title
   wiring. Suite: 262 files / 2143 tests.
+
+## Round 13 — WP03 build complete: chunks b–g (2026-08-11, `2cfa857`…`d85df57`)
+
+- **W3b:** title screen (Continue with probeSave metadata, corrupt-save
+  state, version id), difficulty cards from the real config (Easy Q1 68 /
+  Normal 90 / Hard 117), difficulty written once — buttons left StatusBar;
+  renderer never constructed on the title; CommandWiring split 192→57.
+- **W3c:** story/briefing + story/ledger beats auto-open and chain as one
+  morning sitting; canCloseDialogue softlock guard; loyalty-pump closed (27
+  nodes, 8 trees); **2D portrait drop-in slot**
+  (public/assets/portraits/<id>.png + README); two speaker-resolution bugs
+  fixed (2D + 3D: named speaker beats first-resident). E2E lesson: a reply
+  that unmounts its own button hangs Playwright's click() — chooseReply
+  dispatches instead.
+- **W3d:** DOM destination list (engine answers verbatim), 3s flight-skip
+  gate, story/redwall_trust (seed 80→**55** canonical; both replies +5 to
+  exactly threshold; solidarity/transaction flags for WP05), pledge confirm
+  step, crew card with recommended field + authored-bounds yield range.
+  **Root-cause E2E fix:** headless SwiftShader GL starved the main thread in
+  3D interiors — GPU launch args; suite twice as fast.
+- **W3e:** story/tabr_dilemma (pure context, closes freely — never scripts
+  the decision), settlement previews Full/Minimum/Selected via the same
+  pure settleQuota, story/q1_debrief (Fenring ×3 bands + Thufir summary),
+  charisma-cap copy cites the three real sources. **Measured:** invest line
+  ~51.5 (browser path) / 54.35 (engine path) vs 90 due — 03's two-plans
+  framing is NOT yet balanced; WP04 retune input.
+- **W3f:** coach marks (anchor by objective target, dismissable, on-action
+  removal, guidance-off path proven), truthful conversation hints, seven
+  recovery rows verified, market disclosed on den discovery (was an empty
+  frame from frame one; den is Tsimpo — brief's 'Arrakeen' corrected).
+  Store-selector lesson: s.world object selectors never re-render (same
+  mutated reference) — destructure pattern is load-bearing.
+- **W3g:** CHARISMA_PER_PLEDGE 5→**4** (authored: capacity 2 holds through
+  two pledges; third slot via CHARISMA_PER_QUOTA keeps recovery copy true);
+  rolling autosave extended to travel-start + settlement-created (runtime
+  hooks, engine/IO boundary kept); all EIGHT fixtures and SIX scenarios
+  mapped and closed (keyboard-only traversal: zero UI fixes needed).
+- Suite at close: 282 files / 2272 tests; 21/21 E2E ×2. Board: WP03 stays
+  `in_progress` pending the two package critics (evidence + blind-play).
