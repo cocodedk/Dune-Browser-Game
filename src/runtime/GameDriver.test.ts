@@ -20,12 +20,29 @@ import { world, setWorld, createInitialState } from '../game-engine/GameState'
 import { update as engineUpdate, initLoop as engineInitLoop } from '../game-engine/GameLoop'
 import { saveGame } from '../game-engine/persistence'
 import { SETTLEMENT_PENDING_AUTOSAVE_FLAG } from '../game-engine/quota/settlement'
+import { BRIEFING_COMPLETE_FLAG, LEDGER_READ_FLAG } from '../game-engine/acts/openingObjectives'
+import { BRIEFING_TREE_ID } from '../data/dialogue'
 import { initLoop, tick } from './GameDriver'
+
+// A function indirection, not a bare `world.dialogue?.treeId` re-read — TS's
+// control-flow narrowing otherwise carries a `null` from an earlier direct
+// assignment through later calls that don't take `world` as an argument,
+// narrowing a later read to `never`. A fresh call re-derives the type.
+function currentTreeId(): string | undefined {
+  return world.dialogue?.treeId
+}
 
 describe('GameDriver', () => {
   beforeEach(() => {
     initLoop() // reset the module-level throttle timer to 0
     vi.clearAllMocks()
+    // Keep the ambient module-scope `world` immune to the opening's own
+    // auto-open (runtime/openingBriefing.ts, wired into tick() below) for
+    // every test in this file that does not care about it — only the
+    // dedicated test further down explicitly re-arms a fresh world via
+    // setWorld() to exercise that behaviour on purpose.
+    world.flags[BRIEFING_COMPLETE_FLAG] = true
+    world.flags[LEDGER_READ_FLAG] = true
   })
 
   it('initLoop resets engine state and broadcasts the initial world snapshot', () => {
@@ -90,5 +107,36 @@ describe('GameDriver', () => {
     tick(10)
 
     expect(saveGame).not.toHaveBeenCalled()
+  })
+
+  // W3i remediation: the opening's auto-open (runtime/openingBriefing.ts)
+  // used to fire only from ThreeContainer's one-time mount effect, so a
+  // fresh campaign started mid-session (StatusBar's New button) never
+  // reopened the briefing and froze the clock forever (briefingPending).
+  // Moved to this per-frame hook, the same q1Debrief/pendingSettlementAutosave
+  // shape, so it self-heals on ANY path into a fresh world — proven here via
+  // tick() itself, not by calling maybeOpenOpeningDialogue() directly.
+  it('auto-opens the opening briefing via tick() for a fresh campaign, and re-arms for a second fresh campaign in the same session', () => {
+    setWorld(createInitialState())
+    expect(world.dialogue).toBeNull()
+
+    tick(10)
+
+    expect(currentTreeId()).toBe(BRIEFING_TREE_ID)
+
+    // Completing Beat 1 the way a real final reply does: set the flag, close
+    // the dialogue.
+    world.flags[BRIEFING_COMPLETE_FLAG] = true
+    world.dialogue = null
+
+    // A second, brand-new campaign started mid-session — the same running
+    // tick() loop now drives a completely different WorldState object, with
+    // no remount in between (setWorld's own live-binding contract).
+    setWorld(createInitialState())
+    expect(world.flags[BRIEFING_COMPLETE_FLAG]).not.toBe(true) // sanity: truly fresh
+
+    tick(10)
+
+    expect(currentTreeId()).toBe(BRIEFING_TREE_ID)
   })
 })

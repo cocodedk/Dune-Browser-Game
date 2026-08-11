@@ -12,22 +12,10 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from './store'
 import { EventBus } from '../EventBus'
-import { settleQuota, type PaymentOutcome } from '../game-engine/quota/quota'
-import { defaultSettleAmount } from '../game-engine/quota/settlement'
+import { settleQuota } from '../game-engine/quota/quota'
 import { getDifficultyConfig } from '../game-engine/difficulty'
 import { palette, type, space, row, panelShell, button } from './theme'
-
-/**
- * 03-opening-experience.md Beat 7's settlement wording, shared by every
- * preview this modal shows (full-result, minimum-result, and the live
- * selected-amount preview) — one function, called against settleQuota's own
- * PaymentOutcome each time, never a second estimate of the band rule.
- */
-function bandMessage(outcome: PaymentOutcome): string {
-  if (outcome.band === 'full') return 'Patience restored, arrears cleared.'
-  if (outcome.band === 'partial') return `Patience held, ${outcome.quota.arrears.toFixed(0)} carried as arrears.`
-  return `Patience falls to ${outcome.quota.patience} of 3, ${outcome.quota.arrears.toFixed(0)} carried.`
-}
+import { bandMessage, flooredDefault } from './SettlementModal.helpers'
 
 export default function SettlementModal() {
   const { world } = useGameStore()
@@ -45,7 +33,7 @@ export default function SettlementModal() {
     if (!pending) return
     const decision = pending
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Enter') settle(amount ?? defaultSettleAmount(decision))
+      if (e.key === 'Enter') settle(amount ?? flooredDefault(decision))
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -53,7 +41,7 @@ export default function SettlementModal() {
 
   if (!pending) return null
 
-  const chosen = amount ?? defaultSettleAmount(pending)
+  const chosen = amount ?? flooredDefault(pending)
   const config = getDifficultyConfig(world.difficulty)
   const minAmount = Math.min(pending.minPartialPayment, pending.legalRange.max)
   // Three calls to the same pure engine function — 03 Beat 7's full-result,
@@ -133,15 +121,13 @@ export default function SettlementModal() {
           type="number"
           min={pending.legalRange.min}
           max={pending.legalRange.max}
-          // Prefill rounded to one decimal — every other figure in this
-          // modal is integer or one decimal; the raw stock float
-          // (63.206138100000004) was the build's most conspicuous polish
-          // failure on its most important screen (evidence finding C1). The
-          // engine value itself (`chosen`, used for the preview above and
-          // the actual settle amount below) is untouched — only the DISPLAY
-          // of an untouched default is rounded; a value the player typed
-          // passes through exactly as typed.
-          value={amount ?? Number(defaultSettleAmount(pending).toFixed(1))}
+          // W3i fix: `chosen` (declared above) IS what gets submitted, on
+          // Settle and on Enter alike, so this can never show a different
+          // number than what an untouched confirm actually pays (the old
+          // bug: the display rounded but the submitted amount stayed the
+          // raw float). A value the player typed passes through exactly as
+          // typed — `amount` itself is never rounded or floored.
+          value={chosen}
           onChange={e => setAmount(Number(e.target.value))}
           style={styles.input}
         />

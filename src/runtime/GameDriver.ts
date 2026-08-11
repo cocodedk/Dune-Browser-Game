@@ -7,6 +7,7 @@
 import { world } from '../game-engine/GameState'
 import { update as engineUpdate, initLoop as engineInitLoop } from '../game-engine/GameLoop'
 import { EventBus } from '../EventBus'
+import { maybeOpenOpeningDialogue } from './openingBriefing'
 import { maybeOpenQ1Debrief } from './q1Debrief'
 import { maybeAutosavePendingSettlement } from './pendingSettlementAutosave'
 
@@ -32,6 +33,15 @@ export function initLoop(): void {
  */
 export function tick(deltaMs: number): boolean {
   engineUpdate(deltaMs / 1000)
+  // W3i remediation: the opening's own auto-open used to fire once, from
+  // ThreeContainer's mount effect only — a fresh campaign started mid-session
+  // (StatusBar's New button) never remounts ThreeContainer, so the briefing
+  // never reopened and the clock froze forever (pause.ts's briefingPending).
+  // Moved here, the same per-frame shape as maybeOpenQ1Debrief below, so it
+  // self-heals on ANY path into a fresh world — title, StatusBar New, or any
+  // future one — with no remount required. See runtime/openingBriefing.ts's
+  // own doc for why its guards already re-arm correctly for a new world.
+  maybeOpenOpeningDialogue()
   // Beat 7's debrief auto-open (03-opening-experience.md) — see
   // runtime/q1Debrief.ts's own doc for why this lives here rather than
   // inside settleCommand.ts itself.

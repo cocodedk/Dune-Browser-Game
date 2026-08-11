@@ -83,6 +83,11 @@ export const onChoose = ({ choiceId }: BusEvents['player:choose']): void => {
 }
 export const onSpeed = ({ speed }: BusEvents['game:speed']): void => {
   world.speed = speed
+  // Choosing a speed IS choosing to run: clear the manual pause so 0× and a
+  // speed button can never both read as active at once (the blind delta
+  // re-check's control-desync finding — 0× [pressed] beside 5× [active]
+  // with nothing moving).
+  world.paused = false
   EventBus.emit('world:updated', { state: world })
 }
 

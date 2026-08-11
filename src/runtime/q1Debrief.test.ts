@@ -1,6 +1,6 @@
 // src/runtime/q1Debrief.test.ts
-// Beat 7's debrief hook (mirrors runtime/openingBriefing.ts's own test
-// coverage shape). Node-safe: no DOM, only world state.
+// Beat 7's debrief hook — see runtime/openingBriefing.test.ts (W3i) for the
+// sibling coverage this shape mirrors. Node-safe: no DOM, only world state.
 
 import { describe, it, expect } from 'vitest'
 import { world, setWorld, createInitialState } from '../game-engine/GameState'

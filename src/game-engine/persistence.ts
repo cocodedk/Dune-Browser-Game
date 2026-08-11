@@ -65,6 +65,10 @@ function toEnvelope(world: WorldState): CanonicalSaveEnvelope {
  * serialized the field at all. Either way `migrated.factionProfiles` is not
  * trustworthy content, so this is an unconditional replace, not a `??`
  * default.
+ *
+ * `paused` is unconditionally forced to `false` (W3i, same "Campaign status"
+ * shape as `goalAchieved` above): a save taken mid-pause must never restore
+ * frozen with the 0x control desynced from a clock that never resumes.
  */
 function fromEnvelope(save: VersionedSave): WorldState | null {
   const migrated = migrateSave(save);
@@ -74,6 +78,7 @@ function fromEnvelope(save: VersionedSave): WorldState | null {
     goalAchieved: migrated.ending !== null,
     pendingSettlement: migrated.pendingSettlement ?? null,
     factionProfiles: seedFactionProfiles(),
+    paused: false,
   };
 }
 

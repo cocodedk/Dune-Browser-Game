@@ -53,10 +53,15 @@ export interface CanonicalSaveEnvelope {
  * `goalAchieved` is a derived runtime value that must never be serialized
  * independently (02 "Campaign status"); `factionProfiles` is static,
  * quarantined-sandbox content reseeded fresh on every load rather than
- * persisted (see data/factionProfiles.ts and the v5 schema note above).
- * Both are excluded here at the type level so a future field added to
- * `WorldState` is canonical by default, and only these two stay opted out.
- * (`goalType` needs no entry here — it is not a `WorldState` field at all
- * any more, not merely a canonical-state exclusion.)
+ * persisted (see data/factionProfiles.ts and the v5 schema note above);
+ * `paused` (W3i remediation) is a derived, transient control-surface value
+ * under the same "Campaign status" precedent as `goalAchieved` — a save
+ * taken mid-pause must not restore frozen with the 0x control desynced from
+ * the visible controls (persistence.ts's fromEnvelope forces it back to
+ * `false` on every load). All three are excluded here at the type level so a
+ * future field added to `WorldState` is canonical by default, and only these
+ * three stay opted out. (`goalType` needs no entry here — it is not a
+ * `WorldState` field at all any more, not merely a canonical-state
+ * exclusion.)
  */
-export type CanonicalCampaignState = Omit<WorldState, 'goalAchieved' | 'factionProfiles'>
+export type CanonicalCampaignState = Omit<WorldState, 'goalAchieved' | 'factionProfiles' | 'paused'>

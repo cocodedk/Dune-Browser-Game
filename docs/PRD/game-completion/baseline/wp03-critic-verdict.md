@@ -745,3 +745,290 @@ control actually *does* anything.
 *Probes were written to `src/wp03probe.test.ts`, `e2e/wp03probe.spec.ts` and
 `e2e/wp03probe2.spec.ts`, run, captured above, and deleted. This verdict file is the only
 change to the working tree; no commits were made.*
+
+---
+---
+
+# Delta re-audit — remediation W3h (`0a572b1`)
+
+Scope: **only the deltas** `9ba9488..0a572b1`, re-probed independently. Sections 1–9 above
+are the original audit and stand as written; this section supersedes their score and
+verdict line.
+
+## D0. Gates re-run at HEAD — all five green
+
+```
+$ npx vitest run
+ Test Files  283 passed (283)
+      Tests  2280 passed (2280)
+   Duration  18.34s
+VITEST_EXIT=0
+
+$ npx tsc --noEmit        TSC_EXIT=0
+$ npm run lint            LINT_EXIT=0
+$ npm run build           Bundle size budgets passed.   BUILD_EXIT=0
+
+$ npx playwright test --workers=1
+  ✓  20 opening9.spec.ts › pause halts worldTime and unpause resumes it (5.0s)
+  ✓  21 opening9.spec.ts › spacebar toggles pause the same way the button does (5.2s)
+  ✓  22 opening9.spec.ts › arriving at Hagg selects it in the panel with a DOM Speak/resident path (4.8s)
+  24 passed (1.9m)
+PW_EXIT=0
+```
+
+Round 14's claims (283 / 2280, 24/24) reproduce exactly. Test count moved 2272 → 2280,
+E2E 21 → 24.
+
+## D1. Pause — **closed** ✅
+
+`StatusBar` now emits `game:pause` from a `0×` button (`aria-pressed`, `title="Pause
+(Space)"`) and from a spacebar handler guarded off `INPUT`/`TEXTAREA`/`SELECT`. No engine
+change was needed — `onPause`, `CommandWiring`'s subscription and `pause.ts`'s `manual`
+input were already correct; only the emitter was missing, exactly as F1 diagnosed.
+
+My own probe, measuring the engine clock rather than the button state:
+
+```
+DELTA D pause:    {"t0":0.233,"t1":2.233,"paused1":2.483,"paused2":2.483,"resumed":5.483}
+DELTA D spacebar: {"s1":5.566,"s2":5.566,"frozen":true}
+```
+
+Clock advances (0.23 → 2.23), freezes exactly across a 600 ms real wait (2.483 → 2.483),
+resumes (→ 5.48). Spacebar freezes identically. Speed buttons also stop showing an active
+state while paused (`!paused && speed === s`), so `0×` and `5×` cannot both read as
+selected. Disclosure-table row 1 is now satisfied.
+
+⚠️ One residual nit, not a defect: the spacebar `useEffect` has `[]` deps and reads
+`world.paused` from a captured reference. That works today only because `world` is a
+mutated-in-place singleton (the aliasing `CoachMark.tsx` documents). After a `loadGame()`
+replaces the singleton, the captured reference goes stale and the *toggle source* could be
+read from the old object — the write always lands on the current world, and the button path
+is unaffected because it uses the re-rendered `paused`. Worth a `[paused]` dep at some
+point; not worth blocking on.
+
+## D2. Objective `Show` for panel targets — **closed for every reachable case**, with one precise caveat ⚠️→✅
+
+`coachAnchor.ts` (shared with `CoachMark.tsx`) finds the `data-coach` element;
+`ObjectivePanel.flashPanel` outlines it for 900 ms then restores the previous inline style.
+
+I probed **anchor presence at every step**, and separately proved the flash actually mutates
+the DOM rather than merely that the anchor exists:
+
+```
+DELTA A1 receive_briefing:  {"showLabel":"Show — arrakeen","mountedAnchors":[]}
+DELTA A3 travel_red_wall:   {"showLabel":"Show — red wall sietch","destAnchors":["destination-hagg","destination-red_wall_sietch","destination-sietch_tabr"]}
+DELTA A4 earn_trust:        {"showLabel":"Show — red wall sietch","mountedAnchors":["quota-ledger","pledge-button"]}
+DELTA A5 order_first_harvest:{"showLabel":"Show — Crew","mountedAnchors":["quota-ledger","crew-panel"]}
+DELTA A6 prepare_q1:        {"mountedAnchors":["quota-ledger","crew-panel"]}
+DELTA A6 flash effect: {"label":"Show — Crew",
+  "before":[["quota-ledger",""],["crew-panel",""]],
+  "during":[["quota-ledger",""],["crew-panel","rgb(212, 160, 23) solid 2px"]]}
+```
+
+The flash fires on the correct anchor and only that anchor. **`order_first_harvest` and
+`prepare_q1` now genuinely act.**
+
+**The caveat — `act1.read_ledger` still does not flash anything**, because its target
+(`quota-ledger`) is gated on `ledger.read`, the very flag that step exists to set:
+
+```
+DELTA B read_ledger active: {"inDialogue":true,"ledgerAnchor":false,
+                             "showBtn":"Show — Tribute Ledger",
+                             "objectiveTitles":["Read the tribute ledger"]}
+```
+
+So Round 14's "Show now acts for all 7" is imprecise by exactly one step. **But I hit-tested
+whether that button is reachable, and it is not:**
+
+```
+DELTA B reachability: {"found":true,"hitIsTheButton":false,"topElementTag":"DIV",
+                       "topElementIsDialogueOverlay":true}
+```
+
+`act1.read_ledger` is active only while Thufir's mandatory ledger conversation is open
+(`canCloseDialogue` refuses to close it early), and `DialoguePanel`'s overlay (`zIndex: 100`,
+fixed, covering everything left of the command column) sits on top of `ObjectivePanel`. The
+inert button cannot be clicked for the entire lifetime of that step. **F4's actual harm — "a
+button that lies" — is gone; what remains is an unreachable no-op.** Ruled closed, with the
+wording corrected here rather than accepted as stated.
+
+## D3. Settlement modal at the degenerate state — **closed** ✅
+
+Probed at the exact state my original probe measured (invest line, no `giveHarvester`,
+stock 51.5 / due 90 / minimum partial 54):
+
+```
+DELTA C modal: {
+ "due": "90", "stock": "52", "minPartial": "54",
+ "btns": [ …, "Pay all available (52)", "Settle" ],
+ "notes": [
+  "Pay all available (52)",
+  "Pay all available: Patience falls to 2 of 3, 38 carried.",
+  "The minimum partial (54) is out of reach.",
+  "Selected — Patience falls to 2 of 3, 38 carried."
+ ],
+ "input": "51.5"
+}
+```
+
+All three F3 sub-defects are gone: no `Full (` label against a 90 due; no duplicate
+`Minimum (52)` button; one honest result row plus a plain statement of what is out of reach.
+Engine-level branch check across three stock levels:
+
+```
+D3 (stock 51.5):  {"max":51.5,"minPartial":54,"isTrueFull":false,"minimumOutOfReach":true, "label":"Pay all available","rowsRendered":1}
+D3 (stock 77.35): {"max":77.35,"minPartial":54,"isTrueFull":false,"minimumOutOfReach":false,"label":"Pay all available","rowsRendered":2}
+D3 (stock 200):   {"max":90,  "isTrueFull":true,                                            "label":"Full"}
+```
+
+The honest `Full` label survives where it is actually true, and both reference rows still
+render where they genuinely differ. The reserve line (77.35) keeps two distinct rows — the
+fix is scoped to the degenerate case only, not a blanket removal.
+
+⚠️ Residual nit: the prefill rounds the **display** (`toFixed(1)`) but not the value —
+`chosen` remains the raw float, so an untouched box can read `63.2` and submit
+`63.206138…`. Documented in-code and harmless at this magnitude, but the control shows a
+number it will not submit.
+
+## D4. Hagg DOM path (acceptance-4 root cause) — **closed** ✅
+
+`TravelSystem.checkTravelArrival` now emits `village:selected` on **every** arrival, not
+only the two that happen to auto-open a dialogue.
+
+```
+DELTA D hagg: {"heading":["Hagg"],"peopleHere":true,
+  "residentBtns":["ShishakliYoung prospector, more confident than accurate",
+                  "Liet-KynesPlanetologist, and inconveniently patient"]}
+```
+
+**I record that this was a hole my own audit missed.** §2.8 marked acceptance 4 met on the
+strength of `opening8.spec.ts`'s keyboard traversal — which routes Arrakeen→Hagg→Red Wall
+through the destination list and never needs the location panel at Hagg, so it stepped over
+the defect. The blind-play critic found it by actually standing there. Credit where due; my
+acceptance-4 ruling was under-tested.
+
+## D5. Debrief structure and the partial split — **closed** ✅
+
+All four roots mandatory until Thufir, then free:
+
+```
+D5c:
+q1_debrief_full:         closeableAtRoot=false -> q1_debrief_full_thufir     closeable=true
+q1_debrief_partial_near: closeableAtRoot=false -> q1_debrief_partial_thufir  closeable=true
+q1_debrief_partial_bare: closeableAtRoot=false -> q1_debrief_partial_thufir  closeable=true
+q1_debrief_short:        closeableAtRoot=false -> q1_debrief_short_thufir    closeable=true
+```
+
+Band selection at the 63-vs-54 case the coordinator named, plus my own measured values:
+
+```
+D5:
+paid=63   due=90 ratio=0.700 bandCode=1 nearlyFull=true  root=q1_debrief_partial_near
+paid=54   due=90 ratio=0.600 bandCode=1 nearlyFull=false root=q1_debrief_partial_bare
+paid=51.5 due=90 ratio=0.572 bandCode=0 nearlyFull=false root=q1_debrief_short
+paid=90   due=90 ratio=1.000 bandCode=2 nearlyFull=true  root=q1_debrief_full
+paid=30   due=90 ratio=0.333 bandCode=0 nearlyFull=false root=q1_debrief_short
+FRACTION=0.66
+D5b: boundary inclusive at 0.66 confirmed (59.4 -> near, 59.39 -> bare)
+```
+
+Exactly as specified: 0.70 → nearly-full, 0.60 → bare minimum, boundary inclusive at 0.66.
+Note that my own 51.5 invest measurement is band **short**, not partial, so it correctly
+routes to `q1_debrief_short` rather than either partial variant.
+
+Browser-level, the structural close also holds — attempting to dismiss at Fenring's root:
+
+```
+DELTA C debrief close attempt: no-x-button   stillInDialogue: true
+```
+
+`DialoguePanel` does not even render its `×` at a mandatory node, and the player stays in
+dialogue. Thufir's summary can no longer be skipped.
+
+## D6. The five-dry-runs ledger (3 + 2) — **honest** ✅
+
+My reading of the exit proof's wording, applied to the merged ledger:
+
+- **The three shipped suite runs count.** `opening4` (settlement-reload), `opening6`
+  (reserve line) and `opening8` (keyboard-only) each reach and settle Q1 using `setTime`
+  only — time compression through the same `processDayBoundary` path, writing nothing play
+  would not write. Consistent with the distinction this loop has used throughout.
+- **The blind critic's two cold runs count, and count for more.** Plain URL, no `?debug=1`,
+  no `window.__DUNE__` at all — strictly stronger evidence than the automated three. Its own
+  §11 states both settled Q1 (63 of 90; 54 of 90) with "None" under debug state.
+- **Cross-validation:** those two payment figures land on opposite sides of the new 0.66
+  split (0.700 and 0.600), and my D5 probe independently reproduces both routings. The two
+  verdicts corroborate rather than merely sum.
+- **3 + 2 = 5 satisfies the clause.** The exit proof says five dry runs *can* complete Q1
+  without debug state — a capability claim. Both classes do.
+
+⚠️ Stated plainly so the ledger is not read as stronger than it is: the three suite runs are
+deterministic replays of three code paths, not three independent sessions. Under a stricter
+"five distinct playthroughs" reading the count leans mostly on the two cold runs. I accept
+the capability reading, and note that my own `giveHarvester`-free browser probe (DELTA C,
+re-run post-remediation) is a sixth clean completion.
+
+## D7. What is still open after W3h
+
+| Item | Status |
+|---|---|
+| F6 — travel has no select→confirm step | **untouched.** Copy improved ("Out of walking range from here — travel through a closer place first…") which fixes the *wrong-rule* half, but a single click still commits a journey |
+| F5 — 3s flight-skip gate has no browser test | untouched |
+| F5 — guidance rule 4 (re-enable resumes) untested, Settings still title-only | untouched |
+| F5 — recovery row (d) copy-only | untouched; **honestly recorded** in Round 14 rather than quietly closed |
+| `giveHarvester` in scenarios 3 and 5 | still present; now disclosed in the round log as well as in-file |
+| F2 — Beat 1 portrait | still the text fallback; deferred by the exit proof's own "after production presentation is integrated" |
+| A6 — both lines viable | still WP04's |
+| A8 — Act 1 objectives are a placeholder | still WP05's |
+
+Round 14's bookkeeping is accurate on every item I checked, including correcting the
+portrait carry-forward in the right direction ("search for silent wrong-content fallback,
+not 404s") and reconciling 78.89 vs 77.35 without changing the assertion.
+
+## D8. What failed or did not reproduce (delta)
+
+1. **Round 14's "Show now acts for all 7 objectives" is imprecise** — `act1.read_ledger`'s
+   anchor is not mounted while that step is active (D2). Downgraded from a finding to a
+   wording correction only because I proved the button is unreachable behind the mandatory
+   dialogue overlay.
+2. **Two of my own probe runs failed on probe bugs, not code:** `crew-panel` "missing" was
+   me sampling before the pledge had re-rendered; the "flash didn't fire" was me measuring
+   the outline on `quota-ledger` while the active target was `crew-panel`. Both passed once
+   the probe measured the right element at the right time. **No delta claim failed to
+   reproduce.**
+
+## D9. Revised score and verdict line
+
+### Revised score: **9 / 10** (was 7/10)
+
+All three of my findings that the exit proof's carve-outs did **not** absorb are closed and
+independently verified: pause exists and genuinely freezes the engine clock; `Show` acts on
+every reachable objective; the settlement modal is honest in the exact degenerate state I
+measured. The dry-run ledger is closed legitimately rather than by redefinition. Three
+further defects I did not find — Thufir's skippable debrief, the stale panel at Hagg, raw
+field ids in the engine's own event log — were fixed structurally, at root cause, with the
+Hagg one exposing a genuine gap in my own acceptance-4 reasoning.
+
+Held back from 10 by: F6 (travel still commits on one click, the only unaddressed finding
+from my original list); three F5 coverage gaps still untested (3 s skip gate, guidance
+rule 4, recovery row (d)); and two of six scenarios still reaching the FULL band only via
+`giveHarvester`, so the suite's own invest-line proof still is not the real outcome — now
+disclosed in the round log, but not yet closed.
+
+### Verdict line
+
+> **`verified`** — for WP03's evidence half. Gates green at `0a572b1` (283 files / 2280
+> tests, 24/24 E2E, tsc/lint/build clean). Every remediation item re-probed independently
+> and confirmed at the exact states this audit originally measured; one claim ("Show acts
+> for all 7") corrected to "all reachable cases" with evidence, not accepted as written.
+> The five-dry-runs clause is honestly satisfied at 3 shipped + 2 cold. Remaining items are
+> either other packages' by contract (A6→WP04, A8→WP05, portrait→presentation) or recorded,
+> non-blocking coverage debt (F6, three F5 gaps, the two `giveHarvester` scenarios), all of
+> which belong in WP04's queue rather than gating WP03. **This is one of two package
+> critics; the blind-play critic's own re-verification is the other half.**
+
+---
+
+*Delta probes were written to `src/wp03delta.test.ts` and `e2e/wp03delta.spec.ts`, run,
+captured above, and deleted. This verdict file remains the only change to the working tree;
+no commits were made.*

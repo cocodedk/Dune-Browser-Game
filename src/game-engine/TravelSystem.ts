@@ -8,7 +8,7 @@ import { checkTravel, rejectionMessage } from './travel/rules';
 import type { TravelMode } from './travel/rules';
 import { REGION_ADJACENCY } from '../data/regionAdjacency';
 import { TRAVEL_RED_WALL_FLAG, REDWALL_TRUST_ACKNOWLEDGED_FLAG } from './acts/openingObjectives';
-import { startDialogue } from './DialogueSystem';
+import { startDialogue, dialogueIsCloseable } from './DialogueSystem';
 import { REDWALL_TRUST_TREE_ID, TABR_DILEMMA_TREE_ID } from '../data/dialogue';
 
 /** Beat 6's own guard flag (data/dialogue/opening-tabr-dilemma.ts) — set at
@@ -72,6 +72,10 @@ export function travelCheckTo(targetId: VillageId) {
     mode: currentTravelMode(),
     isTraveling: player.state === 'traveling',
     adjacency: REGION_ADJACENCY,
+    // W3i: refuses travel outright while a mandatory beat (Beat 1/2's
+    // briefing/ledger, Beat 4's Red Wall trust) is open — see rules.ts's own
+    // doc on checkTravel for why this is engine-side, not UI-only.
+    mandatoryDialogueOpen: !dialogueIsCloseable(world),
   });
 }
 

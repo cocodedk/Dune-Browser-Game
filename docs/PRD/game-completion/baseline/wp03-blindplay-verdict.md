@@ -446,3 +446,106 @@ ornithopter copy to clear `verified` comfortably.
 
 *The evidence auditor's verdict is the other half of this decision; this report judges only
 what a first-time player can see and do.*
+
+---
+
+## Delta re-check (findings-verifier, HEAD `0a572b1`)
+
+**Method.** Two fresh campaigns played on the plain URL (`http://localhost:5174/`, no
+`?debug=1`, no `window.__DUNE__`, no game debug API), one tab, browser closed at each run
+boundary, 5× used for waits. `browser_evaluate` was used only twice, both to read rendered
+DOM text/attribute values already visible on screen (a settlement input's `.value`, some
+button `.textContent`) to settle an ambiguous decimal-formatting question — never to call a
+game API or mutate state. Source (`SettlementModal.tsx`, `opening-q1-debrief.ts`) was read
+after play to confirm formatting logic and enumerate dialogue variants, not to change the
+verdict on anything not independently observed live. Tree note: at review time `git status`
+showed only `docs/PRD/game-completion/baseline/wp03-critic-verdict.md` (the sibling evidence
+report) modified — nothing under `src/` was dirty, so the dev server was serving `0a572b1`
+cleanly for this checkout, unlike the tree caveat on the original report.
+
+The first campaign hit a blocking bug at the very first travel action (see the new finding
+below) and was abandoned after confirming the bug did not recover; the second campaign
+avoided the trigger and carried through to Q1 settlement and debrief. A third, minimal
+campaign isolated the trigger precisely (see below).
+
+### Per-finding results
+
+| # | Finding | Verdict | What I saw |
+|---|---|---|---|
+| 1 | Pause (0×) + spacebar freezes the day/time readout | **Verified** | `0×` sits beside `1×/2×/5×`. Engaged while the tribute ledger was open: day/time held at `0:09` across two separate 5–6 s real-time waits (10 s total), no drift. Spacebar toggles pause off (clock resumed) and back on (clock re-froze, confirmed with a further 6 s wait) — both the button and the keyboard shortcut work correctly **in isolation**, i.e. when no travel is initiated while paused. See the new regression below for the one way this breaks. |
+| 2 | Hagg DOM path — location panel follows arrival | **Verified** | Travelled Arrakeen → Hagg with 5× confirmed active before departure. On arrival the header read "Inside Hagg", and the location panel updated to heading "Hagg", "House Atreides", `PEOPLE HERE`: **Shishakli** and **Liet-Kynes** as real DOM buttons (present in the accessibility tree, clickable), Population 320, Spice stockpile 8.0, Loyalty 60. No canvas-only control was needed to reach either resident. |
+| 3 | Settlement modal: one-decimal prefill · honest "Pay all available" label · no duplicate preview rows | **Verified (prefill and label live; duplicate-row guard source-confirmed only)** | At day 12, stock 68 vs due 90: the preset button read **"Pay all available (68)"**, not "Full" — `SettlementModal.tsx` line 73 gates the label on `legalRange.max >= amountDue`, matching Fenring's later "not the full sum" line instead of contradicting it. The custom-amount input's live value was `"68"` — read via `.value` on the DOM element itself, not a rounded display trick; `SettlementModal.tsx` line 144 computes it as `Number(defaultSettleAmount(pending).toFixed(1))`, i.e. genuinely rounded to one decimal (the old bug was 15 raw digits: `63.206138100000004`). The apparent absence of a decimal point is `Number(68.0)` rendering as `68` in a numeric input — normal, not a formatting regression. The **duplicate-preview-row guard** (`minimumOutOfReach`, lines 80/108/118–124: when stock can't cover even the minimum, show one honest row plus an "out of reach" line instead of two identical rows) is implemented correctly and reads exactly to the checklist's spec, but my run's stock (68) exceeded the 54 minimum both times, so this branch was **not triggered live** — confirmed by source reading only. |
+| 4 | Debrief cannot be skipped; Fenring reads as "bare minimum"; Thufir's summary follows | **Verified** | Settled at the minimum (54/90, 45 arrears). Fenring's line: *"The bare minimum, my lord, and not a measure more. The Emperor accepts it — this time — but a habit of scraping the floor is not one I would recommend to him. The rest is noted, with its interest."* — visibly distinct from the near-full variant (`q1_debrief_partial_near` in `opening-q1-debrief.ts`: *"Not the full sum, but close enough that I will not trouble the Emperor with the difference…"*), confirming two partial variants exist as claimed. At Fenring's line there was **no `×` in the DOM at all** (searched, zero matches) and **Escape produced no change** — the same dialogue was still showing afterward. Only after clicking through to Thufir's line ("The first tribute is closed, but not cleanly — what we didn't pay is carried forward as arrears, with the usual surcharge added on top…") did a `×` "Close" button and an "…or press Esc to step away" hint appear — i.e. the debrief is un-skippable until Thufir's operational summary has actually been delivered, which is the correct behaviour. |
+| 5 | Travel-refusal copy names the real adjacency rule, not just a missing ornithopter | **Verified** | From Arrakeen, both Red Wall Sietch and Sietch Tabr showed: *"Out of walking range from here — travel through a closer place first, or wait for a long-range ornithopter to go directly."* Distance-through-Hagg is now stated as the primary, actionable cause; the ornithopter is offered as an alternative, not the sole blocker — consistent across both destinations, both campaigns, and unchanged from the objective banner's own "Reachable on foot from Arrakeen, by way of Hagg." |
+| 6 | Field/crew names read as display names, never raw ids | **Verified** | Crew panel field buttons read "Tabr Shallows" and "Red Wall Pan ★"; the order confirmation read "Order: harvest Red Wall Pan"; the crew status line read "Harvesting Red Wall Pan · yield unclear"; the event log read "Crew ordered to harvest Red Wall Pan." A page-wide regex search for `field_|FIELD_|_pan|_shallows` after assigning a crew and running several ticks returned **zero matches**. |
+
+### New regression found in this session — pause + travel = permanent softlock
+
+Not one of the six named findings, but directly implicates finding 1's own feature, so it
+belongs in this delta.
+
+**Reproduction (isolated, minimal):** new campaign → click through to the point the
+destinations list unlocks (Hagg enabled, still mid-Thufir dialogue) → click `0×` → **confirm
+via snapshot that `0×` shows `[pressed]`** → click **Hagg**. Travel begins (event log logs
+"Traveling to Hagg…"), but day/time stay pinned at `0:00`. Waited 8 s: no change. Clicked
+`5×` (visually goes `[active]`, `0×` stays `[pressed]` simultaneously — the two controls
+disagree with each other): waited 6 s more, no change. Pressed spacebar: waited 5 s more, no
+change. **The clock never resumes by any control.** A second, independent reproduction
+earlier in the session (travel initiated moments after a `5×` click with no confirming
+snapshot in between) produced the identical symptom, then **survived a full page reload** —
+the autosave at "Day 0" restored the exact same frozen `under way` state, and 5×/1×/2× clicks
+against the reloaded state were equally inert. The only recovery was abandoning that campaign
+and starting a new one.
+
+By contrast, when `5×` was confirmed active (via snapshot) *before* clicking a destination,
+travel completed normally in both later campaigns (arrival at Hagg, then Red Wall Sietch,
+worked cleanly with no stall). So the trigger is specifically: **initiate travel while the
+simulation is genuinely paused.** This is a highly reachable sequence for a real player —
+pausing to read the ledger (exactly what this checklist's own finding 1 asks a player to do)
+and then, still paused, clicking the destination you just decided on, is a natural next
+action, not an edge case requiring deliberate abuse.
+
+This is more severe than anything in the original report's correctness section: that report's
+explicit floor was "nothing softlocked, no button did nothing." This does soft-lock — the
+clock cannot be un-paused once travel starts under it, the broken state is what autosave
+persists, and reload does not recover it.
+
+### Also observed, unprompted (not scored, offered for context)
+
+- A **flight sequence with an unskippable beat and a working `Skip` control** now exists on
+  travel (event log: "🐪 Traveling to Hagg…" then "✅ Arrived at Hagg"), where the original
+  report found neither a confirm step nor a flight sequence at all (its L113-116 finding).
+- The ledger's caption no longer contradicts itself at settlement: with a crew actually
+  harvesting, it read "1.6 spice per day at current orders" instead of the original "no crews
+  are harvesting" bug. One residual nit: at the exact instant Q1 resolved (day 12, 0 days
+  left) the caption briefly read "0.0 spice per day at current orders" while the crew was
+  still shown "Harvesting" — a minor lag, not the original self-contradiction, and not one of
+  the six named findings.
+
+### Revised score — blind-play half
+
+Comprehension is **not re-scored**: the original 9/10 read stands: this delta touched
+correctness surfaces only.
+
+**Correctness revises to 4/10** (from the original 5/10). The direction of travel is genuinely
+mixed, not uniformly better: the six named findings (Hagg DOM path, the settlement-modal
+cluster, the debrief-skip guard, the travel-refusal copy, and raw-id leakage) are all fixed
+and confirmed live — a substantial, real body of work. But the correctness floor itself is
+now broken in a way it wasn't before: the original report could say "nothing softlocked" as
+a baseline true of the whole build; that is no longer true. A save-corrupting, no-recovery
+softlock reachable by pausing and then traveling — the exact two actions this very checklist
+asked a player to perform in sequence — outweighs the fixes on points, because a single
+unrecoverable failure mode matters more than several resolved cosmetic or mislabeling defects.
+
+**Combined blind-play score: 6/10** (down from 7/10; comprehension 9, correctness 4, same
+holistic method as the original's 9-and-5).
+
+### Verdict
+
+**`verified` is not warranted on the blind-play half.** The six named findings are genuinely
+fixed and should not be reopened — but this session surfaced a new, more severe defect than
+the one that originally kept this at `in_progress`. **WP03 remains `in_progress`**, and the
+pause + travel softlock replaces "no pause control" as this half's biggest gap: it is a day's
+work at most (evidence points at the travel/tick wiring not resuming after a pause-then-travel
+state, likely in `TravelSystem.ts` or the speed-control wiring in `StatusBar.tsx`/
+`CommandWiring`), but it must close before this half can clear `verified`.

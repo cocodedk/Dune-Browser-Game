@@ -89,6 +89,18 @@ describe('persistence serialization', () => {
     expect(restored.ending).toBe('loss_patience');
     expect(restored.goalAchieved).toBe(true);
   });
+
+  it('never restores paused: true — a loaded game never resumes manually paused', () => {
+    // W3i: a save taken while paused (e.g. the travel-start autosave) must
+    // not restore frozen with the 0x control desynced from the visible
+    // controls. paused is excluded from canonical state and forced false on
+    // every load, the same "derived, never round-tripped" shape as
+    // goalAchieved above (02-runtime-consolidation.md "Campaign status").
+    const state = createInitialState();
+    state.paused = true;
+    const restored = deserializeWorld(serializeWorld(state));
+    expect(restored.paused).toBe(false);
+  });
 });
 
 // classifySave is the title screen's corrupt/absent/valid split (chunk

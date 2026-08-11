@@ -42,4 +42,14 @@ describe('hashState', () => {
     const restored = deserializeWorld(serializeWorld(world))
     expect(hashState(restored)).toBe(before)
   })
+
+  // W3i: a manual pause must never desync a save from the visible controls —
+  // paused is excluded from canonical state (state/canonical.ts), so two
+  // otherwise-identical worlds hash equal regardless of it.
+  it('is equal for two otherwise-identical worlds differing only in paused', () => {
+    const a = createInitialState(3)
+    const b = createInitialState(3)
+    b.paused = true
+    expect(hashState(a)).toBe(hashState(b))
+  })
 })

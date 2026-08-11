@@ -39,6 +39,13 @@ describe('serializeCanonical', () => {
     expect(serializeCanonical(world)).not.toContain('factionProfiles')
   })
 
+  it('omits paused (W3i: derived/transient, same "Campaign status" precedent as goalAchieved — a save must not carry the manual pause into the next load)', () => {
+    const world = createInitialState()
+    world.paused = true
+    const json = serializeCanonical(world)
+    expect(json).not.toContain('paused')
+  })
+
   it('includes the rng state', () => {
     const world = createInitialState(42)
     const parsed = JSON.parse(serializeCanonical(world))

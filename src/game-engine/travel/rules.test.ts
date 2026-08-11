@@ -93,8 +93,11 @@ describe('regionsAdjacent', () => {
 describe('checkTravel', () => {
   const from = node({ id: 'from', regionId: 'r1' })
 
-  function check(to: TravelNode | undefined, mode: TravelMode = 'thopter', isTraveling = false) {
-    return checkTravel({ from, to, mode, isTraveling, adjacency: ADJACENCY })
+  function check(
+    to: TravelNode | undefined, mode: TravelMode = 'thopter', isTraveling = false,
+    mandatoryDialogueOpen = false,
+  ) {
+    return checkTravel({ from, to, mode, isTraveling, adjacency: ADJACENCY, mandatoryDialogueOpen })
   }
 
   it('allows a discovered adjacent destination', () => {
@@ -156,6 +159,19 @@ describe('checkTravel', () => {
     })
     expect(result).toEqual({ ok: false, reason: 'already-traveling' })
   })
+
+  // W3i remediation: the blind-play re-check's softlock repro was travel
+  // starting while a mandatory beat (DialogueSystem.ts's canCloseDialogue)
+  // was still open. The engine, not just the UI, must refuse this.
+  it('refuses travel while a mandatory dialogue is open, ahead of an otherwise-legal destination', () => {
+    const to = node({ id: 'to', regionId: 'r2', position: { x: 600, y: 0 } })
+    expect(check(to, 'thopter', false, true)).toEqual({ ok: false, reason: 'finish-the-conversation' })
+  })
+
+  it('allows travel once the mandatory dialogue is no longer open', () => {
+    const to = node({ id: 'to', regionId: 'r2', position: { x: 600, y: 0 } })
+    expect(check(to, 'thopter', false, false).ok).toBe(true)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -170,6 +186,7 @@ describe('rejectionMessage', () => {
       'unknown-location',
       'undiscovered',
       'out-of-range',
+      'finish-the-conversation',
     ]
     const messages = reasons.map(rejectionMessage)
     expect(new Set(messages).size).toBe(reasons.length)

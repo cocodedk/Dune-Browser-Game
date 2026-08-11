@@ -35,13 +35,23 @@ export default function StatusBar() {
   // already routed 'game:pause' to onPause; only an emitter was missing.
   // Spacebar too, guarded off text-entry targets so it does not fight
   // SettlementModal's own number input.
+  //
+  // W3i fix: reads `useGameStore.getState().world.paused` at keypress time,
+  // not the `world` destructured from this render. The `[]`-deps effect
+  // installs its `onKey` closure once, at mount — a destructured `world`
+  // captured there goes stale the instant a mid-session loadGame()/newGame()
+  // swaps the store's `world` for a brand-new object (ui/store.ts), and
+  // "toggle pause" would then flip relative to a paused flag that no longer
+  // reflects the live campaign. `getState()` reads the CURRENT store value
+  // every time, so this never goes stale regardless of how many campaigns
+  // this one mounted StatusBar lives through.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.code !== 'Space') return
       const tag = (e.target as HTMLElement | null)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       e.preventDefault()
-      EventBus.emit('game:pause', { paused: !world.paused })
+      EventBus.emit('game:pause', { paused: !useGameStore.getState().world.paused })
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
