@@ -128,11 +128,15 @@ describe('production New: a fresh mid-session campaign processes its own day bou
     setWorld(withProspectingCrewAndVillage(seed)); initLoop()
     for (let d = 0; d <= 20; d++) advanceToDay(d)
 
-    // Production New sequence (store.ts newGame()): resetWorld() replaces
-    // the engine's world with a brand-new createInitialState() — no
-    // initLoop() call, exactly like loadGame(). IndexedDB's deleteSave()
-    // and the React store update are UI-layer concerns outside
-    // game-engine's surface; neither touches day bookkeeping.
+    // Production New sequence (store.ts newGame(difficulty), chunk W3b):
+    // setWorld(createInitialState(seed, difficulty)) replaces the engine's
+    // world with a brand-new state — no initLoop() call, exactly like
+    // loadGame(). resetWorld() stands in for that call here: difficulty
+    // only ever affects world.difficulty/world.quota's multiplier (see
+    // GameState.ts), never lastProcessedDay/rng bookkeeping, so it is an
+    // exact stand-in for this test's purposes. IndexedDB's deleteSave() and
+    // the React store update are UI-layer concerns outside game-engine's
+    // surface; neither touches day bookkeeping.
     resetWorld()
     setWorld(withProspectingCrewAndVillage(seed))
 
@@ -157,10 +161,12 @@ describe('production reload: the first frame after loading does not re-run the s
     const controlHash = hashState(world)
 
     // ACTUAL: identical replay to day 5, save via the production save path,
-    // then the real reload sequence — main.tsx's loadFromSave() deserializes
-    // into a fresh world object, then ThreeContainer's mount calls
-    // GameDriver.initLoop() before the first frame. No player command in
-    // between.
+    // then the real reload sequence (chunk W3b: a reload always re-shows
+    // the title screen — see ui/store.ts's `screen` doc) — the title's
+    // Continue button calls store.ts's loadGame(), which deserializes into
+    // a fresh world object via setWorld(), then ThreeContainer's mount
+    // (deferred until `screen` flips to 'game') calls GameDriver.initLoop()
+    // before the first frame. No player command in between.
     setWorld(withProspectingCrewAndVillage(seed)); initLoop()
     for (let d = 0; d <= 5; d++) advanceToDay(d)
     const daySaveBlob = serializeWorld(world)

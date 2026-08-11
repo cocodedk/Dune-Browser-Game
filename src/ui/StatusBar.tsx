@@ -1,8 +1,11 @@
 import { useGameStore } from './store'
 import { EventBus } from '../EventBus'
-import type { Difficulty } from '../types'
 import { useState, useEffect } from 'react'
 import { type as typo, button } from './theme'
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
 
 /** A labelled figure. Labels are words, not emoji — emoji do not scan. */
 function Readout({ label, value }: { label: string; value: string }) {
@@ -34,10 +37,6 @@ export default function StatusBar() {
     EventBus.emit('game:speed', { speed: s })
   }
 
-  function setDifficulty(d: Difficulty) {
-    EventBus.emit('game:difficulty', { difficulty: d })
-  }
-
   function toggleMute() {
     EventBus.emit('audio:mute')
   }
@@ -46,9 +45,15 @@ export default function StatusBar() {
     ? new Date(lastSaveTime).toTimeString().slice(0, 5)
     : null
 
+  // Reuses the current run's difficulty — the only surface that CHOOSES a
+  // difficulty is the title screen's New Campaign setup panel
+  // (ui/title/NewCampaignPanel.tsx); a mid-run reset still counts as one
+  // createInitialState() write, just with today's value carried forward
+  // rather than re-prompting (03-opening-experience.md "Title and run
+  // setup": difficulty is written once per campaign, not once ever).
   async function handleNew() {
     if (!window.confirm('Start a new game? Current progress will be lost.')) return
-    await newGame()
+    await newGame(difficulty)
   }
 
   return (
@@ -76,20 +81,15 @@ export default function StatusBar() {
           ))}
         </span>
       )}
-      {!goalAchieved && (
-        <span style={styles.item}>
-          Difficulty:
-          {(['easy', 'normal', 'hard'] as Difficulty[]).map(d => (
-            <button
-              key={d}
-              onClick={() => setDifficulty(d)}
-              style={{ ...button.base, ...(difficulty === d ? button.active : {}) }}
-            >
-              {d.charAt(0).toUpperCase() + d.slice(1)}
-            </button>
-          ))}
-        </span>
-      )}
+      {/*
+        Read-only — 03-opening-experience.md "Title and run setup":
+        "Difficulty is written once into campaign state and cannot change
+        until another new campaign begins." The mutable buttons that used to
+        sit here (game:difficulty) are gone from the whole app, not hidden;
+        see runtime/CommandWiring.ts's header and types.bus.ts.
+      */}
+      <Readout label="difficulty" value={capitalize(difficulty)} />
+
       <span style={styles.item}>
         <button style={styles.speedBtn} onClick={toggleMute}>
           {isMuted ? '🔇 Off' : '🔊 On'}

@@ -7,7 +7,7 @@
 // and let assertions run against those.
 
 import type { Camera, Object3D } from 'three'
-import type { SceneModeId } from '../../types'
+import type { SceneModeId, Difficulty } from '../../types'
 import { inspectScene } from './inspectScene'
 import { inspectLights, type InspectedLight } from './inspectLights'
 
@@ -102,6 +102,13 @@ export interface DebugHandle {
     travelTarget: string | null
     spice: number
     inDialogue: boolean
+    /**
+     * Written once at campaign creation (03-opening-experience.md "Title
+     * and run setup") — exposed here so an E2E driver can prove the New
+     * Campaign setup panel's choice actually reached engine state, without
+     * reading the DOM (chunk W3b's difficulty-immutability check).
+     */
+    difficulty: Difficulty
   }
   /**
    * Populated by debugSources.ts. Read-only campaign state hash

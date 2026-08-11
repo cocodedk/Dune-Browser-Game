@@ -1,8 +1,8 @@
 import { create } from 'zustand'
-import type { WorldState, Village, Region, RegionId } from '../types'
+import type { WorldState, Village, Region, RegionId, Difficulty } from '../types'
 import type { SietchState } from '../game-engine/sietch/types'
 import { EventBus } from '../EventBus'
-import { createInitialState, resetWorld, setWorld } from '../game-engine/GameState'
+import { createInitialState, setWorld } from '../game-engine/GameState'
 import { currentNode } from '../game-engine/DialogueSystem'
 import type { DialogueNode } from '../types'
 import {
@@ -19,13 +19,27 @@ interface UIState {
   selectedGroupId: string | null
   currentDialogueNode: DialogueNode | null
   lastSaveTime: number | null
+  /**
+   * The top-level app gate (03-opening-experience.md "Title and run
+   * setup": "The title screen appears before the renderer begins advancing
+   * campaign time"). App.tsx renders TitleScreen while this is 'title' and
+   * does not mount ThreeContainer at all — not paused, not constructed —
+   * so GameDriver/GameLoop never tick pre-entry. Starts 'title' on every
+   * fresh page load, including a mid-run reload: main.tsx no longer
+   * auto-installs a save before mount, so a reload always re-shows the
+   * title with Continue available, never resumes a run silently (03's
+   * chosen reading — Continue is one extra click, not a fast-resume).
+   * Flips to 'game' inside loadGame()/newGame() on success — there is no
+   * separate 'game' -> 'title' transition in this chunk's scope.
+   */
+  screen: 'title' | 'game'
   // Actions
   selectVillage: (v: Village | null) => void
   selectGroup: (id: string | null) => void
   refreshDialogueNode: () => void
   saveGame: () => Promise<void>
   loadGame: () => Promise<boolean>
-  newGame: () => Promise<void>
+  newGame: (difficulty: Difficulty) => Promise<void>
 }
 
 /**
@@ -91,6 +105,7 @@ export const useGameStore = create<UIState>((set, get) => {
     selectedGroupId: null,
     currentDialogueNode: null,
     lastSaveTime: null,
+    screen: 'title',
     selectVillage: (v) => set({ selectedVillage: v }),
     selectGroup: (id) => set({ selectedGroupId: id }),
     refreshDialogueNode: () => set({ currentDialogueNode: currentNode() }),
@@ -98,19 +113,29 @@ export const useGameStore = create<UIState>((set, get) => {
       await persistSave(get().world)
       set({ lastSaveTime: Date.now() })
     },
+    // Continue and Load Campaign (ui/title/) both call this directly — the
+    // rolling-save model (WP11 owns multiple slots) means there is only one
+    // save to load either way.
     loadGame: async () => {
       const loaded = await persistLoad()
       if (!loaded) return false
       setWorld(loaded)
       const s = get()
-      set({ world: loaded, lastSaveTime: Date.now(), ...refreshSelections(s, loaded) })
+      set({ world: loaded, lastSaveTime: Date.now(), screen: 'game', ...refreshSelections(s, loaded) })
       EventBus.emit('world:updated', { state: loaded })
       return true
     },
-    newGame: async () => {
+    // The New Campaign setup panel's one call site for creating a run
+    // (03 "Title and run setup": difficulty is written once, here, via
+    // createInitialState — never mutated afterward). `resetWorld()` and
+    // `setWorld()` both set GameState's module-level `world` binding; using
+    // `setWorld` here keeps this store's `world` and GameState's `world` the
+    // SAME object reference from the first frame, matching loadGame()'s own
+    // pattern instead of building a second, momentarily-divergent copy.
+    newGame: async (difficulty) => {
       await deleteSave()
-      resetWorld()
-      const fresh = createInitialState()
+      const fresh = createInitialState(undefined, difficulty)
+      setWorld(fresh)
       set({
         world: fresh,
         selectedVillage: null,
@@ -118,6 +143,7 @@ export const useGameStore = create<UIState>((set, get) => {
         selectedGroupId: null,
         currentDialogueNode: null,
         lastSaveTime: null,
+        screen: 'game',
       })
       EventBus.emit('world:updated', { state: fresh })
     },

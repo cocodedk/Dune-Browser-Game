@@ -1,4 +1,6 @@
 import { lazy, Suspense } from 'react'
+import { useGameStore } from './ui/store'
+import TitleScreen from './ui/title/TitleScreen'
 import StatusBar from './ui/StatusBar'
 import QuotaLedger from './ui/QuotaLedger'
 import CrewPanel from './ui/CrewPanel'
@@ -28,6 +30,15 @@ const GameContainer = lazy(() => import('./ui/ThreeContainer'))
  * Arrakis is the subject; the panels are instruments read against it.
  */
 export default function App() {
+  // 03-opening-experience.md "Title and run setup": "The title screen
+  // appears before the renderer begins advancing campaign time." Gating by
+  // NOT MOUNTING GameContainer at all (rather than pausing it once mounted)
+  // is the strongest form of that: GameDriver/GameLoop never tick, and
+  // ThreeContainer's wireCommands()/initLoop() never run, until the store's
+  // `screen` flips to 'game' inside loadGame()/newGame() (ui/store.ts).
+  const screen = useGameStore(s => s.screen)
+  if (screen === 'title') return <TitleScreen />
+
   return (
     <div style={styles.root}>
       {/* Full-bleed 3D view, underneath everything */}

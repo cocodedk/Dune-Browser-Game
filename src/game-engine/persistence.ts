@@ -87,19 +87,70 @@ export async function saveGame(world: WorldState): Promise<void> {
   });
 }
 
-export async function loadGame(): Promise<WorldState | null> {
-  const db = await openDB();
-  const result = await new Promise<SaveData | undefined>((resolve, reject) => {
+/** The raw envelope read, shared by loadGame() and probeSave() so there is
+ * exactly one IndexedDB read path. `undefined` means no save exists. */
+function readRaw(): Promise<SaveData | undefined> {
+  return openDB().then(db => new Promise<SaveData | undefined>((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readonly');
     const req = tx.objectStore(STORE_NAME).get(KEY);
     req.onsuccess = () => resolve(req.result as SaveData | undefined);
     tx.oncomplete = () => db.close();
     tx.onerror = () => { db.close(); reject(tx.error); };
-  });
+  }));
+}
+
+export async function loadGame(): Promise<WorldState | null> {
+  const result = await readRaw();
   if (!result) return null;
   // A save that cannot be migrated degrades to "no save" — starting a fresh
   // run beats loading a half-populated world that crashes minutes later.
+  // (The title screen's Load Campaign path needs the corrupt/absent
+  // distinction this collapses — see classifySave/probeSave below, which
+  // read the same raw envelope through migrateSave without this fallback.)
   return fromEnvelope(result);
+}
+
+/** What the title screen needs to know about the one rolling save, before
+ * committing to loading it. Three-way rather than loadGame()'s two-way
+ * (null | WorldState): 03-opening-experience.md "Title and run setup"
+ * requires a save that fails migration to show an explicit error, never
+ * silently read as "no save exists" the way loadGame()'s own fallback does
+ * on purpose for the in-game Load button. */
+export type SaveProbe =
+  | { status: 'absent' }
+  | { status: 'corrupt' }
+  | { status: 'valid'; savedAt: number; day: number }
+
+/**
+ * Pure classification of a raw envelope — no IndexedDB, so ui/title's tests
+ * can exercise every branch (absent/corrupt/valid) against real
+ * VersionedSave-shaped objects without touching a database. `migrateSave` is
+ * already pure; this only adds the display-metadata extraction and the
+ * `savedAt` type guard (a hand-edited or pre-versioning save could carry a
+ * non-numeric value there, and NaN must never reach the title's "Nd ago"
+ * formatting silently).
+ */
+export function classifySave(raw: SaveData | undefined): SaveProbe {
+  if (!raw) return { status: 'absent' };
+  const migrated = migrateSave(raw);
+  if (!migrated) return { status: 'corrupt' };
+  if (typeof raw.savedAt !== 'number' || !Number.isFinite(raw.savedAt)) return { status: 'corrupt' };
+  // lastProcessedDay is the canonical day-boundary bookkeeping value
+  // (TimeSystem.ts's crossedDays()) and is preferred when present; a save
+  // taken before any day boundary ever ran (still possible during the
+  // briefing pause) carries `null` there, so fall back to elapsed time.
+  // DAY_SECONDS mirrors saveMigration.ts's migrateV3ToV4 (60) rather than
+  // importing TimeSystem, which would cycle back through GameState.
+  const day = migrated.lastProcessedDay ?? Math.floor(migrated.time / 60);
+  return { status: 'valid', savedAt: raw.savedAt, day };
+}
+
+/** Read the rolling save and classify it — the title screen's one entry
+ * point for Continue/Load Campaign metadata. Never installs the result into
+ * live `world` state (see game-engine/GameState.ts): a title-screen probe
+ * must not run a campaign before the player has chosen to. */
+export async function probeSave(): Promise<SaveProbe> {
+  return classifySave(await readRaw());
 }
 
 export async function deleteSave(): Promise<void> {

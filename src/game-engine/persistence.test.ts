@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { createInitialState } from './GameState';
-import { serializeWorld, deserializeWorld } from './persistence';
+import { serializeWorld, deserializeWorld, classifySave } from './persistence';
+import { CURRENT_SAVE_VERSION } from './saveMigration';
+import type { VersionedSave } from './saveMigration';
 import type { WorldState } from '../types';
 
 describe('persistence serialization', () => {
@@ -86,5 +88,51 @@ describe('persistence serialization', () => {
     const restored = deserializeWorld(serializeWorld(state));
     expect(restored.ending).toBe('loss_patience');
     expect(restored.goalAchieved).toBe(true);
+  });
+});
+
+// classifySave is the title screen's corrupt/absent/valid split (chunk
+// W3b) — pure once given a raw envelope, exercised here against REAL
+// production envelopes (built via serializeWorld, the same function
+// saveGame() calls) rather than hand-shaped fakes, per 03-opening-
+// experience.md "Title and run setup": a save that fails migration must
+// show an explicit error, never silently read as "no save".
+describe('classifySave', () => {
+  it('undefined (no envelope in IndexedDB) -> absent', () => {
+    expect(classifySave(undefined)).toEqual({ status: 'absent' });
+  });
+
+  it('a real envelope -> valid, day derived from lastProcessedDay when present', () => {
+    const state = createInitialState(1, 'hard');
+    state.lastProcessedDay = 4;
+    const raw = JSON.parse(serializeWorld(state)) as VersionedSave;
+    expect(classifySave(raw)).toEqual({ status: 'valid', savedAt: raw.savedAt, day: 4 });
+  });
+
+  it('a save with no lastProcessedDay yet falls back to elapsed time / 60', () => {
+    const state = createInitialState();
+    state.time = 185; // day 3, partway through
+    state.lastProcessedDay = null;
+    const raw = JSON.parse(serializeWorld(state)) as VersionedSave;
+    expect(classifySave(raw)).toEqual({ status: 'valid', savedAt: raw.savedAt, day: 3 });
+  });
+
+  it('a structurally broken save (no villages/player) -> corrupt, never silently absent', () => {
+    const raw: VersionedSave = {
+      version: CURRENT_SAVE_VERSION, savedAt: Date.now(), state: { not: 'a world' },
+    };
+    expect(classifySave(raw)).toEqual({ status: 'corrupt' });
+  });
+
+  it('a save from a newer, unrecognised schema version -> corrupt', () => {
+    const raw = JSON.parse(serializeWorld(createInitialState())) as VersionedSave;
+    raw.version = CURRENT_SAVE_VERSION + 1;
+    expect(classifySave(raw)).toEqual({ status: 'corrupt' });
+  });
+
+  it('a non-numeric savedAt is corrupt, never formatted downstream as "NaNd ago"', () => {
+    const raw = JSON.parse(serializeWorld(createInitialState())) as VersionedSave;
+    (raw as unknown as { savedAt: unknown }).savedAt = 'not-a-timestamp';
+    expect(classifySave(raw).status).toBe('corrupt');
   });
 });

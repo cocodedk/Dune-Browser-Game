@@ -152,16 +152,18 @@ describe('wireCommands', () => {
     EventBus.off('world:updated', onUpdated)
   })
 
-  it('game:difficulty sets world.difficulty and re-broadcasts world:updated', () => {
-    let seen: string | null = null
-    const onUpdated = ({ state }: { state: typeof world }): void => { seen = state.difficulty }
-    EventBus.on('world:updated', onUpdated)
+  // 'game:difficulty' is gone (chunk W3b, types.bus.ts) — difficulty is
+  // written once at createInitialState() and has no in-game mutation seam.
+  // Proven at runtime, not just by the removed type: the raw string bypasses
+  // BusEvents entirely, exactly what a stray un-typed `.on('game:difficulty', ...)`
+  // re-add would do, and nothing answers it.
+  it('an untyped game:difficulty emission changes nothing — the seam is gone, not just unused', () => {
+    const bus = EventBus as unknown as { emit: (event: string, payload: unknown) => void }
+    const before = world.difficulty
 
-    EventBus.emit('game:difficulty', { difficulty: 'hard' })
+    bus.emit('game:difficulty', { difficulty: 'hard' })
 
-    expect(world.difficulty).toBe('hard')
-    expect(seen).toBe('hard')
-    EventBus.off('world:updated', onUpdated)
+    expect(world.difficulty).toBe(before)
   })
 
   it('unsubscribe stops routing further commands', () => {

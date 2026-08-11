@@ -74,6 +74,7 @@ export function wireDebugSources(
         travelTarget: world.player.travelTarget,
         spice: world.player.spice,
         inDialogue: world.dialogue !== null,
+        difficulty: world.difficulty,
       }),
       scene: () => modes.scene,
       camera: () => modes.active?.camera ?? handle.camera,

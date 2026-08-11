@@ -6,7 +6,7 @@
 // than the middle of the world-state types anyway.
 
 import type {
-  VillageId, SceneModeId, WorldState, GameEvent, Difficulty, RegionId,
+  VillageId, SceneModeId, WorldState, GameEvent, RegionId,
 } from './types'
 import type { EquipmentKind, TroopTask } from './game-engine/troops/types'
 
@@ -24,7 +24,11 @@ export interface BusEvents {
   'player:travel': { targetVillageId: VillageId };
   'player:choose': { choiceId: string };
   'game:speed': { speed: number };
-  'game:difficulty': { difficulty: Difficulty };
+  // No 'game:difficulty' here — 03-opening-experience.md "Title and run
+  // setup": difficulty is written once, at createInitialState() (the New
+  // Campaign setup panel's one call site), and is immutable for the run.
+  // Removing the bus entry (not just its handler) makes an in-game mutation
+  // seam impossible to add back without this comment moving with it.
   'territory:selected': { regionId: RegionId };
   'audio:mute': void;
   'player:pledge_sietch': { villageId: VillageId };

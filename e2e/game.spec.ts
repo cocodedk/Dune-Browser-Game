@@ -1,4 +1,11 @@
 import { test, expect } from '@playwright/test'
+import { enterGame, enterGameFromTitle } from './helpers'
+
+// A title screen now sits in front of every scenario here (chunk W3b:
+// 03-opening-experience.md "Title and run setup" — "The title screen
+// appears before the renderer begins advancing campaign time"). Every test
+// below enters via enterGame()/enterGameFromTitle() (e2e/helpers.ts) before
+// asserting on in-game UI; each test's ORIGINAL assertions are unchanged.
 
 // ---------------------------------------------------------------------------
 // Test 1 — Page loads
@@ -7,7 +14,10 @@ test('page loads with 200 and no JS errors', async ({ page }) => {
   const jsErrors: string[] = []
   page.on('pageerror', err => jsErrors.push(err.message))
 
-  const response = await page.goto('/')
+  // enterGame() both captures the raw navigation Response (for the status
+  // check below) and enters a campaign, so "no JS errors" now covers the
+  // title -> New Campaign transition too, not just the bare page load.
+  const response = await enterGame(page)
   expect(response?.status()).toBe(200)
 
   const title = await page.title()
@@ -23,8 +33,7 @@ test('page loads with 200 and no JS errors', async ({ page }) => {
 // Test 2 — Game UI structure visible
 // ---------------------------------------------------------------------------
 test('game UI structure is visible after initialisation', async ({ page }) => {
-  await page.goto('/')
-  await page.waitForTimeout(2000)
+  await enterGame(page)
 
   // Full-bleed redesign: the title is the floating word mark, and the hint
   // describes map controls rather than the old sidebar layout.
@@ -41,8 +50,7 @@ test('game UI structure is visible after initialisation', async ({ page }) => {
 // Test 3 — Status bar renders with game stats
 // ---------------------------------------------------------------------------
 test('status bar renders spice and speed buttons', async ({ page }) => {
-  await page.goto('/')
-  await page.waitForTimeout(2000)
+  await enterGame(page)
 
   // Readouts are a word label beside a tabular figure, not "Spice: 0".
   // "troops"/"influence" readouts removed in WP02e (legacy-authority-
@@ -59,8 +67,7 @@ test('status bar renders spice and speed buttons', async ({ page }) => {
 // Test 4 — Speed buttons are interactive
 // ---------------------------------------------------------------------------
 test('speed buttons change active state on click', async ({ page }) => {
-  await page.goto('/')
-  await page.waitForTimeout(2000)
+  await enterGame(page)
 
   const speed2x = page.getByRole('button', { name: '2×' })
   const speed5x = page.getByRole('button', { name: '5×' })
@@ -76,8 +83,7 @@ test('speed buttons change active state on click', async ({ page }) => {
 // Test 5 — Village panel default state
 // ---------------------------------------------------------------------------
 test('village panel shows placeholder text by default', async ({ page }) => {
-  await page.goto('/')
-  await page.waitForTimeout(2000)
+  await enterGame(page)
 
   await expect(
     page.locator('text=Click a village on the map to inspect it.')
@@ -88,8 +94,10 @@ test('village panel shows placeholder text by default', async ({ page }) => {
 // Test 6 — Event log renders
 // ---------------------------------------------------------------------------
 test('event log renders with empty state', async ({ page }) => {
-  await page.goto('/')
-  // Check immediately before the AI has time to fire its first decision
+  // No day-boundary system runs unprompted in campaign mode any more (see
+  // Test 7's own header comment) — entering via the title no longer races
+  // an "AI decision" that does not exist on this path.
+  await enterGame(page)
   await expect(page.locator('text=Event Log')).toBeVisible()
   const isEmpty = await page.locator('text=No events yet.').isVisible()
   const hasEvents = await page.locator('[style*="flex-start"]').count() > 0
@@ -125,18 +133,21 @@ test('event log renders with empty state', async ({ page }) => {
 // __DUNE__ only attaches with `?debug=1` on a production/preview build
 // (game-render/core/DebugHandle.ts's shouldAttachDebug: import.meta.env.DEV
 // is false under `npm run preview`, which is what this suite's webServer
-// runs) — plain `/` would leave window.__DUNE__ undefined here.
+// runs) — plain `/` would leave window.__DUNE__ undefined here. It also
+// only attaches once ThreeContainer mounts (chunk W3b: the title screen
+// gates that mount), so the debug-query navigation happens BEFORE entering
+// via the title, not as a substitute for it.
 //
 // UNVERIFIED BY THE BUILDER: no Playwright run was made (not permitted this
-// chunk). The lead should watch for: __DUNE__ attach timing after
-// page.goto (the 2s wait mirrors every other test in this file, but
-// ThreeContainer's mount is async); and that pick('arrakeen') actually
+// chunk). The lead should watch for: __DUNE__ attach timing after entering
+// (enterGameFromTitle's own canvas-attached wait plus its 2s buffer mirrors
+// every other test in this file); and that pick('arrakeen') actually
 // resolves to the 'dialogue' branch and not 'none' (would only happen if
 // decideVisit's traveling/dialogue guards are somehow already tripped on a
 // fresh load, which nothing in this test does).
 test('a production pick action emits a logged event', async ({ page }) => {
   await page.goto('/?debug=1')
-  await page.waitForTimeout(2000)
+  await enterGameFromTitle(page)
 
   await page.evaluate(() => window.__DUNE__?.pick('arrakeen'))
   await page.waitForTimeout(500)
@@ -156,8 +167,7 @@ test('a production pick action emits a logged event', async ({ page }) => {
 // Test 8 — Dialogue panel hidden by default
 // ---------------------------------------------------------------------------
 test('dialogue panel overlay is not visible on load', async ({ page }) => {
-  await page.goto('/')
-  await page.waitForTimeout(2000)
+  await enterGame(page)
 
   // No dialog role element should be visible
   const dialogVisible = await page.getByRole('dialog').isVisible().catch(() => false)

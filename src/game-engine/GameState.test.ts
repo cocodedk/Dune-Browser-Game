@@ -54,3 +54,32 @@ describe('createInitialState: new-campaign-normal fixture', () => {
     expect(createInitialState().rng.step).toBe(0)
   })
 })
+
+// 03-opening-experience.md "Title and run setup": "Difficulty is written
+// once into campaign state and cannot change until another new campaign
+// begins." createInitialState is that one write site — see ui/title/
+// NewCampaignPanel.tsx's single call to store.ts's newGame(difficulty).
+// The negative half of "written once" (no other production writer exists)
+// is proven at runtime by runtime/CommandWiring.test.ts's "an untyped
+// game:difficulty emission changes nothing" test, and at the type level by
+// 'game:difficulty' being absent from types.bus.ts's BusEvents entirely.
+describe('createInitialState: difficulty is written once, at construction', () => {
+  it('defaults to normal when no difficulty is given', () => {
+    expect(createInitialState().difficulty).toBe('normal')
+  })
+
+  it('writes the chosen difficulty onto world.difficulty', () => {
+    expect(createInitialState(1, 'easy').difficulty).toBe('easy')
+    expect(createInitialState(1, 'hard').difficulty).toBe('hard')
+  })
+
+  it('threads difficulty into the seeded quota, not just the label — Q1 scales with it from frame one', () => {
+    // difficulty.ts's real quotaMultiplier values: easy 0.75, normal 1.0,
+    // hard 1.3, against the base Q1 amount of 90 (quota/quota.ts's
+    // BASE_AMOUNTS[0]), rounded by createQuotaState itself
+    // (Math.round(90 * 0.75) = 68, not 67.5).
+    expect(createInitialState(1, 'easy').quota.amount).toBe(68)
+    expect(createInitialState(1, 'normal').quota.amount).toBe(90)
+    expect(createInitialState(1, 'hard').quota.amount).toBe(117)
+  })
+})
