@@ -92,11 +92,14 @@ test('ordering prospect without a thopter refuses before confirmation, naming th
 })
 
 // Row (f): "Closes during travel or settlement | Autosave restores the same
-// travel or pending-decision state without duplication." No production path
-// autosaves at the instant a pending settlement is created (only
-// opening.complete does, commandHandlers.ts) — this exercises the one save
-// mechanism that exists today, the rolling save (progress.md Round 11:
-// "autosave = the existing rolling save, slots are WP11's").
+// travel or pending-decision state without duplication." Chunk W3g wired a
+// production autosave for exactly this moment (EconomySystem.ts's
+// runTributeCheck sets a flag; runtime/pendingSettlementAutosave.ts consumes
+// it every tick — see that file's own doc), so the state under test here is
+// no longer reachable ONLY through the manual "Save" button — this test
+// still uses it deliberately, to keep proving reload continuity
+// independently of which save fired it (the rolling save is the one
+// mechanism either way; slots are WP11's).
 test('reload during the pending Q1 settlement restores the same decision, no duplication', async ({ page }) => {
   await page.goto('/?debug=1')
   await enterGameFromTitle(page)
@@ -110,6 +113,12 @@ test('reload during the pending Q1 settlement restores the same decision, no dup
   // stronger proof than reading one figure off the modal, and the same
   // "browser trace hashes before/after" pattern hashState's own doc names.
   const hashBefore = await page.evaluate(() => window.__DUNE__?.hashState?.())
+  // 03's opening-reload-pending fixture: "same selected amount defaults" —
+  // untouched (no preset clicked), so this is SettlementModal's own
+  // `defaultSettleAmount(pending)` read straight off the DOM. Engine-visible
+  // because `pending` itself round-trips byte-identical (the hash proves
+  // it), and `defaultSettleAmount` is a pure function of it.
+  const defaultAmountBefore = await page.locator('input[type="number"]').inputValue()
 
   await clickButton(page, 'Save')
   await page.waitForTimeout(500) // IndexedDB round trip, no on-screen signal
@@ -122,6 +131,8 @@ test('reload during the pending Q1 settlement restores the same decision, no dup
   const hashAfter = await page.evaluate(() => window.__DUNE__?.hashState?.())
   expect(hashAfter).toBe(hashBefore)
   await expect(page.getByRole('button', { name: 'Settle' })).toBeVisible()
+  const defaultAmountAfter = await page.locator('input[type="number"]').inputValue()
+  expect(defaultAmountAfter).toBe(defaultAmountBefore)
 
   // Settling still works exactly once — one decision, not a duplicate.
   await clickButton(page, 'Full (', false)

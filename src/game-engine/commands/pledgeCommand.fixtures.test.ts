@@ -15,7 +15,7 @@ import { rootNodeForCharacter } from '../dialogue/select'
 import { startDialogue, chooseDialogue } from '../DialogueSystem'
 import { REDWALL_TRUST_TREE_ID } from '../../data/dialogue'
 import { INITIAL_DIALOGUE_STATES } from '../../data/dialogueStates'
-import { PLEDGE_THRESHOLD, NEGLECT_DAYS } from '../sietch/loyalty'
+import { PLEDGE_THRESHOLD, NEGLECT_DAYS, CHARISMA_PER_PLEDGE } from '../sietch/loyalty'
 import { EARNED_TRUST_FLAG } from '../acts/openingObjectives'
 
 function freshAtTabr(): ReturnType<typeof createInitialState> {
@@ -49,7 +49,9 @@ describe('pledge-at-threshold: loyalty 60', () => {
     const outcome = runPledgeCommand('sietch_tabr')
 
     expect(outcome).toEqual({ ok: true, code: 'pledged' })
-    expect(world.charisma).toBe(25)
+    // Chunk W3g: CHARISMA_PER_PLEDGE dropped 5 -> 4 (sietch/loyalty.ts's own
+    // doc) — 20 + 4 = 24, not the pre-W3g 25.
+    expect(world.charisma).toBe(20 + CHARISMA_PER_PLEDGE)
     expect(world.troopGroups).toHaveLength(1)
     expect(world.flags['pledged.count']).toBe(1)
     // The act machine's projection reads world.sietches live (actRun.ts's

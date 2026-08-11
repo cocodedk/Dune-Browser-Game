@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { runPledgeCommand } from './pledgeCommand'
 import { world, setWorld, createInitialState } from '../GameState'
+import { CHARISMA_PER_PLEDGE } from '../sietch/loyalty'
 
 function withLoyalty(villageId: string, loyalty: number): void {
   world.sietches = world.sietches.map(s => s.villageId === villageId ? { ...s, loyalty } : s)
@@ -32,7 +33,9 @@ describe('runPledgeCommand', () => {
     const sietch = world.sietches.find(s => s.villageId === 'sietch_tabr')
     expect(sietch?.pledgedToPlayer).toBe(true)
     expect(sietch?.crewIds).toEqual(['group_sietch_tabr'])
-    expect(world.charisma).toBe(charismaBefore + 5)
+    // Chunk W3g: CHARISMA_PER_PLEDGE dropped 5 -> 4 (sietch/loyalty.ts's own
+    // doc, citing the opening-charisma-cap fixture).
+    expect(world.charisma).toBe(charismaBefore + CHARISMA_PER_PLEDGE)
     expect(world.flags['pledged.count']).toBe(1)
     const crew = world.troopGroups.find(g => g.id === 'group_sietch_tabr')
     expect(crew).toBeDefined()

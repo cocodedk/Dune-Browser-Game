@@ -59,8 +59,24 @@ export const onSpeakTo = ({ characterId }: BusEvents['player:speak_to']): void =
   else if (action.kind === 'event') pushEvent('village_selected', action.message)
 }
 
+/**
+ * Recovery row (f)'s travel half (03-opening-experience.md: "Closes during
+ * travel or settlement | Autosave restores the same travel or pending-
+ * decision state without duplication"). Same edge-detected, fire-and-forget
+ * shape as onSettle's own opening-complete autosave below: startTravel is a
+ * pure engine mutation with no save call of its own (TravelSystem.ts stays
+ * IO-free), so this wiring layer is the one place that decides WHEN to
+ * persist — checked by state transition (idle/other -> traveling across
+ * this exact call), not a live re-check of travelCheckTo, so a refused
+ * dispatch (already traveling, unreachable target, same location) saves
+ * nothing.
+ */
 export const onTravel = ({ targetVillageId }: BusEvents['player:travel']): void => {
+  const wasTraveling = world.player.state === 'traveling'
   startTravel(targetVillageId)
+  if (!wasTraveling && world.player.state === 'traveling') {
+    void saveGame(world).catch(() => {})
+  }
 }
 export const onChoose = ({ choiceId }: BusEvents['player:choose']): void => {
   chooseDialogue(choiceId)

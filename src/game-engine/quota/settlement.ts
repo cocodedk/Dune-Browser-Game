@@ -96,3 +96,21 @@ export function encodeSettlementBand(band: PaymentBand): number {
 export function decodeSettlementBand(code: number): PaymentBand {
   return CODES_BAND[code] ?? 'full'
 }
+
+/**
+ * Autosave signal for a freshly-created pending settlement (03-opening-
+ * experience.md recovery row (f): "Closes during travel or settlement |
+ * Autosave restores the same travel or pending-decision state without
+ * duplication"). Same shape as Q1_DEBRIEF_PENDING_FLAG above: EconomySystem.ts's
+ * runTributeCheck sets this the instant it creates a new decision (still pure
+ * `world` mutation, no IO); a runtime/ hook (mirroring runtime/q1Debrief.ts,
+ * called every frame from GameDriver.tick) reads it, fires the rolling
+ * saveGame(), and consumes the flag back to false — keeping every IndexedDB
+ * call in runtime/, never inside game-engine/ (persistence.ts is the one
+ * exception: it IS the IO boundary module, but nothing under game-engine/
+ * ever imports it — only runtime/commandHandlers.ts and the new hook do).
+ * One-shot per decision: settleCommand.ts clears `world.pendingSettlement`
+ * on resolution, and runTributeCheck only rebuilds a decision once a new
+ * deadline comes due, so this cannot fire twice for the same pause.
+ */
+export const SETTLEMENT_PENDING_AUTOSAVE_FLAG = 'settlement.pending.autosave'

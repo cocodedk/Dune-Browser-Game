@@ -8,6 +8,7 @@ import { world } from '../game-engine/GameState'
 import { update as engineUpdate, initLoop as engineInitLoop } from '../game-engine/GameLoop'
 import { EventBus } from '../EventBus'
 import { maybeOpenQ1Debrief } from './q1Debrief'
+import { maybeAutosavePendingSettlement } from './pendingSettlementAutosave'
 
 const UI_UPDATE_INTERVAL_MS = 100 // throttle for world:updated / renderer refresh
 
@@ -35,6 +36,9 @@ export function tick(deltaMs: number): boolean {
   // runtime/q1Debrief.ts's own doc for why this lives here rather than
   // inside settleCommand.ts itself.
   maybeOpenQ1Debrief()
+  // Recovery row (f)'s settlement-pause autosave — see
+  // runtime/pendingSettlementAutosave.ts's own doc.
+  maybeAutosavePendingSettlement()
 
   updateTimer += deltaMs
   if (updateTimer < UI_UPDATE_INTERVAL_MS) return false

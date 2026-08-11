@@ -9,7 +9,10 @@ import { world } from './GameState'
 import { currentDay } from './TimeSystem'
 import { isDue, totalDue } from './quota/quota'
 import { canOrderRemotely } from './prescience/prescience'
-import { buildPendingSettlement, AUTO_SHIP_UNLOCKED_FLAG, AUTO_SHIP_ENABLED_FLAG, AUTO_SHIP_AMOUNT_FLAG } from './quota/settlement'
+import {
+  buildPendingSettlement, AUTO_SHIP_UNLOCKED_FLAG, AUTO_SHIP_ENABLED_FLAG, AUTO_SHIP_AMOUNT_FLAG,
+  SETTLEMENT_PENDING_AUTOSAVE_FLAG,
+} from './quota/settlement'
 import { applySettlement } from './economy/settlementRun'
 import { evaluateEndingAuthority } from './economy/actRun'
 
@@ -67,6 +70,10 @@ export function runTributeCheck(): void {
   }
 
   world.pendingSettlement = buildPendingSettlement(world.quota, world.player.spice)
+  // Recovery row (f)'s autosave signal — see quota/settlement.ts's own doc
+  // for why this is a flag write, not a direct saveGame() call: game-engine/
+  // must never touch IndexedDB itself.
+  world.flags[SETTLEMENT_PENDING_AUTOSAVE_FLAG] = true
 }
 
 // Crew assignment moved to commands/assignCrewCommand.ts (chunk W2d) — the

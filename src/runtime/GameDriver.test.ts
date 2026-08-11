@@ -11,10 +11,15 @@ vi.mock('../game-engine/GameLoop', () => ({
   update: vi.fn(),
   initLoop: vi.fn(),
 }))
+vi.mock('../game-engine/persistence', () => ({
+  saveGame: vi.fn(() => Promise.resolve()),
+}))
 
 import { EventBus } from '../EventBus'
-import { world } from '../game-engine/GameState'
+import { world, setWorld, createInitialState } from '../game-engine/GameState'
 import { update as engineUpdate, initLoop as engineInitLoop } from '../game-engine/GameLoop'
+import { saveGame } from '../game-engine/persistence'
+import { SETTLEMENT_PENDING_AUTOSAVE_FLAG } from '../game-engine/quota/settlement'
 import { initLoop, tick } from './GameDriver'
 
 describe('GameDriver', () => {
@@ -63,5 +68,27 @@ describe('GameDriver', () => {
     tick(10)
     tick(10)
     expect(engineUpdate).toHaveBeenCalledTimes(2)
+  })
+
+  // Recovery row (f)'s settlement-pause autosave (runtime/
+  // pendingSettlementAutosave.ts) — real (unmocked) module, exercised the
+  // same way maybeOpenQ1Debrief already is on every tick() above.
+  it('autosaves once when the settlement-pending-autosave flag is set, and consumes it', () => {
+    setWorld(createInitialState())
+    world.flags[SETTLEMENT_PENDING_AUTOSAVE_FLAG] = true
+
+    tick(10)
+
+    expect(saveGame).toHaveBeenCalledTimes(1)
+    expect(saveGame).toHaveBeenCalledWith(world)
+    expect(world.flags[SETTLEMENT_PENDING_AUTOSAVE_FLAG]).toBe(false)
+  })
+
+  it('does not autosave on an ordinary tick with no pending-settlement flag', () => {
+    setWorld(createInitialState())
+
+    tick(10)
+
+    expect(saveGame).not.toHaveBeenCalled()
   })
 })
