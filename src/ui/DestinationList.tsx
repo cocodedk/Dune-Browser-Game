@@ -18,6 +18,7 @@ import { rejectionMessage } from '../game-engine/travel/rules'
 import { residentsAt } from '../game-engine/dialogue/residents'
 import { INITIAL_CHARACTERS } from '../data/characters'
 import { activeOpeningObjective } from '../game-engine/acts/openingObjectives'
+import { getGuidanceEnabled } from './settings/localSettings'
 import { type as typo, space, panelShell, divider } from './theme'
 
 // Mount gated in App.tsx (destinationsDisclosed), same pattern as
@@ -26,6 +27,13 @@ import { type as typo, space, panelShell, divider } from './theme'
 export default function DestinationList() {
   const { world } = useGameStore()
 
+  // "Disabling guidance removes coach marks and highlighted controls" (03
+  // "Title and run setup", SettingsPanel.tsx's own player-facing copy) — the
+  // ★/tint below is exactly such a highlighted control, so it is gated the
+  // same as CoachMark.tsx even though this row predates that component.
+  // The row itself (name, travel time, residents) is never gated — that is
+  // what the "dismisses every coach mark" recovery row rests on.
+  const guidance = getGuidanceEnabled()
   const activeTarget = activeOpeningObjective(world)?.targetHint
   const objectiveTargetId = activeTarget?.kind === 'location' ? activeTarget.id : null
 
@@ -41,12 +49,13 @@ export default function DestinationList() {
       {known.map(v => {
         const check = travelCheckTo(v.id)
         const residents = residentsAt(INITIAL_CHARACTERS, v.id)
-        const isObjective = v.id === objectiveTargetId
+        const isObjective = guidance && v.id === objectiveTargetId
         return (
           <button
             key={v.id}
             disabled={!check.ok}
             onClick={() => travel(v.id)}
+            data-coach={`destination-${v.id}`}
             style={{
               ...styles.row,
               ...(check.ok ? {} : styles.rowDisabled),

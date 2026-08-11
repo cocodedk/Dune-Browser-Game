@@ -63,7 +63,7 @@ export default function QuotaLedger() {
   }
 
   return (
-    <div style={panelShell}>
+    <div style={panelShell} data-coach="quota-ledger">
       <div style={{ ...row, marginBottom: space.sm }}>
         <span style={type.heading}>Imperial Tribute</span>
         <PatiencePips value={quota.patience} />

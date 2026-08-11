@@ -44,7 +44,11 @@ export const OBJECTIVE_COPY: Record<ObjectiveId, ObjectiveCopy> = {
   },
   'act1.order_first_harvest': {
     title: 'Put your first crew to work',
-    substeps: ['Assign them to a known spice field'],
+    // 03 "Recovery and refusal behavior": "Waits with no crew order |
+    // ...objective points to the idle crew without automatically assigning
+    // it" — named explicitly rather than a generic "assign them", so the
+    // objective line itself is the pointer this recovery row calls for.
+    substeps: ['Your new crew stands idle until you assign a field'],
     why: 'A pledge alone earns nothing — spice only moves once a crew ' +
       'is actually working a field.',
   },

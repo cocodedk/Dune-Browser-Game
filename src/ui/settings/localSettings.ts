@@ -19,6 +19,9 @@ export interface KeyValueStore {
 }
 
 const GUIDANCE_KEY = 'dune.settings.guidanceEnabled'
+/** One JSON object, `{ [dataCoachKey]: true }` — which coach marks the
+ * player has dismissed this guidance-on session (W3f). */
+const DISMISSED_KEY = 'dune.settings.coachDismissed'
 
 function defaultStore(): KeyValueStore | null {
   try {
@@ -41,4 +44,34 @@ export function getGuidanceEnabled(store: KeyValueStore | null = defaultStore())
 
 export function setGuidanceEnabled(enabled: boolean, store: KeyValueStore | null = defaultStore()): void {
   store?.setItem(GUIDANCE_KEY, String(enabled))
+  // 03 "Guidance behavior": "Re-enabling guidance resumes at the current
+  // unmet step" — read as every per-mark dismissal being cleared the
+  // instant guidance turns back on, so nothing a player dismissed earlier
+  // keeps suppressing that step's mark once they've asked for guidance
+  // again. Turning guidance OFF leaves dismissals alone: marks are already
+  // hidden while it is off regardless of their dismissed state.
+  if (enabled) store?.setItem(DISMISSED_KEY, JSON.stringify({}))
+}
+
+function readDismissed(store: KeyValueStore): Record<string, boolean> {
+  const raw = store.getItem(DISMISSED_KEY)
+  if (!raw) return {}
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, boolean>) : {}
+  } catch {
+    return {} // malformed storage — same fallback shape as no prior write
+  }
+}
+
+/** Whether one coach mark, by its `data-coach` key, has been dismissed. */
+export function isMarkDismissed(key: string, store: KeyValueStore | null = defaultStore()): boolean {
+  if (!store) return false
+  return readDismissed(store)[key] === true
+}
+
+/** Dismiss one coach mark — stays gone until guidance is re-enabled. */
+export function dismissMark(key: string, store: KeyValueStore | null = defaultStore()): void {
+  if (!store) return
+  store.setItem(DISMISSED_KEY, JSON.stringify({ ...readDismissed(store), [key]: true }))
 }

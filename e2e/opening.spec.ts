@@ -19,6 +19,12 @@ test('entering a new campaign and completing both opening beats reveals the ledg
   // on ledger.read, which Beat 2 has not set.
   await expect(page.locator('text=Imperial Tribute')).toHaveCount(0)
 
+  // ViewHint fix owed from W3c: Beat 1 is mandatory (canCloseDialogue false
+  // — DialogueSystem.ts), so the conversation hint must not offer an Escape
+  // that does nothing.
+  await expect(page.locator('text=Choose a reply').first()).toBeVisible()
+  await expect(page.locator('text=/step away/')).toHaveCount(0)
+
   // Beat 1, walked to its end via its reply buttons.
   await chooseReply(page, /understand the numbers first/i)
   await chooseReply(page, /hear him out/i)

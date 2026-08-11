@@ -99,6 +99,7 @@ export default function PledgePanel({
       <button
         onClick={requestPledge}
         disabled={!check.ok}
+        data-coach="pledge-button"
         style={{ ...styles.btn, ...(check.ok ? {} : styles.btnDisabled) }}
       >
         Pledge the Fremen of {villageName}

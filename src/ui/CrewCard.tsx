@@ -15,6 +15,8 @@ import { useState } from 'react'
 import { EventBus } from '../EventBus'
 import { effectiveDensity } from '../game-engine/troops/types'
 import { recommendedField } from '../game-engine/troops/harvestRecommendation'
+import { carriedKinds } from '../game-engine/economy/carried'
+import { assignRefusalMessage } from '../game-engine/troops/assign'
 import type { TroopGroup, SpiceField, Equipment } from '../game-engine/troops/types'
 import type { PrescienceLevel } from '../game-engine/prescience/prescience'
 import type { Village } from '../types'
@@ -48,6 +50,12 @@ function statusText(group: TroopGroup, field: SpiceField | undefined, rate: numb
 
 export default function CrewCard({ group, spiceFields, equipment, villages, prescienceLevel }: Props) {
   const [pending, setPending] = useState<PendingOrder | null>(null)
+  // 03-opening-experience.md "Recovery and refusal behavior": "Orders
+  // prospecting without a thopter | Refuse before confirmation." An inline
+  // message, not the ConfirmModal — that modal is reserved for a legal
+  // order actually about to fire (its own changeover consequence), not a
+  // refusal the player cannot proceed past.
+  const [refusal, setRefusal] = useState<string | null>(null)
 
   const field = spiceFields.find(f => f.id === group.taskTargetId)
   const rate = rateFor(group, field, equipment)
@@ -58,8 +66,17 @@ export default function CrewCard({ group, spiceFields, equipment, villages, pres
   const availableFields = spiceFields.filter(f => f.discovered && f.remaining > 0)
   const best = recommendedField(current?.position ?? { x: 0, y: 0 }, spiceFields)
   const bestRange = best ? rangeFor(group, best, equipment) : null
+  // The same read-only check the assign-crew command itself runs
+  // (commands/assignCrewCommand.ts), so this is never a second guess at the
+  // rule — precedented by PledgePanel.tsx's own checkPledgeChain call.
+  const hasThopter = carriedKinds(group.id).includes('thopter')
 
   function order(task: PendingOrder['task'], targetId: string | null, label: string, rangeText: string | null) {
+    if (task === 'prospect' && !hasThopter) {
+      setRefusal(assignRefusalMessage('needs-thopter'))
+      return
+    }
+    setRefusal(null)
     setPending({ task, targetId, label, rangeText })
   }
   function confirmOrder() {
@@ -137,6 +154,8 @@ export default function CrewCard({ group, spiceFields, equipment, villages, pres
         )}
       </div>
 
+      {refusal && <div style={styles.refusal}>{refusal}</div>}
+
       {pending && (
         <ConfirmModal
           title={`Order: ${pending.label}`}
@@ -161,6 +180,7 @@ const styles = {
   meta: { ...typo.note, fontStyle: 'normal' as const, marginTop: 2 },
   status: { color: palette.textDim, fontSize: 11, margin: `${space.xs}px 0 ${space.sm}px` },
   recommend: { color: palette.good, fontSize: 10, marginBottom: space.xs },
+  refusal: { color: palette.danger, fontSize: 11, marginTop: space.xs },
   actions: { display: 'flex', flexWrap: 'wrap' as const, gap: 4 },
   btn: button.base,
   btnActive: button.active,

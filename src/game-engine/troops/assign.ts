@@ -63,7 +63,12 @@ export function assignRefusalMessage(reason: AssignRefusal): string {
     case 'already-assigned':
       return 'They are already at that work.'
     case 'needs-thopter':
-      return 'Prospecting needs an ornithopter.'
+      // 03-opening-experience.md "Recovery and refusal behavior": "identify
+      // the equipment/location path" — the smuggler's den (MarketPanel.tsx,
+      // villages.ts's tsimpo) sells them, not Arrakeen itself; it starts
+      // undiscovered, so "once his den is found" names the real path rather
+      // than a destination the player cannot yet reach.
+      return 'Prospecting needs an ornithopter — buy one from the smuggler once his den is found.'
   }
 }
 

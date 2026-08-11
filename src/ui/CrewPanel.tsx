@@ -18,7 +18,7 @@ export default function CrewPanel() {
 
   if (troopGroups.length === 0) {
     return (
-      <div style={styles.panel}>
+      <div style={styles.panel} data-coach="crew-panel">
         <div style={styles.title}>Crews</div>
         <div style={styles.empty}>No crews. Pledge a sietch to raise one.</div>
       </div>
@@ -26,7 +26,7 @@ export default function CrewPanel() {
   }
 
   return (
-    <div style={styles.panel}>
+    <div style={styles.panel} data-coach="crew-panel">
       <div style={styles.title}>Crews</div>
       {troopGroups.map(group => (
         <CrewCard

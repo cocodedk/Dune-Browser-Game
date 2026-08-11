@@ -117,7 +117,11 @@ export default function SettlementModal() {
           Selected — {bandMessage(chosenPreview)}
         </div>
 
-        <button style={{ ...button.base, ...button.active, marginTop: space.sm }} onClick={() => settle(chosen)}>
+        <button
+          style={{ ...button.base, ...button.active, marginTop: space.sm }}
+          onClick={() => settle(chosen)}
+          data-coach="settle-button"
+        >
           Settle
         </button>
       </div>

@@ -134,6 +134,25 @@ describe('assign-crew refusals', () => {
   })
 })
 
+// 03-opening-experience.md "Recovery and refusal behavior": "Waits with no
+// crew order | Ledger remains short; objective points to the idle crew
+// without automatically assigning it." Proven through production entry
+// points, same as every other fixture in this file — several real day
+// boundaries pass with no player order, and nothing at any layer (dayRunner
+// systems, assign-crew command) ever writes a task onto an idle crew.
+describe('no auto-assignment: an idle pledged crew stays idle across day boundaries', () => {
+  it('never gets a task, a target, or any spice on its own', () => {
+    freshWithCrew()
+    expect(world.troopGroups[0].task).toBe('idle')
+
+    for (let day = 0; day < 5; day++) runHarvestDay(createRng(world.rng))
+
+    expect(world.troopGroups[0].task).toBe('idle')
+    expect(world.troopGroups[0].taskTargetId).toBeNull()
+    expect(world.player.spice).toBe(60) // starting contract's seed, untouched
+  })
+})
+
 describe('opening objective seam: crew.harvest_assigned (acts/openingObjectives.ts)', () => {
   it('is set on the first harvest assignment, and stays set after reassignment away from harvest', () => {
     freshWithCrew()

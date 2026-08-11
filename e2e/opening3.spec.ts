@@ -46,6 +46,13 @@ test('Tabr dilemma, gift climb, second crew, settlement preview, and the Q1 debr
   // Tabr seeds at loyalty 45 (data/sietches.ts) — visible before any gift.
   await expect(page.locator('text=Loyalty 45 / need 60')).toBeVisible()
 
+  // Recovery row (a): "Attempts pledge below 60 loyalty | Control disabled
+  // with current/required loyalty and at least one valid recovery route."
+  // Current/required is the line just asserted; the control and its route
+  // are asserted here, before either gift is spent.
+  await expect(page.getByRole('button', { name: /Pledge the Fremen of Sietch Tabr/ })).toBeDisabled()
+  await expect(page.locator('text=/offer a gift, to raise loyalty/')).toBeVisible()
+
   // Gift twice via GiftPanel (clickButton pattern) — +8 loyalty each time.
   await clickButton(page, 'Gift spice (20)')
   await expect(page.locator('text=Loyalty 53 / need 60')).toBeVisible()

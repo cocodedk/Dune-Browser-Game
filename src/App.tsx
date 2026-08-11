@@ -19,7 +19,9 @@ import PositionStrip from './ui/PositionStrip'
 import ObjectivePanel from './ui/ObjectivePanel'
 import DestinationList from './ui/DestinationList'
 import FlightSkipButton from './ui/FlightSkipButton'
+import CoachMark from './ui/CoachMark'
 import { ledgerDisclosed, destinationsDisclosed, EARNED_TRUST_FLAG } from './game-engine/acts/openingObjectives'
+import { marketDisclosed } from './game-engine/acts/openingDisclosure'
 
 // three.js is now the only renderer; Phaser is gone. Kept lazy so the 3D
 // chunk stays out of the initial payload.
@@ -56,6 +58,11 @@ export default function App() {
   const showCrewPanel = useGameStore(
     s => s.world.flags[EARNED_TRUST_FLAG] === true || s.world.troopGroups.length > 0,
   )
+  // 03 "Progressive disclosure": "Market | Smuggler den is discovered and
+  // entered" — gated the same way as the three surfaces above, rather than
+  // left to MarketPanel's own render-null (OrnamentFrame's empty chrome
+  // would still show at Arrakeen before the den is ever found).
+  const showMarket = useGameStore(s => marketDisclosed(s.world))
   if (screen === 'title') return <TitleScreen />
 
   return (
@@ -71,6 +78,7 @@ export default function App() {
       <div style={styles.title}>DUNE</div>
       <PositionStrip />
       <ObjectivePanel />
+      <CoachMark />
 
       {/* Command column, floating right. Scrolls independently of the map. */}
       <div style={styles.column}>
@@ -78,7 +86,7 @@ export default function App() {
         {showLedger && <OrnamentFrame><QuotaLedger /></OrnamentFrame>}
         {showDestinations && <OrnamentFrame><DestinationList /></OrnamentFrame>}
         {showCrewPanel && <OrnamentFrame><CrewPanel /></OrnamentFrame>}
-        <OrnamentFrame><MarketPanel /></OrnamentFrame>
+        {showMarket && <OrnamentFrame><MarketPanel /></OrnamentFrame>}
         <OrnamentFrame><FortPanel /></OrnamentFrame>
         <OrnamentFrame plain><VillagePanel /></OrnamentFrame>
         <OrnamentFrame plain><EventLog /></OrnamentFrame>

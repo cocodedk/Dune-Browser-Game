@@ -2,7 +2,7 @@ import { world } from './GameState';
 import { applyEffect } from './dialogue/applyEffect';
 import { pushEvent } from './EventSystem';
 import { EventBus } from '../EventBus';
-import type { VillageId, DialogueNode } from '../types';
+import type { VillageId, DialogueNode, WorldState } from '../types';
 import { DIALOGUES } from '../data/dialogues';
 import {
   STORY_NODES, STORY_TREE_ID, BRIEFING_NODES, BRIEFING_TREE_ID, LEDGER_NODES, LEDGER_TREE_ID,
@@ -78,11 +78,23 @@ export function currentNode() {
  * only fires once, on arrival — see its own doc).
  */
 export function canCloseDialogue(): boolean {
-  if (!world.dialogue) return true;
-  const { treeId } = world.dialogue;
-  if (treeId === BRIEFING_TREE_ID) return world.flags[BRIEFING_COMPLETE_FLAG] === true;
-  if (treeId === LEDGER_TREE_ID) return world.flags[LEDGER_READ_FLAG] === true;
-  if (treeId === REDWALL_TRUST_TREE_ID) return world.flags[REDWALL_TRUST_ACKNOWLEDGED_FLAG] === true;
+  return dialogueIsCloseable(world);
+}
+
+/**
+ * Pure form of canCloseDialogue, for callers that hold a WorldState instance
+ * rather than reaching into this module's GameState singleton — chunk W3f's
+ * ViewHint.tsx, which needs the same mandatory-beat rule to pick its
+ * conversation-mode copy honestly (it must not offer "press Esc" during a
+ * beat Escape cannot actually close). Mirrors canCloseDialogue's rule
+ * exactly; see that function's own doc for why each tree is mandatory.
+ */
+export function dialogueIsCloseable(state: WorldState): boolean {
+  if (!state.dialogue) return true;
+  const { treeId } = state.dialogue;
+  if (treeId === BRIEFING_TREE_ID) return state.flags[BRIEFING_COMPLETE_FLAG] === true;
+  if (treeId === LEDGER_TREE_ID) return state.flags[LEDGER_READ_FLAG] === true;
+  if (treeId === REDWALL_TRUST_TREE_ID) return state.flags[REDWALL_TRUST_ACKNOWLEDGED_FLAG] === true;
   return true;
 }
 
