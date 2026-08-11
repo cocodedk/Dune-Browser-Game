@@ -6,8 +6,11 @@ import type { VillageId, DialogueNode } from '../types';
 import { DIALOGUES } from '../data/dialogues';
 import {
   STORY_NODES, STORY_TREE_ID, BRIEFING_NODES, BRIEFING_TREE_ID, LEDGER_NODES, LEDGER_TREE_ID,
+  REDWALL_TRUST_NODES, REDWALL_TRUST_TREE_ID,
 } from '../data/dialogue';
-import { BRIEFING_COMPLETE_FLAG, LEDGER_READ_FLAG } from './acts/openingObjectives';
+import {
+  BRIEFING_COMPLETE_FLAG, LEDGER_READ_FLAG, REDWALL_TRUST_ACKNOWLEDGED_FLAG,
+} from './acts/openingObjectives';
 
 /**
  * Runtime tree lookup, local to this module.
@@ -26,6 +29,7 @@ const TREES: Record<string, DialogueNode[]> = {
   [STORY_TREE_ID]: STORY_NODES,
   [BRIEFING_TREE_ID]: BRIEFING_NODES,
   [LEDGER_TREE_ID]: LEDGER_NODES,
+  [REDWALL_TRUST_TREE_ID]: REDWALL_TRUST_NODES,
 };
 
 /**
@@ -63,12 +67,19 @@ export function currentNode() {
  * tree's own, unrelated Duke content, not this one. Exported so
  * DialoguePanel.tsx can also hide the × affordance instead of leaving a
  * dead button on screen.
+ *
+ * REDWALL_TRUST_TREE_ID joins the mandatory set in chunk W3d, for the same
+ * reason: an early Escape would leave Beat 4 open with neither reply chosen,
+ * so loyalty never reaches PLEDGE_THRESHOLD and the pledge stays refused
+ * with no click-path back to this specific tree (TravelSystem.ts's trigger
+ * only fires once, on arrival — see its own doc).
  */
 export function canCloseDialogue(): boolean {
   if (!world.dialogue) return true;
   const { treeId } = world.dialogue;
   if (treeId === BRIEFING_TREE_ID) return world.flags[BRIEFING_COMPLETE_FLAG] === true;
   if (treeId === LEDGER_TREE_ID) return world.flags[LEDGER_READ_FLAG] === true;
+  if (treeId === REDWALL_TRUST_TREE_ID) return world.flags[REDWALL_TRUST_ACKNOWLEDGED_FLAG] === true;
   return true;
 }
 

@@ -53,6 +53,17 @@ export const TRAVEL_RED_WALL_FLAG = 'travel.red_wall_sietch'
  * campaign — this seam outlives the 12-day opening window.
  */
 export const EARNED_TRUST_FLAG = 'trust.earned'
+/**
+ * Beat 4's tree (data/dialogue/opening-redwall-trust.ts) sets these three.
+ * ACKNOWLEDGED is the shared completion gate (DialogueSystem.ts's
+ * canCloseDialogue and TravelSystem.ts's re-open guard both read only this
+ * one); SOLIDARITY/TRANSACTION are mutually exclusive per-branch flags
+ * recorded for WP05 content to acknowledge later — this chunk sets them and
+ * stops. See that tree's own header for the full reasoning.
+ */
+export const REDWALL_TRUST_ACKNOWLEDGED_FLAG = 'redwall.trust.acknowledged'
+export const REDWALL_TRUST_SOLIDARITY_FLAG = 'redwall.trust.solidarity'
+export const REDWALL_TRUST_TRANSACTION_FLAG = 'redwall.trust.transaction'
 /** Written once, at the assign-crew command (commands/assignCrewCommand.ts). */
 export const FIRST_HARVEST_FLAG = 'crew.harvest_assigned'
 /**
@@ -179,4 +190,11 @@ export function completedOpeningObjectives(world: WorldState): ObjectiveRecord[]
  */
 export function ledgerDisclosed(world: WorldState): boolean {
   return world.flags[LEDGER_READ_FLAG] === true || world.lastProcessedDay !== null
+}
+
+/** Same gate as ledgerDisclosed, keyed to BRIEFING_COMPLETE_FLAG instead —
+ * see that function's doc for the pre-W3c-save reasoning (03 "Progressive
+ * disclosure": "Destination list/map controls — Duke briefing completes"). */
+export function destinationsDisclosed(world: WorldState): boolean {
+  return world.flags[BRIEFING_COMPLETE_FLAG] === true || world.lastProcessedDay !== null
 }

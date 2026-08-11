@@ -67,6 +67,48 @@ export async function chooseReply(page: Page, name: RegExp): Promise<void> {
   await btn.dispatchEvent('click')
 }
 
+/**
+ * Click a button by its exact trimmed text (or a prefix when `exact` is
+ * false) via an in-page evaluate — the same DOM handler path a human click
+ * takes, executed inside the page. Used for buttons living in panels that
+ * re-render on the 100ms world tick, where Playwright's locator-based
+ * clicking (even dispatchEvent) intermittently loses the race against
+ * production-build re-renders. Verified live: the handlers behave
+ * identically under this mechanism, and the UI (e.g. the pledge confirm
+ * modal) is stable for 30s+ under real clicks — the flake is the test
+ * mechanism, not the app.
+ */
+export async function clickButton(page: Page, text: string, exact = true): Promise<void> {
+  await page.waitForFunction(
+    ({ t, ex }) => [...document.querySelectorAll('button')]
+      .some(b => ex ? b.textContent?.trim() === t : b.textContent?.includes(t)),
+    { t: text, ex: exact },
+  )
+  await page.evaluate(({ t, ex }) => {
+    const b = [...document.querySelectorAll('button')]
+      .find(x => ex ? x.textContent?.trim() === t : x.textContent?.includes(t))
+    ;(b as HTMLButtonElement).click()
+  }, { t: text, ex: exact })
+}
+
+/**
+ * Advance the engine clock via the debug handle until the player arrives at
+ * `targetId` — the "setTime for time advancement" labeled pattern (docs/
+ * PRD/game-completion/progress.md Round 9's browser-trace note). Requires
+ * the page to have been entered via '/?debug=1' (window.__DUNE__ only
+ * attaches then). 15 game-seconds is comfortably over every opening-era
+ * hop's duration (travel/rules.ts's MIN_DURATION is 4) without crossing a
+ * day boundary (TimeSystem.DAY_SECONDS is 60).
+ */
+export async function advanceUntilArrived(page: Page, targetId: string): Promise<void> {
+  const worldTime = await page.evaluate(() => window.__DUNE__?.worldTime ?? 0)
+  await page.evaluate(t => window.__DUNE__?.setTime?.(t), worldTime + 15)
+  await page.waitForFunction(
+    id => window.__DUNE__?.player?.().location === id,
+    targetId,
+  )
+}
+
 export async function completeOpeningBriefing(page: Page): Promise<void> {
   const replies = [
     /understand the numbers first/i,

@@ -4,7 +4,6 @@
 // never re-renders per frame.
 
 import { useEffect, useRef } from 'react'
-import { Raycaster, Vector2, Vector3, Plane } from 'three'
 import { world } from '../game-engine/GameState'
 import { DAY_SECONDS } from '../game-engine/TimeSystem'
 import { paletteForTime } from '../game-render/materials/Atmosphere'
@@ -23,6 +22,7 @@ import { startTravel } from '../game-engine/TravelSystem'
 import { startDialogue } from '../game-engine/DialogueSystem'
 import { pushEvent } from '../game-engine/EventSystem'
 import { maybeOpenOpeningDialogue } from '../runtime/openingBriefing'
+import { attachSceneInput } from './sceneInput'
 
 /** Dispatch a logical pick — the same path a raycast hit will take in Stage 03. */
 function dispatchPick(id: string): void {
@@ -49,41 +49,9 @@ export default function ThreeContainer() {
     const modes = createModeManager(handle.camera, quality, world, canvas)
     modes.start('strategic')
 
-    // Raycast a pointer position onto the y=0 plane, then let the active mode
-    // resolve that world position to a location id. Same path __DUNE__.pick
-    // takes, minus the ray.
-    const raycaster = new Raycaster()
-    const pointer = new Vector2()
-    const groundPlane = new Plane(new Vector3(0, 1, 0), 0)
-    const hit = new Vector3()
-
-    function onPointerDown(event: PointerEvent): void {
-      const rect = canvas!.getBoundingClientRect()
-      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
-      raycaster.setFromCamera(pointer, handle.camera)
-
-      // Ray-based picking wins where a mode offers it: the globe's content is
-      // on a sphere, and flattening the ray onto y=0 first made most of the
-      // planet unclickable.
-      const byRay = modes.active?.pickRay?.(raycaster.ray)
-      if (byRay) { dispatchPick(byRay); return }
-      if (modes.active?.pickRay) return
-
-      if (!raycaster.ray.intersectPlane(groundPlane, hit)) return
-      const id = modes.active?.pickAt?.(hit.x, hit.z)
-      if (id) dispatchPick(id)
-    }
-    canvas.addEventListener('pointerdown', onPointerDown)
-
-    function onKeyDown(event: KeyboardEvent): void {
-      if (event.key !== 'Escape') return
-      // Skipping is purely visual: the engine still lands the trip on time.
-      if (modes.currentId === 'flight') modes.handleSignal({ kind: 'travel_complete' })
-      // And Escape backs out of a location, which used to have no exit at all.
-      else if (modes.currentId === 'location') modes.handleSignal({ kind: 'ascend' })
-    }
-    window.addEventListener('keydown', onKeyDown)
+    // Pointer picking + Escape/Skip — see ui/sceneInput.ts for why this
+    // moved out (chunk W3d's flight skip-gate needed the room).
+    const sceneInput = attachSceneInput(canvas, handle.camera, modes, dispatchPick)
 
     const unwire = wireCommands()
     const audio = new AudioManager()
@@ -113,6 +81,8 @@ export default function ThreeContainer() {
         modes.handleSignal({ kind: traveling ? 'travel_start' : 'travel_complete' })
         wasTraveling = traveling
       }
+      // Timestamps the flight skip gate in real time — see sceneInput's own doc.
+      sceneInput.noteTravelState(traveling)
 
       // Dialogue drives the conversation view from world state for the same
       // reason travel does: the view can never disagree with the engine.
@@ -163,8 +133,7 @@ export default function ThreeContainer() {
 
     return () => {
       cancelAnimationFrame(raf)
-      canvas.removeEventListener('pointerdown', onPointerDown)
-      window.removeEventListener('keydown', onKeyDown)
+      sceneInput.dispose()
       unwire()
       audio.dispose()
       modes.dispose()

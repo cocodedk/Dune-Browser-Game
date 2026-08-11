@@ -17,7 +17,9 @@ import OrnamentFrame from './ui/Ornament'
 import ViewHint from './ui/ViewHint'
 import PositionStrip from './ui/PositionStrip'
 import ObjectivePanel from './ui/ObjectivePanel'
-import { ledgerDisclosed } from './game-engine/acts/openingObjectives'
+import DestinationList from './ui/DestinationList'
+import FlightSkipButton from './ui/FlightSkipButton'
+import { ledgerDisclosed, destinationsDisclosed, EARNED_TRUST_FLAG } from './game-engine/acts/openingObjectives'
 
 // three.js is now the only renderer; Phaser is gone. Kept lazy so the 3D
 // chunk stays out of the initial payload.
@@ -46,6 +48,14 @@ export default function App() {
   // is given, including null, so gating inside QuotaLedger would still draw
   // an empty carved box in the command column pre-disclosure.
   const showLedger = useGameStore(s => ledgerDisclosed(s.world))
+  const showDestinations = useGameStore(s => destinationsDisclosed(s.world))
+  // 03 "Progressive disclosure": "Crew panel — First pledge creates a
+  // crew." The flag is sticky past a later crew dissolution; the count
+  // covers a migrated legacy save that already has crews but never ran the
+  // pledge command that would have set the flag.
+  const showCrewPanel = useGameStore(
+    s => s.world.flags[EARNED_TRUST_FLAG] === true || s.world.troopGroups.length > 0,
+  )
   if (screen === 'title') return <TitleScreen />
 
   return (
@@ -66,7 +76,8 @@ export default function App() {
       <div style={styles.column}>
         <OrnamentFrame plain><StatusBar /></OrnamentFrame>
         {showLedger && <OrnamentFrame><QuotaLedger /></OrnamentFrame>}
-        <OrnamentFrame><CrewPanel /></OrnamentFrame>
+        {showDestinations && <OrnamentFrame><DestinationList /></OrnamentFrame>}
+        {showCrewPanel && <OrnamentFrame><CrewPanel /></OrnamentFrame>}
         <OrnamentFrame><MarketPanel /></OrnamentFrame>
         <OrnamentFrame><FortPanel /></OrnamentFrame>
         <OrnamentFrame plain><VillagePanel /></OrnamentFrame>
@@ -74,6 +85,7 @@ export default function App() {
       </div>
 
       <ViewHint />
+      <FlightSkipButton />
 
       {/* Messages over the middle of the scene — see ui/toastPolicy.ts. */}
       <EventToasts />

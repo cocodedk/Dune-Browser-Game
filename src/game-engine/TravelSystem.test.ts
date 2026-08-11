@@ -5,7 +5,8 @@
 import { describe, it, expect } from 'vitest';
 import { setWorld, createInitialState, world } from './GameState';
 import { travelDuration, currentTravelProgress, startTravel, checkTravelArrival } from './TravelSystem';
-import { TRAVEL_RED_WALL_FLAG } from './acts/openingObjectives';
+import { TRAVEL_RED_WALL_FLAG, REDWALL_TRUST_ACKNOWLEDGED_FLAG } from './acts/openingObjectives';
+import { REDWALL_TRUST_TREE_ID } from '../data/dialogue';
 import type { WorldState } from '../types';
 
 function worldWithTrip(distance: number): WorldState {
@@ -108,5 +109,51 @@ describe('checkTravelArrival: opening objective seam (acts/openingObjectives.ts)
 
     expect(world.player.location).toBe('arrakeen');
     expect(world.flags[TRAVEL_RED_WALL_FLAG]).toBeUndefined();
+  });
+});
+
+describe('checkTravelArrival: Beat 4 auto-open trigger (story/redwall_trust)', () => {
+  it('opens the tree once arrival at Red Wall resolves', () => {
+    const state = createInitialState();
+    state.player.location = 'hagg';
+    setWorld(state);
+
+    startTravel('red_wall_sietch');
+    expect(world.dialogue).toBeNull();
+
+    world.time = world.player.arrivalTime;
+    checkTravelArrival();
+
+    expect(world.dialogue).toEqual({
+      treeId: REDWALL_TRUST_TREE_ID,
+      currentNodeId: 'redwall_trust_root',
+      villageId: 'red_wall_sietch',
+    });
+  });
+
+  it('does not reopen once already acknowledged', () => {
+    const state = createInitialState();
+    state.player.location = 'hagg';
+    state.flags[REDWALL_TRUST_ACKNOWLEDGED_FLAG] = true;
+    setWorld(state);
+
+    startTravel('red_wall_sietch');
+    world.time = world.player.arrivalTime;
+    checkTravelArrival();
+
+    expect(world.player.location).toBe('red_wall_sietch');
+    expect(world.dialogue).toBeNull();
+  });
+
+  it('does not open at any other destination', () => {
+    const state = createInitialState();
+    state.player.location = 'hagg';
+    setWorld(state);
+
+    startTravel('arrakeen');
+    world.time = world.player.arrivalTime;
+    checkTravelArrival();
+
+    expect(world.dialogue).toBeNull();
   });
 });

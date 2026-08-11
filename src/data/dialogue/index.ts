@@ -17,6 +17,7 @@ import { REACHES_BASIN_NODES } from './reaches-basin'
 import { DUNCAN_NODES } from './duncan'
 import { BRIEFING_NODES } from './opening-briefing'
 import { LEDGER_NODES } from './opening-ledger'
+import { REDWALL_TRUST_NODES } from './opening-redwall-trust'
 import type { DialogueNode } from '../../types'
 
 export const STORY_NODES: DialogueNode[] = [
@@ -35,14 +36,18 @@ export const STORY_NODES: DialogueNode[] = [
  */
 export const STORY_TREE_ID = 'story'
 
-export { BRIEFING_NODES, LEDGER_NODES }
+export { BRIEFING_NODES, LEDGER_NODES, REDWALL_TRUST_NODES }
 /**
- * The opening's two dedicated beat trees (chunk W3c — 03-opening-
- * experience.md "Teaching sequence" Beats 1-2). Each is its own tree, NOT
- * folded into STORY_NODES/STORY_TREE_ID — see opening-briefing.ts's header
- * for why. Opened only by DialogueSystem.ts's own auto-open/auto-chain
- * logic and runtime/openingBriefing.ts's trigger, not by VisitPolicy
- * routing, so neither needs an entry in routedTrees()/DIALOGUES.
+ * The opening's dedicated beat trees (chunks W3c-d — 03-opening-
+ * experience.md "Teaching sequence" Beats 1-2 and 4). Each is its own tree,
+ * NOT folded into STORY_NODES/STORY_TREE_ID — see opening-briefing.ts's
+ * header for why. Opened only by DialogueSystem.ts's own auto-open/
+ * auto-chain logic, TravelSystem.ts's arrival trigger (Beat 4 — see
+ * checkTravelArrival's own doc for why that trigger lives there rather than
+ * runtime/openingBriefing.ts) and runtime/openingBriefing.ts's own trigger
+ * (Beats 1-2), never by VisitPolicy routing, so none needs an entry in
+ * routedTrees()/DIALOGUES.
  */
 export const BRIEFING_TREE_ID = 'story/briefing'
 export const LEDGER_TREE_ID = 'story/ledger'
+export const REDWALL_TRUST_TREE_ID = 'story/redwall_trust'

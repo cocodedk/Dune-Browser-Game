@@ -22,6 +22,10 @@ export interface BusEvents {
   'event:fired': { event: GameEvent };
   'audio:changed': { isPlaying: boolean; isMuted: boolean; volume: number };
   'player:travel': { targetVillageId: VillageId };
+  /** The visible flight Skip control (FlightSkipButton.tsx). Render-only —
+   * ui/sceneInput.ts applies the same first-three-seconds gate Escape does
+   * (runtime/travelSkipGate.ts) and never mutates engine state itself. */
+  'player:skip_travel': Record<string, never>;
   'player:choose': { choiceId: string };
   'game:speed': { speed: number };
   // No 'game:difficulty' here — 03-opening-experience.md "Title and run

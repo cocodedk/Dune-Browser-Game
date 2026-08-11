@@ -50,7 +50,15 @@ export const OBJECTIVE_COPY: Record<ObjectiveId, ObjectiveCopy> = {
   },
   'act1.prepare_q1': {
     title: 'Prepare to meet the first tribute',
-    substeps: ['Keep the field worked, or seek a second crew at Sietch Tabr'],
+    // 03 "Beat 5": "presents two valid plans rather than one forced
+    // instruction" — reserve (keep the one crew working) and invest (a
+    // second pledge at Tabr). Neither is scripted as correct; both are
+    // legal through Q1 (03's opening-reserve-line/opening-invest-line
+    // fixtures, WP03e).
+    substeps: [
+      'Reserve: keep the field worked, spend nothing further',
+      'Invest: visit Sietch Tabr, build trust, and gain a second crew',
+    ],
     why: 'Q1 is due on day 12. Falling short costs patience, not the run ' +
       '— but only if the ledger is watched before the deadline arrives.',
   },

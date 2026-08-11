@@ -12,6 +12,8 @@ import { runSietchLoyaltyDay } from '../economy/sietchLoyaltyRun'
 import { world, setWorld, createInitialState } from '../GameState'
 import { serializeWorld, deserializeWorld } from '../persistence'
 import { rootNodeForCharacter } from '../dialogue/select'
+import { startDialogue, chooseDialogue } from '../DialogueSystem'
+import { REDWALL_TRUST_TREE_ID } from '../../data/dialogue'
 import { INITIAL_DIALOGUE_STATES } from '../../data/dialogueStates'
 import { PLEDGE_THRESHOLD, NEGLECT_DAYS } from '../sietch/loyalty'
 import { EARNED_TRUST_FLAG } from '../acts/openingObjectives'
@@ -155,15 +157,25 @@ describe('Water of Life: pledging through the canonical chain satisfies its read
 })
 
 describe('playability: a fresh campaign can still pledge, via the real chain', () => {
-  it('pledges a sietch that opens above threshold with no gift or dialogue setup', () => {
-    // red_wall_sietch (loyalty 80, data/sietches.ts) is one of three shipped
-    // sietches already above PLEDGE_THRESHOLD at opening — sietch_tabr (45)
-    // is deliberately NOT one of them: the fresh-campaign pledge path no
-    // longer runs through the player's own home sietch on click one, unlike
-    // the pre-chain live behavior (any Fremen sietch, no loyalty gate).
+  it('pledges Red Wall after walking Beat 4 (story/redwall_trust) for real, no gift needed', () => {
+    // red_wall_sietch seeds at loyalty 55 (data/sietches.ts) as of chunk
+    // W3d — near enough PLEDGE_THRESHOLD (60) that Beat 4's dialogue alone
+    // (either reply, +5) closes the gap; sietch_tabr (45) still needs a
+    // gift on top, unlike this one. This fixture sets player.location
+    // directly rather than traveling (TravelSystem.test.ts already proves
+    // the arrival trigger), so the tree is opened manually here — the same
+    // one production auto-opens on arrival (TravelSystem.ts's
+    // maybeOpenRedWallTrustDialogue).
     const state = createInitialState()
     state.player.location = 'red_wall_sietch'
     setWorld(state)
+
+    expect(runPledgeCommand('red_wall_sietch')).toEqual({ ok: false, reason: 'not-loyal-enough' })
+
+    startDialogue(REDWALL_TRUST_TREE_ID, 'red_wall_sietch')
+    chooseDialogue('redwall_trust_solidarity') // +5: 55 -> 60
+    chooseDialogue('redwall_trust_ack_solidarity_1')
+    expect(world.dialogue).toBeNull()
 
     const outcome = runPledgeCommand('red_wall_sietch')
 

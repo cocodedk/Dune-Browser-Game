@@ -24,6 +24,15 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     ...devices['Desktop Chrome'],
     headless: true,
+    // Headless Chromium falls back to SwiftShader software GL, and the 3D
+    // location interiors (landscape-shop sets) saturate the main thread under
+    // it — page.evaluate and click handlers starve, and any spec that dwells
+    // inside a location hangs to its 30s timeout while the same steps pass
+    // headed in ~6s (measured on e2e/opening2.spec.ts, 2026-08-11). Let the
+    // headless browser use the real GPU instead.
+    launchOptions: {
+      args: ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu'],
+    },
   },
   webServer: {
     command: 'npm run preview -- --host 127.0.0.1 --port 4173',
@@ -33,8 +42,10 @@ export default defineConfig({
   },
   projects: [
     {
+      // launchOptions inherit from the top-level `use` block above — do not
+      // re-spread devices here or the GPU args get clobbered.
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], headless: true },
+      use: { headless: true },
     },
   ],
 })

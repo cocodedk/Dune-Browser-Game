@@ -32,7 +32,16 @@ export const INITIAL_SIETCHES: SietchState[] = [
   seed('hagg', 20, 60),
   seed('arrakeen', 30, 35),
   seed('imperial_basin', 40, 55),
-  seed('red_wall_sietch', 50, 80),
+  // Canonical-numbers decision (chunk W3d, docs/PRD/game-completion/
+  // 03-opening-experience.md Beat 4): dropped from 80 to 55, near enough
+  // PLEDGE_THRESHOLD (60, sietch/loyalty.ts) that either of the two
+  // substantive story/redwall_trust replies (+5 each — see that tree's own
+  // header) closes the gap on its own. 80 let a fresh campaign pledge Red
+  // Wall on arrival with no dialogue at all, which is what Beat 4 exists to
+  // prevent. Every fixture that pledged red_wall cold at 80 now walks that
+  // tree first — see settleCommand.fixtures.test.ts and
+  // pledgeCommand.fixtures.test.ts's own playability fixtures.
+  seed('red_wall_sietch', 50, 55),
   seed('tsimpo', 25, 40),
   seed('sietch_tabr', 60, 45),
   seed('carthag', 20, 20),
