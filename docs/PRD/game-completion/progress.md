@@ -311,3 +311,33 @@ reproduce.
   was reachable at day 0; the travel model is region-hop-based and Red Wall
   is two production hops away. Suite at trace close: 257 files / 2107 tests.
 - Next: WP02 evidence-auditor critic over the whole package.
+
+## Round 10 — WP02 audit, remediation, verified (2026-08-11, `74005ae`)
+
+- **First audit: 7/10, NOT verified** (`baseline/wp02-critic-verdict.md`).
+  Blockers: unbounded repeatable dialogue spice (seven locations paying
+  10–25 per conversation — four chats covered Q1 with zero crews) and C3
+  FAIL (gift command had no production emitter and its outcome was
+  discarded — no production path could raise sietch loyalty at all). Plus
+  a caught miscount in the lead's trace doc (three delivery events, not
+  six — corrected with label).
+- **W2g (`74005ae`):** positive dialogue rewards pay once per (treeId,
+  nodeId) via serialized flags (same-tree locations share one budget;
+  one-time ceiling 55 vs Q1's 90; ritual costs stay repeatable);
+  GiftPanel production emitter + four gift refusal codes and auto-ship's
+  lock surfaced as events; Tabr trust path proven on the real bus
+  (45 → two 20-spice gifts → 61 → pledged, one crew).
+- **Delta re-audit: 9/10, `verified` warranted.** Critic's own probes: all
+  seven locations pay once then zero; shared budget confirmed; flag
+  survives reload; exhaustive all-19-location branch sweep nets −15;
+  eleven refusal paths, zero silent; 55 ceiling reproduced analytically.
+  Critic self-corrected two of its own mis-authored probes on record.
+- **Explicit carve-out on the board:** acceptance criterion 5
+  (runtime/simulator hash parity) is NOT met by WP02 — inherited by WP04
+  with the 15-vs-28 crew-size divergence and the 55-spice one-time
+  opening boost as untuned balance inputs. Content oddity for WP05/WP09:
+  a shared-tree conversation pays at the first sietch and is silent at
+  the other four.
+- **WP02 → `verified`.** Package total: six build chunks + one
+  remediation, a lead-driven browser trace, two audit passes; suite
+  260 files / 2123 tests.

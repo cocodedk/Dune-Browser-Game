@@ -12,12 +12,19 @@ Judged artifacts and code only, never builder reasoning.
 
 ## Verdict at a glance
 
+> **SUPERSEDED by the Delta re-audit in §10 (HEAD `74005ae`, chunk W2g).** Both
+> blocking findings below were fixed and independently re-verified. The current
+> verdict is **9 / 10, `verified` warranted**. §§1-9 are preserved unedited as
+> the record of the audit at `5d3fa6d`.
+
+*Original audit at HEAD `5d3fa6d`:*
+
 | | |
 |---|---|
-| **Score against the exit proof** | **7 / 10** |
-| **Status warranted** | **`in_progress` — `verified` is NOT warranted** |
-| **Biggest remaining gap** | Unbounded repeatable dialogue spice income — an unlimited second income authority that falsifies the single-income claim this package exists to establish |
-| **Acceptance criteria** | 6 of 8 pass; C3 fails; C5 deferred to WP04 under a defensible recorded scope reading |
+| **Score against the exit proof** | **7 / 10** → **9 / 10** at `74005ae` |
+| **Status warranted** | **`in_progress`** → **`verified`** at `74005ae` |
+| **Biggest remaining gap** | Unbounded repeatable dialogue spice income — an unlimited second income authority that falsifies the single-income claim this package exists to establish. **Closed at `74005ae`; re-verified in §10** |
+| **Acceptance criteria** | 6 of 8 pass; C3 fails; C5 deferred to WP04 under a defensible recorded scope reading → **7 of 8 pass at `74005ae`**; C5 still deferred |
 
 The consolidation itself is real, careful, and well-evidenced. Fixtures are
 non-tautological, migration is clean and idempotent, determinism is proven at
@@ -926,3 +933,353 @@ Items 2-4 are small. Item 1 is the real work.
 *Probes were written to a throwaway `src/criticProbeWp02.test.ts`, run at HEAD
 `5d3fa6d`, and deleted. No commits made. This file is the only change left in
 the working tree.*
+
+---
+
+# 10. Delta re-audit — chunk W2g at HEAD `74005ae`
+
+**Scope:** the two blocking findings only (§5's dialogue exploit; §C3's gift
+failure), plus the spice-writer re-sweep and a full gate re-run. Everything
+else in §§1-9 stands as audited at `5d3fa6d`. No browser. Probes written to a
+throwaway `src/criticDeltaWp02.test.ts`, run at `74005ae`, deleted.
+
+Diff under review: `5d3fa6d..74005ae`, +1401/−7 across 13 files.
+
+## 10.1 Gates re-run at `74005ae`
+
+```
+ Test Files  260 passed (260)
+      Tests  2123 passed (2123)
+   Duration  15.62s
+```
+
+```
+$ npx tsc --noEmit        → TSC_EXIT=0, no output
+$ npm run lint            → no findings
+$ find src -name '*.ts*' | xargs wc -l | awk '$1>200'
+    236 src/game-engine/faction/diplomacyEngine.test.ts   (pre-existing, untouched)
+```
+
++3 files / +16 tests over `5d3fa6d`'s 257/2107. Every new source file is under
+200 lines.
+
+## 10.2 The fix under audit
+
+`DialogueSystem.applyEffect` now takes `treeId` and `nodeId` and gates rewards
+on a serialized flag:
+
+```ts
+function rewardKey(treeId: string, nodeId: string): string {
+  return `reward.${treeId}.${nodeId}`;
+}
+const key = rewardKey(treeId, nodeId);
+const isReward = (effect.spiceDelta ?? 0) > 0 || (effect.charismaDelta ?? 0) > 0;
+const rewardAlreadyPaid = isReward && world.flags[key] === true;
+
+if (effect.spiceDelta && !(effect.spiceDelta > 0 && rewardAlreadyPaid)) { …pay… }
+if (effect.charismaDelta && !(effect.charismaDelta > 0 && rewardAlreadyPaid)) { …award… }
+if (isReward && !rewardAlreadyPaid) { world.flags[key] = true; }
+```
+
+Two structural checks I made before probing:
+
+- **Flag durability.** `world.flags` is inside `CanonicalCampaignState`
+  (`state/schema.ts`), so the key serializes with no migration and no schema
+  bump. The one other writer of `world.flags` is
+  `applyFlagEffects`, which spreads (`const next = { ...flags }`,
+  `dialogue/conditions.ts:95`) — it cannot drop a reward key. The reward write
+  is also sequenced *after* that reassignment inside `applyEffect`, so it lands
+  on the replacement object. Correct by construction.
+- **The negative-delta carve-out is sound.** For an effect like
+  `{ spiceDelta: -20, charismaDelta: +5 }`, a replay evaluates
+  `-20 && !(-20 > 0 && true)` → cost re-applies, and
+  `5 && !(5 > 0 && true)` → charisma does not. A cost stays repeatable, its
+  paired reward does not. A negative delta can never be income, so the carve-out
+  opens no farm — verified empirically in D6.
+
+## 10.3 Delta probes — code and raw output
+
+Nine probes, real `EventBus`, all dispatch through `wireCommands()`.
+Final run: **9 passed (9)**, exit 0.
+
+```ts
+function converseGreedy(): void {           // one whole conversation
+  EventBus.emit('player:talk', undefined as never)
+  if (!world.dialogue) return
+  for (let step = 0; step < 10; step++) {
+    const node = currentNode()
+    if (!node || node.choices.length === 0) break
+    const best = [...node.choices].sort(
+      (a, b) => (b.effect?.spiceDelta ?? 0) - (a.effect?.spiceDelta ?? 0))[0]
+    EventBus.emit('player:choose', { choiceId: best.id })
+  }
+}
+```
+
+### D1 — the exploit re-run at all seven previously-paying locations
+
+```ts
+for (let i = 0; i < 5; i++) {
+  const before = world.player.spice
+  converseGreedy()
+  perConversation.push(Number((world.player.spice - before).toFixed(2)))
+  rewardEvents.push(world.events.filter(e => e.type === 'story_reward').length)
+}
+expect(perConversation.slice(1)).toEqual([0, 0, 0, 0])
+expect(rewardEvents[4]).toBe(rewardEvents[0])   // no second story_reward
+```
+
+```
+D1 per-location, FRESH world each time (isolates the tree):
+  plaster_basin    per-conversation [25,0,0,0,0] | cumulative story_reward events [2,2,2,2,2]
+  gara_kulon       per-conversation [25,0,0,0,0] | cumulative story_reward events [2,2,2,2,2]
+  cave_of_birds    per-conversation [10,0,0,0,0] | cumulative story_reward events [1,1,1,1,1]
+  sihaya_ridge     per-conversation [10,0,0,0,0] | cumulative story_reward events [1,1,1,1,1]
+  red_chasm        per-conversation [10,0,0,0,0] | cumulative story_reward events [1,1,1,1,1]
+  bight_of_cliff   per-conversation [10,0,0,0,0] | cumulative story_reward events [1,1,1,1,1]
+  habbanya_ridge   per-conversation [10,0,0,0,0] | cumulative story_reward events [1,1,1,1,1]
+```
+
+**Closed.** Every location pays once and exactly zero thereafter, and the
+`story_reward` event count is frozen after conversation 1 — the log does not
+claim a payment that did not happen.
+
+### D2 — shared-budget semantics across same-tree locations
+
+```
+D2 ONE shared world, walking all five fremen_sietch locations:
+  cave_of_birds    delta    10 | running total 70
+  sihaya_ridge     delta     0 | running total 70
+  red_chasm        delta     0 | running total 70
+  bight_of_cliff   delta     0 | running total 70
+  habbanya_ridge   delta     0 | running total 70
+  fremen_sietch tree lifetime total: 10
+  flags['reward.fremen_sietch.fremen_bond'] === true
+```
+
+**Works exactly as the coordinator described.** The first sietch visited
+collects `fremen_bond`'s 10; the other four pay nothing. See §10.5 for the
+content consequence this carries.
+
+### D3 — the flag survives a save/load round trip
+
+```
+D3 first conversation paid 25 | reward flags: [
+  'reward.smuggler_outpost.smug_deal', 'reward.smuggler_outpost.smug_settled' ]
+D3 after serialize/deserialize | reward flags: [
+  'reward.smuggler_outpost.smug_deal', 'reward.smuggler_outpost.smug_settled' ]
+D3 two more conversations after reload: spice 85 -> 85
+```
+
+**Durable.** Reload does not reopen the budget — the exact failure mode that
+would have made the fix cosmetic.
+
+### D4 — exhaustive branch sweep, one world, every location
+
+Four branch-index passes plus a greedy pass over all 19 locations:
+
+```
+D4 GAME-WIDE lifetime dialogue spice ceiling: -15
+D4 Q1 tribute due: 90 - covered by dialogue? false
+D4 reward nodes consumed: [ 'reward.fremen_sietch.fremen_bond',
+  'reward.smuggler_outpost.smug_deal', 'reward.smuggler_outpost.smug_settled' ]
+D4 story_reward events in log: 0
+```
+
+Net **negative** across an exhaustive sweep: the repeatable *costs* (ritual and
+trade debits, deliberately ungated) outweigh the one-time rewards. Only three
+reward nodes exist game-wide.
+
+### D6 — does the negative-delta carve-out open a new farm?
+
+Six exhaustive passes over every location, from a 10 000-spice float:
+
+```
+D6 spice    10000 -> 10010 | delta 10
+D6 charisma 20 -> 20 | delta 0
+```
+
+**Bounded.** +10 total across six full sweeps, and charisma does not move at
+all. No compounding flow.
+
+### D9 — the analytic ceiling, straight from the dialogue data
+
+The decisive measurement. The guard pays a node once for whichever choice
+triggers it, so the lifetime bound is the sum over nodes of each node's best
+positive `spiceDelta`:
+
+```ts
+for (const node of nodes) {
+  const best = Math.max(0, ...node.choices.map(c => c.effect?.spiceDelta ?? 0))
+  if (best > 0) treeTotal += best
+}
+```
+
+```
+D9 per-tree one-time ceiling (guard key = treeId + nodeId):
+  fremen_sietch          + 10  fremen_bond(+10)
+  smuggler_outpost       + 45  smug_deal(+15) smug_negotiated(+20) smug_settled(+10)
+  ------------------------------------------------------------
+  GAME-WIDE lifetime ceiling: +55
+  Q1 due: 90 | ceiling covers 61% of Q1
+```
+
+**Independently reproduces the coordinator's "55".** Every authored `story/`
+tree pays zero; the entire residual sits in the two legacy faction-routed
+trees. The ceiling is one-time, save-durable, and cannot cover Q1 alone.
+
+### D5 — C3 refusal visibility, re-run and extended
+
+Now covers all four gift refusal codes, each reached for real:
+
+```
+D5 REFUSAL VISIBILITY
+  VISIBLE | pledge (not present)           | You must stand among them to pledge their loyalty.
+  VISIBLE | gift (not present)             | You must stand among them to offer a gift.
+  VISIBLE | assign_crew (unknown crew)     | That crew no longer exists.
+  VISIBLE | issue_equipment (unknown item) | That equipment no longer exists.
+  VISIBLE | assault_fort (unknown fort)    | There is no fort there.
+  VISIBLE | settle_tribute (nothing pending) | There is no tribute decision waiting.
+  VISIBLE | buy_equipment (cannot afford)  | Meko does not deal in that.
+  VISIBLE | set_auto_ship (locked)         | Automatic shipment unlocks after your first tribute is settled.
+  VISIBLE | gift (insufficient spice)      | You do not have enough spice to offer.
+  VISIBLE | gift (cap reached)             | They have accepted all they will take from you this visit.
+  VISIBLE | gift (no sietch record)        | There are no Fremen here to gift.
+  SILENT REFUSALS: (none)
+```
+
+**Zero silent refusals.** Both §C3 findings 3b and 3c are closed.
+
+### Probe-authoring artifacts (mine, not the code's)
+
+D7 and D8 attempted to reach `smug_negotiated`'s +20 by branch index and by
+explicit choice id, and reported a 35 maximum. Both navigations were wrong —
+D7's index-1 walk took the `smug_demand_cut` branch, and D8 used choice ids
+that do not exist (`chooseDialogue` silently returns on an unknown choice id,
+so the walk stalled). D9's analytic bound supersedes both and agrees with the
+coordinator. Recorded so the 35 figure is not mistaken for a finding.
+
+## 10.4 C3 — production emitter, verified
+
+```
+$ grep -rn "gift_sietch" src/ | grep -v "\.test\."
+src/types.bus.ts:31:            'player:gift_sietch': { villageId: VillageId };
+src/runtime/CommandWiring.ts:94,151,168     (handler + on/off)
+src/ui/GiftPanel.tsx:34:        EventBus.emit('player:gift_sietch', { villageId })
+```
+
+`GiftPanel` is mounted in `VillagePanel.tsx` beside `PledgePanel`, in the
+command column App.tsx already renders. The emitter is real production UI, not
+a test.
+
+**`giftTrustBuilding.test.ts` is non-tautological.** I read it in full. No
+`vi.mock` anywhere — real `EventBus`, real `wireCommands()`, real
+`giftPlayerSietch`, real `runPledgeCommand`. It starts from Tabr's *shipped*
+opening value (`expect(tabr().loyalty).toBe(45)`), proves the pledge is refused
+`not-loyal-enough` before and after the first gift, resets the per-visit budget
+through the production visit hook (`visitPlayerSietch`, the same function
+`checkTravelArrival`'s sietch branch calls), and then proves the pledge
+succeeds with one crew and the charisma award. It asserts the *failure* side at
+two points, which is what stops it being a rubber stamp.
+
+One honest limitation: the visit reset is driven by calling
+`visitPlayerSietch` directly rather than by a full two-hop travel round trip.
+That is the production function, not a stub, so the coverage is real — but the
+travel→arrival→visit wiring itself remains covered only by `TravelSystem`'s own
+tests.
+
+**`giftButtonVisibility.ts` extraction is the right call** for a repo with
+`environment: 'node'` and a `*.test.ts`-only glob. The predicate is pure and
+tested, and `CommandWiring.onGift` re-validates independently, satisfying 02's
+"Every mutating command validates its current preconditions even if the UI
+disabled the control." Residual: `GiftPanel.tsx` itself has no rendering test,
+so a wiring bug inside the component would not be caught. Minor, and consistent
+with how every other panel in this repo is (not) tested.
+
+## 10.5 Re-run writer categorization at `74005ae`
+
+```
+$ grep -rn "player\.spice" src/ --include=*.ts --include=*.tsx | grep -v "\.test\." | grep -E "\+=|-=|\.spice *="
+src/game-engine/economy/harvestRun.ts:127:   world.player.spice += scaled
+src/game-engine/economy/settlementRun.ts:27: world.player.spice -= outcome.paid
+src/game-engine/economy/marketOps.ts:41:     world.player.spice -= check.item.price
+src/game-engine/SietchVisitSystem.ts:59:     world.player.spice -= result.spiceSpent
+src/game-engine/DialogueSystem.ts:133:       world.player.spice = Math.max(0, world.player.spice + effect.spiceDelta);
+```
+
+| Site | Category | Status |
+|---|---|---|
+| `harvestRun.ts:127` | crew harvest — the sole *routine* income | Allowed |
+| `settlementRun.ts:27` | tribute settlement debit | Allowed |
+| `marketOps.ts:41` | market debit | Allowed |
+| `SietchVisitSystem.ts:59` | gift debit — **now reachable from production UI** | Allowed |
+| `DialogueSystem.ts:133` | typed **one-time** story reward (`story_reward`), gated per `(treeId, nodeId)`, save-durable; negative deltas remain repeatable costs | **Allowed** |
+
+Charisma writers, checked the same way: `settlementRun` (quota),
+`SietchSystem` (pledge), `raidRun` (raid) — all typed constants — plus the
+now-gated `DialogueSystem:153`. No unbounded flow.
+
+Five spice writers, every one categorized, **none unbounded**. 02 "Crew
+lifecycle" — "Harvest is the only routine source of player spice. Story
+effects, trade, and one-time rewards are individually typed and logged" — now
+holds in full, letter and intent.
+
+## 10.6 Revised criteria and residue
+
+**C3 — every retained system has a production EventBus command path AND a
+visible refusal path — now PASSES.** `player:gift_sietch` has a production
+emitter (`GiftPanel.tsx:34`, mounted via `VillagePanel`); `onGift` and
+`onAutoShip` both map their outcomes to visible events; D5 finds zero silent
+refusals across eleven refusal paths including all four gift codes; and the
+gift lever is proven to work end to end on the one shipped sietch that needs it.
+
+**The §5 exploit — filed against 02 "Crew lifecycle" and the rejection sweep's
+"harvest is the only routine source" row — is CLOSED.** Bounded to a one-time,
+save-durable 55 spice game-wide (61% of Q1), confined to two legacy trees, with
+no repeat and no reload reset. `a696dcf`'s and `trace.md`'s "only income" claims
+are now defensible as written for routine income.
+
+**C7 documentation error corrected.** `trace.md` now reads three delivery
+events, with the correction labeled in place.
+
+**C5 remains deferred to WP04** on the reading I accepted in §C5. Unchanged:
+`simulate.ts` is still a parallel model with no `WorldState` to hash, and the
+15-vs-28 crew-size divergence is still unreconciled. The exit proof's literal
+"every acceptance criterion in `02` passes" therefore remains unmet, and this
+is the sole reason the score is not 10.
+
+**Carried forward, not blocking:**
+
+1. **Shared-tree reward semantics are a content oddity.** Because five sietches
+   share one `fremen_sietch` tree, the "bond" beat pays at whichever sietch the
+   player reaches first and is silent at the other four — the same conversation,
+   with a reward the second time and nothing the third. Correct under the guard,
+   and invisible once the authored `story/` trees (which pay nothing) replace
+   the legacy faction trees. Flagged for **WP05/WP09**, not WP02.
+2. **55 spice of one-time opening income is a balance input** the opening
+   arithmetic has never been tuned against. Flagged for **WP04**.
+3. `GiftPanel.tsx` has no rendering test (repo-wide limitation).
+
+## 10.7 Revised verdict
+
+**Score: 9 / 10 against the exit proof.**
+
+Both blocking findings are genuinely fixed, not papered over. The reward guard
+is keyed on durable serialized state, survives reload, closes every one of the
+seven farms I found, and its bound reproduces analytically from the dialogue
+data at exactly the figure the coordinator claimed. The gift lever is live,
+every refusal path is visible, and the trust-building proof runs on real bus
+commands from the shipped opening numbers. Gates are green at 260/2123. The one
+documentation error I flagged is corrected in place.
+
+The missing point is C5: the runtime/simulator hash parity that the exit proof
+demands cannot exist until WP04 builds the runtime-faithful runner, so the
+sentence "every runtime fixture and acceptance criterion in `02` passes" is
+still literally false, and the crew-size divergence between engine and
+simulator remains a live unreconciled cost.
+
+### Verdict line
+
+**`verified` is warranted for WP02**, with the C5 deferral recorded on the board
+as an explicit carve-out inherited by WP04 — not as a criterion this package met.
+
