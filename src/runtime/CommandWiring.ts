@@ -12,6 +12,9 @@ import { decideVisit, decideSpeakTo } from './VisitPolicy'
 import { assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
 import { runPledgeCommand } from '../game-engine/commands/pledgeCommand'
 import { pledgeChainRefusalMessage } from '../game-engine/sietch/pledgeRefusal'
+import { runSettleCommand } from '../game-engine/commands/settleCommand'
+import { settleRefusalMessage } from '../game-engine/quota/settlementRefusal'
+import { runSetAutoShipCommand } from '../game-engine/commands/autoShipCommand'
 import { giftPlayerSietch } from '../game-engine/SietchVisitSystem'
 import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
 import {
@@ -105,6 +108,19 @@ export function wireCommands(): () => void {
   const onAssault = ({ fortId }: BusEvents['player:assault_fort']): void => {
     assaultFort(fortId)
   }
+  /**
+   * Settle the pending tribute decision (chunk W2c; see commands/
+   * settleCommand.ts). Same refusal-mapping shape as onPledge: success
+   * already published its own event from inside applySettlement, so a
+   * refusal is the one place this becomes player-visible text.
+   */
+  const onSettle = ({ amount }: BusEvents['player:settle_tribute']): void => {
+    const outcome = runSettleCommand(amount)
+    if (!outcome.ok) pushEvent('tribute_refused', settleRefusalMessage(outcome.reason))
+  }
+  const onAutoShip = ({ enabled, amount }: BusEvents['player:set_auto_ship']): void => {
+    runSetAutoShipCommand(enabled, amount)
+  }
   const onPause = ({ paused }: BusEvents['game:pause']): void => {
     world.paused = paused
     EventBus.emit('world:updated', { state: world })
@@ -127,6 +143,8 @@ export function wireCommands(): () => void {
   EventBus.on('player:issue_equipment', onIssue)
   EventBus.on('player:assault_fort', onAssault)
   EventBus.on('game:pause', onPause)
+  EventBus.on('player:settle_tribute', onSettle)
+  EventBus.on('player:set_auto_ship', onAutoShip)
 
   return () => {
     EventBus.off('player:talk', onTalk)
@@ -146,5 +164,7 @@ export function wireCommands(): () => void {
     EventBus.off('player:issue_equipment', onIssue)
     EventBus.off('player:assault_fort', onAssault)
     EventBus.off('game:pause', onPause)
+    EventBus.off('player:settle_tribute', onSettle)
+    EventBus.off('player:set_auto_ship', onAutoShip)
   }
 }

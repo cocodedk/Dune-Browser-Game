@@ -2,7 +2,7 @@
 import type { DesertSite } from './game-engine/desert/sites';
 import type { SietchState } from './game-engine/sietch/types'
 import type { FactionProfile } from './game-engine/faction/types'
-import type { QuotaState } from './game-engine/quota/quota'
+import type { QuotaState, PendingSettlement } from './game-engine/quota/quota'
 import type { ActId, EndingId } from './game-engine/acts/transitions'
 import type { RegionEcology } from './game-engine/ecology/ecology'
 import type { FortState } from './game-engine/acts/endgame'
@@ -124,6 +124,8 @@ export interface WorldState {
    */
   flags: Record<string, boolean | number>;
   quota: QuotaState;
+  /** null outside a due deadline; one decision at a time (02 "Tribute"). */
+  pendingSettlement: PendingSettlement | null;
   troopGroups: TroopGroup[];
   spiceFields: SpiceField[];
   equipment: Equipment[];

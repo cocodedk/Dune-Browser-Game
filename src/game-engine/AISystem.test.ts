@@ -80,6 +80,7 @@ function createTestWorld(): WorldState {
       nextDueDay: 8, amount: 100, cycleIndex: 0,
       patience: 3, arrears: 0, restoredThisAct: false,
     },
+    pendingSettlement: null,
     troopGroups: [],
     spiceFields: [],
     equipment: [],

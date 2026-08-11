@@ -61,6 +61,30 @@ export interface PaymentOutcome {
   shortfall: number
 }
 
+/**
+ * One pending tribute decision, created at a due deadline and cleared by the
+ * settle command (docs/PRD/game-completion/02-runtime-consolidation.md
+ * "Tribute"). Snapshotted at creation so a paused, reloaded campaign shows
+ * the exact same numbers the deadline first presented — see
+ * quota/settlement.ts's buildPendingSettlement.
+ */
+export interface PendingSettlement {
+  /** quota.cycleIndex at creation — which cycle this decision resolves. */
+  cycleIndex: number
+  /** quota.nextDueDay at creation. */
+  dueDay: number
+  /** quota.amount + quota.arrears at creation. */
+  amountDue: number
+  /** player.spice at creation. */
+  stock: number
+  /** amountDue * PARTIAL_PAYMENT_FRACTION — the full/partial payment boundary. */
+  minPartialPayment: number
+  /** ARREARS_SURCHARGE — the rate applied to a shortfall carried as arrears. */
+  arrearsSurchargeRate: number
+  /** Legal settle amounts: 0 through whichever of amountDue/stock is smaller. */
+  legalRange: { min: number; max: number }
+}
+
 export function createQuotaState(difficultyMultiplier = 1): QuotaState {
   return {
     nextDueDay: FIRST_DEADLINE_DAY,

@@ -20,7 +20,7 @@ import { updateVillages } from './VillageSystem'
 import { updateSietches } from './sietch/updateSietches'
 import { createRng } from './rng/rng'
 import {
-  runHarvestDay, runProspectDay, runQuotaCheck, runActCheck,
+  runHarvestDay, runProspectDay, runTributeCheck, runActCheck,
   runTrainingDay, runRaidCheck, runEcologyDay, runSietchLoyaltyDay,
 } from './EconomySystem'
 
@@ -46,16 +46,6 @@ export function runDay(): void {
   // Step 3: Apply prospecting/discovery.
   runProspectDay(rng)
 
-  // Step 9 (today's stand-in): tribute settlement.
-  // 02 places "create the pending settlement decision" at step 9, after the
-  // act/ending check (step 8). There is no pause-and-decide flow yet — that
-  // is WP02's "pausing tribute settlement" scope — so runQuotaCheck settles
-  // immediately from stock. It must run before step 8 below so a patience-0
-  // loss is evaluated and lands the SAME day it happens, exactly as before
-  // this change (see EconomySystem.ts's runQuotaCheck header for the single
-  // ending-writer note this enables).
-  runQuotaCheck()
-
   // Step 4: Apply training and ecology.
   runEcologyDay()
   runTrainingDay()
@@ -72,15 +62,22 @@ export function runDay(): void {
   runSietchLoyaltyDay()
 
   // Step 8: Evaluate act objectives and endings — the sole ending writer.
+  // 02's literal order restored (progress.md Round 7's "settlement-assigns
+  // -loss" trap resolution): tribute settlement used to run BEFORE this
+  // step (a deliberate WP01 deviation, retired now that the settle command
+  // — not this function — owns applying a payment, so nothing left needs
+  // to precede step 8; see EconomySystem.ts's runTributeCheck header).
+  // Organic-loss timing shifts as a result — see this chunk's progress.md
+  // entry for the measured day.
   runActCheck()
 
-  // Step 10: Publish one consolidated world update and ordered player-facing
-  // events. No consolidated single-event publish exists yet; each system
-  // above still pushes its own event(s) as it runs, as today.
-
-  // LEGACY PRODUCTION SEAM — WP02 removes; see legacy-authority-inventory.md
+  // LEGACY PRODUCTION SEAM — WP02e removes; see legacy-authority-inventory.md
   // category 2. The threshold-based sietch task/payout loop duplicates crew
   // harvest/training and is the other retired path from that same table.
+  // Left BEFORE step 9 (not itself a numbered step) so its spice payout is
+  // already in `player.spice` by the time step 9 snapshots stock into the
+  // pending-settlement decision — the deadline should not read the player
+  // as short by income this same day's own seam is about to grant.
   const sietchResult = updateSietches(world.sietches)
   world.sietches = sietchResult.sietches
   for (const payout of sietchResult.payouts) {
@@ -94,6 +91,16 @@ export function runDay(): void {
       pushEvent('fedaykin_ready', `${payout.amount} Fedaykin at ${name} ready for your command`)
     }
   }
+
+  // Step 9: if tribute is due and no ending has occurred, create the
+  // pending settlement decision (or settle automatically via auto-ship —
+  // see EconomySystem.ts's runTributeCheck). Simulation pauses for a
+  // created decision — see processDayBoundary below and pause.ts.
+  runTributeCheck()
+
+  // Step 10: Publish one consolidated world update and ordered player-facing
+  // events. No consolidated single-event publish exists yet; each system
+  // above still pushes its own event(s) as it runs, as today.
 
   world.rng = rng.state()
 }
@@ -112,6 +119,18 @@ export function runDay(): void {
  * way does not keep processing days past it. world.time is left pinned to
  * the ending day in that case rather than the real elapsed time; nothing
  * reads world.time again once the run is frozen.
+ *
+ * A pending settlement decision stops the loop the same way, but it must
+ * also REWIND `world.lastProcessedDay`/`world.time` to the day the decision
+ * was created, not leave them at the jump's original target day. Without
+ * this, a jump that crosses the deadline mid-catch-up (day 5 -> day 20 with
+ * a deadline on day 12) would mark days 13-20 "already processed" the
+ * instant the decision is created, and once it resolves those days would
+ * never run — silently losing that harvest and, since `nextDueDay` only
+ * advances on settlement, the following deadline too. Rewinding matches 02
+ * "Tribute"'s "the clock freezes until the decision resolves": no elapsed
+ * time passes while paused, so the days after the pause point genuinely
+ * have not happened yet.
  */
 export function processDayBoundary(): void {
   const days = crossedDays()
@@ -125,5 +144,10 @@ export function processDayBoundary(): void {
     // world.ending is the freeze authority (02 "Campaign status");
     // goalAchieved is only its derived compatibility shadow.
     if (world.ending !== null) break
+    if (world.pendingSettlement !== null) {
+      world.lastProcessedDay = day
+      world.time = day * DAY_SECONDS
+      break
+    }
   }
 }

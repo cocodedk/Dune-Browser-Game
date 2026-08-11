@@ -229,3 +229,44 @@ reproduce.
   runner exists — recorded now as a scope reading, not a miss**;
   `endgameOps.assaultFort` is authored fort content, survives — commandify
   and seed it in W2d/W2f, don't sweep it with the PoC attack subsystem.
+
+## Round 8 — WP02 chunks a–c landed (2026-08-11, `14b633d` → W2c commit)
+
+- **W2a (`14b633d`):** SietchState owns sietch loyalty/morale/visit/gift/
+  crewIds; `CommandOutcome<TCode,TReason>` substrate with the pledge as
+  reference seam; crewIds aliasing bug fixed in the factory. Flagged honestly:
+  loyalty had no live writer yet (closed in W2b); combat-pledged sietches now
+  contribute their real loyalty to `averagePledgedLoyalty` (win_ecology-gate
+  delta, organically unreachable per WP00).
+- **W2b (`98bc2bf`):** atomic five-step pledge chain, six stable refusal
+  codes, deterministic crew `group_<villageId>` (win-back re-attaches, never
+  duplicates), sietch loyalty live via gifts/dialogue/neglect-decay (arrival
+  +5 superseded — authored rule grants nothing automatic), combat pledge path
+  dead with Water of Life proven through the production dialogue selector,
+  `combatPledgePath` characterization deleted per its header. **Gameplay
+  shift:** one-click pledge gone — opening targets are red_wall (80,
+  discovered:true — verified), cave_of_birds (70), sihaya_ridge (62); Tabr
+  (45) needs trust first. Crew-sizing delta flagged for WP04: formula yields
+  flat 15 today vs simulate.ts's flat 28 — unreconciled.
+- **W2c:** pausing tribute settlement. `PendingSettlement` payload (02's five
+  fields + cycle identity; 03's "committed" field N/A — no partial-commit
+  concept exists, omitted deliberately); settle command idempotent by
+  construction (cleared decision → `no-pending-settlement`); auto-ship
+  opt-in gated behind first settlement; decision serializes (no version
+  bump — optional field, `fromEnvelope` defaults null); pause.ts gains
+  `settlementPending`; centre-screen minimal modal. **One ending authority:**
+  `evaluateEndingAuthority` called from runner step 8 AND the settle command;
+  runQuotaCheck's auto-settle dead; 02's literal step order restored (payout
+  seam sits before step 9 so same-day income lands in the decision's stock
+  snapshot); actRun freeze guard now keys `world.ending` (WP01 residue
+  closed). **Measured behavior change, designed:** organic loss by pure
+  inaction no longer exists — the clock freezes at the day-12 decision
+  (1000-frame probe, zero drift), satisfying 03's no-unrecoverable-loss;
+  losses now require repeated active short settlement. Canonical-numbers
+  decisions recorded: auto-ship default = full due; UI default = legalRange
+  .max; legalRange.min = 0 (forced by the patience-0 zero-stock path); NaN →
+  `amount-negative`. Patience bands reused verbatim from quota.ts (0.6
+  partial fraction, 0.25 arrears surcharge, +1/hold/−1).
+- Lead verified each chunk independently (suite + tsc + protected-file diffs
+  + code reads). Suite at W2c: 250 files / 2115 tests. **types.ts is at
+  exactly 200 lines — zero headroom; W2d must split before adding types.**

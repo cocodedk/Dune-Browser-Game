@@ -8,7 +8,9 @@ import { useGameStore } from './store'
 import { totalDue, daysRemaining } from '../game-engine/quota/quota'
 import { projectIncome } from '../game-engine/quota/projection'
 import { currentDay } from '../game-engine/TimeSystem'
+import { AUTO_SHIP_UNLOCKED_FLAG, AUTO_SHIP_ENABLED_FLAG } from '../game-engine/quota/settlement'
 import { palette, type, space, panelShell, row } from './theme'
+import { EventBus } from '../EventBus'
 
 /** Patience shown as pips rather than a number — state read at a glance. */
 function PatiencePips({ value }: { value: number }) {
@@ -50,6 +52,15 @@ export default function QuotaLedger() {
   // The deadline tightens visually as it approaches, so urgency is felt
   // before it is read.
   const urgent = short && days <= 2
+
+  // Auto-shipment (02 "Tribute"): unavailable until the first settlement of
+  // any band has ever completed. This checkbox is the whole minimal-UI
+  // surface for it — full configuration (a custom amount) is WP03.
+  const autoShipUnlocked = world.flags[AUTO_SHIP_UNLOCKED_FLAG] === 1
+  const autoShipEnabled = world.flags[AUTO_SHIP_ENABLED_FLAG] === 1
+  function toggleAutoShip() {
+    EventBus.emit('player:set_auto_ship', { enabled: !autoShipEnabled })
+  }
 
   return (
     <div style={panelShell}>
@@ -100,6 +111,13 @@ export default function QuotaLedger() {
           ? `${projection.dailyRate.toFixed(1)} spice per day at current orders`
           : 'no crews are harvesting'}
       </div>
+
+      {autoShipUnlocked && (
+        <label style={{ ...row, marginTop: space.xs, cursor: 'pointer' }}>
+          <span style={type.label}>auto-ship in full</span>
+          <input type="checkbox" checked={autoShipEnabled} onChange={toggleAutoShip} />
+        </label>
+      )}
     </div>
   )
 }

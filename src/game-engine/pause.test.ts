@@ -5,7 +5,7 @@ import { shouldPause, effectiveDelta } from './pause'
 import type { PauseInputs } from './pause'
 
 function inputs(overrides: Partial<PauseInputs> = {}): PauseInputs {
-  return { manual: false, inDialogue: false, ended: false, ...overrides }
+  return { manual: false, inDialogue: false, ended: false, settlementPending: false, ...overrides }
 }
 
 // ---------------------------------------------------------------------------
@@ -21,6 +21,14 @@ describe('shouldPause', () => {
     expect(shouldPause(inputs({ manual: true }))).toBe(true)
     expect(shouldPause(inputs({ inDialogue: true }))).toBe(true)
     expect(shouldPause(inputs({ ended: true }))).toBe(true)
+    expect(shouldPause(inputs({ settlementPending: true }))).toBe(true)
+  })
+
+  it('does not let a manual unpause resume time with a settlement pending', () => {
+    // Engine-authoritative like dialogue (02 "Tribute": "the clock freezes
+    // until the decision resolves") — clicking pause/unpause elsewhere must
+    // not bleed the clock through a pending tribute decision either.
+    expect(shouldPause(inputs({ manual: false, settlementPending: true }))).toBe(true)
   })
 
   it('does not let a manual unpause resume time during dialogue', () => {

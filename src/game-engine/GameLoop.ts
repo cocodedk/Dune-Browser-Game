@@ -13,6 +13,8 @@ export function update(delta: number): void {
     inDialogue: world.dialogue !== null,
     // world.ending is the freeze authority (02 "Campaign status").
     ended: world.ending !== null,
+    // A pending tribute decision pauses too — 02 "Tribute".
+    settlementPending: world.pendingSettlement !== null,
   });
   if (paused) return;
 

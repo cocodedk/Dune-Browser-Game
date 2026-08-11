@@ -78,6 +78,7 @@ export function createInitialState(seed: number = DEFAULT_SEED): WorldState {
     // unreadable until the story first turned. See actNumber in acts/transitions.
     flags: { act: actNumber('act1') },
     quota: createQuotaState(getDifficultyConfig('normal').quotaMultiplier),
+    pendingSettlement: null,
     // No operational crew before the first pledge (02-runtime-consolidation.md
     // "Crew lifecycle"; 00-index.md "Opening state"). The first valid pledge
     // creates exactly one — see SietchSystem's pledge chain.

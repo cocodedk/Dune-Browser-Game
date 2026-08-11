@@ -39,6 +39,8 @@ export interface BusEvents {
   'player:assault_fort': { fortId: string };
   'player:buy_equipment': { kind: EquipmentKind };
   'player:issue_equipment': { equipmentId: string; groupId: string };
+  'player:settle_tribute': { amount: number };
+  'player:set_auto_ship': { enabled: boolean; amount?: number };
   // Render -> React only. No engine command may be added here.
   'scene:mode': { mode: SceneModeId };
   'assets:progress': { loaded: number; total: number };

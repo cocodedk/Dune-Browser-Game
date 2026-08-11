@@ -50,11 +50,21 @@ function toEnvelope(world: WorldState): CanonicalSaveEnvelope {
  * independently (02-runtime-consolidation.md "Campaign status") — every
  * load re-derives it from the declared authority, `world.ending`, whatever
  * an old raw-world save happened to carry on disk.
+ *
+ * `pendingSettlement` defaults to `null` for any save predating this field
+ * (chunk W2c; no schema version bump — see state/schema.ts) rather than a
+ * migration step: a save from before the field existed could never have
+ * serialized a decision, so `null` ("no decision pending") is exactly
+ * correct, not just a safe placeholder.
  */
 function fromEnvelope(save: VersionedSave): WorldState | null {
   const migrated = migrateSave(save);
   if (!migrated) return null;
-  return { ...migrated, goalAchieved: migrated.ending !== null };
+  return {
+    ...migrated,
+    goalAchieved: migrated.ending !== null,
+    pendingSettlement: migrated.pendingSettlement ?? null,
+  };
 }
 
 export async function saveGame(world: WorldState): Promise<void> {

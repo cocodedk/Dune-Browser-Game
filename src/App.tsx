@@ -6,6 +6,7 @@ import MarketPanel from './ui/MarketPanel'
 import FortPanel from './ui/FortPanel'
 import VillagePanel from './ui/VillagePanel'
 import DialoguePanel from './ui/DialoguePanel'
+import SettlementModal from './ui/SettlementModal'
 import EventLog from './ui/EventLog'
 import FactionPanel from './ui/FactionPanel'
 import GoalOverlay from './ui/GoalOverlay'
@@ -58,6 +59,7 @@ export default function App() {
       <EventToasts />
 
       <DialoguePanel />
+      <SettlementModal />
       <GoalOverlay />
     </div>
   )

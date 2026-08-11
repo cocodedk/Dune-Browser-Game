@@ -13,6 +13,13 @@ export interface PauseInputs {
   inDialogue: boolean
   /** True once the run has ended — win or loss. */
   ended: boolean
+  /**
+   * True while a tribute settlement decision is pending (02-runtime-
+   * consolidation.md "Tribute": "simulation pauses" at the deadline). Engine-
+   * authoritative like the other reasons here — not a UI flag — so a reload
+   * that restores `world.pendingSettlement` restores the freeze with it.
+   */
+  settlementPending: boolean
 }
 
 /**
@@ -22,7 +29,7 @@ export interface PauseInputs {
  * manual unpause must not resume time while a dialogue is still open.
  */
 export function shouldPause(inputs: PauseInputs): boolean {
-  return inputs.manual || inputs.inDialogue || inputs.ended
+  return inputs.manual || inputs.inDialogue || inputs.ended || inputs.settlementPending
 }
 
 /**

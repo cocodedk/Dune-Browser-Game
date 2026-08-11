@@ -1,12 +1,24 @@
 // src/game-engine/dayRunner.ending.test.ts
 // Fixtures: campaign-goal-authority and the patience-0 single-writer proof
-// for the EconomySystem.runQuotaCheck / acts/transitions.ts ending-writer
-// collapse (docs/PRD/game-completion/02-runtime-consolidation.md "Campaign
-// status": "world.act and world.ending are the only progression authority").
+// for the acts/transitions.ts ending-writer collapse
+// (docs/PRD/game-completion/02-runtime-consolidation.md "Campaign status":
+// "world.act and world.ending are the only progression authority").
+//
+// Chunk W2c update (cited per CLAUDE.md/08 operating rule 4): the patience-0
+// fixture used to reach loss_patience inside a single update() call, because
+// the retired runQuotaCheck settled from stock automatically before
+// runActCheck ran. Tribute settlement is now player-driven (a pending
+// decision, then commands/settleCommand.ts) — the day boundary that creates
+// the decision no longer settles anything itself, so this fixture now
+// drives both steps: update() to reach the pending decision, then
+// runSettleCommand() to resolve it and prove IT is the ending authority
+// (economy/actRun.ts's shared evaluateEndingAuthority) when a payment
+// empties patience.
 
 import { describe, it, expect, vi } from 'vitest'
 import { update, initLoop } from './GameLoop'
 import { world, setWorld, createInitialState } from './GameState'
+import { runSettleCommand } from './commands/settleCommand'
 
 vi.mock('../EventBus', () => ({
   EventBus: { emit: vi.fn(), on: vi.fn(), off: vi.fn() },
@@ -33,8 +45,8 @@ describe('campaign-goal-authority: full village ownership does not end the run',
   })
 })
 
-describe('patience-0: runActCheck is the sole ending writer', () => {
-  it('lands loss_patience the same day patience hits 0, with exactly one ending event', () => {
+describe('patience-0: the settle command is the ending authority for a payment that empties patience', () => {
+  it('creates the pending decision with no ending yet, then lands loss_patience once settled, with exactly one ending event', () => {
     const state = createInitialState(9)
     state.quota.patience = 1
     state.quota.nextDueDay = 0 // due immediately, on day 0
@@ -44,11 +56,20 @@ describe('patience-0: runActCheck is the sole ending writer', () => {
     setWorld(state)
     initLoop()
 
-    update(1) // day-0 boundary: runQuotaCheck settles, then runActCheck ends the run
+    update(1) // day-0 boundary: step 8 (patience still 1, no ending), then step 9 creates the decision
 
+    expect(world.ending).toBeNull()
+    expect(world.pendingSettlement).not.toBeNull()
+    expect(world.pendingSettlement?.amountDue).toBe(100)
+    expect(world.pendingSettlement?.legalRange).toEqual({ min: 0, max: 0 }) // 0 spice in stock
+
+    const outcome = runSettleCommand(0)
+
+    expect(outcome).toEqual({ ok: true, code: 'settled' })
     expect(world.quota.patience).toBe(0)
     expect(world.ending).toBe('loss_patience')
     expect(world.goalAchieved).toBe(true)
+    expect(world.pendingSettlement).toBeNull()
 
     const endingEvents = world.events.filter(e => e.type === 'poc_goal_achieved')
     expect(endingEvents).toHaveLength(1)

@@ -8,12 +8,13 @@
 import { world } from './GameState'
 import { pushEvent } from './EventSystem'
 import { currentDay } from './TimeSystem'
-import { getDifficultyConfig } from './difficulty'
-import { CHARISMA_PER_QUOTA } from './sietch/loyalty'
 import type { TroopTask } from './troops/types'
-import { settleQuota, isDue, totalDue } from './quota/quota'
+import { isDue, totalDue } from './quota/quota'
 import { checkAssign, applyAssign, assignRefusalMessage } from './troops/assign'
 import { canOrderRemotely } from './prescience/prescience'
+import { buildPendingSettlement, AUTO_SHIP_UNLOCKED_FLAG, AUTO_SHIP_ENABLED_FLAG, AUTO_SHIP_AMOUNT_FLAG } from './quota/settlement'
+import { applySettlement } from './economy/settlementRun'
+import { evaluateEndingAuthority } from './economy/actRun'
 
 // The day-runners moved into economy/ when this file outgrew the repository's
 // 200-line limit. Re-exported here so every existing caller and test keeps
@@ -31,59 +32,47 @@ import { carriedKinds } from './economy/carried'
 
 
 /**
- * Settle the Emperor's demand if it has come due.
+ * Step 9: if tribute is due and no ending has occurred, either settle it
+ * automatically (auto-shipment, once unlocked and opted in) or create the
+ * pending settlement decision and let simulation pause for it
+ * (docs/PRD/game-completion/02-runtime-consolidation.md "Tribute" and
+ * "Day-boundary order"). Retires the old `runQuotaCheck` auto-settle-from-
+ * -stock behavior (progress.md Round 7: "runQuotaCheck's auto-settle
+ * dies") — a due deadline no longer pays itself; a player command
+ * (commands/settleCommand.ts) or an explicit opt-in must act on it.
  *
- * Payment is automatic from stock: the player's decision is what they produced
- * before the deadline, not whether they remember to click a button on it.
- *
- * This mutates patience only — it does not write `world.ending`/
- * `world.goalAchieved`. The act machine's day-boundary ending evaluation
- * (economy/actRun.ts's runActCheck, which reads `world.quota.patience` via
- * ActWorldView) is the sole ending writer, per
- * docs/PRD/game-completion/02-runtime-consolidation.md "Campaign status":
- * "`world.act` and `world.ending` are the only progression authority."
- * dayRunner.ts runs this before runActCheck in the same day, so a
- * patience-0 loss still lands the same day it always has.
+ * Idempotent: a decision already pending is left alone rather than rebuilt,
+ * so a multi-day catch-up call that lands on the SAME due day twice (it
+ * cannot under crossedDays()'s per-day loop, but this guard costs nothing
+ * and keeps the function safe to call more than once a day) never
+ * replaces a decision the player may already be looking at.
  */
-export function runQuotaCheck(): void {
+export function runTributeCheck(): void {
+  if (world.ending !== null) return
   if (!isDue(world.quota, currentDay())) return
+  if (world.pendingSettlement !== null) return
 
-  const due = totalDue(world.quota)
-  const paid = Math.min(world.player.spice, due)
-  const config = getDifficultyConfig(world.difficulty)
+  const autoShipReady =
+    world.flags[AUTO_SHIP_UNLOCKED_FLAG] === 1 && world.flags[AUTO_SHIP_ENABLED_FLAG] === 1
 
-  const outcome = settleQuota(world.quota, paid, config.quotaMultiplier)
-  world.player.spice -= outcome.paid
-  world.quota = outcome.quota
-
-  world.flags['quota.cycle'] = outcome.quota.cycleIndex
-  world.flags['quota.patience'] = outcome.quota.patience
-  world.flags['quota.arrears'] = outcome.quota.arrears
-
-  if (outcome.band === 'full') {
-    const paidCount = typeof world.flags['quota.paidInFull'] === 'number'
-      ? (world.flags['quota.paidInFull'] as number) : 0
-    world.flags['quota.paidInFull'] = paidCount + 1
-    world.charisma += CHARISMA_PER_QUOTA
-    pushEvent('tribute_refused', `Tribute paid in full: ${outcome.paid.toFixed(0)} spice.`)
-  } else if (outcome.band === 'partial') {
-    pushEvent(
-      'tribute_refused',
-      `Tribute short by ${outcome.shortfall.toFixed(0)}. The balance is carried, with interest.`,
-    )
-  } else {
-    pushEvent(
-      'tribute_refused',
-      `The Emperor is not paid. Patience ${outcome.quota.patience} of 3 remains.`,
-    )
+  if (autoShipReady) {
+    // Configured amount defaults to the full amount due — a recorded
+    // canonical-numbers decision (02 names no default; "pay in full unless
+    // told otherwise" is the minimal-change reading of "the configured
+    // auto-shipment amount").
+    const configured = typeof world.flags[AUTO_SHIP_AMOUNT_FLAG] === 'number'
+      ? (world.flags[AUTO_SHIP_AMOUNT_FLAG] as number)
+      : totalDue(world.quota)
+    applySettlement(Math.max(0, Math.min(configured, world.player.spice)))
+    // Shared ending authority (economy/actRun.ts): if this payment drops
+    // patience to 0, the ending is assigned here, same day, no pause ever
+    // created — matching the settle command's "before simulation can
+    // resume" rule with nothing to resume from.
+    evaluateEndingAuthority()
+    return
   }
 
-  // outcome.gameOver (patience just hit 0) is deliberately not read here.
-  // runActCheck's evaluateEnding() re-derives it from world.quota.patience
-  // moments later in the same day and is the only writer of world.ending/
-  // world.goalAchieved — see this function's header comment. Writing here
-  // too used to duplicate 'poc_goal_achieved' with an identical event
-  // string; that duplicate write is what this collapse removes.
+  world.pendingSettlement = buildPendingSettlement(world.quota, world.player.spice)
 }
 
 /**

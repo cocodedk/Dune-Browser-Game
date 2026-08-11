@@ -93,11 +93,11 @@ describe('seeded-prospect: identical seed and command sequence twice', () => {
 })
 
 describe('save-load reset: the first update after loading a mid-campaign save processes only that day', () => {
-  it('does not backfill days 0..39 when loading a day-40 save (one settlement, not four)', () => {
+  it('does not backfill days 0..39 when loading a day-40 save (one pending decision, not four settlements)', () => {
     // TimeSystem.crossedDays()'s null sentinel is what makes this true: with
     // a `-1` sentinel, this first update() would compute [0..40] and replay
-    // 40 days of quota settlement (cycles due at 12, 20, 28, 36) in one call.
-    // Still valid under the current semantics — the sentinel now lives on
+    // 40 days (cycles due at 12, 20, 28, 36) in one call. Still valid under
+    // the current semantics — the sentinel now lives on
     // world.lastProcessedDay rather than a TimeSystem module variable (see
     // its doc comment), but `createInitialState()` still seeds it `null`,
     // so this fixture still exercises the exact same "first call after a
@@ -106,6 +106,18 @@ describe('save-load reset: the first update after loading a mid-campaign save pr
     // wp01-critic-verdict.md found this fixture blind to — see
     // dayRunner.sessionBoundary.test.ts for those, driven through the real
     // production save/load sequences instead of a hand-built `state.time`.
+    //
+    // Chunk W2c update (cited): tribute no longer auto-settles from stock
+    // (EconomySystem.ts's runTributeCheck), so the symptom this fixture
+    // reads moved from `quota.cycleIndex` (which no longer advances without
+    // a settle command) to `lastProcessedDay` and `pendingSettlement` —
+    // the direct outputs of the exact backfill hazard this fixture targets.
+    // `cycleIndex` stays 0 (unsettled) either way, which is itself part of
+    // the proof: a backfill bug replaying days 12/20/28/36 would still only
+    // ever produce ONE pending decision (dayRunner.ts's pause-on-pending
+    // break stops the loop the moment the first one is created), so
+    // `lastProcessedDay` is the assertion that actually discriminates a
+    // backfill from the correct single-day path.
     const state = createInitialState(3)
     state.time = 40 * DAY_SECONDS
     state.quota.nextDueDay = 12
@@ -114,6 +126,9 @@ describe('save-load reset: the first update after loading a mid-campaign save pr
 
     update(1)
 
-    expect(world.quota.cycleIndex).toBe(1) // day 40's one due cycle, not four
+    expect(world.lastProcessedDay).toBe(40) // not resynced from day 0
+    expect(world.quota.cycleIndex).toBe(0) // unsettled: no auto-settle anymore
+    expect(world.pendingSettlement).not.toBeNull()
+    expect(world.pendingSettlement?.cycleIndex).toBe(0)
   })
 })
