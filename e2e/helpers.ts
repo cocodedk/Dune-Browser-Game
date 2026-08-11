@@ -133,11 +133,26 @@ export async function reachFirstCrew(page: Page): Promise<void> {
  * day boundary (TimeSystem.DAY_SECONDS is 60).
  */
 export async function advanceUntilArrived(page: Page, targetId: string): Promise<void> {
-  const worldTime = await page.evaluate(() => window.__DUNE__?.worldTime ?? 0)
-  await page.evaluate(t => window.__DUNE__?.setTime?.(t), worldTime + 15)
+  // Re-issue the time jump in small slices instead of one +15 shot: if the
+  // first setTime lands before the travel command's own frame has started
+  // the journey (measured as a ~2/9 flake at this exact step), a single
+  // jump is consumed with the player still idle at the origin and the
+  // arrival never comes. Slicing keeps nudging the clock until the arrival
+  // check has actually fired.
+  for (let i = 0; i < 12; i++) {
+    const arrived = await page.evaluate(
+      id => window.__DUNE__?.player?.().location === id,
+      targetId,
+    )
+    if (arrived) return
+    const worldTime = await page.evaluate(() => window.__DUNE__?.worldTime ?? 0)
+    await page.evaluate(t => window.__DUNE__?.setTime?.(t), worldTime + 5)
+    await page.waitForTimeout(250)
+  }
   await page.waitForFunction(
     id => window.__DUNE__?.player?.().location === id,
     targetId,
+    { timeout: 5000 },
   )
 }
 
