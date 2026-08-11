@@ -1,12 +1,27 @@
 // src/game-engine/economy/marketOps.ts
-// Buying equipment from the smugglers, and issuing it to a crew.
+// Buying equipment from the smugglers.
+//
+// Issuing bought equipment to a crew is commands/issueEquipmentCommand.ts
+// now — that command needs a CommandOutcome refusal for "no crew selected"
+// (02 "Equipment"), which this file's old bare `issueEquipment(id, groupId)`
+// had no way to report; see troops/equipment.ts's checkIssue.
 
 import { world } from '../GameState'
 import { pushEvent } from '../EventSystem'
 import { checkPurchase, purchaseRefusalMessage } from '../market/market'
 import type { EquipmentKind } from '../troops/types'
 
-/** Buy from the smuggler. Guards live in market/market.ts. */
+/**
+ * Buy from the smuggler. Guards live in market/market.ts.
+ *
+ * `act: world.act` is what actually gates tier-3 stock now — this used to
+ * pass a hardcoded `tier3Unlocked: false`, so no purchase could ever reach
+ * act3's gate regardless of the campaign's real act (02 "Market": the act
+ * gate was unwired). `standing` was already a live datum
+ * (world.flags['smuggler.standing'], incremented below on every purchase;
+ * see dialogue/engineFlags.ts's registry) — not deferred, just now actually
+ * read by the query it was always meant to feed.
+ */
 export function buyEquipment(kind: EquipmentKind): void {
   const standing = typeof world.flags['smuggler.standing'] === 'number'
     ? (world.flags['smuggler.standing'] as number)
@@ -15,7 +30,7 @@ export function buyEquipment(kind: EquipmentKind): void {
   const check = checkPurchase(kind, {
     spice: world.player.spice,
     standing,
-    tier3Unlocked: false,
+    act: world.act,
   })
 
   if (!check.ok) {
@@ -33,17 +48,4 @@ export function buyEquipment(kind: EquipmentKind): void {
     condition: 100,
   })
   pushEvent('spice_shipment_received', `Bought ${check.item.label} for ${check.item.price} spice.`)
-}
-
-/** Hand a piece of equipment to a crew. */
-export function issueEquipment(equipmentId: string, groupId: string): void {
-  const item = world.equipment.find(e => e.id === equipmentId)
-  if (!item) return
-  if (item.groupId) {
-    pushEvent('sietch_task_assigned', 'That equipment is already with a crew.')
-    return
-  }
-  item.groupId = groupId
-  item.locationId = null
-  pushEvent('sietch_task_assigned', 'Equipment issued to the crew.')
 }

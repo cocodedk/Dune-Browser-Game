@@ -11,7 +11,7 @@ import { world, setWorld, createInitialState } from '../GameState'
 import { serializeWorld, deserializeWorld } from '../persistence'
 import { runSettleCommand } from './settleCommand'
 import { runPledgeCommand } from './pledgeCommand'
-import { assignCrew } from '../EconomySystem'
+import { runAssignCrewCommand } from './assignCrewCommand'
 import { DAY_SECONDS } from '../TimeSystem'
 
 vi.mock('../../EventBus', () => ({
@@ -96,7 +96,8 @@ describe('playability: a fresh campaign can pledge, earn, and reach and resolve 
     const pledge = runPledgeCommand('red_wall_sietch')
     expect(pledge).toEqual({ ok: true, code: 'pledged' })
 
-    assignCrew('group_red_wall_sietch', 'harvest', 'field_red_wall_pan')
+    const assign = runAssignCrewCommand('group_red_wall_sietch', 'harvest', 'field_red_wall_pan')
+    expect(assign).toEqual({ ok: true, code: 'assigned' })
     const crew = world.troopGroups.find(g => g.id === 'group_red_wall_sietch')
     expect(crew?.task).toBe('harvest')
 

@@ -38,7 +38,9 @@ export interface BusEvents {
   'player:assign_crew': { groupId: string; task: TroopTask; targetId: string | null };
   'player:assault_fort': { fortId: string };
   'player:buy_equipment': { kind: EquipmentKind };
-  'player:issue_equipment': { equipmentId: string; groupId: string };
+  /** `groupId: null` means no explicit crew selected — the issue-equipment
+   * command refuses `'no-target'` rather than guessing (02 "Equipment"). */
+  'player:issue_equipment': { equipmentId: string; groupId: string | null };
   'player:settle_tribute': { amount: number };
   'player:set_auto_ship': { enabled: boolean; amount?: number };
   // Render -> React only. No engine command may be added here.

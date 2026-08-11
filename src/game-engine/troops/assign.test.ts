@@ -14,7 +14,6 @@ function group(overrides: Partial<TroopGroup> = {}): TroopGroup {
     size: 30,
     skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
     morale: 60,
-    equipmentIds: [],
     task: 'idle',
     taskTargetId: null,
     changeoverDaysLeft: 0,

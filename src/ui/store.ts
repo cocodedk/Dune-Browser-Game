@@ -15,16 +15,27 @@ interface UIState {
   world: WorldState
   selectedVillage: Village | null
   selectedRegion: Region | null
+  /** Which crew the equipment-issue picker targets — see MarketPanel.tsx. */
+  selectedGroupId: string | null
   currentDialogueNode: DialogueNode | null
   lastSaveTime: number | null
   // Actions
   selectVillage: (v: Village | null) => void
+  selectGroup: (id: string | null) => void
   refreshDialogueNode: () => void
   saveGame: () => Promise<void>
   loadGame: () => Promise<boolean>
   newGame: () => Promise<void>
 }
 
+/**
+ * Re-derives every selection against a freshly loaded world, dropping any
+ * that no longer resolves — the same pattern `selectedVillage`/
+ * `selectedRegion` already used, extended to crews so a dissolved/merged
+ * crew (troops/casualty.ts) disappears from the equipment-issue picker the
+ * instant `world:updated` fires, not just from the crew list itself (02
+ * "Crew lifecycle": "A destroyed crew cannot remain selectable").
+ */
 function refreshSelections(state: UIState, loaded: WorldState) {
   return {
     selectedVillage: state.selectedVillage
@@ -32,6 +43,9 @@ function refreshSelections(state: UIState, loaded: WorldState) {
       : null,
     selectedRegion: state.selectedRegion
       ? loaded.regions.find(r => r.id === state.selectedRegion!.id) ?? null
+      : null,
+    selectedGroupId: state.selectedGroupId && loaded.troopGroups.some(g => g.id === state.selectedGroupId)
+      ? state.selectedGroupId
       : null,
     currentDialogueNode: loaded.dialogue ? currentNode() : null,
   }
@@ -74,9 +88,11 @@ export const useGameStore = create<UIState>((set, get) => {
     world: initialWorld,
     selectedVillage: null,
     selectedRegion: null,
+    selectedGroupId: null,
     currentDialogueNode: null,
     lastSaveTime: null,
     selectVillage: (v) => set({ selectedVillage: v }),
+    selectGroup: (id) => set({ selectedGroupId: id }),
     refreshDialogueNode: () => set({ currentDialogueNode: currentNode() }),
     saveGame: async () => {
       await persistSave(get().world)
@@ -99,6 +115,7 @@ export const useGameStore = create<UIState>((set, get) => {
         world: fresh,
         selectedVillage: null,
         selectedRegion: null,
+        selectedGroupId: null,
         currentDialogueNode: null,
         lastSaveTime: null,
       })

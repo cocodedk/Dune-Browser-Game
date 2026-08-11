@@ -43,7 +43,7 @@ function riggedSietchRoll(): void {
   world.troopGroups = [{
     id: 'group_tabr_1', homeSietchId: 'sietch_tabr', locationId: 'sietch_tabr',
     size: 30, skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
-    morale: 60, equipmentIds: [], task: 'idle', taskTargetId: null, changeoverDaysLeft: 0,
+    morale: 60, task: 'idle', taskTargetId: null, changeoverDaysLeft: 0,
   }]
   const crew = world.troopGroups.find(g => g.id === 'group_tabr_1')!
   crew.task = 'prospect'

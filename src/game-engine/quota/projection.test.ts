@@ -3,7 +3,6 @@
 import { describe, it, expect } from 'vitest'
 import { projectIncome } from './projection'
 import { harvestDay } from '../troops/harvest'
-import { extractionTier } from '../troops/types'
 import type { SpiceField, TroopGroup, Equipment } from '../troops/types'
 
 function group(overrides: Partial<TroopGroup> = {}): TroopGroup {
@@ -14,7 +13,6 @@ function group(overrides: Partial<TroopGroup> = {}): TroopGroup {
     size: 30,
     skills: { spice: 40, prospect: 20, military: 20, ecology: 20 },
     morale: 70,
-    equipmentIds: [],
     task: 'harvest',
     taskTargetId: 'f1',
     changeoverDaysLeft: 0,
@@ -141,96 +139,5 @@ describe('projectIncome: reporting', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
-// Assignment sensitivity
-// ---------------------------------------------------------------------------
-
-describe('projectIncome: assignment sensitivity', () => {
-  it('ignores groups not assigned to harvest', () => {
-    const p = projectIncome({
-      groups: [group({ task: 'prospect' })],
-      fields: [field()],
-      equipment: NO_EQUIPMENT,
-      daysRemaining: 8,
-      currentStock: 0,
-      amountDue: 100,
-    })
-    expect(p.projectedIncome).toBe(0)
-  })
-
-  it('ignores a harvest group with no target field', () => {
-    const p = projectIncome({
-      groups: [group({ taskTargetId: null })],
-      fields: [field()],
-      equipment: NO_EQUIPMENT,
-      daysRemaining: 8,
-      currentStock: 0,
-      amountDue: 100,
-    })
-    expect(p.projectedIncome).toBe(0)
-  })
-
-  it('discounts the changeover days of a freshly reassigned group', () => {
-    const settled = projectIncome({
-      groups: [group()],
-      fields: [field()],
-      equipment: NO_EQUIPMENT,
-      daysRemaining: 8, currentStock: 0, amountDue: 100,
-    })
-    const switching = projectIncome({
-      groups: [group({ changeoverDaysLeft: 1 })],
-      fields: [field()],
-      equipment: NO_EQUIPMENT,
-      daysRemaining: 8, currentStock: 0, amountDue: 100,
-    })
-    expect(switching.projectedIncome).toBeLessThan(settled.projectedIncome)
-  })
-
-  it('scales with the number of crews assigned', () => {
-    const one = projectIncome({
-      groups: [group({ id: 'a' })],
-      fields: [field()],
-      equipment: NO_EQUIPMENT,
-      daysRemaining: 4, currentStock: 0, amountDue: 100,
-    })
-    const two = projectIncome({
-      groups: [group({ id: 'a' }), group({ id: 'b' })],
-      fields: [field()],
-      equipment: NO_EQUIPMENT,
-      daysRemaining: 4, currentStock: 0, amountDue: 100,
-    })
-    expect(two.projectedIncome).toBeGreaterThan(one.projectedIncome)
-  })
-
-  it('reflects a harvester through the equipment list', () => {
-    const harvester: Equipment = {
-      id: 'e1', kind: 'harvester', locationId: null, groupId: 'g1', condition: 100,
-    }
-    expect(extractionTier(['harvester'])).toBe('harvester')
-
-    const withGear = projectIncome({
-      groups: [group({ equipmentIds: ['e1'] })],
-      fields: [field()],
-      equipment: [harvester],
-      daysRemaining: 4, currentStock: 0, amountDue: 100,
-    })
-    const without = projectIncome({
-      groups: [group()],
-      fields: [field()],
-      equipment: NO_EQUIPMENT,
-      daysRemaining: 4, currentStock: 0, amountDue: 100,
-    })
-    expect(withGear.projectedIncome).toBeGreaterThan(without.projectedIncome)
-  })
-
-  it('never mutates the fields it was given', () => {
-    const f = field()
-    projectIncome({
-      groups: [group()],
-      fields: [f],
-      equipment: NO_EQUIPMENT,
-      daysRemaining: 8, currentStock: 0, amountDue: 100,
-    })
-    expect(f.remaining).toBe(480)
-  })
-})
+// Assignment-sensitivity tests live in projection.assignment.test.ts
+// (split for the 200-line rule).

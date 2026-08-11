@@ -37,7 +37,7 @@ function withProspectingCrewAndVillage(seed: number): WorldState {
   state.troopGroups = [{
     id: 'group_tabr_1', homeSietchId: 'sietch_tabr', locationId: 'sietch_tabr',
     size: 30, skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
-    morale: 60, equipmentIds: [], task: 'prospect', taskTargetId: null, changeoverDaysLeft: 0,
+    morale: 60, task: 'prospect', taskTargetId: null, changeoverDaysLeft: 0,
   }]
   state.quota.nextDueDay = 9999
   const arrakeen = state.villages.find(v => v.id === 'arrakeen')!

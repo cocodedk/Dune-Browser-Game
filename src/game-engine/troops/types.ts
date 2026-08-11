@@ -10,13 +10,32 @@ export type EquipmentKind =
   | 'harvester' | 'heavy_harvester' | 'thopter' | 'lr_thopter'
   | 'krys' | 'sonic_disruptor' | 'windtrap' | 'bulb_cache'
 
+/**
+ * Every item has exactly one holder (docs/PRD/game-completion/
+ * 02-runtime-consolidation.md "Equipment"): a location (unissued, sitting in
+ * inventory there), or one crew. `locationId`/`groupId` stay a flat pair
+ * rather than a discriminated union so the on-disk shape is unchanged (no
+ * schema bump — v5 is WP02f's, not this chunk's) — but every writer must
+ * set exactly one and null the other; see troops/equipment.ts's `issueTo`/
+ * `unissueAt`, the single pair of mutation helpers every holder-change goes
+ * through now (marketOps.ts's buyEquipment, commands/issueEquipmentCommand.ts,
+ * troops/casualty.ts's dissolve/merge equipment transfer).
+ *
+ * `condition` is a WP02d decision, not a WP01 leftover: 02 "Equipment"
+ * requires condition to be either fully active (decay + repair commands +
+ * consequences) or removed from the UI and release scope. It was found
+ * partially wired — harvestRun.ts decremented it on worm damage with no
+ * repair command, no consequence, and no UI reader — so it is now removed
+ * from scope: created at 100 and never mutated again. The field stays
+ * (removing it would touch the save shape) but is inert.
+ */
 export interface Equipment {
   id: string
   kind: EquipmentKind
-  /** Held by a sietch OR carried by a group — never both. */
   locationId: LocationId | null
   groupId: string | null
-  condition: number // 0-100; not ticked in the Act 1 slice
+  /** Always 100. Inert — see the doc comment above. */
+  condition: number
 }
 
 export interface TroopSkills {
@@ -26,6 +45,19 @@ export interface TroopSkills {
   ecology: number
 }
 
+/**
+ * `equipmentIds` used to live here as a second, crew-owned pointer back to
+ * `Equipment.groupId` — the same relationship recorded twice. It was never
+ * written by the mutation layer (marketOps.ts's old `issueEquipment` only
+ * ever set `Equipment.groupId`), so it stayed `[]` forever while
+ * `Equipment.groupId` carried the real, live link — a two-holders bug for
+ * this specific relationship: `CrewPanel.tsx`'s tier readout and
+ * `quota/projection.ts`'s income projection both read the dead field and so
+ * silently under-reported any crew that had actually been issued gear.
+ * Removed for WP02d's single-holder model (02 "Equipment"); every reader now
+ * goes through `economy/carried.ts`'s `carriedKinds(groupId)`, which already
+ * queried the correct (`Equipment.groupId`) side.
+ */
 export interface TroopGroup {
   id: string
   homeSietchId: LocationId
@@ -33,7 +65,6 @@ export interface TroopGroup {
   size: number
   skills: TroopSkills
   morale: number
-  equipmentIds: string[]
   task: TroopTask
   taskTargetId: string | null
   /** Days remaining of the reassignment changeover, during which output is 0. */

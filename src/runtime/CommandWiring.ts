@@ -17,9 +17,13 @@ import { settleRefusalMessage } from '../game-engine/quota/settlementRefusal'
 import { runSetAutoShipCommand } from '../game-engine/commands/autoShipCommand'
 import { giftPlayerSietch } from '../game-engine/SietchVisitSystem'
 import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
-import {
-  assignCrew, buyEquipment, issueEquipment, assaultFort,
-} from '../game-engine/EconomySystem'
+import { buyEquipment } from '../game-engine/EconomySystem'
+import { runAssignCrewCommand } from '../game-engine/commands/assignCrewCommand'
+import { assignCrewRefusalMessage } from '../game-engine/troops/assignCrewRefusal'
+import { runIssueEquipmentCommand } from '../game-engine/commands/issueEquipmentCommand'
+import { issueRefusalMessage } from '../game-engine/troops/equipmentRefusal'
+import { runAssaultCommand } from '../game-engine/commands/assaultCommand'
+import { assaultCommandRefusalMessage } from '../game-engine/acts/assaultCommandRefusal'
 import { EventBus } from '../EventBus'
 import type { BusEvents } from '../types'
 
@@ -96,17 +100,27 @@ export function wireCommands(): () => void {
   const onScout = ({ targetVillageId }: BusEvents['player:scout_village']): void => {
     scoutVillage(targetVillageId)
   }
+  /**
+   * Crew assignment (commands/assignCrewCommand.ts) and issue-equipment
+   * (commands/issueEquipmentCommand.ts) follow the same refusal-mapping
+   * shape as onPledge/onSettle: a success has already pushed its own event
+   * from inside the command, so a refusal is the one place this becomes
+   * player-visible text.
+   */
   const onAssignCrew = ({ groupId, task, targetId }: BusEvents['player:assign_crew']): void => {
-    assignCrew(groupId, task, targetId)
+    const outcome = runAssignCrewCommand(groupId, task, targetId)
+    if (!outcome.ok) pushEvent('sietch_task_assigned', assignCrewRefusalMessage(outcome.reason))
   }
   const onBuy = ({ kind }: BusEvents['player:buy_equipment']): void => {
     buyEquipment(kind)
   }
   const onIssue = ({ equipmentId, groupId }: BusEvents['player:issue_equipment']): void => {
-    issueEquipment(equipmentId, groupId)
+    const outcome = runIssueEquipmentCommand(equipmentId, groupId)
+    if (!outcome.ok) pushEvent('sietch_task_assigned', issueRefusalMessage(outcome.reason))
   }
   const onAssault = ({ fortId }: BusEvents['player:assault_fort']): void => {
-    assaultFort(fortId)
+    const outcome = runAssaultCommand(fortId)
+    if (!outcome.ok) pushEvent('attack', assaultCommandRefusalMessage(outcome.reason))
   }
   /**
    * Settle the pending tribute decision (chunk W2c; see commands/

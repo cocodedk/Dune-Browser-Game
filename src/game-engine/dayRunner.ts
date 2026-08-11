@@ -36,7 +36,11 @@ export function runDay(): void {
 
   // Step 1: Finish task changeovers.
   // Step 2: Apply harvest and field depletion.
-  // Step 5: Apply equipment wear and worm consequences.
+  // Step 5: Apply worm consequences. ("Equipment wear", 02's other half of
+  // step 5, is a WP02d decision: condition was found partially wired — decay
+  // with no repair command and no consequence — and is now removed from the
+  // UI and release scope rather than fully built out; see troops/types.ts's
+  // Equipment doc and economy/harvestRun.ts's worm-casualty block.)
   // One call fulfils all three: runHarvestDay ticks changeoverDaysLeft down,
   // extracts spice, and resolves worm encounters together — see
   // economy/harvestRun.ts. Splitting it into three call sites would reorder

@@ -6,8 +6,9 @@ import { pushEvent } from '../EventSystem'
 import { currentDay } from '../TimeSystem'
 import { getDifficultyConfig } from '../difficulty'
 import {
-  raidInterval, raidPower, resolveCombat, weaponTier, applyLosses,
+  raidInterval, raidPower, resolveCombat, weaponTier,
 } from '../combat/resolve'
+import { applyCasualty } from '../troops/casualty'
 import { raidWarningDays } from '../prescience/prescience'
 import { carriedKinds } from './carried'
 import { CHARISMA_PER_RAID } from '../sietch/loyalty'
@@ -83,12 +84,16 @@ export function runRaidCheck(rng: RngService): void {
   const place = world.villages.find(v => v.id === target.villageId)
   const name = place?.name ?? target.villageId
 
-  // Spread casualties across the defending crews.
+  // Spread casualties across the defending crews, through the one casualty
+  // rule (troops/casualty.ts) — a hard-fought defense can dissolve or merge
+  // a defending crew, not just shrink it.
   if (defenders.length > 0 && outcome.defenderLosses > 0) {
     const each = Math.floor(outcome.defenderLosses / defenders.length)
     for (const group of defenders) {
-      const index = world.troopGroups.findIndex(g => g.id === group.id)
-      if (index >= 0) world.troopGroups[index] = applyLosses(group, each)
+      const result = applyCasualty(world.troopGroups, world.equipment, world.sietches, group.id, each)
+      world.troopGroups = result.groups
+      world.equipment = result.equipment
+      world.sietches = result.sietches
     }
   }
 

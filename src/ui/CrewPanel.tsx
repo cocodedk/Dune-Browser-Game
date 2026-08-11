@@ -15,9 +15,14 @@ import type { PrescienceLevel } from '../game-engine/prescience/prescience'
 import type { Village } from '../types'
 import { palette, type as typo, space, panelShell, button, divider } from './theme'
 
+// Reads Equipment.groupId — the single holder link (troops/types.ts's
+// Equipment doc) — not a crew-owned mirror of it. A prior version of this
+// function filtered by a `TroopGroup.equipmentIds` field that
+// issueEquipment never actually wrote, so an issued harvester never showed
+// up in a crew's displayed tier; removed with that field (WP02d).
 function tierFor(group: TroopGroup, equipment: Equipment[]) {
   return extractionTier(
-    equipment.filter(e => group.equipmentIds.includes(e.id)).map(e => e.kind),
+    equipment.filter(e => e.groupId === group.id).map(e => e.kind),
   )
 }
 

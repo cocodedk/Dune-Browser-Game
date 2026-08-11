@@ -6,11 +6,8 @@
 // files. Keeping it thin is what lets the rules stay testable.
 
 import { world } from './GameState'
-import { pushEvent } from './EventSystem'
 import { currentDay } from './TimeSystem'
-import type { TroopTask } from './troops/types'
 import { isDue, totalDue } from './quota/quota'
-import { checkAssign, applyAssign, assignRefusalMessage } from './troops/assign'
 import { canOrderRemotely } from './prescience/prescience'
 import { buildPendingSettlement, AUTO_SHIP_UNLOCKED_FLAG, AUTO_SHIP_ENABLED_FLAG, AUTO_SHIP_AMOUNT_FLAG } from './quota/settlement'
 import { applySettlement } from './economy/settlementRun'
@@ -24,12 +21,9 @@ export { runRaidCheck } from './economy/raidRun'
 export { runProspectDay } from './economy/prospectRun'
 export { runActCheck } from './economy/actRun'
 export { runEcologyDay, runTrainingDay } from './economy/upkeepRun'
-export { buyEquipment, issueEquipment } from './economy/marketOps'
+export { buyEquipment } from './economy/marketOps'
 export { attemptRitual, assaultFort } from './economy/endgameOps'
 export { runSietchLoyaltyDay } from './economy/sietchLoyaltyRun'
-
-import { carriedKinds } from './economy/carried'
-
 
 /**
  * Step 9: if tribute is due and no ending has occurred, either settle it
@@ -75,55 +69,10 @@ export function runTributeCheck(): void {
   world.pendingSettlement = buildPendingSettlement(world.quota, world.player.spice)
 }
 
-/**
- * Apply a player crew order. Guards live in troops/assign.ts; this is the
- * mutation layer, and it reports refusals so the player is never left
- * wondering whether the click registered.
- */
-export function assignCrew(
-  groupId: string,
-  task: TroopTask,
-  targetId: string | null,
-): void {
-  const index = world.troopGroups.findIndex(g => g.id === groupId)
-  if (index < 0) return
-
-  const group = world.troopGroups[index]
-  if (!canOrderCrewRemotely(groupId)) {
-    pushEvent('sietch_task_assigned', 'They are too far to hear you.')
-    return
-  }
-  const target = targetId
-    ? world.spiceFields.find(f => f.id === targetId)
-    : undefined
-  const hasThopter = carriedKinds(groupId).includes('thopter')
-
-  const check = checkAssign({ group, task, target, hasThopter })
-  if (!check.ok) {
-    pushEvent('sietch_task_assigned', assignRefusalMessage(check.reason))
-    return
-  }
-
-  world.troopGroups[index] = applyAssign(group, task, targetId)
-
-  const label = task === 'idle'
-    ? 'stand down'
-    : task === 'harvest'
-      ? `harvest ${target?.id ?? ''}`.trim()
-      : task
-  pushEvent('sietch_task_assigned', `Crew ordered to ${label}.`)
-}
-
-
-
-
-
-
-
-
-
-
-
+// Crew assignment moved to commands/assignCrewCommand.ts (chunk W2d) — the
+// CommandOutcome contract needed a structured refusal for "too far to hear
+// you", which this file's old void `assignCrew` had no way to report; see
+// that command's header for the changeover-once argument.
 
 /**
  * Whether the player may issue orders to a crew they are not standing with.

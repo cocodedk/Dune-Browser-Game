@@ -15,7 +15,6 @@ export const INITIAL_TROOP_GROUPS: TroopGroup[] = [
     // rather than incapable — and the player feels them improve.
     skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
     morale: 60,
-    equipmentIds: [],
     task: 'idle',
     taskTargetId: null,
     changeoverDaysLeft: 0,
@@ -49,7 +48,6 @@ export function groupsForPledgedSietch(
     size: Math.max(15, Math.round(population / 6)),
     skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
     morale: 55,
-    equipmentIds: [],
     task: 'idle',
     taskTargetId: null,
     changeoverDaysLeft: 0,
