@@ -687,3 +687,27 @@ reproduce.
   (bundle budgets passed); `npx playwright test --workers=1` 24/24
   (21 prior + 3 new in opening9.spec.ts).
 - No commits made this round; both critic verdict files left untouched.
+
+## Round 18 — WP04 verified, M1 REACHED (2026-08-12, `3266ed4`)
+
+- **Evidence audit: 8/10, `verified`.** All four exit-proof clauses hold on
+  the critic's own reproductions: parity exact per step (its independent
+  EventBus replay reproduced parityHash AND full hashState); both lines
+  viable through the real browser route with zero resource-granting debug
+  calls left; recovery 100/100 with patience held and the hand-set fixture
+  fields verified harder-not-easier; no simulator mutation bypass.
+- **Carry-forwards (recorded, not blockers):** the 100-seed sweep currently
+  has zero discriminating power (wormRisk 0 without harvesters, no agent
+  buys one — 1300 rows are 8 traces; the committed report must state this
+  vacuity as loudly as progress.md does, and WP13's release sweep must get
+  real variance); noFormulaCopies is blind to alias mutation (a probe
+  granting 10,000 spice passed it) — a structural guard for WP13;
+  visibleState leaks a live pendingSettlement reference; BASE_AMOUNTS[2]'s
+  change re-bases the ENTIRE post-opening curve ~8.7x down (not just a
+  "cycle-3 dip" — WP05's act escalation owns the re-authoring); the
+  round-1 "predicted 120/69" pair lacks a backing artifact (the builder's
+  arithmetic note, not a test pin — recorded as such); the sweep report's
+  commit header names its generation commit, not HEAD.
+- **Board: WP04 → `verified`. M1 REACHED.** Per 09's stop condition 1 the
+  loop STOPS here: build handed to the user for the play verdict. M2
+  (WP05–WP07, acts and endings) opens on his word.
