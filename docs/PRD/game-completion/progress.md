@@ -270,3 +270,44 @@ reproduce.
 - Lead verified each chunk independently (suite + tsc + protected-file diffs
   + code reads). Suite at W2c: 250 files / 2115 tests. **types.ts is at
   exactly 200 lines — zero headroom; W2d must split before adding types.**
+
+## Round 9 — WP02 chunks d–f + the package browser trace (2026-08-11)
+
+- **W2d (`7b9606b`):** assign-crew/issue-equipment/assault-fort commands; one
+  casualty rule (dissolve/merge/shrink) across worm/raid/assault; market
+  `availableStock(ctx)` single authority (tier3Unlocked was hardcoded false —
+  fixed; first tier-3 item added, price 150 recorded); equipment condition
+  removed from scope per 02's own rule; **live defect fixed** — the dead
+  `equipmentIds` mirror made CrewPanel and the quota projection ignore issued
+  gear. Hook forced three test-file splits (projection/harvest/resolve).
+- **W2e (`a696dcf`):** the deletion sweep, +280/−1614. Both dayRunner seams,
+  sietch task system + UI, CombatSystem + AttackSection whole,
+  `player.troops`/`player.influence`, dialogue faction-reputation write,
+  FactionPanel unmount. Live pledge button rescued into PledgePanel before
+  its host file died. WP00's characterization suite fully retired, every
+  deletion cited. single-harvest-authority proven numerically. E2E events
+  test rewritten (fresh campaigns emit nothing passively now) — validated by
+  the commit gate's real Playwright run.
+- **W2f code (`176685f`):** migrateV4ToV5 (drop troops/influence/task
+  progress/aiTimers; ≤1 deterministic crew per legacy pledged sietch; zero
+  back-pay; idempotent); factionProfiles stops serializing (reseeded from
+  data — no live campaign writer exists); goalType fully out of WorldState;
+  frozen v2 legacy fixture proves post-migration playability; all ten 02
+  fixtures inventoried (legacy-save-migration was the one gap, closed);
+  `__DUNE__.hashState()` exposed.
+- **Package browser trace (lead-driven, one tab):**
+  `baseline/wp02-trace/trace.md` + 3 PNGs. All exit-proof beats through
+  production UI: pledge (15-hand crew), crew harvest (60→64.80 spice, sole
+  income), reassignment (skill 30→34), day-12 settlement (clock provably
+  frozen; partial band held patience, arrears 31 carried; auto-ship
+  unlocked), TWO visible rejections (prospect-needs-thopter;
+  amount-exceeds-available), reload continuity byte-exact on every field
+  with no replayed day. Labeled helpers: `pick` for canvas clicks, `setTime`
+  for day advancement.
+- **Trace finding, fixed same round:** reload reissued colliding event ids
+  (module counter vs restored world — the `lastProcessedDay` defect class);
+  `nextEventId()` now resyncs from `world.events`, regression-pinned.
+- False alarm recorded honestly: an early one-hop probe suggested no sietch
+  was reachable at day 0; the travel model is region-hop-based and Red Wall
+  is two production hops away. Suite at trace close: 257 files / 2107 tests.
+- Next: WP02 evidence-auditor critic over the whole package.
