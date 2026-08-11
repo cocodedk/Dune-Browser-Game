@@ -135,3 +135,37 @@ reproduce.
 - Lead verification: full suite 236 files / **2037 tests pass**, tsc clean.
 - Next: B+D — ten-step day runner, faction/PoC quarantine, ending-writer
   collapse, multi-day catch-up, surviving-call-site seeding.
+
+## Round 5 — WP01-BD: day runner landed (2026-08-11, `59d8667`)
+
+- `dayRunner.ts` (124 lines): 02's ten-step order per crossed day; two marked
+  legacy-production seams (updateVillages + sietch payout loop) preserved for
+  WP02 in today's exact execution order; quota deliberately runs before step 8
+  so a patience-0 loss lands same-day (no pause-and-decide flow until WP02);
+  `runActCheck` is the SOLE ending writer (runQuotaCheck's gameOver block
+  removed). GameLoop 158→36 lines, faction sim/AI/PoC checks off the campaign
+  path; StatusBar PoC counter removed (forced by schema).
+- **Builder-caught design bug:** a naive `-1` day sentinel would have
+  backfilled ~40 days of quota settlement on every save load; `crossedDays()`
+  uses a null sentinel (first call after reset fires current day only) —
+  pinned by a save-load regression test asserting `cycleIndex === 1` not 4.
+- **RNG:** prospect ×3, worm ×1, raid ×1 now draw from one per-day
+  `createRng(world.rng)` service, written back once per day. Left unseeded
+  with reasons: CombatSystem ×2 + faction ×5 (die in WP02/quarantine) and
+  `endgameOps.ts:75` assaultFort — **command-time roll, deferred to WP02's
+  command consolidation** (inventory's WP01 tag re-ownered; critics: this is
+  recorded, not missed). `updateAI` has no random calls; quarantined.
+- **Characterization deletions, cited per their headers:** `pocGoal` and
+  `factionDayUpdate` baseline tests — their pinned behavior is what this
+  commit removes. The three surviving baseline tests pass unmodified (lead
+  re-ran; `git diff` on them empty).
+- `goalType` unseeded and unread on the campaign path; field stays optional in
+  types.ts until out-of-scope constructors (WP02 files) drop it. `goalAchieved`
+  kept as derived shadow; freeze checks aligned by lead to `world.ending` as
+  the authority (02 "Campaign status").
+- Lead verification: full suite 237 files / 2037 tests + tsc clean re-run
+  independently; dayRunner.ts and GameLoop.ts read in full; quarantine grep
+  clean. Commit gate (incl. 8 E2E) passed at `59d8667`.
+- WP01 fixture coverage complete: new-campaign-normal (C), seeded-prospect +
+  multi-day-catch-up + save-load (BD determinism tests), no-faction (BD
+  quarantine test). Next: WP01 evidence-auditor critic.

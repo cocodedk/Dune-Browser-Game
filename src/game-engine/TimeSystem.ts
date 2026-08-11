@@ -18,28 +18,37 @@ export function currentDay(): number {
  * engine repeats all ten steps for each day. It may not process only the
  * final day."
  *
- * The very first call after a reset (fresh campaign OR a loaded save sitting
- * on day 40) fires exactly once for whatever day `world.time` is already on
- * — it does not backfill every day since day 0. A `null` sentinel (rather
- * than `-1`) is what makes that true: with `-1`, loading a day-40 save and
- * calling this once would compute `[0..40]` and replay 41 days of
- * harvest/payouts/raids against an already-day-40 state on every reload.
- * Only calls AFTER that first one iterate monotonically day-by-day.
+ * Bookkeeping lives on `world.lastProcessedDay` (types.ts), not a module
+ * variable here — see baseline/wp01-critic-verdict.md's "biggest gap". A
+ * module-global survives neither `setWorld()` (Load, New) nor serialization
+ * (reload), so every production session-boundary path either replayed every
+ * intervening day, went permanently inert, or re-ran the day a save was
+ * taken on. Putting the value on WorldState means `setWorld(loaded)` —
+ * which store.ts's Load and New paths already call, with no extra wiring —
+ * carries the RIGHT bookkeeping across by construction.
+ *
+ * Semantics:
+ * - `null` (fresh campaign, or a genuinely new one started mid-session):
+ *   process whatever day `world.time` is already on, exactly once, with no
+ *   backfill from day 0.
+ * - `day < lastProcessedDay` (a loaded world's own day is BEHIND its own
+ *   bookkeeping — e.g. a corrupted or hand-built fixture): resync down the
+ *   same way `null` does — process the current day once, no backfill, no
+ *   iterating backward.
+ * - `day === lastProcessedDay`: already processed; nothing crossed.
+ * - `day > lastProcessedDay`: the normal case — every day in between, in
+ *   order.
  */
-let lastDay: number | null = null;
 export function crossedDays(): number[] {
   const day = currentDay();
-  if (lastDay === null) {
-    lastDay = day;
+  const last = world.lastProcessedDay;
+  if (last === null || day < last) {
+    world.lastProcessedDay = day;
     return [day];
   }
-  if (day <= lastDay) return [];
+  if (day === last) return [];
   const days: number[] = [];
-  for (let d = lastDay + 1; d <= day; d++) days.push(d);
-  lastDay = day;
+  for (let d = last + 1; d <= day; d++) days.push(d);
+  world.lastProcessedDay = day;
   return days;
-}
-
-export function resetTime(): void {
-  lastDay = null;
 }

@@ -88,6 +88,9 @@ export function createInitialState(seed: number = DEFAULT_SEED): WorldState {
       regionId: r.id, vegetation: 0, windtraps: 0,
     })),
     rng: { seed, step: 0 },
+    // A fresh campaign has processed no day yet — see types.ts's
+    // lastProcessedDay doc and TimeSystem.ts's crossedDays().
+    lastProcessedDay: null,
   };
 }
 

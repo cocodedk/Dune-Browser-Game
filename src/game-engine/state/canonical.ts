@@ -30,13 +30,23 @@ function canonicalize(value: unknown): unknown {
 }
 
 /**
+ * The canonical campaign object itself — `goalType`/`goalAchieved` omitted
+ * (see module header), everything else including `lastProcessedDay`
+ * included as-is, key order untouched. This is what persistence.ts stores:
+ * IndexedDB structured-clones a plain object fine, and sorted keys only
+ * matter for the string form below.
+ */
+export function toCanonicalState(world: WorldState): CanonicalCampaignState {
+  const { goalType: _goalType, goalAchieved: _goalAchieved, ...rest } = world
+  void _goalType
+  void _goalAchieved
+  return rest
+}
+
+/**
  * Canonical, deterministic JSON of campaign state: stable key order, with
  * `goalType`/`goalAchieved` omitted (see module header) and `rng` included.
  */
 export function serializeCanonical(world: WorldState): string {
-  const { goalType: _goalType, goalAchieved: _goalAchieved, ...rest } = world
-  void _goalType
-  void _goalAchieved
-  const canonical: CanonicalCampaignState = rest
-  return JSON.stringify(canonicalize(canonical))
+  return JSON.stringify(canonicalize(toCanonicalState(world)))
 }

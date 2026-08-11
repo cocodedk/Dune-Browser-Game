@@ -1,9 +1,10 @@
 // src/game-engine/saveMigration.v3.test.ts
-// migrateV2ToV3 and the v1->v3 migrateSave chain. Split from
-// saveMigration.test.ts (v1->v2 coverage) to stay under the file-size limit.
+// migrateV2ToV3, migrateV3ToV4, and the v1->v4 migrateSave chain. Split
+// from saveMigration.test.ts (v1->v2 coverage) to stay under the
+// file-size limit.
 
 import { describe, it, expect } from 'vitest'
-import { migrateV2ToV3, migrateSave, CURRENT_SAVE_VERSION } from './saveMigration'
+import { migrateV2ToV3, migrateV3ToV4, migrateSave, CURRENT_SAVE_VERSION } from './saveMigration'
 import type { VersionedSave } from './saveMigration'
 import type { WorldState } from '../types'
 
@@ -84,17 +85,51 @@ describe('migrateV2ToV3', () => {
   })
 })
 
-describe('migrateSave: v1 -> v3 chain', () => {
+describe('migrateV3ToV4', () => {
+  // The deliberate migration decision (docs/PRD/game-completion/
+  // baseline/wp01-critic-verdict.md's residue item 2): a MISSING
+  // lastProcessedDay backfills to the save's own current day, never to
+  // `null`. `null` means "process the current day once" — backfilling a
+  // real mid-run save to `null` would re-run the day it was saved on the
+  // next time it crosses a boundary, reintroducing PROBE A's reload defect
+  // for every old raw-world save already sitting in a real IndexedDB.
+  it("backfills lastProcessedDay to the save's own current day when the field is absent", () => {
+    const v3 = migrateV2ToV3(v2State()) // time: 120 -> day 2 (120 / 60)
+    const out = migrateV3ToV4(v3)
+    expect(out.lastProcessedDay).toBe(2)
+  })
+
+  it('never backfills to null — null stays reserved for a genuinely new campaign', () => {
+    const out = migrateV3ToV4(migrateV2ToV3(v2State()))
+    expect(out.lastProcessedDay).not.toBeNull()
+  })
+
+  it('leaves an already-present lastProcessedDay untouched, including an explicit null', () => {
+    const withNull: WorldState = { ...migrateV2ToV3(v2State()), lastProcessedDay: null }
+    expect(migrateV3ToV4(withNull).lastProcessedDay).toBeNull()
+
+    const withValue: WorldState = { ...migrateV2ToV3(v2State()), lastProcessedDay: 99 }
+    expect(migrateV3ToV4(withValue).lastProcessedDay).toBe(99)
+  })
+
+  it('is idempotent: migrating an already-migrated save changes nothing', () => {
+    const once = migrateV3ToV4(migrateV2ToV3(v2State()))
+    expect(migrateV3ToV4(once)).toEqual(once)
+  })
+})
+
+describe('migrateSave: v1 -> v4 chain', () => {
   function save(overrides: Partial<VersionedSave> = {}): VersionedSave {
     return { savedAt: 1, state: v2State(), ...overrides }
   }
 
-  it('an unversioned (v1) save ends up with an rng seed and no goalType', () => {
+  it('an unversioned (v1) save ends up with an rng seed, no goalType, and a backfilled lastProcessedDay', () => {
     const out = migrateSave(save())
     expect(out).not.toBeNull()
     expect(out!.rng.step).toBe(0)
     expect(typeof out!.rng.seed).toBe('number')
     expect('goalType' in out!).toBe(false)
+    expect(out!.lastProcessedDay).toBe(2) // v2State().time is 120 -> day 2
   })
 
   it('a v2 save ends up with an rng seed and no goalType', () => {

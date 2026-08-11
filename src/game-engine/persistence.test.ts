@@ -53,13 +53,30 @@ describe('persistence serialization', () => {
     state.speed = 5;
     state.player.spice = 100;
     state.player.influence = 50;
-    state.goalAchieved = true;
     const json = serializeWorld(state);
     const restored = deserializeWorld(json);
     expect(restored.time).toBe(500);
     expect(restored.speed).toBe(5);
     expect(restored.player.spice).toBe(100);
     expect(restored.player.influence).toBe(50);
+    // docs/PRD/game-completion/02-runtime-consolidation.md "Campaign
+    // status": goalAchieved "must not be serialized ... independently" —
+    // it is excluded from the canonical save (state/canonical.ts) and
+    // re-derived on load from world.ending, not round-tripped. A raw
+    // `goalAchieved = true` set here before serializing would NOT survive
+    // the trip (ending is still null), which is the point: see the
+    // "derives goalAchieved from ending, not from the save" test below.
+    expect(restored.goalAchieved).toBe(false);
+  });
+
+  it('derives goalAchieved from ending, not from the save', () => {
+    // The positive case for the same rule: an ending DOES survive (it is
+    // canonical), and goalAchieved is reconstructed from it on load, not
+    // read off whatever the save happened to carry.
+    const state = createInitialState();
+    state.ending = 'loss_patience';
+    const restored = deserializeWorld(serializeWorld(state));
+    expect(restored.ending).toBe('loss_patience');
     expect(restored.goalAchieved).toBe(true);
   });
 });

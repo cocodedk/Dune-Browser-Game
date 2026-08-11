@@ -18,8 +18,14 @@ import type { WorldState } from '../../types'
  *     pause flag — see saveMigration.ts's migrateV1ToV2.
  * v3: added the seeded `rng` field and stopped serializing `goalType` —
  *     see saveMigration.ts's migrateV2ToV3 and ./canonical.ts.
+ * v4: added `lastProcessedDay` day-boundary bookkeeping and wired this
+ *     module into the production save path (persistence.ts) — see
+ *     saveMigration.ts's migrateV3ToV4. The bump is required, not
+ *     cosmetic: without it, an old raw-world save already self-reporting
+ *     `version: 3` would bypass migration entirely and never gain the new
+ *     field (baseline/wp01-critic-verdict.md PROBE A's reload defect).
  */
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
 
 /** A save envelope already migrated to the current schema. */
 export interface CanonicalSaveEnvelope {

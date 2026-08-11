@@ -129,6 +129,32 @@ export function migrateV2ToV3(state: WorldState): WorldState {
 }
 
 /**
+ * v3 -> v4: add `lastProcessedDay` day-boundary bookkeeping (see
+ * TimeSystem.ts's crossedDays()). A pre-v4 save never carried this field —
+ * that bookkeeping used to live in a TimeSystem module-level variable, not
+ * on WorldState.
+ *
+ * Backfilling a MISSING field to `null` here would mean "process the
+ * current day once" — which replays the day the save was taken on the next
+ * time it processes a boundary: the reload defect measured in
+ * baseline/wp01-critic-verdict.md PROBE A (+2.61 spice, +1 RNG draw, no
+ * player command). Backfilling instead to the save's OWN current day marks
+ * that day "already processed", so the first update after load advances
+ * cleanly from there — no re-run, no backfill of days before it either.
+ * `null` stays reserved for a genuinely new campaign (createInitialState())
+ * and is never assigned by this function; idempotent (point 7) because it
+ * only fills a field that is truly absent, never one already `null`.
+ */
+export function migrateV3ToV4(state: WorldState): WorldState {
+  if (state.lastProcessedDay !== undefined) return state
+  // Mirrors TimeSystem.ts's DAY_SECONDS (60). Not imported: TimeSystem
+  // imports GameState, which imports persistence.ts, which imports this
+  // module — importing TimeSystem here would create that cycle.
+  const DAY_SECONDS = 60
+  return { ...state, lastProcessedDay: Math.floor(state.time / DAY_SECONDS) }
+}
+
+/**
  * Bring any supported save up to the current schema.
  * Returns null when the save is too old, unrecognised, or structurally broken.
  */
@@ -145,5 +171,6 @@ export function migrateSave(save: VersionedSave): WorldState | null {
   let migrated = state
   if (version < 2) migrated = migrateV1ToV2(migrated)
   if (version < 3) migrated = migrateV2ToV3(migrated)
+  if (version < 4) migrated = migrateV3ToV4(migrated)
   return migrated
 }

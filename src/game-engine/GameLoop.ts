@@ -1,5 +1,5 @@
 import { world } from './GameState';
-import { tick, resetTime } from './TimeSystem';
+import { tick } from './TimeSystem';
 import { resetEvents } from './EventSystem';
 import { checkTravelArrival } from './TravelSystem';
 import { shouldPause, effectiveDelta } from './pause';
@@ -32,6 +32,11 @@ export function update(delta: number): void {
 }
 
 export function initLoop(): void {
-  resetTime();
+  // Day-boundary bookkeeping (world.lastProcessedDay) is NOT reset here —
+  // it must survive a mount that follows a Load/reload, or the first frame
+  // re-runs the day the save was taken on (baseline/wp01-critic-verdict.md
+  // PROBE A). TimeSystem.ts's crossedDays() derives everything it needs
+  // from world state now, so there is nothing left for initLoop to reset
+  // besides the event-id counter.
   resetEvents();
 }

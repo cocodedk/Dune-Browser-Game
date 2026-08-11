@@ -91,6 +91,7 @@ function createTestWorld(): WorldState {
     wormSightings: [],
     desertSites: [],
     rng: { seed: 1, step: 0 },
+    lastProcessedDay: null,
   };
 }
 

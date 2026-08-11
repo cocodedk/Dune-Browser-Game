@@ -82,6 +82,16 @@ export interface DialogueState {
 export interface WorldState {
   time: number;           // game-seconds elapsed (real seconds × speed)
   speed: number;          // time multiplier (1 = normal, 5 = fast)
+  /**
+   * Day-boundary bookkeeping (game-engine/TimeSystem.ts's crossedDays()).
+   * `null` means "process the current day once, no backfill" — a fresh
+   * campaign, or a genuinely-new one started mid-session. Lives on
+   * WorldState, not a TimeSystem module-global, so every load path (Load,
+   * New, reload) inherits the RIGHT value by construction instead of a
+   * stale in-memory one — see baseline/wp01-critic-verdict.md's "biggest
+   * gap".
+   */
+  lastProcessedDay: number | null;
   villages: Village[];
   player: Player;
   aiTimers: Record<string, AITimer>;

@@ -97,6 +97,15 @@ describe('save-load reset: the first update after loading a mid-campaign save pr
     // TimeSystem.crossedDays()'s null sentinel is what makes this true: with
     // a `-1` sentinel, this first update() would compute [0..40] and replay
     // 40 days of quota settlement (cycles due at 12, 20, 28, 36) in one call.
+    // Still valid under the current semantics — the sentinel now lives on
+    // world.lastProcessedDay rather than a TimeSystem module variable (see
+    // its doc comment), but `createInitialState()` still seeds it `null`,
+    // so this fixture still exercises the exact same "first call after a
+    // fresh state" path. It does NOT cover the three production
+    // session-boundary failures (in-session Load, New, reload) baseline/
+    // wp01-critic-verdict.md found this fixture blind to — see
+    // dayRunner.sessionBoundary.test.ts for those, driven through the real
+    // production save/load sequences instead of a hand-built `state.time`.
     const state = createInitialState(3)
     state.time = 40 * DAY_SECONDS
     state.quota.nextDueDay = 12
