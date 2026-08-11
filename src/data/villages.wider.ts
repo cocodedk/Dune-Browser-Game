@@ -17,7 +17,10 @@ export const WIDER_VILLAGES: Village[] = [
   {
     id: 'habbanya_ridge',
     kind: 'sietch',
-    discovered: true,
+    // W3a (03-opening-experience.md "Starting contract"): not on any
+    // opening route (Arrakeen -> Hagg -> Red Wall Sietch -> Sietch Tabr) —
+    // see villages.ts's carthag for the full citation.
+    discovered: false,
     regionId: 'habbanya_ridge',
     name: 'Habbanya Ridge',
     position: { x: -60, y: 430 },

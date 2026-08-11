@@ -12,6 +12,7 @@ import { update, initLoop } from './GameLoop'
 import { world, setWorld, createInitialState } from './GameState'
 import { hashState } from './state/hash'
 import { DAY_SECONDS } from './TimeSystem'
+import { BRIEFING_COMPLETE_FLAG } from './acts/openingObjectives'
 import type { WorldState } from '../types'
 
 vi.mock('../EventBus', () => ({
@@ -21,6 +22,11 @@ vi.mock('../EventBus', () => ({
 /** A fresh campaign with one crew prospecting from day 0. */
 function withProspectingCrew(seed: number): WorldState {
   const state = createInitialState(seed)
+  // W3a: pause.ts's briefingPending gate blocks processDayBoundary() until
+  // briefing.complete is set — irrelevant to what this fixture tests, so
+  // it's set directly rather than through the (out-of-scope) stand-in
+  // dialogue.
+  state.flags[BRIEFING_COMPLETE_FLAG] = true
   state.troopGroups = [{
     id: 'group_tabr_1', homeSietchId: 'sietch_tabr', locationId: 'sietch_tabr',
     size: 30, skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
@@ -119,6 +125,7 @@ describe('save-load reset: the first update after loading a mid-campaign save pr
     // `lastProcessedDay` is the assertion that actually discriminates a
     // backfill from the correct single-day path.
     const state = createInitialState(3)
+    state.flags[BRIEFING_COMPLETE_FLAG] = true // W3a: see withProspectingCrew's citation above
     state.time = 40 * DAY_SECONDS
     state.quota.nextDueDay = 12
     setWorld(state)

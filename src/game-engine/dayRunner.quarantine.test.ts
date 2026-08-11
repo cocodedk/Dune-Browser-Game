@@ -20,6 +20,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { update, initLoop } from './GameLoop'
 import { world, setWorld, createInitialState } from './GameState'
+import { BRIEFING_COMPLETE_FLAG } from './acts/openingObjectives'
 
 vi.mock('../EventBus', () => ({
   EventBus: { emit: vi.fn(), on: vi.fn(), off: vi.fn() },
@@ -39,7 +40,11 @@ import { executeGoals } from './faction/GoalExecutor'
 
 describe('no-faction: campaign day path never touches the retired faction/AI authority', () => {
   it('leaves factionProfiles/regions/aiTimers untouched and never calls the quarantined systems, after several days', () => {
-    setWorld(createInitialState(7))
+    const state = createInitialState(7)
+    // W3a: pause.ts's briefingPending gate blocks processDayBoundary() until
+    // briefing.complete is set — irrelevant to what this fixture tests.
+    state.flags[BRIEFING_COMPLETE_FLAG] = true
+    setWorld(state)
     initLoop()
 
     const factionProfilesBefore = JSON.parse(JSON.stringify(world.factionProfiles))

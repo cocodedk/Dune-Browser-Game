@@ -18,6 +18,7 @@ import { world, setWorld, createInitialState, resetWorld } from './GameState'
 import { serializeWorld, deserializeWorld } from './persistence'
 import { hashState } from './state/hash'
 import { DAY_SECONDS } from './TimeSystem'
+import { BRIEFING_COMPLETE_FLAG } from './acts/openingObjectives'
 import type { WorldState } from '../types'
 
 vi.mock('../EventBus', () => ({
@@ -38,6 +39,11 @@ vi.mock('../EventBus', () => ({
  */
 function withProspectingCrewAndVillage(seed: number): WorldState {
   const state = createInitialState(seed)
+  // W3a: pause.ts's briefingPending gate blocks processDayBoundary() until
+  // briefing.complete is set — irrelevant to what this fixture tests, so
+  // it's set directly rather than through the (out-of-scope) stand-in
+  // dialogue.
+  state.flags[BRIEFING_COMPLETE_FLAG] = true
   state.troopGroups = [
     {
       id: 'group_tabr_1', homeSietchId: 'sietch_tabr', locationId: 'sietch_tabr',

@@ -20,6 +20,26 @@ export interface PauseInputs {
    * that restores `world.pendingSettlement` restores the freeze with it.
    */
   settlementPending: boolean
+  /**
+   * True until the opening's briefing closes (03-opening-experience.md
+   * "Starting contract": "simulation paused for the briefing"). Callers
+   * derive this as `world.lastProcessedDay === null &&
+   * world.flags['briefing.complete'] !== true` (see GameLoop.ts) — NOT from
+   * the flag alone.
+   *
+   * Keying on `lastProcessedDay` ("has any day boundary ever run in this
+   * save") rather than the flag alone is what keeps an old save from before
+   * this pause reason existed from freezing on load with no way out: such a
+   * save necessarily already crossed a day boundary under the prior code
+   * (day boundaries were never gated before this chunk), so
+   * `lastProcessedDay` is already a number and this input reads false
+   * regardless of the missing flag — no save-migration version bump needed.
+   * The one accepted edge case is an old save taken in the first few seconds
+   * of day 0, before its own first day boundary; it is rare, and recoverable
+   * the same way a fresh campaign clears the gate — open and close any
+   * conversation at Arrakeen (DialogueSystem.ts's temporary stand-in).
+   */
+  briefingPending: boolean
 }
 
 /**
@@ -29,7 +49,8 @@ export interface PauseInputs {
  * manual unpause must not resume time while a dialogue is still open.
  */
 export function shouldPause(inputs: PauseInputs): boolean {
-  return inputs.manual || inputs.inDialogue || inputs.ended || inputs.settlementPending
+  return inputs.manual || inputs.inDialogue || inputs.ended ||
+    inputs.settlementPending || inputs.briefingPending
 }
 
 /**

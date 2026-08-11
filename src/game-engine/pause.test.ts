@@ -5,7 +5,10 @@ import { shouldPause, effectiveDelta } from './pause'
 import type { PauseInputs } from './pause'
 
 function inputs(overrides: Partial<PauseInputs> = {}): PauseInputs {
-  return { manual: false, inDialogue: false, ended: false, settlementPending: false, ...overrides }
+  return {
+    manual: false, inDialogue: false, ended: false, settlementPending: false,
+    briefingPending: false, ...overrides,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -22,6 +25,11 @@ describe('shouldPause', () => {
     expect(shouldPause(inputs({ inDialogue: true }))).toBe(true)
     expect(shouldPause(inputs({ ended: true }))).toBe(true)
     expect(shouldPause(inputs({ settlementPending: true }))).toBe(true)
+    expect(shouldPause(inputs({ briefingPending: true }))).toBe(true)
+  })
+
+  it('does not let a manual unpause resume time during the opening briefing', () => {
+    expect(shouldPause(inputs({ manual: false, briefingPending: true }))).toBe(true)
   })
 
   it('does not let a manual unpause resume time with a settlement pending', () => {

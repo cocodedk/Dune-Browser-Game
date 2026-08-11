@@ -12,7 +12,13 @@ import { serializeWorld, deserializeWorld } from '../persistence'
 import { runSettleCommand } from './settleCommand'
 import { runPledgeCommand } from './pledgeCommand'
 import { runAssignCrewCommand } from './assignCrewCommand'
+import { startDialogue, endDialogue } from '../DialogueSystem'
+import { startTravel } from '../TravelSystem'
 import { DAY_SECONDS } from '../TimeSystem'
+import {
+  BRIEFING_COMPLETE_FLAG, TRAVEL_RED_WALL_FLAG, EARNED_TRUST_FLAG,
+  FIRST_HARVEST_FLAG, OPENING_COMPLETE_FLAG,
+} from '../acts/openingObjectives'
 
 vi.mock('../../EventBus', () => ({
   EventBus: { emit: vi.fn(), on: vi.fn(), off: vi.fn() },
@@ -25,6 +31,13 @@ function advanceToDay(day: number): void {
 
 function reachQ1(spice: number): void {
   const state = createInitialState()
+  // W3a: pause.ts's briefingPending gate blocks processDayBoundary() until
+  // briefing.complete is set — irrelevant to what these three fixtures
+  // test (the settlement bands themselves), so it's set directly rather
+  // than through the (out-of-scope) stand-in dialogue. The playability
+  // fixture below drives the real stand-in instead, since that IS part of
+  // what it proves.
+  state.flags[BRIEFING_COMPLETE_FLAG] = true
   state.player.spice = spice
   setWorld(state)
   initLoop()
@@ -67,6 +80,7 @@ describe('opening-partial-payment: paying exactly the minimum partial threshold'
     expect(world.quota.arrears).toBe(45) // round((90-54) * 1.25)
     expect(world.quota.nextDueDay).toBe(12 + 8)
     expect(world.ending).toBeNull()
+    expect(world.flags[OPENING_COMPLETE_FLAG]).toBe(true) // any band closes the opening (03 "Beat 7")
   })
 })
 
@@ -83,22 +97,44 @@ describe('opening-short-payment: reaching day 12 below the minimum partial thres
     expect(world.quota.arrears).toBe(60) // 90 - 30, no surcharge below the partial band
     expect(world.ending).toBeNull() // patience started at 3; one loss does not end the run
     expect(world.player.spice).toBe(0)
+    expect(world.flags[OPENING_COMPLETE_FLAG]).toBe(true) // short still closes the opening
   })
 })
 
-describe('playability: a fresh campaign can pledge, earn, and reach and resolve Q1 through production commands', () => {
-  it('pledges Red Wall, orders its crew to harvest, reaches the day-12 decision, and settles it', () => {
+describe('playability: a fresh campaign can hear the briefing, travel, pledge, earn, and reach and resolve Q1 — all through production commands', () => {
+  it('closes the stand-in briefing at Arrakeen, travels to Red Wall via Hagg, pledges, harvests, and settles', () => {
     const state = createInitialState()
-    state.player.location = 'red_wall_sietch' // loyalty 80 at opening — no gift/dialogue setup needed
     setWorld(state)
     initLoop()
 
+    // W3c replaces: the stand-in briefing close (DialogueSystem.ts's
+    // endDialogue). Lifts pause.ts's briefingPending gate.
+    startDialogue('neutral_settlement', 'arrakeen')
+    endDialogue()
+    expect(world.flags[BRIEFING_COMPLETE_FLAG]).toBe(true)
+
     const startingSpice = world.player.spice // 60 — the opening balance
-    const pledge = runPledgeCommand('red_wall_sietch')
+
+    // Two production hops — Arrakeen and Red Wall are not directly
+    // adjacent (data/regionAdjacency.ts); Hagg is the required waypoint
+    // (03 "Starting contract": "only routes valid for the opening").
+    startTravel('hagg')
+    expect(world.player.state).toBe('traveling')
+    update(10) // well over the ~6s hop
+    expect(world.player.location).toBe('hagg')
+
+    startTravel('red_wall_sietch')
+    update(10) // well over the ~4s hop
+    expect(world.player.location).toBe('red_wall_sietch')
+    expect(world.flags[TRAVEL_RED_WALL_FLAG]).toBe(true)
+
+    const pledge = runPledgeCommand('red_wall_sietch') // loyalty 80 at opening — no gift/dialogue setup needed
     expect(pledge).toEqual({ ok: true, code: 'pledged' })
+    expect(world.flags[EARNED_TRUST_FLAG]).toBe(true)
 
     const assign = runAssignCrewCommand('group_red_wall_sietch', 'harvest', 'field_red_wall_pan')
     expect(assign).toEqual({ ok: true, code: 'assigned' })
+    expect(world.flags[FIRST_HARVEST_FLAG]).toBe(true)
     const crew = world.troopGroups.find(g => g.id === 'group_red_wall_sietch')
     expect(crew?.task).toBe('harvest')
 
@@ -140,5 +176,6 @@ describe('playability: a fresh campaign can pledge, earn, and reach and resolve 
     expect(outcome).toEqual({ ok: true, code: 'settled' })
     expect(world.pendingSettlement).toBeNull()
     expect(world.quota.cycleIndex).toBe(1)
+    expect(world.flags[OPENING_COMPLETE_FLAG]).toBe(true)
   })
 })

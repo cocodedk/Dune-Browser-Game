@@ -13,8 +13,8 @@ import type { SceneModeId } from '../types'
 import { palette } from './theme'
 
 const HINTS: Record<SceneModeId, string> = {
-  strategic: 'Click a sietch to travel · drag to turn Arrakis · scroll to zoom in',
-  surface: 'Click a sietch to travel · shift-drag to pan · scroll out to leave',
+  strategic: 'Click a location to travel · drag to turn Arrakis · scroll to zoom in',
+  surface: 'Click a location to travel · shift-drag to pan · scroll out to leave',
   location: 'Click Speak to talk · Depart, scroll out or Esc to leave',
   flight: 'Press Esc to skip ahead',
   conversation: 'Choose a reply, or press Esc to step away',

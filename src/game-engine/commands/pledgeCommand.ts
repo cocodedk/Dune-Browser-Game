@@ -13,6 +13,8 @@
 import { checkPledgeChain, pledgePlayerSietch, type PledgeRefusal } from '../SietchSystem'
 import { ok, type CommandOutcome } from './outcome'
 import type { VillageId } from '../../types'
+import { world } from '../GameState'
+import { EARNED_TRUST_FLAG } from '../acts/openingObjectives'
 
 export type PledgeCommandCode = 'pledged'
 
@@ -32,5 +34,11 @@ export function runPledgeCommand(
   if (!check.ok) return check
 
   pledgePlayerSietch(villageId)
+
+  // Opening objective seam: the first successful pledge completes
+  // act1.earn_trust (acts/openingObjectives.ts). A dedicated sticky flag,
+  // not a live read of pledged.count — see that flag's own doc for why.
+  if (world.flags[EARNED_TRUST_FLAG] !== true) world.flags[EARNED_TRUST_FLAG] = true
+
   return ok('pledged')
 }

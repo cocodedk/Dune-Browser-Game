@@ -90,7 +90,13 @@ export const INITIAL_VILLAGES: Village[] = [
   {
     id: 'carthag',
     kind: 'fort',
-    discovered: true,
+    // W3a (03-opening-experience.md "Starting contract"): known destinations
+    // at new-campaign are Arrakeen, Red Wall Sietch and Sietch Tabr only,
+    // plus Hagg as the sole waypoint their routes require (see
+    // regionAdjacency.ts — Arrakeen and Red Wall are not directly adjacent).
+    // Carthag is not on any opening route; discovery now comes later, the
+    // same way every other non-opening location already worked.
+    discovered: false,
     regionId: 'carthag',
     name: 'Carthag',
     position: { x: 640, y: 350 },

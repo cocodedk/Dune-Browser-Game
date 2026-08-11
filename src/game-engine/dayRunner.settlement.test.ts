@@ -13,6 +13,7 @@ import { world, setWorld, createInitialState } from './GameState'
 import { runSettleCommand } from './commands/settleCommand'
 import { AUTO_SHIP_UNLOCKED_FLAG, AUTO_SHIP_ENABLED_FLAG } from './quota/settlement'
 import { DAY_SECONDS } from './TimeSystem'
+import { BRIEFING_COMPLETE_FLAG } from './acts/openingObjectives'
 import type { WorldState } from '../types'
 
 vi.mock('../EventBus', () => ({
@@ -27,6 +28,11 @@ function advanceToDay(day: number): void {
 
 function withProspectingCrew(seed: number): WorldState {
   const state = createInitialState(seed)
+  // W3a: pause.ts's briefingPending gate blocks processDayBoundary() until
+  // briefing.complete is set — irrelevant to what this fixture tests, so
+  // it's set directly rather than through the (out-of-scope) stand-in
+  // dialogue.
+  state.flags[BRIEFING_COMPLETE_FLAG] = true
   state.troopGroups = [{
     id: 'group_tabr_1', homeSietchId: 'sietch_tabr', locationId: 'sietch_tabr',
     size: 30, skills: { spice: 30, prospect: 25, military: 20, ecology: 15 },
@@ -38,6 +44,7 @@ function withProspectingCrew(seed: number): WorldState {
 describe('runTributeCheck: creates the pending decision at the deadline', () => {
   it('snapshots the quota/stock into the payload, and pauses — a huge delta advances nothing', () => {
     const state = createInitialState(2)
+    state.flags[BRIEFING_COMPLETE_FLAG] = true // W3a: see withProspectingCrew's citation above
     state.quota.nextDueDay = 3
     state.player.spice = 40
     setWorld(state)
@@ -61,6 +68,7 @@ describe('runTributeCheck: creates the pending decision at the deadline', () => 
 describe('auto-shipment: settles automatically at the deadline, never pausing', () => {
   it('deducts spice and advances the deadline with no pending decision ever appearing', () => {
     const state = createInitialState(4)
+    state.flags[BRIEFING_COMPLETE_FLAG] = true // W3a: see withProspectingCrew's citation above
     state.quota.nextDueDay = 3
     state.player.spice = 200
     state.flags[AUTO_SHIP_UNLOCKED_FLAG] = 1
@@ -77,6 +85,7 @@ describe('auto-shipment: settles automatically at the deadline, never pausing', 
 
   it('can end the run same day via the shared ending authority, with no decision ever created', () => {
     const state = createInitialState(4)
+    state.flags[BRIEFING_COMPLETE_FLAG] = true // W3a: see withProspectingCrew's citation above
     state.quota.nextDueDay = 3
     state.quota.patience = 1
     state.player.spice = 0

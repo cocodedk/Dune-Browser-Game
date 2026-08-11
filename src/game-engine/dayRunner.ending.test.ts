@@ -19,6 +19,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { update, initLoop } from './GameLoop'
 import { world, setWorld, createInitialState } from './GameState'
 import { runSettleCommand } from './commands/settleCommand'
+import { BRIEFING_COMPLETE_FLAG } from './acts/openingObjectives'
 
 vi.mock('../EventBus', () => ({
   EventBus: { emit: vi.fn(), on: vi.fn(), off: vi.fn() },
@@ -27,6 +28,9 @@ vi.mock('../EventBus', () => ({
 describe('campaign-goal-authority: full village ownership does not end the run', () => {
   it('leaves world.ending null across several act-2 days when every village is player-owned', () => {
     const state = createInitialState(5)
+    // W3a: pause.ts's briefingPending gate blocks processDayBoundary() until
+    // briefing.complete is set — irrelevant to what this fixture tests.
+    state.flags[BRIEFING_COMPLETE_FLAG] = true
     state.act = 'act2'
     state.flags['act'] = 2
     // Isolate ending authority from tribute settlement — that path is
@@ -48,6 +52,7 @@ describe('campaign-goal-authority: full village ownership does not end the run',
 describe('patience-0: the settle command is the ending authority for a payment that empties patience', () => {
   it('creates the pending decision with no ending yet, then lands loss_patience once settled, with exactly one ending event', () => {
     const state = createInitialState(9)
+    state.flags[BRIEFING_COMPLETE_FLAG] = true // W3a: see the fixture above's citation
     state.quota.patience = 1
     state.quota.nextDueDay = 0 // due immediately, on day 0
     state.quota.amount = 100

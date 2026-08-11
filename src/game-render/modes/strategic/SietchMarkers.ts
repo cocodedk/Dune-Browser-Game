@@ -135,7 +135,15 @@ export function createSietchMarkers(
       const village = state.villages.find(v => v.id === entry.id)
       if (!village) continue
 
-      const hex = FACTION_HEX_COLORS[village.owner as FactionId] ?? 0xc8a84b
+      // Arrakeen is the imperial palace, not a sietch — it must not wear
+      // sietch colours (user finding, 2026-08-11): the capital gets an
+      // imperial off-white spire. Undiscovered places show as anonymous dim
+      // spires — present on the map, unnamed and unexplained until found.
+      const palace = village.kind === 'palace'
+      const undiscovered = village.discovered === false
+      const hex = palace ? 0xe8e4da
+        : undiscovered ? 0x7d7668
+        : FACTION_HEX_COLORS[village.owner as FactionId] ?? 0xc8a84b
       entry.pillar.color = new Color(hex)
 
       const sworn = state.sietches.some(
@@ -148,7 +156,7 @@ export function createSietchMarkers(
       // being three pixels across at orbit, so it is hue *and* brightness
       // rather than either alone.
       entry.ring.color = new Color(sworn ? ALLY_COLOR : hex)
-      entry.ring.opacity = sworn ? 0.95 : here ? 0.6 : 0.32
+      entry.ring.opacity = sworn ? 0.95 : here ? 0.6 : undiscovered ? 0.18 : 0.32
       // Recorded rather than applied: the globe rescales every marker child
       // each frame for zoom, and would overwrite a scale set here. Consumers
       // multiply by this instead.

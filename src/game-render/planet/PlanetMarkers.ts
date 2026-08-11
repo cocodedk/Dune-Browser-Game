@@ -66,11 +66,11 @@ export function createPlanetMarkers(
 
   const markers = createSietchMarkers(world, radius * 2, () => 0)
 
-  // Undiscovered places are not named. Learning where somewhere *is* should be
+  // Undiscovered places are not named. Learning what somewhere *is* should be
   // something the player does — by prospecting, or by being told — rather than
   // something the map hands over at the start. Names are supplied only for
-  // what has been found; the rest get no label, and their markers are hidden
-  // entirely in update().
+  // what has been found; the rest keep their markers (an emptied desert reads
+  // as a bug, not a mystery — user finding, 2026-08-11) but get no label.
   const known = new Set(world.villages.filter(v => v.discovered).map(v => v.id))
   const labels = createMarkerLabels(
     markers.placements,
@@ -163,8 +163,11 @@ export function createPlanetMarkers(
       }
 
       for (const seat of seats) {
+        // Markers stay visible for undiscovered places; only the NAME is
+        // earned by discovery, so the label seats (the ones carrying an
+        // anchor) keep the discovery gate and the spires do not.
         seat.object.visible = seat.out.dot(toCamera) > horizon
-          && (seat.id === undefined || known.has(seat.id))
+          && (seat.anchor === undefined || seat.id === undefined || known.has(seat.id))
         if (!seat.anchor) continue
         seat.object.position.copy(seat.anchor).addScaledVector(seat.out, lift)
         const material = (seat.object as Sprite).material

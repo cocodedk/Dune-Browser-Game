@@ -16,12 +16,21 @@ vi.mock('../game-engine/SietchVisitSystem', () => ({
 vi.mock('../game-engine/commands/autoShipCommand', () => ({
   runSetAutoShipCommand: vi.fn(() => ({ ok: true, code: 'auto-ship-configured' })),
 }))
+vi.mock('../game-engine/commands/settleCommand', () => ({
+  runSettleCommand: vi.fn(() => ({ ok: true, code: 'settled' })),
+}))
+vi.mock('../game-engine/persistence', () => ({
+  saveGame: vi.fn(() => Promise.resolve()),
+}))
 
 import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue } from '../game-engine/DialogueSystem'
 import { runPledgeCommand } from '../game-engine/commands/pledgeCommand'
 import { giftPlayerSietch } from '../game-engine/SietchVisitSystem'
 import { runSetAutoShipCommand } from '../game-engine/commands/autoShipCommand'
+import { runSettleCommand } from '../game-engine/commands/settleCommand'
+import { saveGame } from '../game-engine/persistence'
+import { OPENING_COMPLETE_FLAG } from '../game-engine/acts/openingObjectives'
 import { EventBus } from '../EventBus'
 import { world, setWorld, createInitialState } from '../game-engine/GameState'
 import { wireCommands } from './CommandWiring'
@@ -93,6 +102,35 @@ describe('wireCommands', () => {
 
     EventBus.emit('player:set_auto_ship', { enabled: true }) // default mock: success
     expect(world.events.length).toBe(before + 1) // no second event from this seam
+  })
+
+  it('autosaves once when a settle command crosses the opening-complete edge', () => {
+    vi.mocked(runSettleCommand).mockImplementationOnce(() => {
+      world.flags[OPENING_COMPLETE_FLAG] = true // simulates the real command's own write
+      return { ok: true, code: 'settled' }
+    })
+
+    EventBus.emit('player:settle_tribute', { amount: 90 })
+
+    expect(saveGame).toHaveBeenCalledTimes(1)
+    expect(saveGame).toHaveBeenCalledWith(world)
+  })
+
+  it('does not autosave when the opening was already complete before this settle', () => {
+    world.flags[OPENING_COMPLETE_FLAG] = true
+    vi.mocked(runSettleCommand).mockReturnValueOnce({ ok: true, code: 'settled' })
+
+    EventBus.emit('player:settle_tribute', { amount: 90 })
+
+    expect(saveGame).not.toHaveBeenCalled()
+  })
+
+  it('does not autosave on a refused settle', () => {
+    vi.mocked(runSettleCommand).mockReturnValueOnce({ ok: false, reason: 'no-pending-settlement' })
+
+    EventBus.emit('player:settle_tribute', { amount: 90 })
+
+    expect(saveGame).not.toHaveBeenCalled()
   })
 
   // player:assign_sietch_task, player:stop_sietch_task, player:attack_village

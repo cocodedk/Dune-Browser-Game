@@ -24,6 +24,7 @@ import { carriedKinds } from '../economy/carried'
 import { canOrderCrewRemotely } from '../EconomySystem'
 import { ok, fail, type CommandOutcome } from './outcome'
 import type { AssignRefusal } from '../troops/assign'
+import { FIRST_HARVEST_FLAG } from '../acts/openingObjectives'
 
 export type AssignCrewCode = 'assigned'
 export type AssignCrewRefusal = 'unknown-crew' | 'crew-destroyed' | 'too-far' | AssignRefusal
@@ -60,6 +61,13 @@ export function runAssignCrewCommand(
       ? `harvest ${target?.id ?? ''}`.trim()
       : task
   pushEvent('sietch_task_assigned', `Crew ordered to ${label}.`)
+
+  // Opening objective seam: the first-ever harvest order completes
+  // act1.order_first_harvest (acts/openingObjectives.ts) and stays complete
+  // regardless of any later reassignment away from harvest.
+  if (task === 'harvest' && world.flags[FIRST_HARVEST_FLAG] !== true) {
+    world.flags[FIRST_HARVEST_FLAG] = true
+  }
 
   return ok('assigned')
 }

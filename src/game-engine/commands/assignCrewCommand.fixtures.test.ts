@@ -16,6 +16,7 @@ import { applyCasualty } from '../troops/casualty'
 import { runHarvestDay } from '../economy/harvestRun'
 import { createRng } from '../rng/rng'
 import { CHANGEOVER_DAYS } from '../troops/types'
+import { FIRST_HARVEST_FLAG } from '../acts/openingObjectives'
 import type { TroopGroup, SpiceField } from '../troops/types'
 
 vi.mock('../../EventBus', () => ({
@@ -130,5 +131,24 @@ describe('assign-crew refusals', () => {
 
     expect(runAssignCrewCommand('g1', 'train', null)).toEqual({ ok: false, reason: 'already-assigned' })
     expect(world.troopGroups[0]).toEqual(before)
+  })
+})
+
+describe('opening objective seam: crew.harvest_assigned (acts/openingObjectives.ts)', () => {
+  it('is set on the first harvest assignment, and stays set after reassignment away from harvest', () => {
+    freshWithCrew()
+    expect(world.flags[FIRST_HARVEST_FLAG]).toBeUndefined()
+
+    runAssignCrewCommand('g1', 'harvest', 'field_1')
+    expect(world.flags[FIRST_HARVEST_FLAG]).toBe(true)
+
+    runAssignCrewCommand('g1', 'train', null)
+    expect(world.flags[FIRST_HARVEST_FLAG]).toBe(true) // sticky — historical, not live state
+  })
+
+  it('is not set by a non-harvest assignment', () => {
+    freshWithCrew()
+    runAssignCrewCommand('g1', 'train', null)
+    expect(world.flags[FIRST_HARVEST_FLAG]).toBeUndefined()
   })
 })

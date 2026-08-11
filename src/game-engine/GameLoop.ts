@@ -4,6 +4,7 @@ import { resetEvents } from './EventSystem';
 import { checkTravelArrival } from './TravelSystem';
 import { shouldPause, effectiveDelta } from './pause';
 import { processDayBoundary } from './dayRunner';
+import { BRIEFING_COMPLETE_FLAG } from './acts/openingObjectives';
 
 export function update(delta: number): void {
   // Dialogue, an explicit player pause, and a finished run each freeze the
@@ -15,6 +16,9 @@ export function update(delta: number): void {
     ended: world.ending !== null,
     // A pending tribute decision pauses too — 02 "Tribute".
     settlementPending: world.pendingSettlement !== null,
+    // The opening's briefing gate — see pause.ts's PauseInputs doc for why
+    // this keys on lastProcessedDay rather than the flag alone.
+    briefingPending: world.lastProcessedDay === null && world.flags[BRIEFING_COMPLETE_FLAG] !== true,
   });
   if (paused) return;
 

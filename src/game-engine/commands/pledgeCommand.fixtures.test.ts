@@ -14,6 +14,7 @@ import { serializeWorld, deserializeWorld } from '../persistence'
 import { rootNodeForCharacter } from '../dialogue/select'
 import { INITIAL_DIALOGUE_STATES } from '../../data/dialogueStates'
 import { PLEDGE_THRESHOLD, NEGLECT_DAYS } from '../sietch/loyalty'
+import { EARNED_TRUST_FLAG } from '../acts/openingObjectives'
 
 function freshAtTabr(): ReturnType<typeof createInitialState> {
   const state = createInitialState()
@@ -52,6 +53,8 @@ describe('pledge-at-threshold: loyalty 60', () => {
     // The act machine's projection reads world.sietches live (actRun.ts's
     // actView), so it reflects this pledge with no separate write.
     expect(world.sietches.filter(s => s.pledgedToPlayer)).toHaveLength(1)
+    // Opening objective seam (acts/openingObjectives.ts): act1.earn_trust.
+    expect(world.flags[EARNED_TRUST_FLAG]).toBe(true)
   })
 })
 
@@ -115,6 +118,11 @@ describe('win-back: decay to unpledge, restore loyalty, re-pledge', () => {
     const afterDecay = world.sietches.find(s => s.villageId === 'sietch_tabr')
     expect(afterDecay?.pledgedToPlayer).toBe(false)
     expect(afterDecay?.loyalty).toBe(29)
+    // The opening objective seam stays complete even though pledged.count
+    // just fell back to 0 — see EARNED_TRUST_FLAG's own doc for why this is
+    // a dedicated sticky flag, not a live read of that counter.
+    expect(world.flags['pledged.count']).toBe(0)
+    expect(world.flags[EARNED_TRUST_FLAG]).toBe(true)
 
     // Win back: loyalty recovers, re-pledge through the real chain.
     world.sietches = world.sietches.map(s =>

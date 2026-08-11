@@ -13,6 +13,7 @@ import { readLoyaltyState, writeLoyaltyState } from './sietch/loyaltyState';
 // and pulling in the whole facade for one function is the kind of import
 // that turns into a cycle the first time EconomySystem needs a dialogue hook.
 import { attemptRitual } from './economy/endgameOps';
+import { BRIEFING_COMPLETE_FLAG } from './acts/openingObjectives';
 
 /**
  * Runtime tree lookup, local to this module.
@@ -50,9 +51,22 @@ export function currentNode() {
 
 export function endDialogue(): void {
   if (!world.dialogue) return;
+  const location = world.player.location;
   world.dialogue = null;
   pushEvent('dialogue_end', '\ud83d\udcac Conversation ended.');
   EventBus.emit('dialogue:ended');
+
+  // W3c replaces: temporary stand-in for the authored briefing dialogue's
+  // own `setFlags: { 'briefing.complete': true }` effect (03-opening-
+  // experience.md "Teaching sequence" Beat 1: "Completing the exchange sets
+  // briefing.complete"). Any conversation closing at Arrakeen while the flag
+  // is unset counts as having heard the briefing, so pause.ts's
+  // briefingPending gate has a production-reachable exit before the real
+  // Duke Leto tree exists. The `!== true` guard just avoids a redundant
+  // write once the real flag lands; it is otherwise harmless to repeat.
+  if (location === 'arrakeen' && world.flags[BRIEFING_COMPLETE_FLAG] !== true) {
+    world.flags[BRIEFING_COMPLETE_FLAG] = true;
+  }
 }
 
 export function chooseDialogue(choiceId: string): void {
@@ -66,9 +80,9 @@ export function chooseDialogue(choiceId: string): void {
   }
 
   if (choice.nextId === null) {
-    world.dialogue = null;
-    pushEvent('dialogue_end', '\ud83d\udcac Conversation ended.');
-    EventBus.emit('dialogue:ended');
+    // One choke point for "a dialogue just ended" (see endDialogue's own
+    // stand-in logic) rather than duplicating its body here.
+    endDialogue();
   } else {
     world.dialogue!.currentNodeId = choice.nextId;
   }

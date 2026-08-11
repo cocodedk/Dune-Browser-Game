@@ -30,7 +30,7 @@ test('game UI structure is visible after initialisation', async ({ page }) => {
   // describes map controls rather than the old sidebar layout.
   await expect(page.locator('text=DUNE').first()).toBeVisible()
   await expect(
-    page.locator('text=/Click a sietch to travel/i').first()
+    page.locator('text=/Click a location to travel/i').first()
   ).toBeVisible()
 
   const canvas = page.locator('#scene-container canvas')

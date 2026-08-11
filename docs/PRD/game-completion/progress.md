@@ -341,3 +341,83 @@ reproduce.
 - **WP02 → `verified`.** Package total: six build chunks + one
   remediation, a lead-driven browser trace, two audit passes; suite
   260 files / 2123 tests.
+
+## Round 11 — WP03 opened: plan of record (2026-08-11)
+
+- Advisor-checked. Seven serial chunks: W3a objective seam + starting
+  contract → W3b title/new-run setup (difficulty leaves StatusBar,
+  written once) → W3c beats 1–2 (briefing + ledger; **loyalty-pump gate
+  extended to positive loyaltyDelta here** — Beat 4's replies must not
+  make re-conversation a free trust pump; opening beats get their OWN
+  dialogue trees, never the shared fremen_sietch tree whose (tree,node)
+  budget is cross-location; NO new positive spiceDelta in opening
+  content — the 55 ceiling is a recorded WP04 input) → W3d beats 3–5
+  (travel tutorial, Stilgar near-threshold trust, pledge confirm, crew
+  reveal; **Red Wall's 80 seed drops to near-threshold IN THIS CHUNK**,
+  same commit as the dialogue that closes the gap, fixtures updated with
+  citation — canonical numbers recorded) → W3e beats 6–7 (Tabr gift
+  dilemma, settlement upgrade to 03's preview spec, Fenring/Thufir
+  responses, opening.complete) → W3f guidance/coach marks + recovery
+  matrix + disclosure completion → W3g the 8 fixtures + 6 Playwright
+  scenarios.
+- **Every chunk's commit carries its own E2E repairs** — the gate runs
+  Playwright per commit; a UI change split from its E2E update is a
+  burned gate cycle.
+- **Scope readings, recorded before the critic finds them:** 03
+  acceptance 2–3 are human-gated and outside WP03's exit proof ("ready
+  for first-time-player testing" is its own wording) — they close in
+  WP14; autosave = the existing rolling save, slots are WP11's;
+  settlement "committed" stays N/A per W2c's field-by-field reading;
+  W3a builds the minimal act1 objective-record seam and **WP05 extends
+  it** (no parallel-build); the 8 fixtures are engine tests through
+  production entry points and the 6 scenarios are Playwright against the
+  release preview — that is the reading of "fixtures pass in the release
+  browser"; yield-range shown / exact density hidden — the knowledge
+  gate's content is WP05's.
+- Charisma-cap arithmetic must be read from loyalty.ts before the
+  opening-charisma-cap fixture is written — if the +5 pledge award makes
+  a third slot before a third pledge, the reconciliation is an authored
+  canonical-numbers decision, not a builder's silent pick.
+- Beat 1 passes with procedural portraits today; W3c adds the **drop-in
+  2D portrait slot** (folder + loader + framing spec, user image
+  preferred over procedural fallback) — closes the user's open portrait
+  item; tell him where to drop files when it lands.
+- Package close = TWO critics: the evidence audit AND the loop's first
+  **blind-play critic** (fresh context, cold Playwright run, no
+  coaching — both "understandable?" and "correct?"), one tab, serial.
+
+## Round 12 — W3a landed + three user findings applied (2026-08-11)
+
+- **User findings (from play, 2026-08-11 morning), all applied:**
+  1. "Travelling is broken" — root cause: he was playing the dev server
+     while W3a's briefing-pause edits were landing live; verified in the
+     real browser post-landing: fresh campaign starts frozen at the
+     briefing (by design), the Duke's dialogue completes through real
+     replies, the clock resumes, and Arrakeen → Hagg travel runs and
+     arrives. Working.
+  2. "Number of sietches reduced" — the opening's narrowed discovery made
+     undiscovered places vanish from the globe. Applied his art
+     direction (names hidden, not places invisible): markers now stay
+     visible for undiscovered locations as anonymous dim spires; only
+     LABELS are discovery-gated (`PlanetMarkers.ts`, `SietchMarkers.ts`).
+     Verified on the globe: four named places, anonymous spires
+     everywhere else.
+  3. "Arrakeen must not be a sietch" — data was already `kind:'palace'`
+     and the 3D hall gate correct; the defects were presentation: the
+     view hint said "Click a sietch to travel" (now "location") and the
+     capital wore sietch marker colors (now an imperial off-white spire).
+     Verified visually.
+- **W3a (chunk):** act1 objective seam (7 stable ids, flag-derived, pure
+  queries; WP05 extends), ObjectivePanel with Show/Why/history,
+  discovery narrowed to Arrakeen/Red Wall/Tabr + Hagg waypoint, briefing
+  pause keyed on `lastProcessedDay === null` so old saves never freeze,
+  stand-in briefing completion (`// W3c replaces`), autosave on
+  opening.complete. Lead verified the full beat chain live in-browser:
+  briefing → objective advances to "Read the tribute ledger" →
+  "✓ Hear the Duke's briefing" in history → travel under way.
+- **Charisma-cap finding (W3g decision owed):** `maxPledged =
+  floor(charisma/10)`; after two pledges charisma 30 opens a third slot,
+  so 03's `opening-charisma-cap` fixture cannot refuse under the current
+  rule — an authored canonical-numbers reconciliation is owed at W3g.
+- **CommandWiring.ts at 192/200** — W3b must split before adding title
+  wiring. Suite: 262 files / 2143 tests.

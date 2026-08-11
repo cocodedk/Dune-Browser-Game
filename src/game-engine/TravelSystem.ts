@@ -6,6 +6,7 @@ import type { VillageId, WorldState } from '../types';
 import { checkTravel, rejectionMessage } from './travel/rules';
 import type { TravelMode } from './travel/rules';
 import { REGION_ADJACENCY } from '../data/regionAdjacency';
+import { TRAVEL_RED_WALL_FLAG } from './acts/openingObjectives';
 
 export function travelDuration(fromId: VillageId, toId: VillageId): number {
   const from = world.villages.find(v => v.id === fromId);
@@ -115,5 +116,13 @@ export function checkTravelArrival(): void {
     visitPlayerSietch(arrivedAt);
   } else {
     visitVillage(arrivedAt);
+  }
+
+  // Opening objective seam (acts/openingObjectives.ts): arrival at Red Wall
+  // completes act1.travel_red_wall. A dedicated flag rather than a read of
+  // sietch.lastVisitedDay — every sietch seeds lastVisitedDay: 0
+  // (data/sietches.ts), indistinguishable from "visited on day 0".
+  if (arrivedAt === 'red_wall_sietch' && world.flags[TRAVEL_RED_WALL_FLAG] !== true) {
+    world.flags[TRAVEL_RED_WALL_FLAG] = true;
   }
 }

@@ -14,6 +14,7 @@ import EventToasts from './ui/EventToasts'
 import OrnamentFrame from './ui/Ornament'
 import ViewHint from './ui/ViewHint'
 import PositionStrip from './ui/PositionStrip'
+import ObjectivePanel from './ui/ObjectivePanel'
 
 // three.js is now the only renderer; Phaser is gone. Kept lazy so the 3D
 // chunk stays out of the initial payload.
@@ -39,6 +40,7 @@ export default function App() {
       {/* Title, floating top-left over the sand */}
       <div style={styles.title}>DUNE</div>
       <PositionStrip />
+      <ObjectivePanel />
 
       {/* Command column, floating right. Scrolls independently of the map. */}
       <div style={styles.column}>

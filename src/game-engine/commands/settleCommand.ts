@@ -13,6 +13,7 @@ import { ok, fail, type CommandOutcome } from './outcome'
 import { validateSettleAmount, type SettleAmountRefusal } from '../quota/settlement'
 import { applySettlement } from '../economy/settlementRun'
 import { evaluateEndingAuthority } from '../economy/actRun'
+import { OPENING_COMPLETE_FLAG } from '../acts/openingObjectives'
 
 export type SettleCommandCode = 'settled'
 export type SettleRefusal = 'no-pending-settlement' | SettleAmountRefusal
@@ -37,9 +38,18 @@ export function runSettleCommand(
   const refusal = validateSettleAmount(amount, pending)
   if (refusal) return fail(refusal)
 
+  // Captured before applySettlement clears world.pendingSettlement — cycle 0
+  // is Q1 (quota.ts's cycleIndex starts at 0). 03-opening-experience.md
+  // "Beat 7": settling Q1, any payment band, closes the opening — the
+  // command's own SettleCommandCode stays a single 'settled' either way so
+  // every existing fixture pinning that code needs no change.
+  const isOpeningSettlement = pending.cycleIndex === 0
+
   applySettlement(amount)
   world.pendingSettlement = null
   evaluateEndingAuthority()
+
+  if (isOpeningSettlement) world.flags[OPENING_COMPLETE_FLAG] = true
 
   return ok('settled')
 }

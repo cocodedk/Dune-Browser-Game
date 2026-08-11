@@ -44,7 +44,7 @@ implementation starts.
 | WP00 | Baseline and contract fixtures | `verified` | — | `02`, `03`, `04` |
 | WP01 | Runtime authority and seeded time | `verified` | WP00 | `02` |
 | WP02 | Command, pledge, crew, and tribute consolidation | `verified` | WP01 | `02` |
-| WP03 | Title, new run, and opening through Q1 | `planned` | WP02 | `03` |
+| WP03 | Title, new run, and opening through Q1 | `in_progress` | WP02 | `03` |
 | WP04 | Runtime-faithful runner and opening balance | `planned` | WP03 | `07` |
 | WP05 | Act/objective and consequence framework | `planned` | WP02 | `04`, `05` |
 | WP06 | Acts 1–2 vertical campaign | `planned` | WP04, WP05 | `04`, `05` |

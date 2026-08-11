@@ -24,6 +24,8 @@ import { runIssueEquipmentCommand } from '../game-engine/commands/issueEquipment
 import { issueRefusalMessage } from '../game-engine/troops/equipmentRefusal'
 import { runAssaultCommand } from '../game-engine/commands/assaultCommand'
 import { assaultCommandRefusalMessage } from '../game-engine/acts/assaultCommandRefusal'
+import { OPENING_COMPLETE_FLAG } from '../game-engine/acts/openingObjectives'
+import { saveGame } from '../game-engine/persistence'
 import { EventBus } from '../EventBus'
 import type { BusEvents } from '../types'
 
@@ -124,8 +126,21 @@ export function wireCommands(): () => void {
    * refusal is the one place this becomes player-visible text.
    */
   const onSettle = ({ amount }: BusEvents['player:settle_tribute']): void => {
+    const openingAlreadyComplete = world.flags[OPENING_COMPLETE_FLAG] === true
     const outcome = runSettleCommand(amount)
-    if (!outcome.ok) pushEvent('tribute_refused', settleRefusalMessage(outcome.reason))
+    if (!outcome.ok) {
+      pushEvent('tribute_refused', settleRefusalMessage(outcome.reason))
+      return
+    }
+    // 03 "Beat 7": "Q1 completion sets opening.complete, autosaves...".
+    // Detected by edge (flag false -> true across this exact call) rather
+    // than the command's own return code, so SettleCommandCode stays
+    // untouched and every existing 'settled' fixture keeps passing.
+    // Fire-and-forget: saveGame is async IndexedDB I/O this wiring layer
+    // must not block a frame on; `.catch` mirrors main.tsx's own load.
+    if (!openingAlreadyComplete && world.flags[OPENING_COMPLETE_FLAG] === true) {
+      void saveGame(world).catch(() => {})
+    }
   }
   /**
    * Same refusal-mapping shape as onSettle (chunk W2g — finding 3c, minor:
