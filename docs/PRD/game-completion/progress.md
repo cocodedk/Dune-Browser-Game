@@ -506,6 +506,36 @@ reproduce.
   giveHarvester scenario bridge + invest-line shortfall + cycle-2 pressure
   (183 due vs ~2.9/day) + crew 15-vs-28 + 55-spice ceiling → **WP04**.
 
+## Round 16 — WP04 opened: plan of record (2026-08-11)
+
+- Advisor-checked. Six serial chunks: W4a runner core (imports the REAL
+  commandHandlers — trace = bus-event tuples both sides replay; saveGame
+  no-ops headless with citation; the runner's tick calls the runtime
+  auto-open hooks or the briefing gate freezes exactly like the
+  mid-session-New bug; **simulate.ts dies here**, closing WP02's C5
+  carve-out and the 15-vs-28 divergence) → W4b parity (protocol pins time
+  to day quanta via setTime on the browser side; a separate parityView
+  hash EXCLUDES events — canonical saves unchanged; wormSightings decided
+  with citation) → W4c agents (reserve/capacity/reactive/novice/recovery,
+  player-visible queries only, every agent settles tribute explicitly and
+  walks dialogue via production chooseDialogue) → W4d sweep (SEQUENTIAL
+  node script — the world singleton forbids Promise.all; published
+  baseline/wp04-sweep/seeds.txt is a contract: regression seeds add,
+  inconvenient ones never leave; summaries committed, raw traces
+  regenerable) → W4e tuning (lead-authored rounds per 07's seven steps;
+  levers that do NOT detonate WP03's pinned numbers: crew yield/skill
+  curve, second-crew sizing, gift cost-vs-gain, cycle-2+ escalation rate;
+  Q1=90/day-12 and the 54/45 quota constants are contract, not knobs) →
+  W4f closure (strip the giveHarvester bridges once FULL is honestly
+  reachable, WP03 suite fallout updated with citations, evidence-auditor
+  critic with 07's rejection criteria as its completeness hunt).
+- **Recovery fixture reading owed** (invariant 2 + exit proof): 07's
+  "damaged field" and raid threat don't exist in act 1 — construct from
+  what does (patience 1, arrears, depleted field, pledge near decay
+  threshold), record the reading.
+- On WP04 `verified`: **M1 flips and the loop STOPS** — build handed to
+  the user for the play verdict, per 09's stop conditions.
+
 ## Round 14 — WP03 remediation W3h: both critics' findings closed (2026-08-11)
 
 - **Verdicts merged (`baseline/wp03-critic-verdict.md` 7/10 + `baseline/

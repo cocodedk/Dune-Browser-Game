@@ -33,9 +33,12 @@ export const INITIAL_TROOP_GROUPS: TroopGroup[] = [
  * `fremenWorkers` at every current sietch tops out at 60 (data/sietches.ts),
  * so `max(15, round(fremenWorkers/6))` == 15 for the entire shipped roster
  * today — the formula only diverges from the floor once a sietch's worker
- * count exceeds 90. balance/simulate.ts's headless model expands with
- * flat size-28 crews instead; the two are not yet reconciled (out of this
- * chunk's scope — flagged for the balance owner).
+ * count exceeds 90. balance/simulate.ts's headless model used to expand
+ * with flat size-28 crews instead — a divergence from this production
+ * formula, not a reconciled alternative. Closed at WP04 chunk W4a
+ * (progress.md Round 16) by deleting that parallel-economy model:
+ * game-engine/sim/runner.ts drives crew sizing through THIS function, the
+ * production formula, so the 15-vs-28 gap cannot recur.
  */
 export function groupsForPledgedSietch(
   sietchId: string,

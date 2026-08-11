@@ -83,6 +83,9 @@ function fromEnvelope(save: VersionedSave): WorldState | null {
 }
 
 export async function saveGame(world: WorldState): Promise<void> {
+  // Autosave is IO, not rules: sim/runner.ts drives this headlessly, with
+  // no IndexedDB — no-op rather than reject, so handlers need no fork.
+  if (typeof indexedDB === 'undefined') return;
   const db = await openDB();
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -183,8 +186,7 @@ export async function hasSave(): Promise<boolean> {
 /**
  * IndexedDB-free stand-ins for saveGame/loadGame, built on the exact same
  * toEnvelope/fromEnvelope logic — production persistence minus the storage
- * transport. Used by tests (vitest's `node` environment has no `indexedDB`)
- * and available to any caller that wants a portable save blob.
+ * transport. Used by tests and game-engine/sim/runner.ts's reload seam.
  */
 export function serializeWorld(w: WorldState): string {
   return JSON.stringify(toEnvelope(w));

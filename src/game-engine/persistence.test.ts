@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createInitialState } from './GameState';
-import { serializeWorld, deserializeWorld, classifySave } from './persistence';
+import { saveGame, serializeWorld, deserializeWorld, classifySave } from './persistence';
 import { CURRENT_SAVE_VERSION } from './saveMigration';
 import type { VersionedSave } from './saveMigration';
 import type { WorldState } from '../types';
@@ -100,6 +100,18 @@ describe('persistence serialization', () => {
     state.paused = true;
     const restored = deserializeWorld(serializeWorld(state));
     expect(restored.paused).toBe(false);
+  });
+});
+
+// The headless persistence-boundary guard (WP04 chunk W4a): vitest's own
+// 'node' test environment (vite.config.ts) has no `indexedDB` global, same
+// as game-engine/sim/runner.ts's environment — so this exercises the exact
+// no-op branch the runner relies on to call the REAL commandHandlers.ts
+// functions (onTravel, onSettle) with no headless fork.
+describe('saveGame headless no-op', () => {
+  it('resolves without throwing when indexedDB is unavailable', async () => {
+    expect(typeof indexedDB).toBe('undefined');
+    await expect(saveGame(createInitialState())).resolves.toBeUndefined();
   });
 });
 

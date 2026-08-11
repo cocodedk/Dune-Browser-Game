@@ -4,8 +4,15 @@
 // Without this the game is a sandbox with no reason to act; with it, every
 // assignment decision has a deadline behind it. The pressure has to be real
 // but survivable: the design promise is that from patience 1, full
-// mobilisation can always buy two more cycles. Stage 21's balance harness
-// asserts that end to end; these tests pin the mechanics it relies on.
+// mobilisation can always buy two more cycles. game-engine/sim/runner.ts
+// (07-balance-playtest-and-release.md's runtime-faithful simulator, WP04)
+// is what asserts that end to end now — balance/simulate.ts, the parallel-
+// economy model this citation used to name, was deleted at chunk W4a
+// (progress.md Round 16: closes WP02's C5 carve-out and the 15-vs-28
+// crew-size divergence — see data/troopGroups.ts's own citation). The
+// recovery-fixture proof of THIS specific invariant is still owed to a
+// later WP04 chunk (Round 16's own reading); these tests pin the mechanics
+// it will rely on.
 
 export const CYCLE_DAYS = 8
 /**
@@ -27,15 +34,18 @@ export const ARREARS_SURCHARGE = 0.25
 /**
  * First three cycles are hand-authored; later ones scale geometrically.
  *
- * Retuned from 100/250/450 after the balance harness showed that curve was
- * unpayable: Act 1 yields ~470 spice including the starting 60, against 800
- * demanded. Worse, it left no window in which the 100-spice harvester was
- * affordable, so the capex decision the whole slice is built around never
- * actually occurred.
+ * Retuned from 100/250/450 after balance/simulate.ts's parallel-economy
+ * harness (deleted at WP04 chunk W4a — game-engine/sim/runner.ts is its
+ * runtime-faithful successor, per 07-balance-playtest-and-release.md)
+ * showed that curve was unpayable: Act 1 yields ~470 spice including the
+ * starting 60, against 800 demanded. Worse, it left no window in which the
+ * 100-spice harvester was affordable, so the capex decision the whole slice
+ * is built around never actually occurred.
  *
  * 90/150/260 totals 500 against ~530 available to a good line — tight enough
  * that a wasted cycle hurts, loose enough that the harvester window opens
- * around day 12-14 as the design intended.
+ * around day 12-14 as the design intended. The numbers are unchanged by the
+ * harness's retirement — this is a citation update, not a balance retune.
  */
 export const BASE_AMOUNTS = [90, 150, 260] as const
 export const LATER_CYCLE_GROWTH = 1.5
