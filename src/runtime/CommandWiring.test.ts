@@ -12,7 +12,10 @@ vi.mock('../game-engine/SietchSystem', () => ({
   stopPlayerSietchTask: vi.fn(),
 }))
 vi.mock('../game-engine/commands/pledgeCommand', () => ({
-  runPledgeCommand: vi.fn(),
+  runPledgeCommand: vi.fn(() => ({ ok: true, code: 'pledged' })),
+}))
+vi.mock('../game-engine/SietchVisitSystem', () => ({
+  giftPlayerSietch: vi.fn(() => ({ ok: true, code: 'gifted' })),
 }))
 vi.mock('../game-engine/CombatSystem', () => ({
   attackVillage: vi.fn(),
@@ -23,6 +26,7 @@ import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue } from '../game-engine/DialogueSystem'
 import { assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
 import { runPledgeCommand } from '../game-engine/commands/pledgeCommand'
+import { giftPlayerSietch } from '../game-engine/SietchVisitSystem'
 import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
 import { EventBus } from '../EventBus'
 import { world, setWorld, createInitialState } from '../game-engine/GameState'
@@ -54,6 +58,23 @@ describe('wireCommands', () => {
   it('routes player:pledge_sietch through the runPledgeCommand dispatch seam', () => {
     EventBus.emit('player:pledge_sietch', { villageId: 'sietch_tabr' })
     expect(runPledgeCommand).toHaveBeenCalledWith('sietch_tabr')
+  })
+
+  it('publishes a refusal toast when runPledgeCommand refuses, and nothing on success', () => {
+    vi.mocked(runPledgeCommand).mockReturnValueOnce({ ok: false, reason: 'not-loyal-enough' })
+    const before = world.events.length
+
+    EventBus.emit('player:pledge_sietch', { villageId: 'sietch_tabr' })
+    expect(world.events.length).toBe(before + 1)
+    expect(world.events[0].message).toBe('They do not trust you enough yet.')
+
+    EventBus.emit('player:pledge_sietch', { villageId: 'sietch_tabr' }) // default mock: success
+    expect(world.events.length).toBe(before + 1) // no second event from this seam
+  })
+
+  it('routes player:gift_sietch to giftPlayerSietch', () => {
+    EventBus.emit('player:gift_sietch', { villageId: 'sietch_tabr' })
+    expect(giftPlayerSietch).toHaveBeenCalledWith('sietch_tabr')
   })
 
   it('routes player:assign_sietch_task to assignPlayerSietchTask', () => {

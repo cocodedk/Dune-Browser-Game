@@ -1,17 +1,16 @@
 // src/game-engine/commands/pledgeCommand.ts
 // The pledge command wired end-to-end through the CommandOutcome contract —
-// docs/PRD/game-completion/02-runtime-consolidation.md "Command outcome
-// contract". Reference implementation for chunk W2a: wraps the EXISTING
-// pledgePlayerSietch mutation and its current guard order
-// (SietchSystem.checkPledgeGuards) without changing any rule. The atomic
-// five-step chain (loyalty threshold, charisma cap, one crew created and
-// attached) is chunk W2b's rewrite of this same function.
+// docs/PRD/game-completion/02-runtime-consolidation.md "Sietches and
+// loyalty". Chunk W2b: runs the atomic five-step chain
+// (SietchSystem.checkPledgeChain) and, on success, delegates the single
+// mutation to SietchSystem.pledgePlayerSietch. A refusal reaches this point
+// having mutated nothing — checkPledgeChain is read-only.
 //
-// This is the "thin typed dispatch seam" CommandWiring.ts calls: an
+// This stays the "thin typed dispatch seam" CommandWiring.ts calls: an
 // EventBus command still triggers exactly one function call here; only what
 // that call returns is new.
 
-import { checkPledgeGuards, pledgePlayerSietch, type PledgeGuardRefusal } from '../SietchSystem'
+import { checkPledgeChain, pledgePlayerSietch, type PledgeRefusal } from '../SietchSystem'
 import { ok, type CommandOutcome } from './outcome'
 import type { VillageId } from '../../types'
 
@@ -20,16 +19,16 @@ export type PledgeCommandCode = 'pledged'
 /**
  * Run the pledge command for villageId.
  *
- * Refuses with the same guard pledgePlayerSietch itself checks (see
- * checkPledgeGuards) and mutates nothing on refusal — repeating a refused
- * or already-successful pledge command stays a no-op, never a second
- * charisma award. On success, delegates the mutation to pledgePlayerSietch
- * unchanged and reports it.
+ * Refuses with the specific reason checkPledgeChain reports and mutates
+ * nothing on refusal — repeating a refused or already-successful pledge
+ * command stays a no-op, never a second charisma award or a second crew
+ * (see pledgePlayerSietch's win-back handling for the decay-then-re-pledge
+ * case specifically).
  */
 export function runPledgeCommand(
   villageId: VillageId,
-): CommandOutcome<PledgeCommandCode, PledgeGuardRefusal> {
-  const check = checkPledgeGuards(villageId)
+): CommandOutcome<PledgeCommandCode, PledgeRefusal> {
+  const check = checkPledgeChain(villageId)
   if (!check.ok) return check
 
   pledgePlayerSietch(villageId)

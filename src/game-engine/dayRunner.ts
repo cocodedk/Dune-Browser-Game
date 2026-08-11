@@ -21,7 +21,7 @@ import { updateSietches } from './sietch/updateSietches'
 import { createRng } from './rng/rng'
 import {
   runHarvestDay, runProspectDay, runQuotaCheck, runActCheck,
-  runTrainingDay, runRaidCheck, runEcologyDay,
+  runTrainingDay, runRaidCheck, runEcologyDay, runSietchLoyaltyDay,
 } from './EconomySystem'
 
 /** Run every campaign day-boundary system for exactly one day, in order. */
@@ -65,8 +65,11 @@ export function runDay(): void {
   runRaidCheck(rng)
 
   // Step 7: Update loyalty neglect, morale, and persistent location state.
-  // No dedicated authored system yet: village loyalty neglect/rebellion
-  // status still lives inside the legacy updateVillages() call above.
+  // Sietch loyalty neglect is authored now (economy/sietchLoyaltyRun.ts,
+  // chunk W2b) — village loyalty neglect/rebellion still lives inside the
+  // legacy updateVillages() call above (untouched; that seam is not this
+  // chunk's). Morale neglect/drift has no day-boundary writer yet.
+  runSietchLoyaltyDay()
 
   // Step 8: Evaluate act objectives and endings — the sole ending writer.
   runActCheck()

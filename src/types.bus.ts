@@ -29,6 +29,7 @@ export interface BusEvents {
   'territory:selected': { regionId: RegionId };
   'audio:mute': void;
   'player:pledge_sietch': { villageId: VillageId };
+  'player:gift_sietch': { villageId: VillageId };
   'player:assign_sietch_task': { villageId: VillageId; task: SietchTask };
   'player:attack_village': { targetVillageId: VillageId; troopsCommitted: number };
   'player:scout_village': { targetVillageId: VillageId };

@@ -6,6 +6,8 @@ import type { VillageId, DialogueEffect, DialogueNode } from '../types';
 import { DIALOGUES } from '../data/dialogues';
 import { STORY_NODES, STORY_TREE_ID } from '../data/dialogue';
 import { checkOwnershipTransition } from './VillageSystem';
+import { adjustLoyalty } from './sietch/loyalty';
+import { readLoyaltyState, writeLoyaltyState } from './sietch/loyaltyState';
 import { applyPlayerAction } from './faction/reputation';
 import { toReputationWorld } from './faction/adapter';
 // Imported straight from endgameOps rather than the EconomySystem facade —
@@ -75,8 +77,18 @@ export function chooseDialogue(choiceId: string): void {
 function applyEffect(effect: DialogueEffect, villageId: VillageId): void {
   const village = world.villages.find(v => v.id === villageId);
   if (village && effect.loyaltyDelta) {
-    village.loyalty = Math.max(0, Math.min(100, village.loyalty + effect.loyaltyDelta));
-    checkOwnershipTransition(village);
+    // SietchState is the sole loyalty authority for sietch-kind locations
+    // (docs/PRD/game-completion/02-runtime-consolidation.md "Sietches and
+    // loyalty"); every other kind still owns Village.loyalty, unchanged.
+    if (village.kind === 'sietch') {
+      const delta = effect.loyaltyDelta;
+      world.sietches = world.sietches.map(s =>
+        s.villageId === villageId ? writeLoyaltyState(s, adjustLoyalty(readLoyaltyState(s), delta)) : s,
+      );
+    } else {
+      village.loyalty = Math.max(0, Math.min(100, village.loyalty + effect.loyaltyDelta));
+      checkOwnershipTransition(village);
+    }
   }
   if (effect.influenceDelta) {
     world.player.influence = Math.max(0, Math.min(100, world.player.influence + effect.influenceDelta));

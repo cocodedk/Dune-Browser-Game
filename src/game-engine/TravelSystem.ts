@@ -1,6 +1,7 @@
 import { world } from './GameState';
 import { pushEvent } from './EventSystem';
 import { visitVillage } from './VillageSystem';
+import { visitPlayerSietch } from './SietchVisitSystem';
 import type { VillageId, WorldState } from '../types';
 import { checkTravel, rejectionMessage } from './travel/rules';
 import type { TravelMode } from './travel/rules';
@@ -102,5 +103,17 @@ export function checkTravelArrival(): void {
 
   const village = world.villages.find(v => v.id === arrivedAt);
   pushEvent('travel_complete', `\u2705 Arrived at ${village?.name ?? arrivedAt}.`);
-  visitVillage(arrivedAt);
+
+  // Sietch-kind arrivals: SietchState is the sole loyalty authority (02
+  // "Sietches and loyalty"). Its authored visit rule (loyalty.ts's
+  // onArrival) does NOT grant a flat loyalty bump \u2014 visitVillage's legacy
+  // +5 is superseded here, not moved, because the authored rule only resets
+  // the neglect clock and the per-visit gift budget; loyalty itself moves
+  // through gifts and dialogue. Every other kind keeps the legacy path,
+  // since Village.loyalty is still that kind's authority.
+  if (village?.kind === 'sietch') {
+    visitPlayerSietch(arrivedAt);
+  } else {
+    visitVillage(arrivedAt);
+  }
 }

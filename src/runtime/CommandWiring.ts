@@ -11,6 +11,8 @@ import { pushEvent } from '../game-engine/EventSystem'
 import { decideVisit, decideSpeakTo } from './VisitPolicy'
 import { assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
 import { runPledgeCommand } from '../game-engine/commands/pledgeCommand'
+import { pledgeChainRefusalMessage } from '../game-engine/sietch/pledgeRefusal'
+import { giftPlayerSietch } from '../game-engine/SietchVisitSystem'
 import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
 import {
   assignCrew, buyEquipment, issueEquipment, assaultFort,
@@ -64,13 +66,20 @@ export function wireCommands(): () => void {
     EventBus.emit('world:updated', { state: world })
   }
   /**
-   * The reference CommandOutcome dispatch seam (chunk W2a) — see
-   * commands/pledgeCommand.ts. The outcome is available for a future
-   * chunk's toast/refusal wiring; success already publishes its own event
-   * from inside pledgePlayerSietch, unchanged.
+   * The CommandOutcome dispatch seam (chunk W2a; chain rewritten W2b) —
+   * see commands/pledgeCommand.ts. Success already publishes its own event
+   * from inside pledgePlayerSietch; a refusal publishes nothing on its own
+   * (checkPledgeChain is read-only), so this is the one place a refusal
+   * becomes a player-visible message — the minimal centre-screen mapping
+   * the event policy layer (toastPolicy.ts) already displays. Full pledge
+   * UI (disabling the button, showing WHY before the click) is WP03.
    */
   const onPledge = ({ villageId }: BusEvents['player:pledge_sietch']): void => {
-    runPledgeCommand(villageId)
+    const outcome = runPledgeCommand(villageId)
+    if (!outcome.ok) pushEvent('sietch_pledged', pledgeChainRefusalMessage(outcome.reason))
+  }
+  const onGift = ({ villageId }: BusEvents['player:gift_sietch']): void => {
+    giftPlayerSietch(villageId)
   }
   const onAssignTask = ({ villageId, task }: BusEvents['player:assign_sietch_task']): void => {
     assignPlayerSietchTask(villageId, task)
@@ -108,6 +117,7 @@ export function wireCommands(): () => void {
   EventBus.on('game:speed', onSpeed)
   EventBus.on('game:difficulty', onDifficulty)
   EventBus.on('player:pledge_sietch', onPledge)
+  EventBus.on('player:gift_sietch', onGift)
   EventBus.on('player:assign_sietch_task', onAssignTask)
   EventBus.on('player:stop_sietch_task', onStopTask)
   EventBus.on('player:attack_village', onAttack)
@@ -126,6 +136,7 @@ export function wireCommands(): () => void {
     EventBus.off('game:speed', onSpeed)
     EventBus.off('game:difficulty', onDifficulty)
     EventBus.off('player:pledge_sietch', onPledge)
+    EventBus.off('player:gift_sietch', onGift)
     EventBus.off('player:assign_sietch_task', onAssignTask)
     EventBus.off('player:stop_sietch_task', onStopTask)
     EventBus.off('player:attack_village', onAttack)

@@ -5,7 +5,6 @@
 import type { FactionId, VillageId } from '../types'
 import { world } from './GameState'
 import { pushEvent } from './EventSystem'
-import { pledgedCount } from './sietch/assignTask'
 
 export const DEFENDER_STRENGTH: Record<FactionId, number> = {
   harkonnen: 30,
@@ -25,8 +24,13 @@ export const DEFENDER_STRENGTH: Record<FactionId, number> = {
  * playerWins = troopsCommitted > effectiveDefense
  *
  * Victory  → village.owner = 'fremen', status = 'friendly', loyalty = 60;
- *            matching sietch (if any) becomes pledgedToPlayer = true;
- *            attackerLosses = floor(committed * 0.20)
+ *            attackerLosses = floor(committed * 0.20). Taking a sietch by
+ *            force no longer pledges it (chunk W2b killed the combat pledge
+ *            path — docs/PRD/game-completion/02-runtime-consolidation.md
+ *            "Sietches and loyalty" names one atomic chain as the sole way
+ *            to pledge). The village-ownership/loyalty mutation above is
+ *            legacy production the doc's "Current conflicts to retire"
+ *            table marks for removal in a later chunk (W2e), not this one.
  * Defeat   → village unchanged; attackerLosses = floor(committed * 0.55)
  */
 export const SCOUT_COST = 10
@@ -90,17 +94,6 @@ export function attackVillage(
     village.owner = 'fremen'
     village.status = 'friendly'
     village.loyalty = 60
-
-    // Promote any matching sietch to pledged
-    const sietch = world.sietches.find(s => s.villageId === targetVillageId)
-    if (sietch) {
-      sietch.pledgedToPlayer = true
-      // The second place a sietch can become pledged, and so the second place
-      // this gate flag has to stay true — sova.ritual_available reads it, and a
-      // count that only tracked SietchSystem's path would leave the Water of
-      // Life unreachable for a player who took their sietches by force.
-      world.flags['pledged.count'] = pledgedCount(world.sietches)
-    }
 
     pushEvent(
       'attack',

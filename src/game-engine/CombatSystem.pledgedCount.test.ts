@@ -1,9 +1,11 @@
 // src/game-engine/CombatSystem.pledgedCount.test.ts
 // Split from CombatSystem.test.ts, which had reached the repository's file
-// limit. Covers the second of the two places a sietch can become pledged:
-// sova.ritual_available reads pledged.count, not pledgedToPlayer directly,
-// so this path has to keep it correct too (see SietchSystem.test.ts for the
-// other one).
+// limit. Was: "the second of the two places a sietch can become pledged."
+// Chunk W2b killed that path — docs/PRD/game-completion/
+// 02-runtime-consolidation.md "Sietches and loyalty" names the atomic
+// pledge chain (commands/pledgeCommand.ts) as the ONLY way to pledge. This
+// is now a regression guard: taking a sietch by force must never touch
+// pledgedToPlayer or pledged.count again, on victory or defeat.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { attackVillage } from './CombatSystem'
@@ -28,23 +30,28 @@ function harkonnenVillage(state: WorldState) {
   return v
 }
 
-describe('attackVillage: pledged.count', () => {
+describe('attackVillage: pledge state is untouched (combat pledge path retired W2b)', () => {
   beforeEach(() => {
     setWorld(freshState())
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
   })
 
-  it('updates pledged.count alongside pledgedToPlayer on victory', () => {
+  it('leaves pledgedToPlayer and pledged.count untouched on victory', () => {
     const v = harkonnenVillage(world)
     world.sietches = [
       { villageId: v.id, pledgedToPlayer: false, fremenWorkers: 20, currentTask: null, outputProgress: 0 },
       { villageId: 'sietch_tabr', pledgedToPlayer: true, fremenWorkers: 10, currentTask: null, outputProgress: 0 },
     ]
     attackVillage(v.id, 40)
-    expect(world.flags['pledged.count']).toBe(2)
+
+    const taken = world.sietches.find(s => s.villageId === v.id)
+    expect(taken?.pledgedToPlayer).toBe(false)
+    // pledged.count is never written by this call at all — not even to
+    // resync the pre-existing pledge on 'sietch_tabr'.
+    expect(world.flags['pledged.count']).toBeUndefined()
   })
 
-  it('leaves pledged.count unset on defeat', () => {
+  it('leaves pledged.count unset on defeat too', () => {
     const v = harkonnenVillage(world)
     world.sietches = [
       { villageId: v.id, pledgedToPlayer: false, fremenWorkers: 20, currentTask: null, outputProgress: 0 },

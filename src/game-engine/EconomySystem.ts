@@ -25,6 +25,7 @@ export { runActCheck } from './economy/actRun'
 export { runEcologyDay, runTrainingDay } from './economy/upkeepRun'
 export { buyEquipment, issueEquipment } from './economy/marketOps'
 export { attemptRitual, assaultFort } from './economy/endgameOps'
+export { runSietchLoyaltyDay } from './economy/sietchLoyaltyRun'
 
 import { carriedKinds } from './economy/carried'
 

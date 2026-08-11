@@ -127,14 +127,15 @@ describe('attackVillage: victory path', () => {
     expect(world.player.troops).toBe(50 - 8)
   })
 
-  it('sets matching sietch pledgedToPlayer = true on victory', () => {
+  it('leaves the matching sietch unpledged on victory (chunk W2b killed the combat pledge path)', () => {
     const v = harkonnenVillage(world)
     world.sietches = [
       { villageId: v.id, pledgedToPlayer: false, fremenWorkers: 20, currentTask: null, outputProgress: 0 },
     ]
     attackVillage(v.id, 40)
     const sietch = world.sietches.find(s => s.villageId === v.id)
-    expect(sietch?.pledgedToPlayer).toBe(true)
+    expect(sietch?.pledgedToPlayer).toBe(false)
+    expect(world.flags['pledged.count']).toBeUndefined()
   })
 
   it('does not require a sietch (no crash if none exists)', () => {

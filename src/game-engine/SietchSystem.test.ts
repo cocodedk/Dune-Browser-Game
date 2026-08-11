@@ -1,6 +1,12 @@
 // src/game-engine/SietchSystem.test.ts
 // Unit tests for pledgePlayerSietch, focused on pledged.count: the flag
 // sova.ritual_available gates on, written by nothing until this fix.
+//
+// W2b update: pledgePlayerSietch now runs the atomic five-step chain
+// (checkPledgeChain), so a sietch also needs enough loyalty and charisma
+// headroom — sietch_tabr's own seeded loyalty (45) is below PLEDGE_THRESHOLD
+// (60), so every fixture below raises it explicitly instead of relying on
+// the production default.
 
 import { describe, it, expect, beforeEach } from 'vitest'
 import { pledgePlayerSietch } from './SietchSystem'
@@ -13,12 +19,15 @@ describe('pledgePlayerSietch: pledged.count', () => {
     // "Opening state"), so these pledge-mechanics fixtures move the player
     // to sietch_tabr explicitly rather than relying on the old default.
     state.player.location = 'sietch_tabr'
+    state.sietches = state.sietches.map(s =>
+      s.villageId === 'sietch_tabr' ? { ...s, loyalty: 60 } : s,
+    )
     setWorld(state)
   })
 
   it('sets pledged.count to 1 after pledging the player\'s starting sietch', () => {
-    // Player stands at sietch_tabr, a fremen-owned, unpledged sietch —
-    // pledging it should need no other setup.
+    // Player stands at sietch_tabr, a fremen-owned, unpledged, loyal-enough
+    // sietch — pledging it should need no other setup.
     pledgePlayerSietch('sietch_tabr')
     expect(world.flags['pledged.count']).toBe(1)
   })
@@ -46,5 +55,15 @@ describe('pledgePlayerSietch: pledged.count', () => {
     world.player.location = 'hagg'
     pledgePlayerSietch('sietch_tabr')
     expect(world.flags['pledged.count']).toBeUndefined()
+  })
+
+  it('leaves pledged.count untouched when loyalty is below threshold', () => {
+    world.sietches = world.sietches.map(s =>
+      s.villageId === 'sietch_tabr' ? { ...s, loyalty: 59 } : s,
+    )
+    pledgePlayerSietch('sietch_tabr')
+    expect(world.flags['pledged.count']).toBeUndefined()
+    const sietch = world.sietches.find(s => s.villageId === 'sietch_tabr')
+    expect(sietch?.pledgedToPlayer).toBe(false)
   })
 })
