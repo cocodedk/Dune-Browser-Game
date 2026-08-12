@@ -33,15 +33,16 @@ describe('quota schedule', () => {
     expect(q.arrears).toBe(0)
   })
 
+  // WP04 chunk W4e: [1]/[2] retuned 150/260->100/173->100/30 (quota.ts). [0] FORBIDDEN.
   it('uses the authored amounts for the first three cycles', () => {
     expect(baseAmountForCycle(0)).toBe(90)
-    expect(baseAmountForCycle(1)).toBe(150)
-    expect(baseAmountForCycle(2)).toBe(260)
+    expect(baseAmountForCycle(1)).toBe(100)
+    expect(baseAmountForCycle(2)).toBe(30)
   })
 
   it('grows geometrically after the authored cycles', () => {
-    expect(baseAmountForCycle(3)).toBe(390)
-    expect(baseAmountForCycle(4)).toBe(585)
+    expect(baseAmountForCycle(3)).toBe(45)
+    expect(baseAmountForCycle(4)).toBe(68)
     expect(baseAmountForCycle(5)).toBeGreaterThan(baseAmountForCycle(4))
   })
 
@@ -162,20 +163,22 @@ describe('quota over several cycles', () => {
     expect(second.quota.nextDueDay).toBe(FIRST_DEADLINE_DAY + CYCLE_DAYS * 2)
   })
 
+  // WP04 chunk W4e: BASE_AMOUNTS[1]/[2] retuned 150/260->100/30, recomputing
+  // the demand side below; the 40-short/50-arrears/patience-2 figures don't.
   it('compounds arrears into the next demand across three cycles', () => {
     let q = quota({ amount: 100 })
     let result = settleQuota(q, 60) // 40 short -> 50 arrears
     expect(result.quota.arrears).toBe(50)
 
     q = result.quota
-    expect(totalDue(q)).toBe(150 + 50)
+    expect(totalDue(q)).toBe(100 + 50)
 
     result = settleQuota(q, 0) // pays nothing -> full shortfall carried
-    expect(result.quota.arrears).toBe(200)
+    expect(result.quota.arrears).toBe(150)
     expect(result.quota.patience).toBe(2)
 
     q = result.quota
-    expect(totalDue(q)).toBe(260 + 200)
+    expect(totalDue(q)).toBe(30 + 150)
   })
 
   it('kills a player who ignores three consecutive demands', () => {

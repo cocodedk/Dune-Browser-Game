@@ -31,12 +31,19 @@ export interface Projection {
   dailyRate: number
 }
 
+// Reads Equipment.groupId, the single holder link (troops/types.ts's
+// Equipment doc). Previously filtered by a `TroopGroup.equipmentIds`
+// mirror that issueEquipment never wrote — the projection under-reported
+// income for any crew with issued gear until WP02d removed that field;
+// projected income now correctly rises once a harvester is issued, which
+// is a designed behavior change (the ledger was lying before), not a
+// balance retune.
 function equipmentKindsFor(
   group: TroopGroup,
   equipment: readonly Equipment[],
 ): ReturnType<typeof extractionTier> {
   const kinds = equipment
-    .filter(e => group.equipmentIds.includes(e.id))
+    .filter(e => e.groupId === group.id)
     .map(e => e.kind)
   return extractionTier(kinds)
 }

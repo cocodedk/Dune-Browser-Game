@@ -5,8 +5,9 @@
 // The caller supplies delta each frame; nothing here touches a renderer API.
 
 import { world } from '../game-engine/GameState'
-import { update as engineUpdate, initLoop as engineInitLoop } from '../game-engine/GameLoop'
+import { initLoop as engineInitLoop } from '../game-engine/GameLoop'
 import { EventBus } from '../EventBus'
+import { runtimeTick } from './runtimeTick'
 
 const UI_UPDATE_INTERVAL_MS = 100 // throttle for world:updated / renderer refresh
 
@@ -29,7 +30,13 @@ export function initLoop(): void {
  * since `world:updated` was just broadcast in step with it.
  */
 export function tick(deltaMs: number): boolean {
-  engineUpdate(deltaMs / 1000)
+  // Engine step + every runtime auto-open/autosave hook, in the one shared
+  // sequence runtimeTick.ts documents — see its own header for why this
+  // used to be three separate calls copied here (W3i's mid-session-New fix,
+  // Beat 7's debrief, recovery row (f)'s settlement autosave) and why that
+  // shape now lives in one place both this driver and the headless runner
+  // (game-engine/sim/runner.ts) call.
+  runtimeTick(deltaMs / 1000)
 
   updateTimer += deltaMs
   if (updateTimer < UI_UPDATE_INTERVAL_MS) return false

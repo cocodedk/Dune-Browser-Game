@@ -6,11 +6,13 @@ import { pushEvent } from '../EventSystem'
 import { currentDay } from '../TimeSystem'
 import { getDifficultyConfig } from '../difficulty'
 import {
-  raidInterval, raidPower, resolveCombat, weaponTier, applyLosses,
+  raidInterval, raidPower, resolveCombat, weaponTier,
 } from '../combat/resolve'
+import { applyCasualty } from '../troops/casualty'
 import { raidWarningDays } from '../prescience/prescience'
 import { carriedKinds } from './carried'
 import { CHARISMA_PER_RAID } from '../sietch/loyalty'
+import type { RngService } from '../rng/rng'
 
 /**
  * The Harkonnen raid clock.
@@ -18,8 +20,11 @@ import { CHARISMA_PER_RAID } from '../sietch/loyalty'
  * Raids target a pledged sietch and are resolved against whatever garrison is
  * standing there. A sietch with no crew present still defends — its people
  * fight — but badly, which is the cost of leaving it uncovered.
+ *
+ * `rng` is the day's one seeded service instance (see dayRunner.ts's
+ * header) — the combat roll below draws from it instead of Math.random().
  */
-export function runRaidCheck(): void {
+export function runRaidCheck(rng: RngService): void {
   const interval = raidInterval(world.act)
   if (interval === null) return
 
@@ -73,18 +78,22 @@ export function runRaidCheck(): void {
   const outcome = resolveCombat(
     { size: power / 2, militarySkill: 60, weapon: 'krys', defending: false },
     { size: defenderSize || 20, militarySkill: defenderSkill, weapon, defending: true },
-    Math.random(),
+    rng.next(),
   )
 
   const place = world.villages.find(v => v.id === target.villageId)
   const name = place?.name ?? target.villageId
 
-  // Spread casualties across the defending crews.
+  // Spread casualties across the defending crews, through the one casualty
+  // rule (troops/casualty.ts) — a hard-fought defense can dissolve or merge
+  // a defending crew, not just shrink it.
   if (defenders.length > 0 && outcome.defenderLosses > 0) {
     const each = Math.floor(outcome.defenderLosses / defenders.length)
     for (const group of defenders) {
-      const index = world.troopGroups.findIndex(g => g.id === group.id)
-      if (index >= 0) world.troopGroups[index] = applyLosses(group, each)
+      const result = applyCasualty(world.troopGroups, world.equipment, world.sietches, group.id, each)
+      world.troopGroups = result.groups
+      world.equipment = result.equipment
+      world.sietches = result.sietches
     }
   }
 

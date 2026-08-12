@@ -1,4 +1,6 @@
 import { lazy, Suspense } from 'react'
+import { useGameStore } from './ui/store'
+import TitleScreen from './ui/title/TitleScreen'
 import StatusBar from './ui/StatusBar'
 import QuotaLedger from './ui/QuotaLedger'
 import CrewPanel from './ui/CrewPanel'
@@ -6,14 +8,20 @@ import MarketPanel from './ui/MarketPanel'
 import FortPanel from './ui/FortPanel'
 import VillagePanel from './ui/VillagePanel'
 import DialoguePanel from './ui/DialoguePanel'
+import SettlementModal from './ui/SettlementModal'
 import EventLog from './ui/EventLog'
-import FactionPanel from './ui/FactionPanel'
 import GoalOverlay from './ui/GoalOverlay'
 import { COMMAND_COLUMN_WIDTH, palette } from './ui/theme'
 import EventToasts from './ui/EventToasts'
 import OrnamentFrame from './ui/Ornament'
 import ViewHint from './ui/ViewHint'
 import PositionStrip from './ui/PositionStrip'
+import ObjectivePanel from './ui/ObjectivePanel'
+import DestinationList from './ui/DestinationList'
+import FlightSkipButton from './ui/FlightSkipButton'
+import CoachMark from './ui/CoachMark'
+import { ledgerDisclosed, destinationsDisclosed, EARNED_TRUST_FLAG } from './game-engine/acts/openingObjectives'
+import { marketDisclosed } from './game-engine/acts/openingDisclosure'
 
 // three.js is now the only renderer; Phaser is gone. Kept lazy so the 3D
 // chunk stays out of the initial payload.
@@ -27,6 +35,36 @@ const GameContainer = lazy(() => import('./ui/ThreeContainer'))
  * Arrakis is the subject; the panels are instruments read against it.
  */
 export default function App() {
+  // 03-opening-experience.md "Title and run setup": "The title screen
+  // appears before the renderer begins advancing campaign time." Gating by
+  // NOT MOUNTING GameContainer at all (rather than pausing it once mounted)
+  // is the strongest form of that: GameDriver/GameLoop never tick, and
+  // ThreeContainer's wireCommands()/initLoop() never run, until the store's
+  // `screen` flips to 'game' inside loadGame()/newGame() (ui/store.ts).
+  const screen = useGameStore(s => s.screen)
+  // 03 "Progressive disclosure": "Tribute ledger — Thufir explains the first
+  // demand." Read as the ledger CONVERSATION completing (game-engine/acts/
+  // openingObjectives.ts's ledgerDisclosed — also covers every pre-W3c save,
+  // see its own doc). Gated here rather than inside QuotaLedger itself:
+  // OrnamentFrame renders its border/corner chrome around whatever child it
+  // is given, including null, so gating inside QuotaLedger would still draw
+  // an empty carved box in the command column pre-disclosure.
+  const showLedger = useGameStore(s => ledgerDisclosed(s.world))
+  const showDestinations = useGameStore(s => destinationsDisclosed(s.world))
+  // 03 "Progressive disclosure": "Crew panel — First pledge creates a
+  // crew." The flag is sticky past a later crew dissolution; the count
+  // covers a migrated legacy save that already has crews but never ran the
+  // pledge command that would have set the flag.
+  const showCrewPanel = useGameStore(
+    s => s.world.flags[EARNED_TRUST_FLAG] === true || s.world.troopGroups.length > 0,
+  )
+  // 03 "Progressive disclosure": "Market | Smuggler den is discovered and
+  // entered" — gated the same way as the three surfaces above, rather than
+  // left to MarketPanel's own render-null (OrnamentFrame's empty chrome
+  // would still show at Arrakeen before the den is ever found).
+  const showMarket = useGameStore(s => marketDisclosed(s.world))
+  if (screen === 'title') return <TitleScreen />
+
   return (
     <div style={styles.root}>
       {/* Full-bleed 3D view, underneath everything */}
@@ -39,25 +77,29 @@ export default function App() {
       {/* Title, floating top-left over the sand */}
       <div style={styles.title}>DUNE</div>
       <PositionStrip />
+      <ObjectivePanel />
+      <CoachMark />
 
       {/* Command column, floating right. Scrolls independently of the map. */}
       <div style={styles.column}>
         <OrnamentFrame plain><StatusBar /></OrnamentFrame>
-        <OrnamentFrame><QuotaLedger /></OrnamentFrame>
-        <OrnamentFrame><CrewPanel /></OrnamentFrame>
-        <OrnamentFrame><MarketPanel /></OrnamentFrame>
+        {showLedger && <OrnamentFrame><QuotaLedger /></OrnamentFrame>}
+        {showDestinations && <OrnamentFrame><DestinationList /></OrnamentFrame>}
+        {showCrewPanel && <OrnamentFrame><CrewPanel /></OrnamentFrame>}
+        {showMarket && <OrnamentFrame><MarketPanel /></OrnamentFrame>}
         <OrnamentFrame><FortPanel /></OrnamentFrame>
         <OrnamentFrame plain><VillagePanel /></OrnamentFrame>
-        <OrnamentFrame plain><FactionPanel /></OrnamentFrame>
         <OrnamentFrame plain><EventLog /></OrnamentFrame>
       </div>
 
       <ViewHint />
+      <FlightSkipButton />
 
       {/* Messages over the middle of the scene — see ui/toastPolicy.ts. */}
       <EventToasts />
 
       <DialoguePanel />
+      <SettlementModal />
       <GoalOverlay />
     </div>
   )

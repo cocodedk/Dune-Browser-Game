@@ -14,7 +14,7 @@ const ALL: GameEventType[] = [
   'village_selected', 'travel_start', 'travel_complete',
   'faction_decision', 'tribute_refused', 'poc_goal_achieved',
   'sietch_pledged', 'sietch_task_assigned', 'spice_shipment_received',
-  'fedaykin_ready',
+  'fedaykin_ready', 'story_reward',
 ]
 
 describe('toastDurationMs', () => {

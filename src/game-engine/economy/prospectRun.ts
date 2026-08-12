@@ -12,6 +12,7 @@ import { pushEvent } from '../EventSystem'
 import { findChance, resolveFind, regionExhausted, findMessage } from '../troops/prospect'
 import { nextFind, siteYield } from '../desert/sites'
 import { canSenseHidden } from '../prescience/prescience'
+import type { RngService } from '../rng/rng'
 
 /**
  * How far a crew can range, in days.
@@ -33,11 +34,12 @@ const DEEP_DESERT_CHANCE = 0.18
 /**
  * Run one day of prospecting for every crew out looking.
  *
- * Rolls come from Math.random here at the mutation layer; the rules themselves
- * take injected rolls so they stay deterministic under test.
+ * `rng` is the day's one seeded service instance (see dayRunner.ts's
+ * header); the rules themselves take injected rolls so they stay
+ * deterministic under test.
  */
-export function runProspectDay(): void {
-  revealDesertSite()
+export function runProspectDay(rng: RngService): void {
+  revealDesertSite(rng)
   for (const group of world.troopGroups) {
     if (group.task !== 'prospect') continue
     if (group.changeoverDaysLeft > 0) continue
@@ -49,7 +51,7 @@ export function runProspectDay(): void {
     const richness = region?.spice ?? 30
 
     const chance = findChance(group.skills.prospect, richness, false)
-    const outcome = resolveFind(chance, Math.random(), Math.random(), richness)
+    const outcome = resolveFind(chance, rng.next(), rng.next(), richness)
     if (outcome.kind === 'nothing') continue
 
     // A hidden sietch is not the player's to find without Awareness — the
@@ -90,21 +92,22 @@ export function runProspectDay(): void {
 /**
  * Sometimes a prospecting crew comes back with a location instead of a field.
  *
- * Rolls come from Math.random at this mutation layer; the rules stay pure.
+ * Rolls come from the day's seeded rng at this mutation layer; the rules
+ * stay pure.
  */
-function revealDesertSite(): void {
+function revealDesertSite(rng: RngService): void {
   const crews = world.troopGroups.filter(
     g => g.task === 'prospect' && g.changeoverDaysLeft === 0,
   )
   if (crews.length === 0) return
-  if (Math.random() >= DEEP_DESERT_CHANCE) return
+  if (rng.next() >= DEEP_DESERT_CHANCE) return
 
   const hasThopter = world.equipment.some(
     e => crews.some(c => c.id === e.groupId) &&
          (e.kind === 'thopter' || e.kind === 'lr_thopter'),
   )
 
-  const site = nextFind(world.desertSites, prospectRange(hasThopter), Math.random())
+  const site = nextFind(world.desertSites, prospectRange(hasThopter), rng.next())
   if (!site) return
 
   const index = world.desertSites.findIndex(s => s.id === site.id)

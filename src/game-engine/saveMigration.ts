@@ -7,10 +7,15 @@
 // therefore fills in defaults rather than assuming a field exists.
 
 import type { WorldState, Village, LocationKind } from '../types'
+import type { RngState } from './rng/rng'
 import { createQuotaState } from './quota/quota'
 import { INITIAL_VILLAGES } from '../data/villages'
+import { SCHEMA_VERSION } from './state/schema'
+import { fnv1a64 } from './state/hash'
+import { migrateV4ToV5 } from './saveMigration.v5'
 
-export const CURRENT_SAVE_VERSION = 2
+/** Single source of truth for the schema number — see state/schema.ts. */
+export const CURRENT_SAVE_VERSION = SCHEMA_VERSION
 
 export interface VersionedSave {
   version?: number
@@ -91,6 +96,69 @@ export function migrateV1ToV2(state: WorldState): WorldState {
 }
 
 /**
+ * Derive a stable rng seed from a save's own identity, for a save that
+ * predates the seeded rng and so never carried one.
+ *
+ * docs/PRD/game-completion/02-runtime-consolidation.md ("Save migration"
+ * point 6): "derive one stable seed from old save identity and time for
+ * migrated saves" — deterministic, no wall clock, no Math.random(), so
+ * re-migrating the SAME save (idempotency, point 7) always derives the SAME
+ * seed. Combines elapsed game time with the player's spice and location: any
+ * one of the three colliding between two distinct saves is plausible, all
+ * three colliding is not. Folded to 32 bits so it stays a safe-integer
+ * `number` (RngState.seed), well within what rng/hash.ts's own masking
+ * already tolerates.
+ */
+function deriveLegacySeed(state: WorldState): number {
+  const identity = `${state.time}|${state.player?.spice ?? 0}|${state.player?.location ?? ''}`
+  return Number(fnv1a64(identity) & 0xffffffffn)
+}
+
+/** A pre-v3 save may still carry `goalType` — removed from WorldState entirely in WP02f. */
+type PreV3State = WorldState & { goalType?: unknown }
+
+/**
+ * v2 -> v3: add the seeded `rng` field and drop the retired `goalType`.
+ *
+ * 02's migration list: preserve the rng seed for new saves and derive one
+ * for migrated saves (point 6); drop `goalType` (point 4). Idempotent (point
+ * 7): a save that already carries `rng` keeps that exact value, and one with
+ * no `goalType` is untouched by the drop.
+ */
+export function migrateV2ToV3(state: WorldState): WorldState {
+  const { goalType: _goalType, ...rest } = state as PreV3State
+  void _goalType
+  const rng: RngState = state.rng ?? { seed: deriveLegacySeed(state), step: 0 }
+  return { ...rest, rng }
+}
+
+/**
+ * v3 -> v4: add `lastProcessedDay` day-boundary bookkeeping (see
+ * TimeSystem.ts's crossedDays()). A pre-v4 save never carried this field —
+ * that bookkeeping used to live in a TimeSystem module-level variable, not
+ * on WorldState.
+ *
+ * Backfilling a MISSING field to `null` here would mean "process the
+ * current day once" — which replays the day the save was taken on the next
+ * time it processes a boundary: the reload defect measured in
+ * baseline/wp01-critic-verdict.md PROBE A (+2.61 spice, +1 RNG draw, no
+ * player command). Backfilling instead to the save's OWN current day marks
+ * that day "already processed", so the first update after load advances
+ * cleanly from there — no re-run, no backfill of days before it either.
+ * `null` stays reserved for a genuinely new campaign (createInitialState())
+ * and is never assigned by this function; idempotent (point 7) because it
+ * only fills a field that is truly absent, never one already `null`.
+ */
+export function migrateV3ToV4(state: WorldState): WorldState {
+  if (state.lastProcessedDay !== undefined) return state
+  // Mirrors TimeSystem.ts's DAY_SECONDS (60). Not imported: TimeSystem
+  // imports GameState, which imports persistence.ts, which imports this
+  // module — importing TimeSystem here would create that cycle.
+  const DAY_SECONDS = 60
+  return { ...state, lastProcessedDay: Math.floor(state.time / DAY_SECONDS) }
+}
+
+/**
  * Bring any supported save up to the current schema.
  * Returns null when the save is too old, unrecognised, or structurally broken.
  */
@@ -103,6 +171,11 @@ export function migrateSave(save: VersionedSave): WorldState | null {
   const version = save.version ?? 1
 
   if (version > CURRENT_SAVE_VERSION) return null // Written by a newer build.
-  if (version === CURRENT_SAVE_VERSION) return state
-  return migrateV1ToV2(state)
+
+  let migrated = state
+  if (version < 2) migrated = migrateV1ToV2(migrated)
+  if (version < 3) migrated = migrateV2ToV3(migrated)
+  if (version < 4) migrated = migrateV3ToV4(migrated)
+  if (version < 5) migrated = migrateV4ToV5(migrated)
+  return migrated
 }

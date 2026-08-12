@@ -1,8 +1,8 @@
 import { useGameStore, selectSietch } from './store'
 import { EventBus } from '../EventBus'
 import type { Village } from '../types'
-import SietchCommandSection from './SietchCommandSection'
-import AttackSection from './AttackSection'
+import PledgePanel from './PledgePanel'
+import GiftPanel from './GiftPanel'
 import PeopleHere from './PeopleHere'
 import TravelAction from './TravelAction'
 
@@ -33,6 +33,14 @@ export default function VillagePanel() {
   const isHere = world.player.location === selectedVillage.id
   const isTraveling = world.player.state === 'traveling'
   const sietch = selectSietch(world, selectedVillage.id)
+  // Sietch-kind locations: SietchState is now the sole loyalty authority
+  // (docs/PRD/game-completion/02-runtime-consolidation.md "Sietches and
+  // loyalty") — Village.loyalty is a stale legacy copy for these. Every
+  // other kind still reads Village.loyalty, which the (untouched) village
+  // diplomacy systems keep mutating.
+  const loyalty = selectedVillage.kind === 'sietch'
+    ? sietch?.loyalty ?? selectedVillage.loyalty
+    : selectedVillage.loyalty
 
   function travel() {
     EventBus.emit('player:travel', { targetVillageId: selectedVillage!.id })
@@ -46,7 +54,7 @@ export default function VillagePanel() {
       {/*
         Above the statistics on purpose. Talking to people is the primary verb
         at a location you are standing in, and this panel is long enough that
-        anything below the attack section falls off the bottom of a 800px
+        anything further down risked falling off the bottom of a 800px
         window — captured, the list rendered entirely below the fold with only
         its heading visible. It draws nothing when the player is elsewhere, so
         inspecting a distant village is unchanged.
@@ -63,7 +71,7 @@ export default function VillagePanel() {
       </div>
       <div style={styles.row}>
         <span style={styles.label}>Loyalty</span>
-        <LoyaltyBar value={selectedVillage.loyalty} />
+        <LoyaltyBar value={loyalty} />
       </div>
       <div style={styles.row}>
         <span style={styles.label}>Status</span>
@@ -88,23 +96,20 @@ export default function VillagePanel() {
         </>
       )}
 
-      <SietchCommandSection
+      <PledgePanel
         villageId={selectedVillage.id}
         villageName={selectedVillage.name}
         villageOwner={selectedVillage.owner}
         sietch={sietch}
         playerIsHere={isHere}
       />
-
-      <AttackSection
+      <GiftPanel
         villageId={selectedVillage.id}
         villageName={selectedVillage.name}
         villageOwner={selectedVillage.owner}
-        playerTroops={world.player.troops ?? 0}
+        sietch={sietch}
+        playerIsHere={isHere}
         playerSpice={world.player.spice}
-        playerTraveling={world.player.state === 'traveling'}
-        sietchPledged={sietch?.pledgedToPlayer ?? false}
-        scoutedDefense={world.scoutedDefense[selectedVillage.id]}
       />
 
       <div style={{ marginTop: 12 }}>

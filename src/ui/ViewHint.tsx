@@ -9,19 +9,36 @@
 
 import { useEffect, useState } from 'react'
 import { EventBus } from '../EventBus'
+import { useGameStore } from './store'
+import { dialogueIsCloseable } from '../game-engine/DialogueSystem'
 import type { SceneModeId } from '../types'
 import { palette } from './theme'
 
 const HINTS: Record<SceneModeId, string> = {
-  strategic: 'Click a sietch to travel · drag to turn Arrakis · scroll to zoom in',
-  surface: 'Click a sietch to travel · shift-drag to pan · scroll out to leave',
+  strategic: 'Click a location to travel · drag to turn Arrakis · scroll to zoom in',
+  surface: 'Click a location to travel · shift-drag to pan · scroll out to leave',
   location: 'Click Speak to talk · Depart, scroll out or Esc to leave',
   flight: 'Press Esc to skip ahead',
   conversation: 'Choose a reply, or press Esc to step away',
 }
 
+/**
+ * The 'conversation' hint's truthful variant during one of the opening's
+ * mandatory beats (owed from W3c — DialogueSystem.ts's canCloseDialogue is
+ * false throughout Duke Leto's briefing, Thufir's ledger, and Beat 4's trust
+ * exchange): Escape cannot actually close the dialogue then, so offering it
+ * is a lie the player would have to discover by testing it.
+ */
+function conversationHint(closeable: boolean): string {
+  return closeable ? HINTS.conversation : 'Choose a reply'
+}
+
 export default function ViewHint() {
   const [mode, setMode] = useState<SceneModeId>('strategic')
+  // A pure selector over the store's world (dialogueIsCloseable), not a
+  // second read of the DialogueSystem singleton — ViewHint stays dumb, the
+  // mandatory-beat rule stays owned by DialogueSystem.ts's one function.
+  const closeable = useGameStore(s => dialogueIsCloseable(s.world))
 
   useEffect(() => {
     // The bus has no unsubscribe-on-subscribe return, so off() is explicit.
@@ -30,7 +47,9 @@ export default function ViewHint() {
     return () => EventBus.off('scene:mode', onMode)
   }, [])
 
-  return <div style={styles.hint}>{HINTS[mode] ?? HINTS.strategic}</div>
+  const text = mode === 'conversation' ? conversationHint(closeable) : (HINTS[mode] ?? HINTS.strategic)
+
+  return <div style={styles.hint}>{text}</div>
 }
 
 /** Tight opaque halo plus a wide soft one — legible over sand or sky. */

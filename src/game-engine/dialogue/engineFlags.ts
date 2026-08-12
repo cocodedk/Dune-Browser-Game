@@ -11,7 +11,7 @@
 
 export const ENGINE_WRITTEN_FLAGS: Readonly<Record<string, string>> = {
   'act': 'economy/actRun.runActCheck(), seeded in GameState.createInitialState()',
-  'pledged.count': 'SietchSystem.pledgePlayerSietch(), CombatSystem.attackVillage()',
+  'pledged.count': 'SietchSystem.pledgePlayerSietch(), economy/sietchLoyaltyRun.runSietchLoyaltyDay() — CombatSystem is gone entirely (W2b killed the combat pledge path; W2e deleted the file, since nothing production-reachable used it after that)',
   'ritual.count': 'economy/endgameOps.attemptRitual()',
   'forts.destroyed': 'economy/endgameOps.assaultFort()',
   'quota.cycle': 'EconomySystem (quota settlement)',

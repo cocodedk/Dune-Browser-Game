@@ -2,12 +2,13 @@
 import type { DesertSite } from './game-engine/desert/sites';
 import type { SietchState } from './game-engine/sietch/types'
 import type { FactionProfile } from './game-engine/faction/types'
-import type { QuotaState } from './game-engine/quota/quota'
+import type { QuotaState, PendingSettlement } from './game-engine/quota/quota'
 import type { ActId, EndingId } from './game-engine/acts/transitions'
 import type { RegionEcology } from './game-engine/ecology/ecology'
 import type { FortState } from './game-engine/acts/endgame'
 import type { PrescienceLevel } from './game-engine/prescience/prescience'
 import type { TroopGroup, SpiceField, Equipment } from './game-engine/troops/types'
+import type { RngState } from './game-engine/rng/rng'
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type VillageId = string;
@@ -47,9 +48,7 @@ export interface Player {
   state: 'idle' | 'traveling';
   travelTarget: VillageId | null;
   arrivalTime: number;    // game-time (seconds) when travel completes
-  influence: number;      // 0–100
   spice: number;
-  troops: number;
   /** 0 none, 1 awareness, 2 farspeech, 3 foresight. */
   prescience: PrescienceLevel;
 }
@@ -63,7 +62,9 @@ export type GameEventType =
   | 'alliance_offer' | 'betrayal' | 'attack' | 'dialogue_start' | 'dialogue_end'
   | 'village_selected' | 'travel_start' | 'travel_complete'
   | 'faction_decision' | 'tribute_refused' | 'poc_goal_achieved'
-  | 'sietch_pledged' | 'sietch_task_assigned' | 'spice_shipment_received' | 'fedaykin_ready';
+  | 'sietch_pledged' | 'sietch_task_assigned' | 'spice_shipment_received' | 'fedaykin_ready'
+  /** Dialogue spiceDelta effects — distinct from harvest income (02 "Crew lifecycle"). */
+  | 'story_reward';
 
 export interface GameEvent {
   id: string;
@@ -81,13 +82,30 @@ export interface DialogueState {
 export interface WorldState {
   time: number;           // game-seconds elapsed (real seconds × speed)
   speed: number;          // time multiplier (1 = normal, 5 = fast)
+  /**
+   * Day-boundary bookkeeping (game-engine/TimeSystem.ts's crossedDays()).
+   * `null` means "process the current day once, no backfill" — a fresh
+   * campaign, or a genuinely-new one started mid-session. Lives on
+   * WorldState, not a TimeSystem module-global, so every load path (Load,
+   * New, reload) inherits the RIGHT value by construction instead of a
+   * stale in-memory one — see baseline/wp01-critic-verdict.md's "biggest
+   * gap".
+   */
+  lastProcessedDay: number | null;
   villages: Village[];
   player: Player;
   aiTimers: Record<string, AITimer>;
   dialogue: DialogueState | null;
   events: GameEvent[];    // ring buffer — keep last 20
   goalAchieved: boolean;
-  goalType: 'control_all_villages' | 'survive_20_min';
+  // `goalType` (the retired campaign-completion authority — docs/PRD/
+  // game-completion/02-runtime-consolidation.md "Campaign status") is fully
+  // removed as of WP02f: GameLoop's PoC win check that used to read it died
+  // in WP01 (dayRunner.ts / legacy-authority-inventory.md category 3), and
+  // migrateV2ToV3 (saveMigration.ts) has dropped it from every save since.
+  // The spiceTripleCredit/sietchPayoutLoop baseline characterization tests
+  // that used to pin the last non-test constructors were themselves deleted
+  // in WP02e, closing the reason the field stayed optional instead of gone.
   factionProfiles: FactionProfile[];
   regions: Region[];
   sietches: SietchState[];
@@ -101,6 +119,8 @@ export interface WorldState {
    */
   flags: Record<string, boolean | number>;
   quota: QuotaState;
+  /** null outside a due deadline; one decision at a time (02 "Tribute"). */
+  pendingSettlement: PendingSettlement | null;
   troopGroups: TroopGroup[];
   spiceFields: SpiceField[];
   equipment: Equipment[];
@@ -121,6 +141,11 @@ export interface WorldState {
   wormSightings: WormSighting[];
   /** Deep-desert sites, generated once per game and revealed by prospecting. */
   desertSites: DesertSite[];
+  /**
+   * The campaign's single seeded RNG state — see game-engine/rng/rng.ts and
+   * 02-runtime-consolidation.md "Randomness". Canonical and serialized.
+   */
+  rng: RngState;
 }
 
 export type { DesertSite, SiteKind } from './game-engine/desert/sites';

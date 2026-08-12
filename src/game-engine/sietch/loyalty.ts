@@ -40,7 +40,22 @@ function clampLoyalty(value: number): number {
  * normal play. Renown now comes from the three things that visibly grow a
  * house: sietches sworn, tribute met, raids beaten.
  */
-export const CHARISMA_PER_PLEDGE = 5
+/**
+ * Canonical-numbers decision (chunk W3g, docs/PRD/game-completion/
+ * 03-opening-experience.md): dropped from 5 to 4. The starting contract
+ * fixes charisma-20 capacity at 2 pledges AND the `opening-charisma-cap`
+ * fixture requires a THIRD pledge attempt to refuse after exactly two
+ * successful pledges. At +5, 20 -> 25 -> 30 opens a third slot after the
+ * second pledge alone (maxPledged(30) = 3), making that fixture
+ * unwritable. At +4: 20 -> 24 -> 28, capacity stays 2 after two pledges;
+ * the third slot arrives only via CHARISMA_PER_QUOTA (28 + 5 = 33 ->
+ * maxPledged 3), i.e. a full tribute payment — which is exactly what
+ * PledgePanel.tsx's charisma-cap recovery copy already names as a "next
+ * known source", so the copy stays true under the new value with no
+ * change of its own. CHARISMA_PER_QUOTA and CHARISMA_PER_RAID are
+ * untouched — this is the one authored balance change for this chunk.
+ */
+export const CHARISMA_PER_PLEDGE = 4
 export const CHARISMA_PER_QUOTA = 5
 export const CHARISMA_PER_RAID = 5
 

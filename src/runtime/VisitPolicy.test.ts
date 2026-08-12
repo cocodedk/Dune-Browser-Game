@@ -8,7 +8,13 @@ import { STORY_TREE_ID } from '../data/dialogue'
 import type { FactionId, WorldState } from '../types'
 
 function stateAt(overrides: Partial<WorldState> = {}): WorldState {
-  return { ...createInitialState(), ...overrides }
+  const base = createInitialState()
+  // The canonical opening now starts the player at Arrakeen, not Sietch
+  // Tabr (docs/PRD/game-completion/00-index.md "Opening state"). These
+  // fixtures pin dialogue-routing behavior that is specifically about
+  // Sietch Tabr's residents (Chani/ysane, then Sova), so they re-establish
+  // that precondition explicitly rather than relying on the old default.
+  return { ...base, player: { ...base.player, location: 'sietch_tabr' }, ...overrides }
 }
 
 /**

@@ -98,6 +98,12 @@ the WP09 IP/license decision are user-owned: reaching one means `blocked`, not
 - Never `--no-verify`. Commit early and often — a dead session must be cheap.
 - Measure, don't assume: read `window.__DUNE__.inspect()` numbers before changing
   anything visual or spatial, and put the numbers in the evidence.
+- **One running game instance at a time, machine-wide.** Never open the game in
+  several browser tabs or drive it from several agents in parallel — WebGL contexts
+  multiply and it kills the machine (user rule, 2026-08-10; this box has been OOMed
+  before). Reuse the single shared dev server, close a tab before opening another,
+  and sequence all browser evidence. **Close the browser the moment its capture or
+  check is finished** — never leave a page open while doing non-browser work.
 - Use the status vocabulary exactly: `planned`, `in_progress`, `verified`, `blocked`.
   "Done", "green", "implemented", and "mostly" are banned in reports.
 - Report using items 1–6 of 08 §Package completion report. Item 7 (reviewer verdict)
@@ -110,6 +116,8 @@ the WP09 IP/license decision are user-owned: reaching one means `blocked`, not
 - Score against the bar out of 10 so progress across rounds is legible.
 - Judge several samples — multiple seeds, saves, and days. One unlucky frame is not a
   verdict, and one lucky frame is not a pass.
+- Critics run **serially**, one browser tab each, closed when finished — never two
+  game instances alive at once (see the machine rule above).
 
 ## Lead verification — never bank a report
 

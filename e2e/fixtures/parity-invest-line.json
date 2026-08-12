@@ -1,0 +1,459 @@
+{
+  "seed": 31,
+  "entryParityHash": "fac8002d0cdab61b",
+  "phaseA": [
+    {
+      "kind": "command",
+      "ref": 0,
+      "hash": "4f8f06559d350021",
+      "parityHash": "a70668544245ec48"
+    },
+    {
+      "kind": "command",
+      "ref": 1,
+      "hash": "221e89830ec8f8fd",
+      "parityHash": "d575df6231daa47a"
+    },
+    {
+      "kind": "command",
+      "ref": 2,
+      "hash": "33357bb9d74e4fcb",
+      "parityHash": "da02d56a0cf35168"
+    },
+    {
+      "kind": "command",
+      "ref": 3,
+      "hash": "2c0c06bbdf445f3a",
+      "parityHash": "0e67c26d60920341"
+    },
+    {
+      "kind": "command",
+      "ref": 4,
+      "hash": "a019566194f6bc48",
+      "parityHash": "fe6a65d937d56a57"
+    },
+    {
+      "kind": "command",
+      "ref": 5,
+      "hash": "fdbf4b1b44623510",
+      "parityHash": "5d4d4e1f41c23b7f"
+    },
+    {
+      "kind": "command",
+      "ref": 6,
+      "hash": "ccbbddec73a49f25",
+      "parityHash": "13c3bb41c4ee8222"
+    },
+    {
+      "kind": "command",
+      "ref": 7,
+      "hash": "25af52fa80065d2a",
+      "parityHash": "a66b21d352b1ccca"
+    },
+    {
+      "kind": "arrival",
+      "ref": 6,
+      "hash": "492fc5afc4f3e2e7",
+      "parityHash": "e7fdd4a4e172e4b9"
+    },
+    {
+      "kind": "command",
+      "ref": 8,
+      "hash": "464840a5844f991d",
+      "parityHash": "f69b434c32fa0da8"
+    },
+    {
+      "kind": "arrival",
+      "ref": 10,
+      "hash": "8e0e8e5bd3a22467",
+      "parityHash": "e980d78273bb57ad"
+    },
+    {
+      "kind": "command",
+      "ref": 9,
+      "hash": "d88046f5a9d354df",
+      "parityHash": "29ce2fbb3648a3a3"
+    },
+    {
+      "kind": "command",
+      "ref": 10,
+      "hash": "5d9ba127b463e98c",
+      "parityHash": "220e43a513c2c82a"
+    },
+    {
+      "kind": "command",
+      "ref": 11,
+      "hash": "a96bf4007305c219",
+      "parityHash": "14f45e0435927885"
+    },
+    {
+      "kind": "command",
+      "ref": 12,
+      "hash": "7d5b76ff4b04ec55",
+      "parityHash": "d444e096fb1eb1fe"
+    },
+    {
+      "kind": "command",
+      "ref": 13,
+      "hash": "51097e78ad4d5907",
+      "parityHash": "61eb34f8d6d0ac03"
+    },
+    {
+      "kind": "arrival",
+      "ref": 14,
+      "hash": "c0b7bd8bc97587fa",
+      "parityHash": "67c417d421d3f994"
+    },
+    {
+      "kind": "command",
+      "ref": 14,
+      "hash": "d9d7c410b5c1b9ee",
+      "parityHash": "73725bf32a446ea8"
+    },
+    {
+      "kind": "command",
+      "ref": 15,
+      "hash": "45cc6f80a86c3d0a",
+      "parityHash": "36f0fcad06566c84"
+    },
+    {
+      "kind": "command",
+      "ref": 16,
+      "hash": "374064255f951c26",
+      "parityHash": "9de280e2bcd74538"
+    },
+    {
+      "kind": "command",
+      "ref": 17,
+      "hash": "fe8c1a3d415a3aab",
+      "parityHash": "b4ed410498d4ee13"
+    },
+    {
+      "kind": "command",
+      "ref": 18,
+      "hash": "398049ca85ed261c",
+      "parityHash": "a2181bcd0c68e17b"
+    },
+    {
+      "kind": "command",
+      "ref": 19,
+      "hash": "d89665ffaf5cc93e",
+      "parityHash": "cb0510aae72766d9"
+    },
+    {
+      "kind": "command",
+      "ref": 20,
+      "hash": "3cab1c269f9e1351",
+      "parityHash": "deb9f4c36f566ed2"
+    },
+    {
+      "kind": "day",
+      "ref": 1,
+      "hash": "2de7d17c6ddca907",
+      "parityHash": "ae20526e4fa19a14"
+    },
+    {
+      "kind": "day",
+      "ref": 2,
+      "hash": "ec993288df9fc956",
+      "parityHash": "5d5de5ef9faf14e7"
+    },
+    {
+      "kind": "day",
+      "ref": 3,
+      "hash": "37835a7771ea241f",
+      "parityHash": "057c1d2d634ed09a"
+    },
+    {
+      "kind": "day",
+      "ref": 4,
+      "hash": "e13e360d6e0044b6",
+      "parityHash": "8e91d0984b387bc4"
+    },
+    {
+      "kind": "day",
+      "ref": 5,
+      "hash": "64175428a2e17340",
+      "parityHash": "9eb0db77e3f270f1"
+    },
+    {
+      "kind": "day",
+      "ref": 6,
+      "hash": "303a14432877c6bf",
+      "parityHash": "eb7bede9764c243b"
+    },
+    {
+      "kind": "day",
+      "ref": 7,
+      "hash": "fddf83f32e64b5ad",
+      "parityHash": "c5c362413c96a4cf"
+    },
+    {
+      "kind": "day",
+      "ref": 8,
+      "hash": "2df38ff696b3da93",
+      "parityHash": "f31673165af718f3"
+    },
+    {
+      "kind": "day",
+      "ref": 9,
+      "hash": "bec0a26091ffd700",
+      "parityHash": "62aab935d4f224d3"
+    },
+    {
+      "kind": "day",
+      "ref": 10,
+      "hash": "dfdd25e2e3a8b8f6",
+      "parityHash": "4d4629e265ada672"
+    },
+    {
+      "kind": "day",
+      "ref": 11,
+      "hash": "43a9cbedeb8cfb95",
+      "parityHash": "828c66194819f116"
+    },
+    {
+      "kind": "day",
+      "ref": 12,
+      "hash": "ed0baaa54886ebad",
+      "parityHash": "19be727df18d0245"
+    }
+  ],
+  "preReloadParityHash": "19be727df18d0245",
+  "phaseB": [
+    {
+      "kind": "command",
+      "ref": 21,
+      "hash": "cb27ed7eb5877a65",
+      "parityHash": "c816bd2900ef04e0"
+    },
+    {
+      "kind": "tick",
+      "ref": 721,
+      "hash": "5ed60daf8948845d",
+      "parityHash": "e937ad3086f3fd9b"
+    },
+    {
+      "kind": "command",
+      "ref": 22,
+      "hash": "675b7df432c3b5b6",
+      "parityHash": "cf6ac926ac3d1f68"
+    },
+    {
+      "kind": "command",
+      "ref": 23,
+      "hash": "1442a7a1bcab7239",
+      "parityHash": "305db48093ada5ae"
+    },
+    {
+      "kind": "day",
+      "ref": 13,
+      "hash": "1cd70c7a671d12c4",
+      "parityHash": "ce9a22fecf898788"
+    },
+    {
+      "kind": "day",
+      "ref": 14,
+      "hash": "acdb7f55a5b5f03f",
+      "parityHash": "098624ba528e0558"
+    },
+    {
+      "kind": "day",
+      "ref": 15,
+      "hash": "8c0860a8ad383180",
+      "parityHash": "6f2197fe4ace241a"
+    },
+    {
+      "kind": "day",
+      "ref": 16,
+      "hash": "e2a985b92233274d",
+      "parityHash": "461215f412a03026"
+    },
+    {
+      "kind": "day",
+      "ref": 17,
+      "hash": "7035da4b42f23a93",
+      "parityHash": "dde8f193707dbc41"
+    },
+    {
+      "kind": "day",
+      "ref": 18,
+      "hash": "f7bc7130cfa08193",
+      "parityHash": "88b652fad777ab41"
+    },
+    {
+      "kind": "day",
+      "ref": 19,
+      "hash": "0af8b9aa79c185a0",
+      "parityHash": "5b6098016efe1cc3"
+    },
+    {
+      "kind": "day",
+      "ref": 20,
+      "hash": "9a53788b32528b20",
+      "parityHash": "5334b42d79620fe4"
+    },
+    {
+      "kind": "command",
+      "ref": 24,
+      "hash": "a195390ade2e618a",
+      "parityHash": "93a3296825d9c027"
+    }
+  ],
+  "trace": [
+    [
+      "player:choose",
+      {
+        "choiceId": "briefing_understand"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "briefing_ack_practical_1"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "ledger_root_1"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "ledger_stock_1"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "ledger_projection_1"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "ledger_shortfall_1"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "ledger_patience_1"
+      }
+    ],
+    [
+      "player:travel",
+      {
+        "targetVillageId": "hagg"
+      }
+    ],
+    [
+      "player:travel",
+      {
+        "targetVillageId": "red_wall_sietch"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "redwall_trust_transaction"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "redwall_trust_ack_transaction_1"
+      }
+    ],
+    [
+      "player:pledge_sietch",
+      {
+        "villageId": "red_wall_sietch"
+      }
+    ],
+    [
+      "player:assign_crew",
+      {
+        "groupId": "group_red_wall_sietch",
+        "task": "harvest",
+        "targetId": "field_red_wall_pan"
+      }
+    ],
+    [
+      "player:travel",
+      {
+        "targetVillageId": "sietch_tabr"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "tabr_dilemma_root_1"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "tabr_dilemma_ramallo_1"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "tabr_dilemma_close_consider"
+      }
+    ],
+    [
+      "player:gift_sietch",
+      {
+        "villageId": "sietch_tabr"
+      }
+    ],
+    [
+      "player:gift_sietch",
+      {
+        "villageId": "sietch_tabr"
+      }
+    ],
+    [
+      "player:pledge_sietch",
+      {
+        "villageId": "sietch_tabr"
+      }
+    ],
+    [
+      "player:assign_crew",
+      {
+        "groupId": "group_sietch_tabr",
+        "task": "harvest",
+        "targetId": "field_tabr_shallows"
+      }
+    ],
+    [
+      "player:settle_tribute",
+      {
+        "amount": 90
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "q1_debrief_full_1"
+      }
+    ],
+    [
+      "player:choose",
+      {
+        "choiceId": "q1_debrief_full_thufir_1"
+      }
+    ],
+    [
+      "player:settle_tribute",
+      {
+        "amount": 100
+      }
+    ]
+  ]
+}

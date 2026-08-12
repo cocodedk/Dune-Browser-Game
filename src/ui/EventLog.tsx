@@ -11,6 +11,7 @@ const EVENT_ICONS: Record<string, string> = {
   travel_complete: '✅',
   faction_decision: '🔴',
   poc_goal_achieved: '🏆',
+  story_reward: '✦',
 }
 
 export default function EventLog() {

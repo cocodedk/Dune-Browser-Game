@@ -1,8 +1,11 @@
 import { useGameStore } from './store'
 import { EventBus } from '../EventBus'
-import type { Difficulty } from '../types'
 import { useState, useEffect } from 'react'
-import { palette, type as typo, button } from './theme'
+import { type as typo, button } from './theme'
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
 
 /** A labelled figure. Labels are words, not emoji — emoji do not scan. */
 function Readout({ label, value }: { label: string; value: string }) {
@@ -16,7 +19,7 @@ function Readout({ label, value }: { label: string; value: string }) {
 
 export default function StatusBar() {
   const { world, lastSaveTime, saveGame, loadGame, newGame } = useGameStore()
-  const { player, time, speed, goalAchieved, goalType, villages, difficulty } = world
+  const { player, time, speed, goalAchieved, difficulty, paused } = world
   const [isMuted, setIsMuted] = useState(false)
 
   useEffect(() => {
@@ -27,20 +30,42 @@ export default function StatusBar() {
     return () => { EventBus.off('audio:changed', onAudioChange) }
   }, [])
 
+  // Both critics' biggest gap (W3h): a manual pause, coexisting with the
+  // engine's own pause reasons (pause.ts's `manual` input) — CommandWiring
+  // already routed 'game:pause' to onPause; only an emitter was missing.
+  // Spacebar too, guarded off text-entry targets so it does not fight
+  // SettlementModal's own number input.
+  //
+  // W3i fix: reads `useGameStore.getState().world.paused` at keypress time,
+  // not the `world` destructured from this render. The `[]`-deps effect
+  // installs its `onKey` closure once, at mount — a destructured `world`
+  // captured there goes stale the instant a mid-session loadGame()/newGame()
+  // swaps the store's `world` for a brand-new object (ui/store.ts), and
+  // "toggle pause" would then flip relative to a paused flag that no longer
+  // reflects the live campaign. `getState()` reads the CURRENT store value
+  // every time, so this never goes stale regardless of how many campaigns
+  // this one mounted StatusBar lives through.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.code !== 'Space') return
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      e.preventDefault()
+      EventBus.emit('game:pause', { paused: !useGameStore.getState().world.paused })
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const minutes = Math.floor(time / 60)
   const seconds = Math.floor(time % 60)
-  const playerVillages = villages.filter(v => v.owner === 'player').length
-
-  const goalText = goalType === 'control_all_villages'
-    ? `Villages: ${playerVillages}/${villages.length}`
-    : `Survive: ${minutes}m ${seconds}s / 20m`
 
   function setSpeed(s: number) {
     EventBus.emit('game:speed', { speed: s })
   }
 
-  function setDifficulty(d: Difficulty) {
-    EventBus.emit('game:difficulty', { difficulty: d })
+  function togglePause() {
+    EventBus.emit('game:pause', { paused: !paused })
   }
 
   function toggleMute() {
@@ -51,9 +76,15 @@ export default function StatusBar() {
     ? new Date(lastSaveTime).toTimeString().slice(0, 5)
     : null
 
+  // Reuses the current run's difficulty — the only surface that CHOOSES a
+  // difficulty is the title screen's New Campaign setup panel
+  // (ui/title/NewCampaignPanel.tsx); a mid-run reset still counts as one
+  // createInitialState() write, just with today's value carried forward
+  // rather than re-prompting (03-opening-experience.md "Title and run
+  // setup": difficulty is written once per campaign, not once ever).
   async function handleNew() {
     if (!window.confirm('Start a new game? Current progress will be lost.')) return
-    await newGame()
+    await newGame(difficulty)
   }
 
   return (
@@ -67,39 +98,37 @@ export default function StatusBar() {
       <Readout label="day" value={`${Math.floor(time / 60)}`} />
       <Readout label="time" value={`${minutes}:${seconds.toString().padStart(2, '0')}`} />
       <Readout label="spice" value={player.spice.toFixed(1)} />
-      <Readout label="troops" value={`${player.troops ?? 0}`} />
-      <Readout label="influence" value={`${player.influence}`} />
-      <span style={{ ...styles.item, color: goalAchieved ? palette.good : palette.gold }}>
-        {goalAchieved ? 'RUN ENDED' : goalText}
-      </span>
       {!goalAchieved && (
         <span style={styles.item}>
           Speed:
+          <button
+            onClick={togglePause}
+            aria-pressed={paused}
+            style={{ ...button.base, ...(paused ? button.active : {}) }}
+            title="Pause (Space)"
+          >
+            0×
+          </button>
           {[1, 2, 5].map(s => (
             <button
               key={s}
               onClick={() => setSpeed(s)}
-              style={{ ...button.base, ...(speed === s ? button.active : {}) }}
+              style={{ ...button.base, ...(!paused && speed === s ? button.active : {}) }}
             >
               {s}×
             </button>
           ))}
         </span>
       )}
-      {!goalAchieved && (
-        <span style={styles.item}>
-          Difficulty:
-          {(['easy', 'normal', 'hard'] as Difficulty[]).map(d => (
-            <button
-              key={d}
-              onClick={() => setDifficulty(d)}
-              style={{ ...button.base, ...(difficulty === d ? button.active : {}) }}
-            >
-              {d.charAt(0).toUpperCase() + d.slice(1)}
-            </button>
-          ))}
-        </span>
-      )}
+      {/*
+        Read-only — 03-opening-experience.md "Title and run setup":
+        "Difficulty is written once into campaign state and cannot change
+        until another new campaign begins." The mutable buttons that used to
+        sit here (game:difficulty) are gone from the whole app, not hidden;
+        see runtime/CommandWiring.ts's header and types.bus.ts.
+      */}
+      <Readout label="difficulty" value={capitalize(difficulty)} />
+
       <span style={styles.item}>
         <button style={styles.speedBtn} onClick={toggleMute}>
           {isMuted ? '🔇 Off' : '🔊 On'}

@@ -47,3 +47,8 @@ blob-report/
 # reshaped, baked derivatives that ship in the game may be committed.
 landscape-shop/*/feedstock/
 landscape-shop/feedstock-packs/
+
+# WP04 chunk W4d published seed sweep: raw per-run JSON is regenerable
+# (progress.md Round 16 — "summaries committed, raw traces regenerable").
+# Only seeds.txt and sweep-report.md, both siblings of this dir, are committed.
+docs/PRD/game-completion/baseline/wp04-sweep/raw/

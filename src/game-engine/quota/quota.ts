@@ -4,8 +4,15 @@
 // Without this the game is a sandbox with no reason to act; with it, every
 // assignment decision has a deadline behind it. The pressure has to be real
 // but survivable: the design promise is that from patience 1, full
-// mobilisation can always buy two more cycles. Stage 21's balance harness
-// asserts that end to end; these tests pin the mechanics it relies on.
+// mobilisation can always buy two more cycles. game-engine/sim/runner.ts
+// (07-balance-playtest-and-release.md's runtime-faithful simulator, WP04)
+// is what asserts that end to end now — balance/simulate.ts, the parallel-
+// economy model this citation used to name, was deleted at chunk W4a
+// (progress.md Round 16: closes WP02's C5 carve-out and the 15-vs-28
+// crew-size divergence — see data/troopGroups.ts's own citation). The
+// recovery-fixture proof of THIS specific invariant is still owed to a
+// later WP04 chunk (Round 16's own reading); these tests pin the mechanics
+// it will rely on.
 
 export const CYCLE_DAYS = 8
 /**
@@ -27,17 +34,28 @@ export const ARREARS_SURCHARGE = 0.25
 /**
  * First three cycles are hand-authored; later ones scale geometrically.
  *
- * Retuned from 100/250/450 after the balance harness showed that curve was
- * unpayable: Act 1 yields ~470 spice including the starting 60, against 800
- * demanded. Worse, it left no window in which the 100-spice harvester was
- * affordable, so the capex decision the whole slice is built around never
- * actually occurred.
+ * Retuned from 100/250/450 after balance/simulate.ts's parallel-economy
+ * harness (deleted at WP04 chunk W4a — game-engine/sim/runner.ts is its
+ * runtime-faithful successor, per 07-balance-playtest-and-release.md)
+ * showed that curve was unpayable: Act 1 yields ~470 spice including the
+ * starting 60, against 800 demanded, and left no window in which the
+ * 100-spice harvester was affordable.
  *
- * 90/150/260 totals 500 against ~530 available to a good line — tight enough
- * that a wasted cycle hurts, loose enough that the harvester window opens
- * around day 12-14 as the design intended.
+ * WP04 chunk W4e (balance tuning): [1]/[2] retuned across two rounds,
+ * 150/260 -> 100/173 (round 1) -> 100/30 (round 2). [0]=90 is FORBIDDEN,
+ * unchanged. Round 1: the reserve line (exactly one crew, by design) could
+ * not out-earn a 150 cycle-2 demand in 8 days even after troopGroups.ts's
+ * and spiceFields.ts's yield legs of the same round — measured before the
+ * cut (baseline/wp04-sweep/sweep-report.md): cycle-2 stock 12.18 vs a 166
+ * amountDue, 0/100 seeds even partial. Round 2: `recoveryProbe.test.ts`'s
+ * distressed fixture reaches cycle index 2 (day 28) carrying real arrears
+ * from two forced-short settlements (a fixed ~56 from [0]/[1] and the
+ * forbidden 0.25 surcharge); a single crew recovering from a hand-set
+ * exhausted field still could not out-earn [2]'s 173 while also funding
+ * recovery.ts's genuine loyalty-protection gifts. See progress.md's round
+ * record for the day-by-day arithmetic and measured post-change numbers.
  */
-export const BASE_AMOUNTS = [90, 150, 260] as const
+export const BASE_AMOUNTS = [90, 100, 30] as const
 export const LATER_CYCLE_GROWTH = 1.5
 
 export interface QuotaState {
@@ -59,6 +77,30 @@ export interface PaymentOutcome {
   gameOver: boolean
   paid: number
   shortfall: number
+}
+
+/**
+ * One pending tribute decision, created at a due deadline and cleared by the
+ * settle command (docs/PRD/game-completion/02-runtime-consolidation.md
+ * "Tribute"). Snapshotted at creation so a paused, reloaded campaign shows
+ * the exact same numbers the deadline first presented — see
+ * quota/settlement.ts's buildPendingSettlement.
+ */
+export interface PendingSettlement {
+  /** quota.cycleIndex at creation — which cycle this decision resolves. */
+  cycleIndex: number
+  /** quota.nextDueDay at creation. */
+  dueDay: number
+  /** quota.amount + quota.arrears at creation. */
+  amountDue: number
+  /** player.spice at creation. */
+  stock: number
+  /** amountDue * PARTIAL_PAYMENT_FRACTION — the full/partial payment boundary. */
+  minPartialPayment: number
+  /** ARREARS_SURCHARGE — the rate applied to a shortfall carried as arrears. */
+  arrearsSurchargeRate: number
+  /** Legal settle amounts: 0 through whichever of amountDue/stock is smaller. */
+  legalRange: { min: number; max: number }
 }
 
 export function createQuotaState(difficultyMultiplier = 1): QuotaState {

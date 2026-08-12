@@ -47,9 +47,7 @@ function createTestWorld(): WorldState {
       state: 'idle',
       travelTarget: null,
       arrivalTime: 0,
-      influence: 5,
       spice: 0,
-      troops: 0,
       prescience: 0,
     },
     aiTimers: {
@@ -58,7 +56,6 @@ function createTestWorld(): WorldState {
     dialogue: null,
     events: [],
     goalAchieved: false,
-    goalType: 'control_all_villages',
     factionProfiles: [
       {
         id: 'harkonnen',
@@ -80,6 +77,7 @@ function createTestWorld(): WorldState {
       nextDueDay: 8, amount: 100, cycleIndex: 0,
       patience: 3, arrears: 0, restoredThisAct: false,
     },
+    pendingSettlement: null,
     troopGroups: [],
     spiceFields: [],
     equipment: [],
@@ -90,6 +88,8 @@ function createTestWorld(): WorldState {
     forts: [],
     wormSightings: [],
     desertSites: [],
+    rng: { seed: 1, step: 0 },
+    lastProcessedDay: null,
   };
 }
 

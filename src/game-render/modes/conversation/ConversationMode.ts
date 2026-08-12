@@ -14,6 +14,8 @@ import type { SceneModeId, WorldState } from '../../../types'
 import type { SceneMode } from '../../core/ModeManager'
 import { createCharacterCard } from './CharacterCard'
 import { INITIAL_CHARACTERS } from '../../../data/characters'
+import { currentNode } from '../../../game-engine/DialogueSystem'
+import { speakerCharacter } from '../../../game-engine/dialogue/speakerCharacter'
 import { fitOrtho } from '../../core/orthoFit'
 
 const CARD_PLANE_WIDTH = 1400
@@ -23,7 +25,14 @@ const CARD_LIFT = 120
 
 /** Who is speaking at this location, if anyone. */
 function speakerAt(world: WorldState): { name: string; role: string; id: string } {
-  const character = INITIAL_CHARACTERS.find(c => c.locationId === world.player.location)
+  // Match the current dialogue node's named speaker first — location-only
+  // resolution shows the wrong figure the moment two named characters share
+  // a location (Duke Leto rendered behind Thufir's own ledger talk). Same
+  // rule the 2D portrait uses: game-engine/dialogue/speakerCharacter.ts.
+  const node = currentNode()
+  const character = speakerCharacter(
+    INITIAL_CHARACTERS, node?.speaker ?? '', world.player.location,
+  )
   if (character) return { name: character.name, role: character.role, id: character.id }
 
   // A location with no named resident still gets a speaker, so the player is

@@ -32,54 +32,15 @@ vi.mock('../EventBus', () => ({
   EventBus: { emit: vi.fn(), on: vi.fn(), off: vi.fn() },
 }));
 
-describe('DialogueSystem: reputation dispatch', () => {
-  beforeEach(() => {
-    setWorld(freshState());
-  });
-
-  it('applies help_village reputation action on offer_help choice', () => {
-    startDialogue('village_leader', world.villages[0].id);
-    chooseDialogue('offer_help');
-
-    const fremenAfter = world.factionProfiles.find(f => f.id === 'fremen')!;
-    expect(fremenAfter.relations['player']!.trust).toBe(15);
-  });
-
-  it('applies attack_faction reputation action on demand_spice choice', () => {
-    startDialogue('village_leader', world.villages[0].id);
-    chooseDialogue('demand_spice');
-
-    const fremenAfter = world.factionProfiles.find(f => f.id === 'fremen')!;
-    expect(fremenAfter.relations['player']!.trust).toBe(-20);
-    expect(fremenAfter.relations['player']!.fear).toBe(15);
-  });
-
-  it('applies trade_with_faction reputation action on hk_trade choice', () => {
-    startDialogue('harkonnen_stronghold', world.villages[0].id);
-    chooseDialogue('hk_trade');
-
-    const hkAfter = world.factionProfiles.find(f => f.id === 'harkonnen')!;
-    expect(hkAfter.relations['player']!.trust).toBe(8);
-  });
-
-  it('does not mutate factionProfiles when choice has no reputationAction', () => {
-    startDialogue('village_leader', world.villages[0].id);
-    const profilesBefore = JSON.stringify(world.factionProfiles);
-
-    chooseDialogue('just_passing');
-
-    expect(JSON.stringify(world.factionProfiles)).toBe(profilesBefore);
-  });
-
-  it('applies honor_agreement reputation action on swear_protection choice', () => {
-    startDialogue('village_leader', world.villages[0].id);
-    chooseDialogue('offer_help');    // help_village: fremen trust +15
-    chooseDialogue('swear_protection'); // honor_agreement: partner(fremen) trust +13
-
-    const fremenAfter = world.factionProfiles.find(f => f.id === 'fremen')!;
-    expect(fremenAfter.relations['player']!.trust).toBe(28);
-  });
-});
+// "DialogueSystem: reputation dispatch" describe block removed in WP02e
+// (legacy-authority-inventory.md category 1's `DialogueSystem.ts:97-101`
+// WP01-audit-residue row, cross-referenced from category 6): applyEffect no
+// longer reads effect.reputationAction or writes world.factionProfiles —
+// see DialogueSystem.ts's applyEffect header comment. The authored
+// reputationAction data (offer_help, demand_spice, hk_trade,
+// swear_protection, ...) stays in src/data/ untouched; it is simply no
+// longer read by anything, like every other authored dialogue effect that
+// duplicated a retired system before WP01/WP02.
 
 describe('DialogueSystem: ritual effect', () => {
   beforeEach(() => {

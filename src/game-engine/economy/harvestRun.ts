@@ -11,18 +11,33 @@ import { DAY_SECONDS } from '../TimeSystem'
 import { getDifficultyConfig } from '../difficulty'
 import { harvestDay, resolveWorm } from '../troops/harvest'
 import { extractionTier } from '../troops/types'
+import { applyCasualty } from '../troops/casualty'
 import { pruneSightings } from '../worms/wormsign'
 import { carriedKinds } from './carried'
+import type { RngService } from '../rng/rng'
 
 /**
  * Run one day of harvesting for every assigned crew.
  * Spice accrues continuously to the player's stock — the shipment event is
  * kept as the player-facing notification.
+ *
+ * `rng` is one seeded service instance for the whole day (see
+ * dayRunner.ts's header) — the worm roll below draws from it instead of
+ * Math.random(), per 02-runtime-consolidation.md "Randomness".
  */
-export function runHarvestDay(): void {
+export function runHarvestDay(rng: RngService): void {
   let dayTotal = 0
+  // Snapshot ids, not group objects: a worm casualty this same pass can
+  // dissolve or merge a crew (troops/casualty.ts), which replaces
+  // world.troopGroups with a new array — any `group` reference captured
+  // before that call would go stale. Every group below is looked up fresh
+  // by id, so a group a prior iteration already dissolved/merged away is
+  // simply not found and skipped.
+  const groupIds = world.troopGroups.map(g => g.id)
 
-  for (const group of world.troopGroups) {
+  for (const groupId of groupIds) {
+    const group = world.troopGroups.find(g => g.id === groupId)
+    if (!group) continue
     if (group.task !== 'harvest' || !group.taskTargetId) continue
 
     const fieldIndex = world.spiceFields.findIndex(f => f.id === group.taskTargetId)
@@ -39,29 +54,47 @@ export function runHarvestDay(): void {
 
     // Worms. The rules for this were written and tested long ago and then
     // never called, so in practice no crew on Arrakis had ever been taken.
-    // Rolls come from Math.random at this mutation layer; the rules stay pure.
+    // Rolls come from the day's seeded rng at this mutation layer; the
+    // rules stay pure.
     const hasHarvester = kinds.includes('harvester') || kinds.includes('heavy_harvester')
     const hasThopter = kinds.includes('thopter') || kinds.includes('lr_thopter')
-    const worm = resolveWorm(hasHarvester, hasThopter, Math.random())
+    const worm = resolveWorm(hasHarvester, hasThopter, rng.next())
 
     if (worm.attacked) {
       world.wormSightings.push({ fieldId: field.id, atTime: world.time })
 
       if (worm.casualtyFraction > 0) {
+        // Equipment condition is out of scope (docs/PRD/game-completion/
+        // 02-runtime-consolidation.md "Equipment"): resolveWorm still
+        // reports `equipmentDamage` (its pure shape is pinned by
+        // harvest.test.ts and stays useful narrative color for the event
+        // text below), but nothing applies it to Equipment.condition
+        // anymore — see troops/types.ts's Equipment doc for the decision.
         const lost = Math.max(1, Math.round(group.size * worm.casualtyFraction))
-        group.size = Math.max(0, group.size - lost)
-        for (const item of world.equipment) {
-          if (item.groupId !== group.id) continue
-          item.condition = Math.max(0, item.condition - worm.equipmentDamage)
-        }
+        const result = applyCasualty(world.troopGroups, world.equipment, world.sietches, group.id, lost)
+        world.troopGroups = result.groups
+        world.equipment = result.equipment
+        world.sietches = result.sietches
+
         pushEvent(
           'attack',
           `A maker takes the crew at ${field.id}. ${lost} lost, the harvester mauled.`,
         )
-        // A crew that has just watched a worm eat their machine does not carry
-        // on working that field.
-        group.task = 'idle'
-        group.taskTargetId = null
+
+        // A crew that has just watched a worm eat their machine does not
+        // carry on working that field — but only the surviving, still-
+        // standalone crew: a dissolved crew has no task left to clear, and
+        // a merged crew keeps the absorbing crew's own task rather than
+        // being force-idled into it.
+        if (result.outcome === 'shrunk' && result.survivorId) {
+          const survivorIndex = world.troopGroups.findIndex(g => g.id === result.survivorId)
+          if (survivorIndex >= 0) {
+            world.troopGroups[survivorIndex] = {
+              ...world.troopGroups[survivorIndex], task: 'idle', taskTargetId: null,
+            }
+          }
+        }
+        continue
       } else {
         pushEvent(
           'attack',

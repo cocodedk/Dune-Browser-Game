@@ -1,11 +1,26 @@
 /// <reference types="vitest/config" />
+import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Read directly rather than `import ... with { type: 'json' }` — this file
+// runs under Vite's own config loader, not the app bundle, so the simplest
+// portable read wins over an import-assertion syntax question.
+const pkg = JSON.parse(
+  readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf-8'),
+) as { version: string }
+
 export default defineConfig({
   plugins: [react()],
   base: './',
+  // The title screen's version identifier (03-opening-experience.md "Title
+  // and run setup": "A visible version identifier suitable for bug
+  // reports") — real, from package.json, not hand-maintained. Ambient
+  // declaration in src/vite-env.d.ts.
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   resolve: {
     // Shop release seam: game imports the shop public surface only, and
     // ESLint (eslint.config.js) enforces that boundary at lint time. Three

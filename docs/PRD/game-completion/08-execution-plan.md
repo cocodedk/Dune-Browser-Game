@@ -31,7 +31,7 @@ implementation starts.
 
 | Milestone | Player-visible result | Cumulative packages |
 |---|---|---|
-| M1 — Coherent opening | New Campaign through Q1 is understandable, balanced, saveable, and free of duplicate rules. | WP00–WP04 |
+| M1 — Coherent opening | New Campaign through Q1 is understandable, balanced, saveable, and free of duplicate rules. | WP00–WP04 — **REACHED 2026-08-12**, awaiting the user's play verdict |
 | M2 — Finishable campaign | One production path reaches both victories and all three losses across four acts. | WP00–WP07 |
 | M3 — Content complete | Release-floor locations, characters, dialogue, events, and consequence states are integrated. | WP00–WP10 |
 | M4 — Presentation complete | Production UX, scenes, art, audio, accessibility, and performance pass in game. | WP00–WP12 |
@@ -41,11 +41,11 @@ implementation starts.
 
 | ID | Package | Status | Depends on | Primary contract |
 |---|---|---|---|---|
-| WP00 | Baseline and contract fixtures | `planned` | — | `02`, `03`, `04` |
-| WP01 | Runtime authority and seeded time | `planned` | WP00 | `02` |
-| WP02 | Command, pledge, crew, and tribute consolidation | `planned` | WP01 | `02` |
-| WP03 | Title, new run, and opening through Q1 | `planned` | WP02 | `03` |
-| WP04 | Runtime-faithful runner and opening balance | `planned` | WP03 | `07` |
+| WP00 | Baseline and contract fixtures | `verified` | — | `02`, `03`, `04` |
+| WP01 | Runtime authority and seeded time | `verified` | WP00 | `02` |
+| WP02 | Command, pledge, crew, and tribute consolidation | `verified` | WP01 | `02` |
+| WP03 | Title, new run, and opening through Q1 | `verified` | WP02 | `03` |
+| WP04 | Runtime-faithful runner and opening balance | `verified` | WP03 | `07` |
 | WP05 | Act/objective and consequence framework | `planned` | WP02 | `04`, `05` |
 | WP06 | Acts 1–2 vertical campaign | `planned` | WP04, WP05 | `04`, `05` |
 | WP07 | Acts 3–4 and five ending routes | `planned` | WP06 | `04`, `05` |

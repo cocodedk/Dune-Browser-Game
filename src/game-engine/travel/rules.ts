@@ -20,6 +20,7 @@ export type TravelRejection =
   | 'unknown-location'
   | 'undiscovered'
   | 'out-of-range'
+  | 'finish-the-conversation'
 
 export type TravelCheck =
   | { ok: true; durationSeconds: number }
@@ -67,17 +68,31 @@ export interface TravelContext {
   mode: TravelMode
   isTraveling: boolean
   adjacency: Readonly<Record<string, readonly string[]>>
+  /**
+   * True while a mandatory dialogue is open — DialogueSystem.ts's
+   * canCloseDialogue()/dialogueIsCloseable() is false. Optional so every
+   * existing caller/test that predates this field keeps compiling with the
+   * old "no mandatory beat can possibly be open" assumption; TravelSystem.ts
+   * always supplies it explicitly on the live path.
+   */
+  mandatoryDialogueOpen?: boolean
 }
 
 /**
  * Full validity check for a travel command.
  *
  * Order matters: cheaper and more specific rejections come first so the reason
- * reported back to the player is the most useful one.
+ * reported back to the player is the most useful one. A mandatory dialogue
+ * comes first of all — W3i remediation: the blind-play re-check's softlock
+ * was travel starting while a mandatory beat (e.g. Thufir's ledger) was still
+ * open, which the UI alone could not reliably prevent (a replayed bus event,
+ * a stale panel). Nothing else the player could legally be doing matters
+ * until that conversation ends.
  */
 export function checkTravel(ctx: TravelContext): TravelCheck {
-  const { from, to, mode, isTraveling, adjacency } = ctx
+  const { from, to, mode, isTraveling, adjacency, mandatoryDialogueOpen } = ctx
 
+  if (mandatoryDialogueOpen) return { ok: false, reason: 'finish-the-conversation' }
   if (isTraveling) return { ok: false, reason: 'already-traveling' }
   if (!from || !to) return { ok: false, reason: 'unknown-location' }
   if (from.id === to.id) return { ok: false, reason: 'same-location' }
@@ -104,6 +119,17 @@ export function rejectionMessage(reason: TravelRejection): string {
     case 'undiscovered':
       return 'You know of no route there. Send a crew to prospect.'
     case 'out-of-range':
-      return 'Too far without a long-range ornithopter.'
+      // W3h: the old copy ("Too far without a long-range ornithopter")
+      // read as an equipment gate, but the real rule is region adjacency
+      // on foot (checkTravel above) — a first-timer could read it as
+      // "buy a vehicle" when the actual fix is a closer waypoint. Names
+      // the real rule and both remedies instead.
+      return 'Out of walking range from here — travel through a closer place first, ' +
+        'or wait for a long-range ornithopter to go directly.'
+    case 'finish-the-conversation':
+      // W3i: the destination rows render this verbatim (DestinationList.tsx)
+      // while a mandatory beat is open — the player must resolve it before
+      // travel is legal again, not merely be told a click "did nothing".
+      return 'Finish this conversation before you travel.'
   }
 }

@@ -11,7 +11,7 @@ import type { MarketContext, PurchaseRefusal } from './market'
 import { harvestYield } from '../troops/harvest'
 
 function ctx(overrides: Partial<MarketContext> = {}): MarketContext {
-  return { spice: 1000, standing: 0, tier3Unlocked: false, ...overrides }
+  return { spice: 1000, standing: 0, act: 'act1', ...overrides }
 }
 
 describe('market stock', () => {
@@ -54,10 +54,29 @@ describe('checkPurchase', () => {
 })
 
 describe('availableStock', () => {
-  it('shows tier 1-2 from the start', () => {
+  it('shows tier 1-2 from the start, withholding tier 3', () => {
     const stock = availableStock(ctx())
-    expect(stock.length).toBe(MARKET_STOCK.length)
+    expect(stock.length).toBe(MARKET_STOCK.filter(i => i.tier < 3).length)
     expect(stock.every(i => i.tier < 3)).toBe(true)
+  })
+
+  // market-gate fixture (docs/PRD/game-completion progress.md Round 8 note;
+  // 02 "Market": "Market stock queries include act and smuggler-standing
+  // gates. The UI renders only stock returned by that query.") act1 and
+  // act3 must return different stock through the SAME query, or the gate
+  // is not actually gating anything.
+  it('market-gate: act1 and act3 stock differ through the same query', () => {
+    const act1 = availableStock(ctx({ act: 'act1', standing: 5 }))
+    const act3 = availableStock(ctx({ act: 'act3', standing: 5 }))
+
+    expect(act1.length).toBeLessThan(act3.length)
+    expect(act1.some(i => i.tier === 3)).toBe(false)
+    expect(act3.some(i => i.tier === 3)).toBe(true)
+  })
+
+  it('gates tier 3 on standing even once act3 is reached', () => {
+    const lowStanding = availableStock(ctx({ act: 'act3', standing: 0 }))
+    expect(lowStanding.some(i => i.tier === 3)).toBe(false)
   })
 })
 

@@ -1,7 +1,7 @@
 // src/game-engine/troops/harvest.test.ts
 
 import { describe, it, expect } from 'vitest'
-import { harvestYield, harvestDay, wormRisk, resolveWorm } from './harvest'
+import { harvestYield, harvestDay } from './harvest'
 import { effectiveDensity, MIN_TASK_SIZE } from './types'
 import type { SpiceField, TroopGroup, ExtractionTier } from './types'
 
@@ -13,7 +13,6 @@ function group(overrides: Partial<TroopGroup> = {}): TroopGroup {
     size: 30,
     skills: { spice: 40, prospect: 20, military: 20, ecology: 20 },
     morale: 70,
-    equipmentIds: [],
     task: 'harvest',
     taskTargetId: 'field1',
     changeoverDaysLeft: 0,
@@ -40,13 +39,20 @@ function field(overrides: Partial<SpiceField> = {}): SpiceField {
 // these, so a change here is a change to the whole economy.
 // ---------------------------------------------------------------------------
 
+// WP04 chunk W4e round 2: EXTRACTION_RATE.hand raised 6 -> 7 (troops/
+// types.ts's own citation — the invariant-2 recovery probe needed it after
+// round 1's crew-size/field-density legs alone still left a single
+// recovering crew unable to out-earn a genuine loyalty-protection gift plus
+// two consecutive settlements). This is the calibration-affecting change
+// this file's own header names ("a change here is a change to the whole
+// economy") — updating these three pins IS the authored retune.
 describe('harvestYield: calibration references', () => {
   const reference = { size: 30, spiceSkill: 40, morale: 70, density: 60 }
 
-  it('hand crew yields about 4.4/day (design target 4.5)', () => {
+  it('hand crew yields about 5.2/day (design target 5.25 = 4.5 x 7/6)', () => {
     const yieldPerDay = harvestYield({ ...reference, tier: 'hand' })
-    expect(yieldPerDay).toBeCloseTo(4.43, 1)
-    expect(Math.abs(yieldPerDay - 4.5)).toBeLessThan(0.3)
+    expect(yieldPerDay).toBeCloseTo(5.17, 1)
+    expect(Math.abs(yieldPerDay - 5.25)).toBeLessThan(0.3)
   })
 
   it('the same crew with a harvester yields about 14.8/day (design target 15)', () => {
@@ -55,11 +61,12 @@ describe('harvestYield: calibration references', () => {
     expect(Math.abs(yieldPerDay - 15)).toBeLessThan(0.3)
   })
 
-  it('makes a harvester worth roughly 3.3x a hand crew', () => {
-    // This ratio is what justifies the 100-spice price against Q2 at 250.
+  it('makes a harvester worth roughly 2.9x a hand crew', () => {
+    // This ratio is what justifies the 100-spice market price
+    // (market/market.ts's own citation of this same round).
     const hand = harvestYield({ ...reference, tier: 'hand' })
     const mech = harvestYield({ ...reference, tier: 'harvester' })
-    expect(mech / hand).toBeCloseTo(20 / 6, 2)
+    expect(mech / hand).toBeCloseTo(20 / 7, 2)
   })
 })
 
@@ -166,39 +173,4 @@ describe('harvestDay', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
-// Worm risk
-// ---------------------------------------------------------------------------
-
-describe('wormRisk and resolveWorm', () => {
-  it('ignores hand crews', () => {
-    expect(wormRisk(false, false)).toBe(0)
-  })
-
-  it('charges 5% for an unescorted harvester and 1% with a thopter', () => {
-    expect(wormRisk(true, false)).toBeCloseTo(0.05, 6)
-    expect(wormRisk(true, true)).toBeCloseTo(0.01, 6)
-  })
-
-  it('is deterministic under an injected roll', () => {
-    expect(resolveWorm(true, false, 0.99).attacked).toBe(false)
-    expect(resolveWorm(true, false, 0.01).attacked).toBe(true)
-  })
-
-  it('costs a fifth of the crew and harvester condition when unescorted', () => {
-    const outcome = resolveWorm(true, false, 0)
-    expect(outcome.casualtyFraction).toBeCloseTo(0.2, 6)
-    expect(outcome.equipmentDamage).toBe(30)
-  })
-
-  it('lets an escorted crew evacuate intact', () => {
-    const outcome = resolveWorm(true, true, 0)
-    expect(outcome.attacked).toBe(true)
-    expect(outcome.casualtyFraction).toBe(0)
-    expect(outcome.equipmentDamage).toBe(0)
-  })
-
-  it('never attacks a hand crew whatever the roll', () => {
-    expect(resolveWorm(false, false, 0).attacked).toBe(false)
-  })
-})
+// Worm-risk tests live in harvest.worm.test.ts (split for the 200-line rule).

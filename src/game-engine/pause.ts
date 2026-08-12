@@ -13,6 +13,34 @@ export interface PauseInputs {
   inDialogue: boolean
   /** True once the run has ended — win or loss. */
   ended: boolean
+  /**
+   * True while a tribute settlement decision is pending (02-runtime-
+   * consolidation.md "Tribute": "simulation pauses" at the deadline). Engine-
+   * authoritative like the other reasons here — not a UI flag — so a reload
+   * that restores `world.pendingSettlement` restores the freeze with it.
+   */
+  settlementPending: boolean
+  /**
+   * True until the opening's briefing closes (03-opening-experience.md
+   * "Starting contract": "simulation paused for the briefing"). Callers
+   * derive this as `world.lastProcessedDay === null &&
+   * world.flags['briefing.complete'] !== true` (see GameLoop.ts) — NOT from
+   * the flag alone.
+   *
+   * Keying on `lastProcessedDay` ("has any day boundary ever run in this
+   * save") rather than the flag alone is what keeps an old save from before
+   * this pause reason existed from freezing on load with no way out: such a
+   * save necessarily already crossed a day boundary under the prior code
+   * (day boundaries were never gated before this chunk), so
+   * `lastProcessedDay` is already a number and this input reads false
+   * regardless of the missing flag — no save-migration version bump needed.
+   * The one accepted edge case is an old save taken in the first few seconds
+   * of day 0, before its own first day boundary; it is rare, and recoverable
+   * the same way a fresh campaign clears the gate — runtime/openingBriefing.ts's
+   * trigger reopens the Duke Leto (or Thufir) tree on the next mount and the
+   * player walks it to its end, same as any other fresh campaign.
+   */
+  briefingPending: boolean
 }
 
 /**
@@ -22,7 +50,8 @@ export interface PauseInputs {
  * manual unpause must not resume time while a dialogue is still open.
  */
 export function shouldPause(inputs: PauseInputs): boolean {
-  return inputs.manual || inputs.inDialogue || inputs.ended
+  return inputs.manual || inputs.inDialogue || inputs.ended ||
+    inputs.settlementPending || inputs.briefingPending
 }
 
 /**

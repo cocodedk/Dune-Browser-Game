@@ -7,20 +7,30 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 vi.mock('../game-engine/TravelSystem', () => ({ startTravel: vi.fn() }))
 vi.mock('../game-engine/DialogueSystem', () => ({ chooseDialogue: vi.fn() }))
-vi.mock('../game-engine/SietchSystem', () => ({
-  pledgePlayerSietch: vi.fn(),
-  assignPlayerSietchTask: vi.fn(),
-  stopPlayerSietchTask: vi.fn(),
+vi.mock('../game-engine/commands/pledgeCommand', () => ({
+  runPledgeCommand: vi.fn(() => ({ ok: true, code: 'pledged' })),
 }))
-vi.mock('../game-engine/CombatSystem', () => ({
-  attackVillage: vi.fn(),
-  scoutVillage: vi.fn(),
+vi.mock('../game-engine/SietchVisitSystem', () => ({
+  giftPlayerSietch: vi.fn(() => ({ ok: true, code: 'gifted' })),
+}))
+vi.mock('../game-engine/commands/autoShipCommand', () => ({
+  runSetAutoShipCommand: vi.fn(() => ({ ok: true, code: 'auto-ship-configured' })),
+}))
+vi.mock('../game-engine/commands/settleCommand', () => ({
+  runSettleCommand: vi.fn(() => ({ ok: true, code: 'settled' })),
+}))
+vi.mock('../game-engine/persistence', () => ({
+  saveGame: vi.fn(() => Promise.resolve()),
 }))
 
 import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue } from '../game-engine/DialogueSystem'
-import { pledgePlayerSietch, assignPlayerSietchTask, stopPlayerSietchTask } from '../game-engine/SietchSystem'
-import { attackVillage, scoutVillage } from '../game-engine/CombatSystem'
+import { runPledgeCommand } from '../game-engine/commands/pledgeCommand'
+import { giftPlayerSietch } from '../game-engine/SietchVisitSystem'
+import { runSetAutoShipCommand } from '../game-engine/commands/autoShipCommand'
+import { runSettleCommand } from '../game-engine/commands/settleCommand'
+import { saveGame } from '../game-engine/persistence'
+import { OPENING_COMPLETE_FLAG } from '../game-engine/acts/openingObjectives'
 import { EventBus } from '../EventBus'
 import { world, setWorld, createInitialState } from '../game-engine/GameState'
 import { wireCommands } from './CommandWiring'
@@ -48,30 +58,87 @@ describe('wireCommands', () => {
     expect(chooseDialogue).toHaveBeenCalledWith('offer_help')
   })
 
-  it('routes player:pledge_sietch to pledgePlayerSietch', () => {
+  it('routes player:pledge_sietch through the runPledgeCommand dispatch seam', () => {
     EventBus.emit('player:pledge_sietch', { villageId: 'sietch_tabr' })
-    expect(pledgePlayerSietch).toHaveBeenCalledWith('sietch_tabr')
+    expect(runPledgeCommand).toHaveBeenCalledWith('sietch_tabr')
   })
 
-  it('routes player:assign_sietch_task to assignPlayerSietchTask', () => {
-    EventBus.emit('player:assign_sietch_task', { villageId: 'sietch_tabr', task: 'harvest_spice' })
-    expect(assignPlayerSietchTask).toHaveBeenCalledWith('sietch_tabr', 'harvest_spice')
+  it('publishes a refusal toast when runPledgeCommand refuses, and nothing on success', () => {
+    vi.mocked(runPledgeCommand).mockReturnValueOnce({ ok: false, reason: 'not-loyal-enough' })
+    const before = world.events.length
+
+    EventBus.emit('player:pledge_sietch', { villageId: 'sietch_tabr' })
+    expect(world.events.length).toBe(before + 1)
+    expect(world.events[0].message).toBe('They do not trust you enough yet.')
+
+    EventBus.emit('player:pledge_sietch', { villageId: 'sietch_tabr' }) // default mock: success
+    expect(world.events.length).toBe(before + 1) // no second event from this seam
   })
 
-  it('routes player:stop_sietch_task to stopPlayerSietchTask', () => {
-    EventBus.emit('player:stop_sietch_task', { villageId: 'sietch_tabr' })
-    expect(stopPlayerSietchTask).toHaveBeenCalledWith('sietch_tabr')
+  it('routes player:gift_sietch to giftPlayerSietch', () => {
+    EventBus.emit('player:gift_sietch', { villageId: 'sietch_tabr' })
+    expect(giftPlayerSietch).toHaveBeenCalledWith('sietch_tabr')
   })
 
-  it('routes player:attack_village to attackVillage', () => {
-    EventBus.emit('player:attack_village', { targetVillageId: 'arrakeen', troopsCommitted: 5 })
-    expect(attackVillage).toHaveBeenCalledWith('arrakeen', 5)
+  it('publishes a refusal event when giftPlayerSietch refuses, and nothing on success (chunk W2g, C3-FAIL)', () => {
+    vi.mocked(giftPlayerSietch).mockReturnValueOnce({ ok: false, reason: 'gift-cap-reached' })
+    const before = world.events.length
+
+    EventBus.emit('player:gift_sietch', { villageId: 'sietch_tabr' })
+    expect(world.events.length).toBe(before + 1)
+    expect(world.events[0].message).toBe('They have accepted all they will take from you this visit.')
+
+    EventBus.emit('player:gift_sietch', { villageId: 'sietch_tabr' }) // default mock: success
+    expect(world.events.length).toBe(before + 1) // no second event from this seam
   })
 
-  it('routes player:scout_village to scoutVillage', () => {
-    EventBus.emit('player:scout_village', { targetVillageId: 'arrakeen' })
-    expect(scoutVillage).toHaveBeenCalledWith('arrakeen')
+  it('publishes a refusal event when runSetAutoShipCommand refuses, and nothing on success (chunk W2g, finding 3c)', () => {
+    vi.mocked(runSetAutoShipCommand).mockReturnValueOnce({ ok: false, reason: 'auto-ship-locked' })
+    const before = world.events.length
+
+    EventBus.emit('player:set_auto_ship', { enabled: true })
+    expect(world.events.length).toBe(before + 1)
+    expect(world.events[0].message).toBe('Automatic shipment unlocks after your first tribute is settled.')
+
+    EventBus.emit('player:set_auto_ship', { enabled: true }) // default mock: success
+    expect(world.events.length).toBe(before + 1) // no second event from this seam
   })
+
+  it('autosaves once when a settle command crosses the opening-complete edge', () => {
+    vi.mocked(runSettleCommand).mockImplementationOnce(() => {
+      world.flags[OPENING_COMPLETE_FLAG] = true // simulates the real command's own write
+      return { ok: true, code: 'settled' }
+    })
+
+    EventBus.emit('player:settle_tribute', { amount: 90 })
+
+    expect(saveGame).toHaveBeenCalledTimes(1)
+    expect(saveGame).toHaveBeenCalledWith(world)
+  })
+
+  it('does not autosave when the opening was already complete before this settle', () => {
+    world.flags[OPENING_COMPLETE_FLAG] = true
+    vi.mocked(runSettleCommand).mockReturnValueOnce({ ok: true, code: 'settled' })
+
+    EventBus.emit('player:settle_tribute', { amount: 90 })
+
+    expect(saveGame).not.toHaveBeenCalled()
+  })
+
+  it('does not autosave on a refused settle', () => {
+    vi.mocked(runSettleCommand).mockReturnValueOnce({ ok: false, reason: 'no-pending-settlement' })
+
+    EventBus.emit('player:settle_tribute', { amount: 90 })
+
+    expect(saveGame).not.toHaveBeenCalled()
+  })
+
+  // player:assign_sietch_task, player:stop_sietch_task, player:attack_village
+  // and player:scout_village routing tests removed in WP02e — those events
+  // and their engine handlers (SietchSystem's assign/stopPlayerSietchTask,
+  // CombatSystem's attackVillage/scoutVillage) are gone (legacy-authority-
+  // inventory.md categories 2 and 4). player:assign_crew below is the
+  // production path a pledged sietch's crew now dispatches through.
 
   it('game:speed sets world.speed and re-broadcasts world:updated', () => {
     let seen: number | null = null
@@ -85,16 +152,34 @@ describe('wireCommands', () => {
     EventBus.off('world:updated', onUpdated)
   })
 
-  it('game:difficulty sets world.difficulty and re-broadcasts world:updated', () => {
-    let seen: string | null = null
-    const onUpdated = ({ state }: { state: typeof world }): void => { seen = state.difficulty }
+  // W3h: the manual pause seam (game-engine/pause.ts's `manual` input) was
+  // already wired end-to-end — onPause existed, CommandWiring subscribed —
+  // but nothing ever emitted 'game:pause' (evidence finding F1). This is
+  // that seam's own routing test, same shape as game:speed's just above.
+  it('game:pause sets world.paused and re-broadcasts world:updated', () => {
+    let seen: boolean | null = null
+    const onUpdated = ({ state }: { state: typeof world }): void => { seen = state.paused }
     EventBus.on('world:updated', onUpdated)
 
-    EventBus.emit('game:difficulty', { difficulty: 'hard' })
+    EventBus.emit('game:pause', { paused: true })
 
-    expect(world.difficulty).toBe('hard')
-    expect(seen).toBe('hard')
+    expect(world.paused).toBe(true)
+    expect(seen).toBe(true)
     EventBus.off('world:updated', onUpdated)
+  })
+
+  // 'game:difficulty' is gone (chunk W3b, types.bus.ts) — difficulty is
+  // written once at createInitialState() and has no in-game mutation seam.
+  // Proven at runtime, not just by the removed type: the raw string bypasses
+  // BusEvents entirely, exactly what a stray un-typed `.on('game:difficulty', ...)`
+  // re-add would do, and nothing answers it.
+  it('an untyped game:difficulty emission changes nothing — the seam is gone, not just unused', () => {
+    const bus = EventBus as unknown as { emit: (event: string, payload: unknown) => void }
+    const before = world.difficulty
+
+    bus.emit('game:difficulty', { difficulty: 'hard' })
+
+    expect(world.difficulty).toBe(before)
   })
 
   it('unsubscribe stops routing further commands', () => {

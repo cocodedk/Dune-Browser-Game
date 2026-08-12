@@ -7,7 +7,8 @@ import {
   checkGrant, grantRefusalMessage, levelDescription,
 } from '../prescience/prescience'
 import { checkAssault, assaultRefusalMessage, destroyedCount } from '../acts/endgame'
-import { resolveCombat, weaponTier, applyLosses } from '../combat/resolve'
+import { resolveCombat, weaponTier } from '../combat/resolve'
+import { applyCasualty } from '../troops/casualty'
 import { carriedKinds } from './carried'
 
 /**
@@ -43,13 +44,34 @@ export function attemptRitual(): void {
   pushEvent('poc_goal_achieved', levelDescription(check.level))
 }
 
+/** The attacking force a fort assault would field right now. Shared by the
+ * command's pre-check (commands/assaultCommand.ts) and this module's own
+ * defensive re-check, so the two can never compute a different number. */
+export function attackForce(fortId: string): { size: number; militarySkill: number } {
+  const attackers = world.troopGroups.filter(
+    g => g.locationId === fortId && g.changeoverDaysLeft === 0,
+  )
+  const size = attackers.reduce((sum, g) => sum + g.size, 0)
+  const militarySkill = attackers.length
+    ? attackers.reduce((sum, g) => sum + g.skills.military, 0) / attackers.length
+    : 0
+  return { size, militarySkill }
+}
+
 /**
  * Storm a Harkonnen stronghold with every drilled crew standing at the fort.
  *
  * Assault is resolved against the fort's garrison; the attacker carries no
  * defender bonus, so taking a wall costs materially more than holding one.
+ *
+ * `roll` replaces the direct `Math.random()` call this used to make —
+ * commands/assaultCommand.ts draws it from the campaign's one seeded RNG
+ * (`createRng(world.rng)`) before calling this, and writes the advanced
+ * state back after. This module stays pure of RNG plumbing; it only
+ * consumes the roll it is handed, same as combat/resolve.ts's own
+ * `resolveCombat` already does.
  */
-export function assaultFort(fortId: string): void {
+export function assaultFort(fortId: string, roll: number): void {
   const index = world.forts.findIndex(f => f.locationId === fortId)
   if (index < 0) return
   const fort = world.forts[index]
@@ -57,10 +79,7 @@ export function assaultFort(fortId: string): void {
   const attackers = world.troopGroups.filter(
     g => g.locationId === fortId && g.changeoverDaysLeft === 0,
   )
-  const size = attackers.reduce((sum, g) => sum + g.size, 0)
-  const skill = attackers.length
-    ? attackers.reduce((sum, g) => sum + g.skills.military, 0) / attackers.length
-    : 0
+  const { size, militarySkill: skill } = attackForce(fortId)
 
   const check = checkAssault(fort, { size, militarySkill: skill }, destroyedCount(world.forts))
   if (!check.ok) {
@@ -72,15 +91,19 @@ export function assaultFort(fortId: string): void {
   const outcome = resolveCombat(
     { size, militarySkill: skill, weapon, defending: false },
     { size: fort.strength / 4, militarySkill: 70, weapon: 'krys', defending: true },
-    Math.random(),
+    roll,
   )
 
-  // Casualties land on the attacking crews either way.
+  // Casualties land on the attacking crews either way, through the one
+  // casualty rule (troops/casualty.ts) — a losing assault can dissolve or
+  // merge an attacking crew, not just shrink it.
   if (attackers.length > 0 && outcome.attackerLosses > 0) {
     const each = Math.floor(outcome.attackerLosses / attackers.length)
     for (const group of attackers) {
-      const i = world.troopGroups.findIndex(g => g.id === group.id)
-      if (i >= 0) world.troopGroups[i] = applyLosses(group, each)
+      const result = applyCasualty(world.troopGroups, world.equipment, world.sietches, group.id, each)
+      world.troopGroups = result.groups
+      world.equipment = result.equipment
+      world.sietches = result.sietches
     }
   }
 

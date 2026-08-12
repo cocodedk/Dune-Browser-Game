@@ -2,6 +2,18 @@ import { world } from './GameState';
 import { pushEvent } from './EventSystem';
 import type { Village } from '../types';
 
+// The day-boundary player-crediting half of this module (updateVillages,
+// collectPlayerSpice) was removed in WP02e (legacy-authority-inventory.md
+// category 2; dayRunner.ts's removed LEGACY PRODUCTION SEAM comment): every
+// day, village.spice += village.productionRate fed collectPlayerSpice's 10%
+// skim straight into world.player.spice, duplicating crew harvest. The
+// functions below have live production callers OUTSIDE the day loop
+// (TravelSystem.checkTravelArrival, DialogueSystem.applyEffect) or are kept
+// compilable only because AISystem.ts still imports them — nothing calls
+// AISystem from the campaign path (WP01 quarantine), so harkonnenAttack/
+// harkonnenBribe are unreachable in production today, but AISystem.test.ts
+// pins their behavior and is outside this package's scope to edit.
+
 // Check if a loyalty change should flip village ownership.
 // Called after any loyalty mutation (dialogue effects, visits).
 export function checkOwnershipTransition(village: Village): void {
@@ -14,40 +26,6 @@ export function checkOwnershipTransition(village: Village): void {
     village.owner = 'player';
     village.status = 'friendly';
     pushEvent('alliance_offer', `🤝 ${village.name} defected from the Harkonnen — they stand with you!`);
-  }
-}
-
-// Called once per day boundary
-export function updateVillages(): void {
-  for (const village of world.villages) {
-    // Spice production
-    village.spice += village.productionRate;
-
-    // Loyalty decay if not visited recently (simple: -1 per day if not player-owned)
-    if (village.owner === 'neutral') {
-      village.loyalty = Math.max(0, village.loyalty - 1);
-    }
-
-    // Rebellion check
-    if (village.loyalty < 30 && village.status !== 'rebelling') {
-      village.status = 'rebelling';
-      pushEvent('faction_decision', `\u26a0 ${village.name} is rebelling \u2014 loyalty too low.`);
-    } else if (village.loyalty >= 50 && village.status === 'rebelling') {
-      village.status = village.owner === 'player' ? 'friendly' : 'neutral';
-    }
-  }
-  collectPlayerSpice();
-}
-
-// Collect 10% of each player-owned village's spice stockpile (min 0.5 per village).
-// Capped so the village stockpile never goes below 0.
-export function collectPlayerSpice(): void {
-  for (const village of world.villages) {
-    if (village.owner !== 'player') continue;
-    const collected = Math.max(0.5, village.spice * 0.1);
-    const actual = Math.min(collected, village.spice);
-    village.spice = Math.max(0, village.spice - actual);
-    world.player.spice += actual;
   }
 }
 
@@ -67,9 +45,9 @@ export function harkonnenAttack(villageId: string): void {
   if (village.loyalty < 30 && village.owner === 'player') {
     village.owner = 'harkonnen';
     village.status = 'neutral';
-    pushEvent('attack', `\u2694 Harkonnen forces seized ${village.name}!`);
+    pushEvent('attack', `⚔ Harkonnen forces seized ${village.name}!`);
   } else {
-    pushEvent('attack', `\u2694 Harkonnen forces attacked ${village.name}. Loyalty \u201325.`);
+    pushEvent('attack', `⚔ Harkonnen forces attacked ${village.name}. Loyalty –25.`);
   }
 }
 
@@ -81,6 +59,6 @@ export function harkonnenBribe(villageId: string): void {
   if (village.loyalty < 40) {
     village.owner = 'neutral';
     village.status = 'neutral';
-    pushEvent('betrayal', `\ud83d\udc80 ${village.name} betrayed you \u2014 Harkonnen gold.`);
+    pushEvent('betrayal', `💀 ${village.name} betrayed you — Harkonnen gold.`);
   }
 }

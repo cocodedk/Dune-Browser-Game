@@ -1,38 +1,13 @@
 // src/game-engine/sietch/assignTask.ts
-// Pure functions for assigning tasks and pledging sietches to the player
+// Pure functions for pledging sietches to the player, and counting pledges.
+//
+// canAssignTask/assignTask (the legacy threshold task system's underlying
+// pure mechanism) were removed in WP02e along with their SietchSystem
+// wrappers (assignPlayerSietchTask/stopPlayerSietchTask) — see
+// legacy-authority-inventory.md category 2.
 
-import type { SietchState, SietchTask } from './types'
-import { HARVEST_MIN_WORKERS, TRAIN_MIN_WORKERS } from './types'
+import type { SietchState } from './types'
 import type { VillageId } from '../../types'
-
-/**
- * Returns true only if the sietch is pledged to the player AND has enough
- * workers for the given task.
- */
-export function canAssignTask(sietch: SietchState, task: SietchTask): boolean {
-  if (!sietch.pledgedToPlayer) return false
-  if (task === 'harvest_spice') return sietch.fremenWorkers >= HARVEST_MIN_WORKERS
-  if (task === 'train_troops') return sietch.fremenWorkers >= TRAIN_MIN_WORKERS
-  return false
-}
-
-/**
- * Immutable update — returns a new SietchState[].
- * For the matching sietch, if canAssignTask passes, sets currentTask and
- * resets outputProgress to 0. If preconditions fail the sietch is returned
- * unchanged (caller is responsible for gating).
- */
-export function assignTask(
-  sietches: SietchState[],
-  villageId: VillageId,
-  task: SietchTask,
-): SietchState[] {
-  return sietches.map((s) => {
-    if (s.villageId !== villageId) return s
-    if (!canAssignTask(s, task)) return s
-    return { ...s, currentTask: task, outputProgress: 0 }
-  })
-}
 
 /**
  * Immutable update — sets pledgedToPlayer = true on the matching sietch.

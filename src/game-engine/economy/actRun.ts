@@ -1,14 +1,29 @@
 // src/game-engine/economy/actRun.ts
 // Act transitions and endings.
 
+/**
+ * Average loyalty across pledged sietches, read from SietchState — the sole
+ * loyalty authority for sietch-kind locations (docs/PRD/game-completion/
+ * 02-runtime-consolidation.md "Sietches and loyalty"). Village/Location no
+ * longer answers for this; the village lookup this replaced is gone.
+ *
+ * A sietch predating this chunk's `loyalty` field (an old save, or a test
+ * fixture outside its scope — see sietch/types.ts's SietchState doc) reads
+ * as 0 rather than throwing or producing NaN: no in-memory migration
+ * adapter is needed for this value, a documented default suffices.
+ */
+export function averagePledgedSietchLoyalty(sietches: readonly SietchState[]): number {
+  const loyalties = sietches
+    .filter(s => s.pledgedToPlayer)
+    .map(s => s.loyalty ?? 0)
+  return loyalties.length
+    ? loyalties.reduce((a, b) => a + b, 0) / loyalties.length
+    : 0
+}
+
 /** Build the act machine's view of the world from live state. */
 function actView(): ActWorldView {
   const pledged = world.sietches.filter(s => s.pledgedToPlayer)
-  const loyalties = pledged
-    .map(s => world.villages.find(v => v.id === s.villageId)?.loyalty ?? 0)
-  const avgLoyalty = loyalties.length
-    ? loyalties.reduce((a, b) => a + b, 0) / loyalties.length
-    : 0
 
   return {
     act: world.act,
@@ -24,7 +39,7 @@ function actView(): ActWorldView {
     capitalFortDestroyed: capitalDestroyed(world.forts),
     palaceHeld: true,
     greenRegions: greenRegionCount(world.ecology),
-    averagePledgedLoyalty: avgLoyalty,
+    averagePledgedLoyalty: averagePledgedSietchLoyalty(world.sietches),
     countdownExpired: false,
   }
 }
@@ -32,28 +47,51 @@ function actView(): ActWorldView {
 import { world } from '../GameState'
 import { currentDay } from '../TimeSystem'
 import { pushEvent } from '../EventSystem'
-import { evaluateAct, actQuotaMultiplier, actNumber } from '../acts/transitions'
+import { evaluateEnding, evaluateActTransition, actQuotaMultiplier, actNumber } from '../acts/transitions'
 import { onActTransition } from '../quota/quota'
 import type { ActWorldView, EndingId } from '../acts/transitions'
+import type { SietchState } from '../sietch/types'
 import { greenRegionCount, maxVegetation } from '../ecology/ecology'
 import { destroyedCount, capitalDestroyed } from '../acts/endgame'
 
 /**
- * Day-boundary act check. An ending stops the run; an advance escalates the
- * quota and clears the once-per-act patience allowance.
+ * The single ending-authority function (docs/PRD/game-completion/
+ * progress.md Round 7: "the settlement-assigns-loss rule gets ONE shared
+ * ending-authority function"). Called from BOTH the day runner's step 8
+ * (via runActCheck below) and commands/settleCommand.ts, so "if settlement
+ * reduces patience to zero, the settlement command assigns the economic
+ * loss ending before simulation can resume" (02 "Tribute") reuses the exact
+ * same rule the day boundary does rather than a second copy of it.
+ *
+ * Guards on `world.ending !== null` — the WP01 audit residue fix: the
+ * freeze authority is `world.ending` (02 "Campaign status": "a non-null
+ * ending freezes simulation"), not the derived `goalAchieved` shadow this
+ * guard used to key on.
+ */
+export function evaluateEndingAuthority(): boolean {
+  if (world.ending !== null) return false
+
+  const ending = evaluateEnding(actView())
+  if (!ending) return false
+
+  world.goalAchieved = true
+  world.ending = ending
+  pushEvent('poc_goal_achieved', endingMessage(ending))
+  return true
+}
+
+/**
+ * Day-boundary act check (step 8). Ending evaluation is the shared function
+ * above; act advancement (escalating the quota, clearing the once-per-act
+ * patience allowance) stays day-boundary-only — it is not called from the
+ * settle command, so a mid-cycle full payment that completes act 1's exit
+ * condition advances at the NEXT day's step 8, not at settlement time.
  */
 export function runActCheck(): void {
-  if (world.goalAchieved) return
+  evaluateEndingAuthority()
+  if (world.ending !== null) return
 
-  const { ending, nextAct } = evaluateAct(actView())
-
-  if (ending) {
-    world.goalAchieved = true
-    world.ending = ending
-    pushEvent('poc_goal_achieved', endingMessage(ending))
-    return
-  }
-
+  const nextAct = evaluateActTransition(actView())
   if (nextAct) {
     world.act = nextAct
     // Mirrored as a number because dialogue gates compare numerically; see
