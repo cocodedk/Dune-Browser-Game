@@ -13,6 +13,7 @@ import { startTravel } from '../game-engine/TravelSystem'
 import { chooseDialogue, startDialogue } from '../game-engine/DialogueSystem'
 import { pushEvent } from '../game-engine/EventSystem'
 import { decideVisit, decideSpeakTo } from './VisitPolicy'
+import { visitRefusalMessage } from './visitRefusal'
 import { runPledgeCommand } from '../game-engine/commands/pledgeCommand'
 import { pledgeChainRefusalMessage } from '../game-engine/sietch/pledgeRefusal'
 import { runSettleCommand } from '../game-engine/commands/settleCommand'
@@ -57,6 +58,13 @@ export const onSpeakTo = ({ characterId }: BusEvents['player:speak_to']): void =
   const action = decideSpeakTo(world, characterId)
   if (action.kind === 'dialogue') startDialogue(action.treeId, action.villageId, action.nodeId)
   else if (action.kind === 'event') pushEvent('village_selected', action.message)
+  // No silent rejection (02's command contract). Clicking a named person is
+  // an explicit request, so it always gets an answer — the PEOPLE HERE list
+  // stays visible and clickable beside an open dialogue (the overlay stops
+  // short of the command column), and every click there used to vanish
+  // without a word. decideVisit's own 'none' stays quiet on purpose: that is
+  // an idle click on the globe, not a request.
+  else if (action.kind === 'none') pushEvent('village_selected', visitRefusalMessage(action.reason))
 }
 
 /**

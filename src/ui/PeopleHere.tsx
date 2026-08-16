@@ -10,6 +10,8 @@
 import { EventBus } from '../EventBus'
 import { INITIAL_CHARACTERS } from '../data/characters'
 import { residentsAt } from '../game-engine/dialogue/residents'
+import { visitRefusalMessage } from '../runtime/visitRefusal'
+import { useGameStore } from './store'
 
 interface Props {
   villageId: string
@@ -17,6 +19,12 @@ interface Props {
 }
 
 export default function PeopleHere({ villageId, playerIsHere }: Props) {
+  // Whole-store read, not a `s => s.world` selector: GameDriver re-emits the
+  // same mutated world object every tick, so an object selector is
+  // Object.is-equal forever and this list would freeze on its first render
+  // (the same trap CoachMark.tsx hit in chunk W3f).
+  const { world } = useGameStore()
+
   // residentsAt has no notion of distance — decideSpeakTo is what actually
   // enforces "you cannot talk to someone across the planet". Gating the list
   // here too means the player is never shown a roster they cannot act on.
@@ -24,6 +32,15 @@ export default function PeopleHere({ villageId, playerIsHere }: Props) {
 
   const residents = residentsAt(INITIAL_CHARACTERS, villageId)
   if (residents.length === 0) return null
+
+  // The dialogue overlay stops short of the command column, so this list sits
+  // in plain sight beside an open conversation — including the opening's own
+  // auto-opened briefing, which the player cannot dismiss. Every click here
+  // was refused in silence. Show the refusal the way DestinationList shows
+  // travel's: the control goes dead and says why, before the click.
+  const busy = world.dialogue !== null
+  const travelling = world.player.state === 'traveling'
+  const reason = busy ? 'in-dialogue' as const : travelling ? 'traveling' as const : null
 
   function speakTo(characterId: string) {
     EventBus.emit('player:speak_to', { characterId })
@@ -33,11 +50,17 @@ export default function PeopleHere({ villageId, playerIsHere }: Props) {
     <div style={styles.section}>
       <div style={styles.header}>PEOPLE HERE</div>
       {residents.map(person => (
-        <button key={person.id} onClick={() => speakTo(person.id)} style={styles.btn}>
+        <button
+          key={person.id}
+          onClick={() => speakTo(person.id)}
+          disabled={reason !== null}
+          style={{ ...styles.btn, ...(reason ? styles.btnDisabled : {}) }}
+        >
           <span style={styles.name}>{person.name}</span>
           <span style={styles.role}>{person.role}</span>
         </button>
       ))}
+      {reason && <p style={styles.refusal}>{visitRefusalMessage(reason)}</p>}
     </div>
   )
 }
@@ -65,6 +88,17 @@ const styles = {
     width: '100%',
     marginTop: 6,
     textAlign: 'left' as const,
+  },
+  btnDisabled: {
+    opacity: 0.45,
+    cursor: 'not-allowed' as const,
+    borderColor: '#3d2b10',
+  },
+  refusal: {
+    color: '#8b6914',
+    fontSize: 11,
+    fontStyle: 'italic' as const,
+    margin: '6px 0 0',
   },
   name: { fontWeight: 'bold' as const },
   role: {
