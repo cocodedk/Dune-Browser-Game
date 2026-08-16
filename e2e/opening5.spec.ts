@@ -46,8 +46,22 @@ test('with guidance disabled from the start, every step stays discoverable and t
   const pledgeBtn = page.getByRole('button', { name: /Pledge the Fremen of Red Wall Sietch/ })
   await expect(pledgeBtn).toBeEnabled()
 
+  // The centre-screen decision card (src/ui/ActionPrompt.tsx) is guidance
+  // too, and gates on the same getGuidanceEnabled() the coach marks do — so
+  // its primary button must be genuinely ABSENT here, not merely hidden.
+  // This is exactly where it would offer the pledge with guidance on
+  // (e2e/opening11.spec.ts asserts the positive case).
+  await expect(page.getByRole('button', { name: 'Pledge Red Wall Sietch', exact: true }))
+    .toHaveCount(0)
+
   await clickButton(page, 'Pledge the Fremen', false)
   await clickButton(page, 'Pledge')
+
+  // Same absence proof one step later: an idle crew now exists with a
+  // recommended field, the first-harvest card's own live condition.
+  await expect(page.getByRole('button', { name: 'Send them to work', exact: true }))
+    .toHaveCount(0)
+
   await clickButton(page, 'Red Wall Pan', false)
   await clickButton(page, 'Issue order')
 

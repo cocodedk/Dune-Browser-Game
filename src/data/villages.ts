@@ -62,7 +62,16 @@ export const INITIAL_VILLAGES: Village[] = [
   {
     id: 'tsimpo',
     kind: 'smuggler_den',
-    discovered: false,
+    // Known from the start, deliberately. Every other production path into
+    // the equipment economy runs through this den's market, and the ONLY
+    // production writer that discovers a location is prospecting's sietch
+    // find — which itself refuses without an ornithopter bought at this
+    // market. Seeded hidden, that is a closed loop: fifteen locations,
+    // Wind Pass among them, were permanently unreachable (user report,
+    // 2026-08-16). A Duke knows where the smugglers deal; what he does not
+    // know is where the Fremen hide. Entering it is still required to trade
+    // — see acts/openingDisclosure.ts's marketDisclosed.
+    discovered: true,
     regionId: 'tsimpo',
     name: 'Tsimpo',
     position: { x: 380, y: 285 },

@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react'
 import { EventBus } from '../EventBus'
 import { COMMAND_COLUMN_WIDTH, palette } from './theme'
+import { TOAST_TOP_CSS } from './centreBand'
 import { toastDurationMs, MAX_VISIBLE } from './toastPolicy'
 import type { GameEvent } from '../types'
 
@@ -84,13 +85,18 @@ const styles = {
    * the descent all happen mid-frame, and covering them to say "task assigned"
    * trades one invisibility for a worse one.
    *
+   * `top` is no longer the literal 18vh it once was: ObjectiveBanner.tsx now
+   * occupies the band above, and at Playwright's 720px-tall viewport 18vh
+   * left only 58px for a ~104px banner. centreBand.ts owns that arithmetic
+   * for both surfaces and centreBand.test.ts pins it.
+   *
    * pointerEvents none is load-bearing. The map is this game's primary control
    * surface and a transparent div over the middle of it would eat clicks on
    * exactly the sietches the message is usually about.
    */
   layer: {
     position: 'fixed' as const,
-    top: '18vh',
+    top: TOAST_TOP_CSS,
     left: 0,
     width: `calc(100% - ${COMMAND_COLUMN_WIDTH}px)`,
     display: 'flex',
