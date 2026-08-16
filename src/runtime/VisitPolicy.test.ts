@@ -1,5 +1,10 @@
 // src/runtime/VisitPolicy.test.ts
 // Unit tests for the pure click-decision policy — every branch, no side effects.
+//
+// Updated 2026-08-16: `none` now carries a VisitRefusal reason, so these
+// assertions pin WHY a click was refused rather than only that it was. The
+// user reported the PEOPLE HERE list swallowing clicks in silence at
+// Arrakeen; a reasonless `none` is what left onSpeakTo nothing to say.
 
 import { describe, it, expect } from 'vitest'
 import { createInitialState } from '../game-engine/GameState'
@@ -37,20 +42,20 @@ describe('decideVisit', () => {
     const state = stateAt()
     state.player.state = 'traveling'
     const action = decideVisit(state, state.villages[0].id)
-    expect(action).toEqual({ kind: 'none' })
+    expect(action).toEqual({ kind: 'none', reason: 'traveling' })
   })
 
   it('returns none while a dialogue is active', () => {
     const state = stateAt()
     state.dialogue = { treeId: 'village_leader', currentNodeId: 'n1', villageId: state.villages[0].id }
     const action = decideVisit(state, state.villages[0].id)
-    expect(action).toEqual({ kind: 'none' })
+    expect(action).toEqual({ kind: 'none', reason: 'in-dialogue' })
   })
 
   it('returns none for an unknown location id', () => {
     const state = stateAt()
     const action = decideVisit(state, 'no_such_village')
-    expect(action).toEqual({ kind: 'none' })
+    expect(action).toEqual({ kind: 'none', reason: 'unknown-place' })
   })
 
   it('returns travel when clicking a village other than the current location', () => {
@@ -143,23 +148,23 @@ describe('decideSpeakTo', () => {
     const state = stateAt()
     // Stilgar (shadir) lives at red_wall_sietch; the player starts at sietch_tabr.
     const action = decideSpeakTo(state, 'shadir')
-    expect(action).toEqual({ kind: 'none' })
+    expect(action).toEqual({ kind: 'none', reason: 'not-here' })
   })
 
   it('returns none while the player is traveling', () => {
     const state = stateAt()
     state.player.state = 'traveling'
-    expect(decideSpeakTo(state, 'sova')).toEqual({ kind: 'none' })
+    expect(decideSpeakTo(state, 'sova')).toEqual({ kind: 'none', reason: 'traveling' })
   })
 
   it('returns none while a dialogue is active', () => {
     const state = stateAt()
     state.dialogue = { treeId: 'village_leader', currentNodeId: 'n1', villageId: state.villages[0].id }
-    expect(decideSpeakTo(state, 'sova')).toEqual({ kind: 'none' })
+    expect(decideSpeakTo(state, 'sova')).toEqual({ kind: 'none', reason: 'in-dialogue' })
   })
 
   it('returns none for an unknown character id', () => {
     const state = stateAt()
-    expect(decideSpeakTo(state, 'no_such_character')).toEqual({ kind: 'none' })
+    expect(decideSpeakTo(state, 'no_such_character')).toEqual({ kind: 'none', reason: 'unknown-person' })
   })
 })

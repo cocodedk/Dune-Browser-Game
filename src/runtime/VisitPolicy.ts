@@ -59,8 +59,25 @@ export function routedTrees(): string[] {
   return [...new Set([...Object.values(TREE_BY_OWNER), FALLBACK_TREE])]
 }
 
+/**
+ * Why a click resolved to nothing.
+ *
+ * `none` used to carry no reason at all, which is how the PEOPLE HERE list
+ * came to swallow clicks in silence: the dialogue overlay stops short of the
+ * command column (DialoguePanel.styles.ts), so every resident button stays
+ * visible and clickable through the opening's own auto-opened briefing, and
+ * `in-dialogue` refusals had nothing to say. Travel already learned this
+ * lesson (travel/rules.ts's 'finish-the-conversation'); speaking had not.
+ */
+export type VisitRefusal =
+  | 'traveling'
+  | 'in-dialogue'
+  | 'unknown-person'
+  | 'not-here'
+  | 'unknown-place'
+
 export type VisitAction =
-  | { kind: 'none' } // traveling or in dialogue — click is ignored
+  | { kind: 'none'; reason: VisitRefusal }
   | { kind: 'travel'; targetId: VillageId }
   | { kind: 'dialogue'; treeId: string; villageId: VillageId; nodeId?: string }
   | { kind: 'event'; message: string } // own territory
@@ -105,11 +122,11 @@ function dialogueForResident(
  * else, the click starts travel.
  */
 export function decideVisit(world: WorldState, locationId: VillageId): VisitAction {
-  if (world.player.state === 'traveling') return { kind: 'none' }
-  if (world.dialogue !== null) return { kind: 'none' }
+  if (world.player.state === 'traveling') return { kind: 'none', reason: 'traveling' }
+  if (world.dialogue !== null) return { kind: 'none', reason: 'in-dialogue' }
 
   const village = world.villages.find(v => v.id === locationId)
-  if (!village) return { kind: 'none' }
+  if (!village) return { kind: 'none', reason: 'unknown-place' }
 
   if (world.player.location !== locationId) {
     return { kind: 'travel', targetId: locationId }
@@ -137,15 +154,15 @@ export function decideVisit(world: WorldState, locationId: VillageId): VisitActi
  * crash.
  */
 export function decideSpeakTo(world: WorldState, characterId: string): VisitAction {
-  if (world.player.state === 'traveling') return { kind: 'none' }
-  if (world.dialogue !== null) return { kind: 'none' }
+  if (world.player.state === 'traveling') return { kind: 'none', reason: 'traveling' }
+  if (world.dialogue !== null) return { kind: 'none', reason: 'in-dialogue' }
 
   const character = INITIAL_CHARACTERS.find(c => c.id === characterId)
-  if (!character) return { kind: 'none' }
-  if (character.locationId !== world.player.location) return { kind: 'none' }
+  if (!character) return { kind: 'none', reason: 'unknown-person' }
+  if (character.locationId !== world.player.location) return { kind: 'none', reason: 'not-here' }
 
   const village = world.villages.find(v => v.id === world.player.location)
-  if (!village) return { kind: 'none' }
+  if (!village) return { kind: 'none', reason: 'unknown-place' }
 
   return dialogueForResident(character, village, world.flags)
 }
