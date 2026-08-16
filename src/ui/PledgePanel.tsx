@@ -25,6 +25,7 @@ import { pledgedCount } from '../game-engine/sietch/assignTask'
 import { PLEDGE_THRESHOLD, maxPledged } from '../game-engine/sietch/loyalty'
 import { useGameStore } from './store'
 import ConfirmModal from './ConfirmModal'
+import { pledgeConfirmCopy } from './confirmCopy'
 
 interface Props {
   villageId: string
@@ -110,13 +111,10 @@ export default function PledgePanel({
         </p>
       )}
       {confirming && (
+        // Wording shared with ActionPrompt.tsx's centre-screen card, which
+        // raises this same confirmation — confirmCopy.ts.
         <ConfirmModal
-          title={`Pledge the Fremen of ${villageName}`}
-          lines={[
-            'A pledge grants you responsibility for one crew raised from their ' +
-              'people — their orders, their welfare, and their harvest become yours to answer for.',
-          ]}
-          confirmLabel="Pledge"
+          {...pledgeConfirmCopy(villageName)}
           onConfirm={confirmPledge}
           onCancel={() => setConfirming(false)}
         />

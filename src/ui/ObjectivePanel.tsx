@@ -1,111 +1,43 @@
 // src/ui/ObjectivePanel.tsx
-// The active-objective surface (03-opening-experience.md "Objective
-// presentation"): one verb-first sentence, at most two substeps, a Show
-// action, progress where meaningful, a Why expander, and a compact history
-// of completed opening steps. Wording lives in objectiveCopy.ts — this
-// component renders it, never authors it (02-runtime-consolidation.md
-// "Campaign status": "UI wording is authored outside the engine query").
+// The completed-step history, and nothing else.
 //
-// Placed under PositionStrip, left edge — EventToasts already owns the
-// top-centre band (its own doc: "where the player is actually looking"),
-// and the command column is for panels, not the one always-on objective
-// line. `Show` for a location target reuses the existing pick/selection
-// store (EventBus 'village:selected' — the same event a canvas click
-// emits); a panel-key target (W3h) briefly flashes the same `data-coach`
-// anchor CoachMark.tsx points at (coachAnchor.ts) — a one-shot highlight,
-// not a persistent coach mark, so Show never blocks the rest of the screen
-// either.
+// This file used to carry the whole objective surface: the active line
+// (title, substeps, progress, Show, Why), the post-opening placeholder AND
+// the ✓ history, all at `top:72 left:20`, fontSize 13. The owner does not
+// read the corners — "my focus is on the center of the screen and I don't
+// read the sidebar" — so the ACTIVE line MOVED to ObjectiveBanner.tsx in the
+// scene-centred band. Read that file for the reasoning and for the rules the
+// moved block still has to keep.
+//
+// The history STAYED here on purpose. 03-opening-experience.md asks for "a
+// compact history"; centre-screen it would grow, step by step, straight into
+// the toast band and end up covering the desert it is meant to sit over.
+//
+// Moved, never duplicated: six e2e assertions use bare `text=…` locators,
+// which Playwright resolves strictly, so net text on screen is unchanged and
+// each of them still matches exactly one element.
 
-import { useState } from 'react'
 import { useGameStore } from './store'
-import { EventBus } from '../EventBus'
-import { activeOpeningObjective, completedOpeningObjectives } from '../game-engine/acts/openingObjectives'
-import type { ObjectiveTargetHint } from '../game-engine/acts/openingObjectives'
-import { OBJECTIVE_COPY, PANEL_LABELS, POST_OPENING_PLACEHOLDER } from './objectiveCopy'
-import { findCoachAnchor } from './coachAnchor'
-import { palette, type as typo } from './theme'
-
-const FLASH_MS = 900
-
-/** Brief outline/glow on whatever `data-coach="<key>"` currently owns —
- * plain imperative style mutation, reverted after FLASH_MS, so a panel that
- * is not mounted right now (its objective step not yet reachable on
- * screen) is a silent no-op rather than a broken promise (evidence
- * finding F4: "a button that lies is worse than an absent one"). */
-function flashPanel(key: string): void {
-  const el = findCoachAnchor(key)
-  if (!el) return
-  const prevOutline = el.style.outline
-  const prevShadow = el.style.boxShadow
-  el.style.outline = `2px solid ${palette.gold}`
-  el.style.boxShadow = '0 0 0 4px rgba(212,160,23,0.35)'
-  window.setTimeout(() => {
-    el.style.outline = prevOutline
-    el.style.boxShadow = prevShadow
-  }, FLASH_MS)
-}
-
-function showTarget(hint: ObjectiveTargetHint): void {
-  if (hint.kind === 'location') EventBus.emit('village:selected', { villageId: hint.id })
-  else flashPanel(hint.key)
-}
-
-function targetLabel(hint: ObjectiveTargetHint): string {
-  return hint.kind === 'location' ? hint.id.replace(/_/g, ' ') : PANEL_LABELS[hint.key] ?? hint.key
-}
+import { completedOpeningObjectives } from '../game-engine/acts/openingObjectives'
+import { OBJECTIVE_COPY } from './objectiveCopy'
+import { palette } from './theme'
 
 export default function ObjectivePanel() {
+  // NOT `useGameStore(s => s.world)` — see CoachMark.tsx:52-61 for why a
+  // selector on that reference never re-renders.
   const { world } = useGameStore()
-  const [showWhy, setShowWhy] = useState(false)
 
-  const active = activeOpeningObjective(world)
-  // `opening.complete` never appears as the active line — once every real
-  // step is done there is nothing left to surface here (03: "At no point
-  // may the only current goal be ... a raw flag name"); WP05 replaces this
-  // with Act 1's own objectives once they exist.
-  const displayActive = active && active.id !== 'opening.complete' ? active : null
+  // `opening.complete` is a bookkeeping flag, not a step the player did —
+  // it never appears in the history, exactly as it never appeared as the
+  // active line.
   const history = completedOpeningObjectives(world).filter(r => r.id !== 'opening.complete')
-  // `active === null` only once the WHOLE chain, including opening.complete,
-  // is done (openingObjectives.ts's activeOpeningObjective) — task item 3's
-  // "the objective surface moves past the opening chain" reading.
-  const pastOpening = active === null
-
-  if (!displayActive && !pastOpening && history.length === 0) return null
-
-  const copy = displayActive ? OBJECTIVE_COPY[displayActive.id] : undefined
+  if (history.length === 0) return null
 
   return (
     <div style={styles.box}>
-      {pastOpening && <div style={styles.title}>{POST_OPENING_PLACEHOLDER}</div>}
-      {displayActive && copy && (
-        <>
-          <div style={styles.title}>{copy.title}</div>
-          {copy.substeps?.map(s => (
-            <div key={s} style={styles.substep}>· {s}</div>
-          ))}
-          {displayActive.progress && (
-            <div style={styles.progress}>
-              {displayActive.progress.current.toFixed(0)} / {displayActive.progress.target.toFixed(0)}
-            </div>
-          )}
-          <div style={styles.actions}>
-            <button style={styles.link} onClick={() => showTarget(displayActive.targetHint)}>
-              Show — {targetLabel(displayActive.targetHint)}
-            </button>
-            <button style={styles.link} onClick={() => setShowWhy(w => !w)}>
-              {showWhy ? 'Hide why' : 'Why?'}
-            </button>
-          </div>
-          {showWhy && <p style={styles.why}>{copy.why}</p>}
-        </>
-      )}
-      {history.length > 0 && (
-        <div style={styles.history}>
-          {history.map(r => (
-            <div key={r.id} style={styles.historyItem}>✓ {OBJECTIVE_COPY[r.id].title}</div>
-          ))}
-        </div>
-      )}
+      {history.map(r => (
+        <div key={r.id} style={styles.historyItem}>✓ {OBJECTIVE_COPY[r.id].title}</div>
+      ))}
     </div>
   )
 }
@@ -125,29 +57,8 @@ const styles = {
     maxWidth: 320,
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: 3,
+    gap: 2,
     pointerEvents: 'none' as const,
   },
-  title: { color: palette.gold, fontSize: 13, fontWeight: 600 as const, textShadow: HALO },
-  substep: { color: palette.textDim, fontSize: 11, textShadow: HALO },
-  progress: {
-    color: palette.text, fontSize: 11,
-    fontVariantNumeric: 'tabular-nums' as const, textShadow: HALO,
-  },
-  actions: { display: 'flex', gap: 10, marginTop: 2 },
-  link: {
-    pointerEvents: 'auto' as const,
-    background: 'transparent',
-    border: 'none',
-    color: palette.textDim,
-    fontSize: 10,
-    letterSpacing: '0.04em',
-    textDecoration: 'underline',
-    cursor: 'pointer',
-    padding: 0,
-    textShadow: HALO,
-  },
-  why: { ...typo.note, marginTop: 2, maxWidth: 300, textShadow: HALO },
-  history: { marginTop: 6, display: 'flex', flexDirection: 'column' as const, gap: 2 },
   historyItem: { color: palette.textFaint, fontSize: 10, textShadow: HALO },
 }

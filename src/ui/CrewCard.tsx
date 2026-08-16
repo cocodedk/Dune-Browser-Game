@@ -23,6 +23,7 @@ import type { Village } from '../types'
 import { rateFor, densityKnown, rangeFor } from './crewCardHelpers'
 import { fieldDisplayName } from '../game-engine/troops/fieldDisplayName'
 import ConfirmModal from './ConfirmModal'
+import { orderConfirmCopy, harvestOrderLabel, yieldRangeText } from './confirmCopy'
 import { palette, type as typo, space, button, divider } from './theme'
 
 interface Props {
@@ -124,7 +125,7 @@ export default function CrewCard({ group, spiceFields, equipment, villages, pres
                 ...(group.taskTargetId === f.id ? styles.btnActive : {}),
                 ...(f.id === best?.id ? styles.btnRecommended : {}),
               }}
-              onClick={() => order('harvest', f.id, `harvest ${fieldDisplayName(f.id)}`, `${range.min.toFixed(1)}–${range.max.toFixed(1)}/day`)}
+              onClick={() => order('harvest', f.id, harvestOrderLabel(fieldDisplayName(f.id)), yieldRangeText(range))}
               title={`Density ${density}, ${f.remaining.toFixed(0)} left`}
             >
               {fieldDisplayName(f.id)}{f.id === best?.id ? ' ★' : ''}
@@ -160,13 +161,10 @@ export default function CrewCard({ group, spiceFields, equipment, villages, pres
       {refusal && <div style={styles.refusal}>{refusal}</div>}
 
       {pending && (
+        // Wording shared with ActionPrompt.tsx's centre-screen card, which
+        // raises this same confirmation — confirmCopy.ts.
         <ConfirmModal
-          title={`Order: ${pending.label}`}
-          lines={[
-            'Moving to new orders — no yield today; the changeover costs one full day before this crew produces again.',
-            ...(pending.rangeText ? [`Once working, projected yield: ${pending.rangeText}.`] : []),
-          ]}
-          confirmLabel="Issue order"
+          {...orderConfirmCopy(pending.label, pending.rangeText)}
           onConfirm={confirmOrder}
           onCancel={() => setPending(null)}
         />

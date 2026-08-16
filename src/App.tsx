@@ -17,6 +17,8 @@ import OrnamentFrame from './ui/Ornament'
 import ViewHint from './ui/ViewHint'
 import PositionStrip from './ui/PositionStrip'
 import ObjectivePanel from './ui/ObjectivePanel'
+import ObjectiveBanner from './ui/ObjectiveBanner'
+import ActionPrompt from './ui/ActionPrompt'
 import DestinationList from './ui/DestinationList'
 import FlightSkipButton from './ui/FlightSkipButton'
 import CoachMark from './ui/CoachMark'
@@ -78,6 +80,15 @@ export default function App() {
       <div style={styles.title}>DUNE</div>
       <PositionStrip />
       <ObjectivePanel />
+      {/* Both centre-band surfaces are ROOT-LEVEL SIBLINGS, deliberately
+          outside the command column below: that column sets
+          `backdropFilter: blur(7px)`, which per CSS makes it the containing
+          block for any `position: fixed` descendant — the exact defect that
+          left ConfirmModal centred on the 340px sidebar instead of the
+          screen (measured at x=2744 on a 3067px display). Their vertical
+          budget against EventToasts is ui/centreBand.ts's. */}
+      <ObjectiveBanner />
+      <ActionPrompt />
       <CoachMark />
 
       {/* Command column, floating right. Scrolls independently of the map. */}
