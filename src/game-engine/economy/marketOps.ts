@@ -23,6 +23,16 @@ import type { EquipmentKind } from '../troops/types'
  * read by the query it was always meant to feed.
  */
 export function buyEquipment(kind: EquipmentKind): void {
+  // Presence is the command's own precondition, not the panel's. The market
+  // renders only at the den (acts/openingDisclosure.ts), but a bus dispatch
+  // does not go through the panel — and buying an ornithopter from the far
+  // side of the planet was legal until this check existed.
+  const here = world.villages.find(v => v.id === world.player.location)
+  if (here?.kind !== 'smuggler_den') {
+    pushEvent('sietch_task_assigned', purchaseRefusalMessage('not-at-market'))
+    return
+  }
+
   const standing = typeof world.flags['smuggler.standing'] === 'number'
     ? (world.flags['smuggler.standing'] as number)
     : 0

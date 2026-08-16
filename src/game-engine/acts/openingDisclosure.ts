@@ -29,11 +29,14 @@
 import type { WorldState } from '../../types'
 
 export function marketDisclosed(world: WorldState): boolean {
-  const den = world.villages.find(v => v.kind === 'smuggler_den')
-  // Belt-and-suspenders, not a real legacy hatch: unissued equipment can
-  // only exist in production by having bought it at a discovered den, so
-  // this branch is unreached by any writer today — kept only against an
-  // untested legacy save that somehow carries equipment without the den's
-  // discovered flag surviving migration.
-  return den?.discovered === true || world.equipment.some(e => e.groupId === null)
+  const den = world.villages.find(v => v.id === world.player.location)
+  // "Smuggler den is discovered AND ENTERED" — 03's own disclosure row, now
+  // read literally. Gating on discovery alone was what closed the equipment
+  // economy: the den had to stay hidden to keep an empty market frame off
+  // the Arrakeen view, and hiding it left no way to buy the ornithopter that
+  // prospecting — the only path that discovers anything — requires (user
+  // report, 2026-08-16). Presence keeps the frame off every other view
+  // without costing the player the shop: the den is seeded discovered now
+  // (data/villages.ts) and sits one hop from Arrakeen.
+  return den?.kind === 'smuggler_den' && den.discovered === true
 }

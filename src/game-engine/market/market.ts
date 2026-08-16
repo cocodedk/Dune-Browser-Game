@@ -62,7 +62,7 @@ export const MARKET_STOCK: readonly MarketItem[] = [
   },
 ]
 
-export type PurchaseRefusal = 'unknown-item' | 'cannot-afford' | 'tier-locked'
+export type PurchaseRefusal = 'unknown-item' | 'cannot-afford' | 'tier-locked' | 'not-at-market'
 
 export type PurchaseCheck =
   | { ok: true; item: MarketItem }
@@ -103,6 +103,12 @@ export function purchaseRefusalMessage(reason: PurchaseRefusal): string {
       return 'Not enough spice.'
     case 'tier-locked':
       return 'Meko keeps that for buyers he trusts.'
+    case 'not-at-market':
+      // The command validates presence even though the panel is only mounted
+      // at the den (02's ownership contract: "every mutating command
+      // validates its current preconditions even if the UI disabled the
+      // control").
+      return 'Meko deals in person, at Tsimpo.'
   }
 }
 
