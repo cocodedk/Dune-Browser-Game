@@ -7,8 +7,8 @@ A browser-based strategy and adventure game set in Frank Herbert's Dune universe
 
 ## Website
 
-- [English](https://cocodedk.github.io/Dune-Browser-Game/)
-- [فارسی (Persian)](https://cocodedk.github.io/Dune-Browser-Game/fa/)
+- [English](https://dune.cocode.dk/)
+- [فارسی (Persian)](https://dune.cocode.dk/fa/)
 
 ## Features
 
@@ -23,7 +23,7 @@ A browser-based strategy and adventure game set in Frank Herbert's Dune universe
 
 Open the game directly in your browser — no installation needed.
 
-[**Play Dune Browser Game**](https://cocodedk.github.io/Dune-Browser-Game/)
+[**Play Dune Browser Game**](https://dune.cocode.dk/)
 
 Or download the latest release to self-host:
 [**Download Dune-Browser-Game.zip**](https://github.com/cocodedk/Dune-Browser-Game/releases/latest/download/Dune-Browser-Game.zip)
