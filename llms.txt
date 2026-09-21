@@ -37,6 +37,6 @@ Built with React 18, TypeScript 5, and Vite. Runs entirely in the browser — no
 ## Links
 
 - [GitHub Repository](https://github.com/cocodedk/Dune-Browser-Game): Source code, issues, and releases
-- [Play the Game](https://cocodedk.github.io/Dune-Browser-Game/): Live deployment on GitHub Pages
+- [Play the Game](https://dune.cocode.dk/): Live deployment on GitHub Pages
 - [Cocode](https://cocode.dk): Developer studio behind the project
 - [Author: Babak Bandpey](https://linkedin.com/in/babakbandpey): LinkedIn profile of the project author
