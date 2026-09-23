@@ -42,6 +42,8 @@
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://brand.cocode.dk/v1.css" />
+  <script type="module" src="https://brand.cocode.dk/v1.js"></script>
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -65,17 +67,16 @@
   </script>
 </head>
 <body>
-<div class="site-wrapper">
 
-  <!-- ── Navigation ── -->
-  <nav class="site-nav" aria-label="Primary navigation">
-    <a href="https://dune.cocode.dk/" class="nav-logo" aria-label="Dune Browser Game home">
-      DUNE: BROWSER GAME
-    </a>
-    <div class="nav-right">
-      <a href="fa/" class="lang-switch" hreflang="fa" lang="fa" aria-label="Switch to Persian">فارسی</a>
-    </div>
-  </nav>
+<!-- The cocode.dk family frame. Without JavaScript its children show instead: a way home
+     and the language links. It replaces the site's own top bar (wordmark + language switch). -->
+<cocode-head project="Dune Browser Game" accent="#d4a017" on-accent="#0a0a0f" dark>
+  <a href="https://cocode.dk">cocode.dk</a>
+  <span class="on">EN</span>
+  <a href="fa/" hreflang="fa">FA</a>
+</cocode-head>
+
+<div class="site-wrapper">
 
   <!-- ── Hero ── -->
   <header class="hero" role="banner">
@@ -246,10 +247,17 @@
   </section>
 
   <!-- ── Footer ── -->
+  <!-- Copyright, "made by" and the cocode.dk link now come from cocode-foot below;
+       Apache-2.0 is already stated in the tech-stack section above. The LinkedIn
+       link is kept here because cocode-foot does not carry it. -->
   <footer role="contentinfo">
-    <p>Apache-2.0 &nbsp;|&nbsp; © 2026 <a href="https://cocode.dk" target="_blank" rel="noreferrer">Cocode</a> &nbsp;|&nbsp; Created by <a href="https://linkedin.com/in/babakbandpey" target="_blank" rel="noreferrer">Babak Bandpey</a></p>
+    <p>Babak Bandpey on <a href="https://linkedin.com/in/babakbandpey" target="_blank" rel="noreferrer">LinkedIn</a></p>
   </footer>
 
 </div><!-- /.site-wrapper -->
+
+<cocode-foot repo="cocodedk/Dune-Browser-Game" dark>
+  <a href="https://cocode.dk">cocode.dk</a>
+</cocode-foot>
 </body>
 </html>

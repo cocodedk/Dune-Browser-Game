@@ -42,6 +42,8 @@
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="https://brand.cocode.dk/v1.css" />
+  <script type="module" src="https://brand.cocode.dk/v1.js"></script>
 
   <!-- RTL font override -->
   <style>
@@ -52,7 +54,7 @@
       font-family: 'Cinzel Decorative', 'Cinzel', serif;
       letter-spacing: 0.02em;
     }
-    .hero-eyebrow, .section-eyebrow, .btn, .nav-logo {
+    .hero-eyebrow, .section-eyebrow, .btn {
       font-family: 'Vazirmatn', system-ui, sans-serif;
       letter-spacing: 0.02em;
     }
@@ -93,17 +95,16 @@
   </script>
 </head>
 <body>
-<div class="site-wrapper">
 
-  <!-- ── Navigation ── -->
-  <nav class="site-nav" aria-label="ناوبری اصلی">
-    <a href="https://dune.cocode.dk/fa/" class="nav-logo" aria-label="صفحه اصلی بازی مرورگر دیون">
-      DUNE: BROWSER GAME
-    </a>
-    <div class="nav-right">
-      <a href="../" class="lang-switch" hreflang="en" lang="en" aria-label="Switch to English">English</a>
-    </div>
-  </nav>
+<!-- The cocode.dk family frame. Without JavaScript its children show instead: a way home
+     and the language links. It replaces the site's own top bar (wordmark + language switch). -->
+<cocode-head project="Dune Browser Game" accent="#d4a017" on-accent="#0a0a0f" dark>
+  <a href="https://cocode.dk">cocode.dk</a>
+  <a href="../" hreflang="en">EN</a>
+  <span class="on">FA</span>
+</cocode-head>
+
+<div class="site-wrapper">
 
   <!-- ── Hero ── -->
   <header class="hero" role="banner">
@@ -274,10 +275,17 @@
   </section>
 
   <!-- ── Footer ── -->
+  <!-- Copyright, "made by" and the cocode.dk link now come from cocode-foot below;
+       Apache-2.0 is already stated in the tech-stack section above. The LinkedIn
+       link is kept here because cocode-foot does not carry it. -->
   <footer role="contentinfo">
-    <p>Apache-2.0 &nbsp;|&nbsp; © ۱۴۰۵ <a href="https://cocode.dk" target="_blank" rel="noreferrer">Cocode</a> &nbsp;|&nbsp; ساخته شده توسط <a href="https://linkedin.com/in/babakbandpey" target="_blank" rel="noreferrer">بابک بندپی</a></p>
+    <p>بابک بندپی در <a href="https://linkedin.com/in/babakbandpey" target="_blank" rel="noreferrer">لینکدین</a></p>
   </footer>
 
 </div><!-- /.site-wrapper -->
+
+<cocode-foot repo="cocodedk/Dune-Browser-Game" dark>
+  <a href="https://cocode.dk">cocode.dk</a>
+</cocode-foot>
 </body>
 </html>
