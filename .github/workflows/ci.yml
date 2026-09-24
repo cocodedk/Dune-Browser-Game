@@ -40,5 +40,17 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      # This runner has no GPU. playwright.config.ts forces GPU launch
+      # flags that need a windowing system (ANGLE's `gl` backend) — with
+      # no display at all, Chromium falls through to SwiftShader, which
+      # is too slow for this suite's 3D specs (measured: real GPU ~6s per
+      # spec, no display ~timeout). Xvfb gives it a display, which routes
+      # the same flags to Mesa's llvmpipe software rasterizer instead —
+      # much faster, and (per playwright.config.ts's `workers` comment)
+      # fast enough for the full suite at one worker. `xvfb-run` ships on
+      # ubuntu-latest; the `which` guard is a cheap safety net, not an
+      # assumption it's missing.
       - name: End-to-end tests
-        run: npm test
+        run: |
+          which xvfb-run || { sudo apt-get update && sudo apt-get install -y xvfb; }
+          xvfb-run -a npm test

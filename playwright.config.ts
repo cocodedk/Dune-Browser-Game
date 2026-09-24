@@ -19,6 +19,15 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 30000,
   reporter: [['list'], ['html', { open: 'never' }]],
+  // CI's runner has no GPU, so the GPU launch flags below route through
+  // Mesa's llvmpipe software rasterizer (via the Xvfb display the CI
+  // workflow now provides) rather than real hardware. Two llvmpipe
+  // instances sharing the runner's ~4 vCPUs is enough contention to push
+  // a few specs past their budget or into a genuine timing race
+  // (measured: 26/30 at 2 workers, 30/30 at 1, 2026-09-24). One worker in
+  // CI removes that contention; locally, with a real GPU, the default
+  // (auto-detected) worker count is unaffected.
+  workers: process.env.CI ? 1 : undefined,
   use: {
     baseURL: 'http://127.0.0.1:4173',
     screenshot: 'only-on-failure',
