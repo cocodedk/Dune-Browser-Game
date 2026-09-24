@@ -40,5 +40,13 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      # TEMPORARY diagnostic — remove before merge. Checking whether the
+      # runner has Mesa's software GL/EGL libs (llvmpipe) available for
+      # ANGLE's --use-angle=gl backend to fall back to.
+      - name: GPU/Mesa diagnostic
+        run: |
+          ldconfig -p | grep -iE 'EGL_mesa|gallium|swrast' || echo "NONE FOUND"
+          npx playwright test e2e/gpucheck.spec.ts --project=chromium
+
       - name: End-to-end tests
         run: npm test
